@@ -3,7 +3,8 @@ import models.raxs as model2
 from models.utils import UserVars
 from datetime import datetime
 import numpy as np
-import sys,pickle,domain_creator
+import sys,pickle
+import models.domain_creator as domain_creator
 sys.path.append("D:\Google Drive\useful codes")
 try:
     import make_parameter_table_GenX as make_grid
@@ -132,7 +133,7 @@ for scale in scales:
 
 #only two possible path(one for runing in pacman, the other in local laptop)
 try:
-    add_atom_in_slab(bulk,batch_path_head+'bulk.str')
+    domain_creator.add_atom_in_slab(bulk,batch_path_head+'bulk.str')
 except:
     batch_path_head='D:\\Github\\batchfile\\'
     domain_creator.add_atom_in_slab(bulk,batch_path_head+'bulk.str')
@@ -343,7 +344,7 @@ if USE_BV:
 #####################################specify f1f2 here###################################
 res_el='Pb'
 f1f2_file='raxs_Pb_formatted.f1f2'
-f1f2=np.loadtxt(batch_path_head+f1f2_file)
+#f1f2=np.loadtxt(batch_path_head+f1f2_file)
 VARS=vars()#pass local variables to sim function
 ###################################fitting function part##########################################
 if COUNT_TIME:t_1=datetime.now()

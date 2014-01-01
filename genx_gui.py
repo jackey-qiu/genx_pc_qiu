@@ -1,4 +1,4 @@
-  #!/usr/bin/env python
+#!/usr/bin/env python
 '''
 $Rev::                                  $:  Revision of last commit
 $Author::                               $:  Author of last commit
