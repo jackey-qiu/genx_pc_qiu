@@ -32,6 +32,7 @@ BV_SUM=[[1.33],[5.]]#pseudo bond valence sum for sorbate
 SORBATE_ATTACH_ATOM=[[['O1_1_0','O1_2_0']],[['O1_1_0','O1_2_0','O1_3_0']]]
 SORBATE_ATTACH_ATOM_OFFSET=[[[None,None]],[[None,None,None]]]
 COVALENT_HYDROGEN_ACCEPTOR=[['O1_1_0','O1_2_0'],['O1_1_0','O1_2_0']]
+COVALENT_HYDROGEN_NUMBER=[[1,1],[1,1]]
 TOP_ANGLE=[[1.38],[1.38]]
 PHI=[[0],[0]]
 R_S=[[1],[1]]
@@ -505,7 +506,8 @@ def Sim(data,VARS=VARS):
                     case_tag=len(VARS['match_lib_'+str(i+1)+'A'][key])
                     if key in key in map(lambda x:x+'_D'+str(i+1)+'A',COVALENT_HYDROGEN_ACCEPTOR[i]):
                         #if consider convalent hydrogen bond
-                        bv=bv+_widen_validness(1.2-temp_bv)
+                        H_N=COVALENT_HYDROGEN_NUMBER[i][map(lambda x:x+'_D'+str(i+1)+'A',COVALENT_HYDROGEN_ACCEPTOR[i]).index(key)]
+                        bv=bv+_widen_validness(2-0.8*H_N-temp_bv)
                     else:
                         bv=bv+_widen_validness(2.-temp_bv)
                 elif 'Fe' in key:
