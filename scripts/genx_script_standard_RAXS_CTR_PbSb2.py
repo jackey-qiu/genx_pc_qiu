@@ -61,7 +61,13 @@ PLOT=True
 ##want to make parameter table?##
 TABLE=False
 if TABLE:
-    make_grid.make_structure(list(np.sum(SORBATE_NUMBER,axis=1)),O_NUMBER,TOP_ANGLE,PHI,WATER_NUMBER,DOMAIN,Metal=SORBATE[1])
+    O_N=[]
+    for i in O_NUMBER:
+        temp=0
+        for j in i:
+            temp+=sum(j)
+        O_N.append([temp])
+    make_grid.make_structure(map(sum,SORBATE_NUMBER),O_N,TOP_ANGLE,PHI,WATER_NUMBER,DOMAIN,Metal=SORBATE[1])
 
 ##############################################set up atm ids###############################################
 
