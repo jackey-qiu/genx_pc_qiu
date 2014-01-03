@@ -31,10 +31,13 @@ SORBATE_LIST=domain_creator.create_sorbate_el_list(SORBATE,SORBATE_NUMBER)
 BV_SUM=[[1.33],[5.]]#pseudo bond valence sum for sorbate
 SORBATE_ATTACH_ATOM=[[['O1_1_0','O1_2_0']],[['O1_1_0','O1_2_0','O1_3_0']]]
 SORBATE_ATTACH_ATOM_OFFSET=[[[None,None]],[[None,None,None]]]
+DISCONNECT_BV_CONTRIBUTION=[{('O1_1_0','O1_2_0'):'Pb2'},{}]#set itmes to be {} if considering single sorbate
+#if consider hydrogen bonds#
 COVALENT_HYDROGEN_ACCEPTOR=[['O1_1_0','O1_2_0'],['O1_1_0','O1_2_0']]
 COVALENT_HYDROGEN_NUMBER=[[1,1],[1,1]]
 HYDROGEN_ACCEPTOR=[['O1_1_0','O1_2_0','O1_3_0','O1_4_0'],['O1_1_0','O1_2_0']]
 HYDROGEN_NUMBER=[[1,1,1,1],[1,1]]
+#geometrical parameters#
 TOP_ANGLE=[[1.38],[1.38]]
 PHI=[[0],[0]]
 R_S=[[1],[1]]
@@ -352,7 +355,12 @@ if USE_BV:
         elif DOMAIN[i]==2:
             vars()['match_lib_'+str(int(i+1))+'A']=domain_creator.create_match_lib_before_fitting(domain_class=vars()['domain_class_'+str(int(i+1))],domain=vars()['domain_class_'+str(int(i+1))].build_super_cell(ref_domain=vars()['domain_class_'+str(int(i+1))].create_equivalent_domains_2()[0],rem_atom_ids=None),atm_list=vars()['atm_list_'+str(int(i+1))+'A'],search_range=2.3)
             vars()['match_lib_'+str(int(i+1))+'A']=domain_creator.merge_two_libs(vars()['match_lib_'+str(int(i+1))+'A'],lib_sorbate)
-
+        if DISCONNECT_BV_CONTRIBUTION[i]!={}:
+            ids=map(lambda x:x+'_D'+str(i+1)+'A',DISCONNECT_BV_CONTRIBUTION[i].keys()[0])
+            value=DISCONNECT_BV_CONTRIBUTION[i][DISCONNECT_BV_CONTRIBUTION[i].keys()[0]]
+            for id in ids:
+                index_temp=vars()['match_lib_'+str(int(i+1))+'A'][id].index(filter(lambda x:value in x,vars()['match_lib_'+str(int(i+1))+'A'][id])[0])
+                del vars()['match_lib_'+str(int(i+1))+'A'][id][index_temp]
 #####################################specify f1f2 here###################################
 res_el='Pb'
 f1f2_file='raxs_Pb_formatted.f1f2'
@@ -665,6 +673,20 @@ consider sorbate (Pb and Sb) of any combination
     V_SHIFT: vertical shiftment of water molecules, in unit of angstroms,two items each if consider two water pair
     R=: half distance bw two waters at each layer in unit of angstroms
     ALPHA: alpha angle used to cal the pos of water molecule
+    
+    DISCONNECT_BV_CONTRIBUTION=[{('O1_1_0','O1_2_0'):'Pb2'},{}]
+    ##if you have two sorbate within the same unit cell, two sorbates will be the coordinative ligands of anchor atoms
+    ##but in fact the sorbate cannot occupy the adjacent sites due to steric constrain, so you should delete one ligand in the case of average structure
+    ##However, if you consider multiple domains with each domain having only one sorbate, then set the items to be {}
+    ##in this case, bv contribution from Pb2 won't be account for both O1 and O2 atom.
+        
+    COVALENT_HYDROGEN_ACCEPTOR=[['O1_1_0','O1_2_0'],['O1_1_0','O1_2_0']]
+    COVALENT_HYDROGEN_NUMBER=[[1,1],[1,1]]
+    ##means in domain1 both O1 and O2 will accept one covalent hydrogen (bv contribution of 0.8)
+    
+    HYDROGEN_ACCEPTOR=[['O1_1_0','O1_2_0','O1_3_0','O1_4_0'],['O1_1_0','O1_2_0']]
+    HYDROGEN_NUMBER=[[1,1,1,1],[1,1]]
+    ##means in domain1 O1 to O4 will accept one covalent hygrogen (bv contribution of 0.2)
 """
 
 ##########################some examples to set up sorbates binding under different configurations#######################
