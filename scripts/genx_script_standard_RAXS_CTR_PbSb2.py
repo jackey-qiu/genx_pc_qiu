@@ -33,6 +33,8 @@ SORBATE_ATTACH_ATOM=[[['O1_1_0','O1_2_0']],[['O1_1_0','O1_2_0','O1_3_0']]]
 SORBATE_ATTACH_ATOM_OFFSET=[[[None,None]],[[None,None,None]]]
 COVALENT_HYDROGEN_ACCEPTOR=[['O1_1_0','O1_2_0'],['O1_1_0','O1_2_0']]
 COVALENT_HYDROGEN_NUMBER=[[1,1],[1,1]]
+HYDROGEN_ACCEPTOR=[['O1_1_0','O1_2_0','O1_3_0','O1_4_0'],['O1_1_0','O1_2_0']]
+HYDROGEN_NUMBER=[[1,1,1,1],[1,1]]
 TOP_ANGLE=[[1.38],[1.38]]
 PHI=[[0],[0]]
 R_S=[[1],[1]]
@@ -463,6 +465,10 @@ def Sim(data,VARS=VARS):
                 if value<-BV_TOLERANCE:return 100
                 elif value>=-BV_TOLERANCE and value<BV_TOLERANCE:return 0
                 else:return value
+            def _widen_validness_hydrogen_acceptor(value,H_N=0):#here consider possible contribution of hydrogen bond (~0.2)
+                if (value-H_N*0.2)<-BV_TOLERANCE:return 100
+                elif (value-H_N*0.2)>=-BV_TOLERANCE and (value-H_N*0.2)<BV_TOLERANCE:return 0
+                else:return (value-H_N*0.2)
             super_cell_water,super_cell_sorbate,super_cell_surface=None,None,None
             if WATER_NUMBER[i]!=0:
                 super_cell_water=domain_class_1.build_super_cell2_simple(VARS['domain'+str(i+1)+'A'],[0,1]+range(-(WATER_NUMBER[i]+sum([np.sum(N_list) for N_list in O_NUMBER[i]])),0))
@@ -504,12 +510,21 @@ def Sim(data,VARS=VARS):
                     #For O you may consider possible binding to proton (+0.8) 
                     #And note the maximum coordination number for O is 4
                     case_tag=len(VARS['match_lib_'+str(i+1)+'A'][key])
-                    if key in key in map(lambda x:x+'_D'+str(i+1)+'A',COVALENT_HYDROGEN_ACCEPTOR[i]):
+                    if key in map(lambda x:x+'_D'+str(i+1)+'A',COVALENT_HYDROGEN_ACCEPTOR[i]):
                         #if consider convalent hydrogen bond
-                        H_N=COVALENT_HYDROGEN_NUMBER[i][map(lambda x:x+'_D'+str(i+1)+'A',COVALENT_HYDROGEN_ACCEPTOR[i]).index(key)]
-                        bv=bv+_widen_validness(2-0.8*H_N-temp_bv)
+                        H_N=0
+                        C_H_N=COVALENT_HYDROGEN_NUMBER[i][map(lambda x:x+'_D'+str(i+1)+'A',COVALENT_HYDROGEN_ACCEPTOR[i]).index(key)]
+                        if key in map(lambda x:x+'_D'+str(i+1)+'A',HYDROGEN_ACCEPTOR[i]):#consider hydrogen bond
+                            H_N=HYDROGEN_NUMBER[i][map(lambda x:x+'_D'+str(i+1)+'A',HYDROGEN_ACCEPTOR[i]).index(key)]
+                        else:pass
+                        bv=bv+_widen_validness_hydrogen_acceptor(2-0.8*C_H_N-temp_bv,H_N)
                     else:
-                        bv=bv+_widen_validness(2.-temp_bv)
+                        H_N=None
+                        if key in map(lambda x:x+'_D'+str(i+1)+'A',HYDROGEN_ACCEPTOR[i]):
+                            H_N=HYDROGEN_NUMBER[i][map(lambda x:x+'_D'+str(i+1)+'A',HYDROGEN_ACCEPTOR[i]).index(key)]
+                            bv=bv+_widen_validness_hydrogen_acceptor(2-temp_bv,H_N)#consider hydrogen bond
+                        else:
+                            bv=bv+_widen_validness(2.-temp_bv)
                 elif 'Fe' in key:
                     bv=bv+_widen_validness(3-temp_bv)
                 elif ('Pb' in key) or ('Sb' in key):
