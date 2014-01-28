@@ -1,0 +1,5 @@
+#extract parameter values in grid and save them in the second argument below
+#no dx_n1,dy_n1 and dz_n1 are set to default value of 1
+ocu,scale_values_Fe_u,u_Fe_n1,u_Fe_n2,u_Fe_n3,*
+ocu,scale_values_O_u,u_o_n1,u_o_n2,u_o_n3,u_o_n4,*
+ocu,scale_values_all_oc,oc_n1,oc_n2,oc_n3,oc_n4,oc_n5,oc_n6,oc_n7,*

@@ -1,0 +1,6 @@
+#Each row in the output file: dx1_f,dy1_f,dz1_f(0),dx2_f,dy2_f,dz2_f(0),dx3_f(0),dy3_f(0),dz3_f(1) 
+#the fact is: dx will change dx1(=dx*dx1_f) dy1(=dx*dy1_f) and dz1(=dx*dz1_f), dy will change dx2 dy2 and dz2, dz will change dx3 dy3 and dz3
+#eg (dx1_f=0.1,dy1_f=0.2, dz1_f=0.3,dx=1)-->(dx1=0.1,dy1=0.2,dz1=0.3)
+#from top to bottom: sorbate(pb1-pb3 for domain1A + pb1-pb3 for domain1B)
+1.,0.,0.,0.,1.,0.,0.,0.,1.
+-1.,0.,0.,0.,1.,0.,0.,0.,1.

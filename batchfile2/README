@@ -1,0 +1,3 @@
+text files to be used in genx script, NOT prgrame
+Pb output file for Genx reading3_1.txt (tag of 3 means 3 pb atoms and 1 means half layer)
+O output file for Genx reading6_1.txt (tag of 6 means 6 extra oxygen atm including water molecule if any)
