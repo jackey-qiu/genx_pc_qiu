@@ -1,0 +1,5 @@
+#atm_gp_list_domain1,5420,scale_values_O_u,None,u,0.4,*
+#in 3rd row, group oxygen in surface cell and the Os and OH
+atm_gp_list_domain1,631,scale_values_Fe_u,None,u,0.32,*
+atm_gp_list_domain1,5420,scale_values_O_u,None,u,0.4,*
+atm_gp_list_domain1,6543210,scale_values_all_oc,None,oc,1.0,*
