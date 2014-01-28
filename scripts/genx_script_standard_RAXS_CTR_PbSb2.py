@@ -3,7 +3,7 @@ import models.raxs as model2
 from models.utils import UserVars
 from datetime import datetime
 import numpy as np
-import sys,pickle
+import sys,pickle,__main__
 import models.domain_creator as domain_creator
 sys.path.append("D:\Google Drive\useful codes")
 try:
@@ -31,7 +31,7 @@ SORBATE_LIST=domain_creator.create_sorbate_el_list(SORBATE,SORBATE_NUMBER)
 BV_SUM=[[1.33],[5.]]#pseudo bond valence sum for sorbate
 SORBATE_ATTACH_ATOM=[[['O1_1_0','O1_2_0']],[['O1_1_0','O1_2_0','O1_3_0']]]
 SORBATE_ATTACH_ATOM_OFFSET=[[[None,None]],[[None,None,None]]]
-DISCONNECT_BV_CONTRIBUTION=[{('O1_1_0','O1_2_0'):'Pb2'},{}]#set itmes to be {} if considering single sorbate
+DISCONNECT_BV_CONTRIBUTION=[{('O1_1_0','O1_2_0'):'Pb1'},{}]#set items to be {} if considering single sorbate
 #if consider hydrogen bonds#
 COVALENT_HYDROGEN_ACCEPTOR=[['O1_1_0','O1_2_0'],['O1_1_0','O1_2_0']]
 COVALENT_HYDROGEN_NUMBER=[[1,1],[1,1]]
@@ -59,7 +59,7 @@ DOMAIN_NUMBER=len(DOMAIN)
 USE_BV=True
 
 ##want to output the data for plotting?##
-PLOT=True
+PLOT=False
 
 ##want to make parameter table?##
 TABLE=False
@@ -148,7 +148,7 @@ for scale in scales:
 try:
     domain_creator.add_atom_in_slab(bulk,batch_path_head+'bulk.str')
 except:
-    batch_path_head='D:\\Github\\batchfile\\'
+    batch_path_head='\\'.join(__main__.__file__.rsplit('\\')[:-1])+'\\batchfile\\'
     domain_creator.add_atom_in_slab(bulk,batch_path_head+'bulk.str')
 domain_creator.add_atom_in_slab(ref_domain1,batch_path_head+'half_layer2.str')
 domain_creator.add_atom_in_slab(ref_domain2,batch_path_head+'full_layer3.str')

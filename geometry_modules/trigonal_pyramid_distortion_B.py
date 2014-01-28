@@ -35,7 +35,8 @@ atms=np.append(atms,np.array(atms_cell)+[1,-1,0],axis=0)
 atms=np.append(atms,np.array(atms_cell)+[-1,1,0],axis=0)
 
 atms=atms*basis
-O1,O2=[0.653,1.1121,1.903]*basis,[0.847,0.6121,1.903]*basis
+O1,O2,O3,O4=[0.653,1.1121,1.903]*basis,[0.847,0.6121,1.903]*basis,[0.306,0.744,1.75]*basis,[0.194,0.243,1.75]*basis
+
 
 class trigonal_pyramid_distortion():
     
@@ -143,7 +144,7 @@ class trigonal_pyramid_distortion():
 #the container has 9 items, ie phi (rotation angle), top_angle, low_dis, apex coors (x,y,z), os coors(x,y,z)
 #in which the low_dis is the lowest dist between sorbate and atm (averaged value)
 class steric_check(trigonal_pyramid_distortion):
-    def __init__(self,p0=O1,p1=O2,len_offset=[0.,0.],cutting_limit=3.):
+    def __init__(self,p0=O1,p1=O3,len_offset=[0.,0.],cutting_limit=3.):
         self.p0,self.p1=np.array(p0),np.array(p1)
         self.len_offset=len_offset
         self.cutting_limit=cutting_limit
@@ -177,6 +178,43 @@ class steric_check(trigonal_pyramid_distortion):
                                 self.container[:,8]-7.3707],names='phi,top,low,A1,A2,A3,P1,P2,P3')
         data.sort(order=('phi','top','low'))
         print "phi,top_angle,low_dt_limit,A_x,A_y,A_z,P2_x,P2_y,P3_z"
+        if print_path!=None:
+            np.savetxt(print_path,data,"%5.3f")
+            print np.loadtxt(print_path)
+        else:
+            np.savetxt('test',data,"%5.3f")
+            print np.loadtxt('test')
+            os.remove('test')
+    
+    def steric_check_only_sorbate(self,top_ang_res=0.1,phi_res=0.5,switch=False,mirror=False,print_path=None):
+        for top in np.arange(1.,2.0,top_ang_res):
+            for phi in np.arange(0,np.pi*2,phi_res):
+                self.top_angle=top
+                self.shoulder_angle=(np.pi-top)/2.
+                self.all_in_all(switch=switch,phi=phi,mirror=mirror)
+                low_limit=self.cutting_limit*2
+                for atm in atms:
+                    if ((abs(sum(atm-self.p0))>0.01)&(abs(sum(atm-self.p1))>0.01)):
+                        dt_apex_atm=f2(atm,self.apex)
+                        if (dt_apex_atm<self.cutting_limit):
+                            low_limit=None
+                            break
+                        else:
+                            if dt_apex_atm<low_limit:
+                                low_limit=dt_apex_atm
+                            else:pass
+                if low_limit!=None:
+                    A=self.apex
+                    self.container=np.zeros((1,6))[0:0]
+                    self.container=np.append(self.container,[[phi,top,low_limit,A[0],A[1],A[2]]],axis=0)
+                else:pass
+        #note here consider the first slab, y and z shiftment has been made properly
+        data=np.rec.fromarrays([self.container[:,0],self.container[:,1],\
+                                self.container[:,2],self.container[:,3],\
+                                self.container[:,4]-0.7558,self.container[:,5]-7.3707],\
+                                names='phi,top,low,A1,A2,A3')
+        data.sort(order=('phi','top','low'))
+        print "phi,top_angle,low_dt_limit,A_x,A_y,A_z"
         if print_path!=None:
             np.savetxt(print_path,data,"%5.3f")
             print np.loadtxt(print_path)
