@@ -35,8 +35,7 @@ DISCONNECT_BV_CONTRIBUTION=[{('O1_1_0','O1_2_0'):'Pb1'},{}]#set items to be {} i
 #if consider hydrogen bonds#
 COVALENT_HYDROGEN_ACCEPTOR=[['O1_1_0','O1_2_0'],['O1_1_0','O1_2_0']]
 COVALENT_HYDROGEN_NUMBER=[[1,1],[1,1]]
-HYDROGEN_ACCEPTOR=[['O1_1_0','O1_2_0','O1_3_0','O1_4_0'],['O1_1_0','O1_2_0']]
-HYDROGEN_NUMBER=[[1,1,1,1],[1,1]]
+POTENTIAL_HYDROGEN_ACCEPTOR=[['O1_1_0','O1_2_0','O1_3_0','O1_4_0'],['O1_1_0','O1_2_0']]#they can accept one hygrogen bond or not
 #geometrical parameters#
 TOP_ANGLE=[[1.38],[1.38]]
 PHI=[[0],[0]]
@@ -135,7 +134,7 @@ ref_domain1 =  model.Slab(c = 1.0,T_factor='B')
 ref_domain2 =  model.Slab(c = 1.0,T_factor='B')
 rgh=UserVars()
 rgh.new_var('beta', 0.0)
-scales=['scale_CTR','scale_RAXS']
+scales=['scale_CTR','scale_RAXS','scale_CTR_specular')]
 for scale in scales:
     rgh.new_var(scale,1.)
     
@@ -483,6 +482,10 @@ def Sim(data,VARS=VARS):
                 if (value-H_N*0.2)<-BV_TOLERANCE:return 100
                 elif (value-H_N*0.2)>=-BV_TOLERANCE and (value-H_N*0.2)<BV_TOLERANCE:return 0
                 else:return (value-H_N*0.2)
+            def _widen_validness_potential_hydrogen_acceptor(value):#value=2-temp_bv(temp_bv include covalent hydrogen bond possibly)
+                if value<0.2 and value>-BV_TOLERANCE: return 0
+                elif value<-BV_TOLERANCE: return 100
+                else:return value
             super_cell_water,super_cell_sorbate,super_cell_surface=None,None,None
             if WATER_NUMBER[i]!=0:
                 super_cell_water=domain_class_1.build_super_cell2_simple(VARS['domain'+str(i+1)+'A'],[0,1]+range(-(WATER_NUMBER[i]+sum([np.sum(N_list) for N_list in O_NUMBER[i]])),0))
@@ -526,19 +529,16 @@ def Sim(data,VARS=VARS):
                     case_tag=len(VARS['match_lib_'+str(i+1)+'A'][key])
                     if key in map(lambda x:x+'_D'+str(i+1)+'A',COVALENT_HYDROGEN_ACCEPTOR[i]):
                         #if consider convalent hydrogen bond
-                        H_N=0
                         C_H_N=COVALENT_HYDROGEN_NUMBER[i][map(lambda x:x+'_D'+str(i+1)+'A',COVALENT_HYDROGEN_ACCEPTOR[i]).index(key)]
-                        if key in map(lambda x:x+'_D'+str(i+1)+'A',HYDROGEN_ACCEPTOR[i]):#consider hydrogen bond
-                            H_N=HYDROGEN_NUMBER[i][map(lambda x:x+'_D'+str(i+1)+'A',HYDROGEN_ACCEPTOR[i]).index(key)]
-                        else:pass
-                        bv=bv+_widen_validness_hydrogen_acceptor(2-0.8*C_H_N-temp_bv,H_N)
-                    else:
-                        H_N=None
-                        if key in map(lambda x:x+'_D'+str(i+1)+'A',HYDROGEN_ACCEPTOR[i]):
-                            H_N=HYDROGEN_NUMBER[i][map(lambda x:x+'_D'+str(i+1)+'A',HYDROGEN_ACCEPTOR[i]).index(key)]
-                            bv=bv+_widen_validness_hydrogen_acceptor(2-temp_bv,H_N)#consider hydrogen bond
+                        if key in map(lambda x:x+'_D'+str(i+1)+'A',POTENTIAL_HYDROGEN_ACCEPTOR[i]):#consider potential hydrogen bond
+                            bv=bv+_widen_validness_potential_hydrogen_acceptor(2-temp_bv-0.8*C_H_N)
                         else:
-                            bv=bv+_widen_validness(2.-temp_bv)
+                            bv=bv+_widen_validness(2-0.8*C_H_N-temp_bv)
+                    else:
+                        if key in map(lambda x:x+'_D'+str(i+1)+'A',POTENTIAL_HYDROGEN_ACCEPTOR[i]):#consider hydrogen bond
+                            bv=bv+_widen_validness_potential_hydrogen_acceptor(2-temp_bv)
+                        else:
+                            bv=bv+_widen_validness(2-temp_bv)
                 elif 'Fe' in key:
                     bv=bv+_widen_validness(3-temp_bv)
                 elif ('Pb' in key) or ('Sb' in key):
@@ -570,12 +570,15 @@ def Sim(data,VARS=VARS):
             sample = model.Sample(inst, bulk, domain, unitcell,coherence=True,surface_parms={'delta1':0.,'delta2':0.1391})
             rough = (1-beta)/((1-beta)**2 + 4*beta*np.sin(np.pi*(x-LB)/dL)**2)**0.5#roughness model, double check LB and dL values are correctly set up in data file
             f = SCALES[0]*rough*sample.calc_f(h, k, x)
+            if h[0]==0 and k[0]==0:#extra scale factor for specular rod
+                f=SCALES[2]*f
             F.append(abs(f))
             fom_scaler.append(1)
     #print domain_creator.extract_coor(domain1B,'Pb1_D1B')
     #print domain_creator.extract_component(domain1A,'O1_1_0_D1A',['dx1','dy2','dz3'])  
     #domain_creator.print_data(N_sorbate=2,N_atm=40,domain=domain1A,z_shift=1,half_layer=True,save_file='D://model2.xyz')    
     #export the model results for plotting if PLOT set to true
+    #domain_creator.layer_spacing_calculator(domain1A,12,True)
     #print domain_class_1.cal_bond_valence1(domain_class_1.build_super_cell2(domain1A,[0,1,4,5]+range(-6,0)),'Pb1_D1A',3,False)
     #print domain_class_1.cal_bond_valence1(domain_class_1.build_super_cell(domain1A),'O1_6_0_D1A',2.5,False)
     #print domain_class_1.cal_bond_valence1(domain_class_1.build_super_cell2(domain1A,[0,1,4,5]+range(-6,0)),'Pb1_D1A',3,False)
