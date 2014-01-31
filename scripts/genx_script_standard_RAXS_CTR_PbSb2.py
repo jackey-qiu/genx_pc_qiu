@@ -35,7 +35,7 @@ DISCONNECT_BV_CONTRIBUTION=[{('O1_1_0','O1_2_0'):'Pb1'},{}]#set items to be {} i
 #if consider hydrogen bonds#
 COVALENT_HYDROGEN_ACCEPTOR=[['O1_1_0','O1_2_0'],['O1_1_0','O1_2_0']]
 COVALENT_HYDROGEN_NUMBER=[[1,1],[1,1]]
-POTENTIAL_HYDROGEN_ACCEPTOR=[['O1_1_0','O1_2_0','O1_3_0','O1_4_0'],['O1_1_0','O1_2_0']]#they can accept one hygrogen bond or not
+POTENTIAL_HYDROGEN_ACCEPTOR=[['O1_1_0','O1_2_0','O1_3_0','O1_4_0'],['O1_1_0','O1_2_0']]#they can accept one hydrogen bond or not
 #geometrical parameters#
 TOP_ANGLE=[[1.38],[1.38]]
 PHI=[[0],[0]]
@@ -53,9 +53,11 @@ ALPHA=[[0],[3]]
 DOMAIN=[1,1]
 DOMAIN_GP=[[0,1]]#means you want to group first two and last two domains together, only group half layers or full layers together
 DOMAIN_NUMBER=len(DOMAIN)
+COHERENCE=True #want to add up in coherence?
 
 ##cal bond valence switch##
 USE_BV=True
+DOMAINS_BV=[0,1]#Domains being considered for bond valence constrain, counted from 0
 
 ##want to output the data for plotting?##
 PLOT=False
@@ -134,7 +136,7 @@ ref_domain1 =  model.Slab(c = 1.0,T_factor='B')
 ref_domain2 =  model.Slab(c = 1.0,T_factor='B')
 rgh=UserVars()
 rgh.new_var('beta', 0.0)
-scales=['scale_CTR','scale_RAXS','scale_CTR_specular')]
+scales=['scale_CTR','scale_RAXS','scale_CTR_specular']
 for scale in scales:
     rgh.new_var(scale,1.)
     
@@ -472,7 +474,7 @@ def Sim(data,VARS=VARS):
                     sorbate_els=[SORBATE_LIST[i][j]]+['O']*(len(O_id_B))
                     domain_creator.add_atom(domain=VARS['domain'+str(int(i+1))+'B'],ref_coor=np.array(SORBATE_coors_a+O_coors_a)*[-1,1,1]-[-1.,0.06955,0.5],ids=sorbate_ids,els=sorbate_els)    
 
-        if USE_BV:
+        if USE_BV and i in DOMAINS_BV:
             #set up dynamic super cells,where water and sorbate is a library and surface is a domain instance
             def _widen_validness(value):#acceptable bond valence offset can be adjusted (here is 0.08)
                 if value<-BV_TOLERANCE:return 100
@@ -561,13 +563,13 @@ def Sim(data,VARS=VARS):
         LB = data_set.extra_data['LB']
         dL = data_set.extra_data['dL']
         if x[0]>100:#a sign for RAXS dataset(first column is Energy which is in the order of 1000 ev)
-            sample = model2.Sample(inst, bulk, domain, unitcell,coherence=False,surface_parms={'delta1':0.,'delta2':0.1391})
+            sample = model2.Sample(inst, bulk, domain, unitcell,coherence=COHERENCE,surface_parms={'delta1':0.,'delta2':0.1391})
             rough = (1-beta)/((1-beta)**2 + 4*beta*np.sin(np.pi*(y-LB)/dL)**2)**0.5#roughness model, double check LB and dL values are correctly set up in data file
             f = SCALES[1]*rough*sample.calc_f(h, k, y,f1f2,res_el)
             F.append(abs(f))
             fom_scaler.append(WT_RAXS)
         else:#First column is l for CTR dataset, l is a relative small number (less than 10 usually)
-            sample = model.Sample(inst, bulk, domain, unitcell,coherence=True,surface_parms={'delta1':0.,'delta2':0.1391})
+            sample = model.Sample(inst, bulk, domain, unitcell,coherence=COHERENCE,surface_parms={'delta1':0.,'delta2':0.1391})
             rough = (1-beta)/((1-beta)**2 + 4*beta*np.sin(np.pi*(x-LB)/dL)**2)**0.5#roughness model, double check LB and dL values are correctly set up in data file
             f = SCALES[0]*rough*sample.calc_f(h, k, x)
             if h[0]==0 and k[0]==0:#extra scale factor for specular rod
