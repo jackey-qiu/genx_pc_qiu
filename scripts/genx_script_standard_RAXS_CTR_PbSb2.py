@@ -374,6 +374,8 @@ def Sim(data,VARS=VARS):
     VARS=VARS
     F =[]
     bv=0
+    bv_container={}
+    debug_bv=False
     fom_scaler=[]
     beta=rgh.beta
     SCALES=[getattr(rgh,scale) for scale in scales]
@@ -513,6 +515,7 @@ def Sim(data,VARS=VARS):
                 for id in water_ids:
                     tmp_bv=domain_class_1.cal_hydrogen_bond_valence2B(super_cell_water,id,3.,2.5)
                     bv=bv+tmp_bv
+                    if debug_bv:bv_container[id]=tmp_bv
             
             #cal bv for surface atoms and sorbates
             #only consdier domainA since domain B is symmetry related to domainA
@@ -542,23 +545,34 @@ def Sim(data,VARS=VARS):
                             if _widen_validness_range(2-0.88*C_H_N-temp_bv,2-0.68*C_H_N-temp_bv)==0 or _widen_validness_range(2-0.88*C_H_N-temp_bv,2-0.68*C_H_N-temp_bv)==100:
                             #if saturated already or over-saturated, then adding H-bonding wont help decrease the the total bv anyhow
                                 bv=bv+_widen_validness_range(2-0.88*C_H_N-temp_bv,2-0.68*C_H_N-temp_bv)
+                                if debug_bv:bv_container[key]=_widen_validness_range(2-0.88*C_H_N-temp_bv,2-0.68*C_H_N-temp_bv)
                             else:
                             #if undersaturation, then compare the cases of inclusion of H-bonding and exclusion of H-bonding. Whichever give rise to the lower bv will be used.
                                 bv=bv+min([_widen_validness_range(2-0.88*C_H_N-temp_bv,2-0.68*C_H_N-temp_bv),_widen_validness_range(2-0.88*C_H_N-temp_bv-0.25,2-0.68*C_H_N-temp_bv)])
+                                if debug_bv:bv_container[key]=min([_widen_validness_range(2-0.88*C_H_N-temp_bv,2-0.68*C_H_N-temp_bv),_widen_validness_range(2-0.88*C_H_N-temp_bv-0.25,2-0.68*C_H_N-temp_bv)])
                         else:
                             bv=bv+_widen_validness_range(2-0.88*C_H_N-temp_bv,2-0.68*C_H_N-temp_bv)
+                            if debug_bv:bv_container[key]=_widen_validness_range(2-0.88*C_H_N-temp_bv,2-0.68*C_H_N-temp_bv)
                     else:
                         if key in map(lambda x:x+'_D'+str(i+1)+'A',POTENTIAL_HYDROGEN_ACCEPTOR[i]):#consider hydrogen bond
-                            if _widen_validness_range(2-temp_bv)==0 or _widen_validness_range(2-temp_bv)==100:
+                            if _widen_validness(2-temp_bv)==0 or _widen_validness(2-temp_bv)==100:
                                 bv=bv+_widen_validness(2-temp_bv)
+                                if debug_bv:bv_container[key]=_widen_validness(2-temp_bv)
                             else:
                                 bv=bv+min([_widen_validness(2-temp_bv),_widen_validness_range(2-temp_bv-0.25,2-temp_bv-0.13)])
+                                if debug_bv:bv_container[key]=min([_widen_validness(2-temp_bv),_widen_validness_range(2-temp_bv-0.25,2-temp_bv-0.13)])
                         else:
                             bv=bv+_widen_validness(2-temp_bv)
+                            if debug_bv:bv_container[key]=_widen_validness(2-temp_bv)
                 elif 'Fe' in key:
                     bv=bv+_widen_validness(3-temp_bv)
+                    if debug_bv:bv_container[key]=_widen_validness(3-temp_bv)
                 elif ('Pb' in key) or ('Sb' in key):
                     bv=bv+_widen_validness(BV_SUM[i][j]-temp_bv)
+                    if debug_bv:bv_container[key]=_widen_validness(BV_SUM[i][j]-temp_bv)
+    if debug_bv:
+        for i in bv_container.keys():
+            print i,bv_container[i]
     #set up multiple domains
     #note for each domain there are two sub domains which symmetrically related to each other, so have equivalent wt
     for i in range(DOMAIN_NUMBER):
