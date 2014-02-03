@@ -234,7 +234,7 @@ class Sample:
     def calc_f(self, h, k, l):
         '''Calculate the structure factors for the sample
         '''
-        
+        #here the chemically equivalent domains will be added up in-coherently always
         ftot=0
         ftot_A=0
         ftot_B=0
@@ -256,6 +256,18 @@ class Sample:
             for i in keys_domainB:
                 ftot_B=ftot_B+abs(fb+self.calc_fs(h, k, l,[self.domain[i]['slab']]))*self.domain[i]['wt']
         ftot=abs(ftot_A)+abs(ftot_B)
+        return abs(ftot)*self.inst.inten
+        
+        
+    def calc_f2(self, h, k, l):
+        ftot=0
+        fb = self.calc_fb(h, k, l)
+        if self.coherence==True:
+            for i in self.domain.keys():
+                ftot=ftot+(fb+self.calc_fs(h, k, l,[self.domain[i]['slab']]))*self.domain[i]['wt']
+        else:
+            for i in self.domain.keys():
+                ftot=ftot+abs(fb+self.calc_fs(h, k, l,[self.domain[i]['slab']]))*self.domain[i]['wt']
         return abs(ftot)*self.inst.inten
 
     def turbo_calc_f(self, h, k, l):
