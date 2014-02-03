@@ -21,7 +21,7 @@ if COUNT_TIME:t_0=datetime.now()
 batch_path_head='/u1/uaf/cqiu/batchfile/'
 WT_RAXS=5#weighting for RAXS dataset
 WT_BV=1#weighting for bond valence constrain (1 recommended)
-BV_TOLERANCE=0.08#ideal bv value + or - this value is acceptable
+BV_TOLERANCE=0.05#ideal bv value + or - this value is acceptable
 
 ##pars for sorbates##
 SORBATE=["Pb","Sb"]#any combo of "Pb" and "Sb"
@@ -480,6 +480,11 @@ def Sim(data,VARS=VARS):
                 if value<-BV_TOLERANCE:return 100
                 elif value>=-BV_TOLERANCE and value<BV_TOLERANCE:return 0
                 else:return value
+            def _widen_validness_range(value_min,value_max):#consider a range of (ideal_bv-temp_bv)
+                if (value_min<-BV_TOLERANCE and value_max>BV_TOLERANCE) or (value_min>=-BV_TOLERANCE and value_min<=BV_TOLERANCE) or (value_max>=-BV_TOLERANCE and value_max<=BV_TOLERANCE):
+                    return 0
+                elif value_min>BV_TOLERANCE:return value_min
+                else:return 100
             def _widen_validness_hydrogen_acceptor(value,H_N=0):#here consider possible contribution of hydrogen bond (~0.2)
                 if (value-H_N*0.2)<-BV_TOLERANCE:return 100
                 elif (value-H_N*0.2)>=-BV_TOLERANCE and (value-H_N*0.2)<BV_TOLERANCE:return 0
@@ -487,7 +492,8 @@ def Sim(data,VARS=VARS):
             def _widen_validness_potential_hydrogen_acceptor(value):#value=2-temp_bv(temp_bv include covalent hydrogen bond possibly)
                 if value<0.2 and value>-BV_TOLERANCE: return 0
                 elif value<-BV_TOLERANCE: return 100
-                else:return value
+                else:return value               
+                
             super_cell_water,super_cell_sorbate,super_cell_surface=None,None,None
             if WATER_NUMBER[i]!=0:
                 super_cell_water=domain_class_1.build_super_cell2_simple(VARS['domain'+str(i+1)+'A'],[0,1]+range(-(WATER_NUMBER[i]+sum([np.sum(N_list) for N_list in O_NUMBER[i]])),0))
@@ -530,15 +536,23 @@ def Sim(data,VARS=VARS):
                     #And note the maximum coordination number for O is 4
                     case_tag=len(VARS['match_lib_'+str(i+1)+'A'][key])
                     if key in map(lambda x:x+'_D'+str(i+1)+'A',COVALENT_HYDROGEN_ACCEPTOR[i]):
-                        #if consider convalent hydrogen bond
+                        #if consider convalent hydrogen bond (bv=0.68 to 0.88) while the hydrogen bond has bv from 0.13 to 0.25
                         C_H_N=COVALENT_HYDROGEN_NUMBER[i][map(lambda x:x+'_D'+str(i+1)+'A',COVALENT_HYDROGEN_ACCEPTOR[i]).index(key)]
-                        if key in map(lambda x:x+'_D'+str(i+1)+'A',POTENTIAL_HYDROGEN_ACCEPTOR[i]):#consider potential hydrogen bond
-                            bv=bv+_widen_validness_potential_hydrogen_acceptor(2-temp_bv-0.8*C_H_N)
+                        if key in map(lambda x:x+'_D'+str(i+1)+'A',POTENTIAL_HYDROGEN_ACCEPTOR[i]):#consider potential hydrogen bond (you can have or have not H-bonding)
+                            if _widen_validness_range(2-0.88*C_H_N-temp_bv,2-0.68*C_H_N-temp_bv)==0 or _widen_validness_range(2-0.88*C_H_N-temp_bv,2-0.68*C_H_N-temp_bv)==100:
+                            #if saturated already or over-saturated, then adding H-bonding wont help decrease the the total bv anyhow
+                                bv=bv+_widen_validness_range(2-0.88*C_H_N-temp_bv,2-0.68*C_H_N-temp_bv)
+                            else:
+                            #if undersaturation, then compare the cases of inclusion of H-bonding and exclusion of H-bonding. Whichever give rise to the lower bv will be used.
+                                bv=bv+min([_widen_validness_range(2-0.88*C_H_N-temp_bv,2-0.68*C_H_N-temp_bv),_widen_validness_range(2-0.88*C_H_N-temp_bv-0.25,2-0.68*C_H_N-temp_bv)])
                         else:
-                            bv=bv+_widen_validness(2-0.8*C_H_N-temp_bv)
+                            bv=bv+_widen_validness_range(2-0.88*C_H_N-temp_bv,2-0.68*C_H_N-temp_bv)
                     else:
                         if key in map(lambda x:x+'_D'+str(i+1)+'A',POTENTIAL_HYDROGEN_ACCEPTOR[i]):#consider hydrogen bond
-                            bv=bv+_widen_validness_potential_hydrogen_acceptor(2-temp_bv)
+                            if _widen_validness_range(2-temp_bv)==0 or _widen_validness_range(2-temp_bv)==100:
+                                bv=bv+_widen_validness(2-temp_bv)
+                            else:
+                                bv=bv+min([_widen_validness(2-temp_bv),_widen_validness_range(2-temp_bv-0.25,2-temp_bv-0.13)])
                         else:
                             bv=bv+_widen_validness(2-temp_bv)
                 elif 'Fe' in key:

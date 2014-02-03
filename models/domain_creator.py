@@ -148,7 +148,7 @@ def print_data(N_sorbate=4,N_atm=40,domain='',z_shift=1,half_layer=False,save_fi
     if half_layer:
         index=index_all[0:20]+index_all[N_atm:N_atm+N_sorbate]
     else:
-        index=index_all[0:22]+index_all[N_atm:N_atm+N_sorbate]
+        index=index_all[0:12]+index_all[N_atm:N_atm+N_sorbate]
     if half_layer==True:
         index.pop(2)
         index.pop(2)
