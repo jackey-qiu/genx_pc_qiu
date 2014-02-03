@@ -21,7 +21,7 @@ if COUNT_TIME:t_0=datetime.now()
 batch_path_head='/u1/uaf/cqiu/batchfile/'
 WT_RAXS=5#weighting for RAXS dataset
 WT_BV=1#weighting for bond valence constrain (1 recommended)
-BV_TOLERANCE=0.08#ideal bv value + or - this value is acceptable
+BV_TOLERANCE=0.05#ideal bv value + or - this value is acceptable
 
 ##pars for sorbates##
 SORBATE=["Pb","Sb"]#any combo of "Pb" and "Sb"
@@ -35,7 +35,7 @@ DISCONNECT_BV_CONTRIBUTION=[{('O1_1_0','O1_2_0'):'Pb1'},{}]#set items to be {} i
 #if consider hydrogen bonds#
 COVALENT_HYDROGEN_ACCEPTOR=[['O1_1_0','O1_2_0'],['O1_1_0','O1_2_0']]
 COVALENT_HYDROGEN_NUMBER=[[1,1],[1,1]]
-POTENTIAL_HYDROGEN_ACCEPTOR=[['O1_1_0','O1_2_0','O1_3_0','O1_4_0'],['O1_1_0','O1_2_0']]#they can accept one hygrogen bond or not
+POTENTIAL_HYDROGEN_ACCEPTOR=[['O1_1_0','O1_2_0','O1_3_0','O1_4_0'],['O1_1_0','O1_2_0']]#they can accept one hydrogen bond or not
 #geometrical parameters#
 TOP_ANGLE=[[1.38],[1.38]]
 PHI=[[0],[0]]
@@ -53,9 +53,11 @@ ALPHA=[[0],[3]]
 DOMAIN=[1,1]
 DOMAIN_GP=[[0,1]]#means you want to group first two and last two domains together, only group half layers or full layers together
 DOMAIN_NUMBER=len(DOMAIN)
+COHERENCE=True #want to add up in coherence?
 
 ##cal bond valence switch##
 USE_BV=True
+DOMAINS_BV=[0,1]#Domains being considered for bond valence constrain, counted from 0
 
 ##want to output the data for plotting?##
 PLOT=False
@@ -134,7 +136,7 @@ ref_domain1 =  model.Slab(c = 1.0,T_factor='B')
 ref_domain2 =  model.Slab(c = 1.0,T_factor='B')
 rgh=UserVars()
 rgh.new_var('beta', 0.0)
-scales=['scale_CTR','scale_RAXS','scale_CTR_specular')]
+scales=['scale_CTR','scale_RAXS','scale_CTR_specular']
 for scale in scales:
     rgh.new_var(scale,1.)
     
@@ -472,12 +474,17 @@ def Sim(data,VARS=VARS):
                     sorbate_els=[SORBATE_LIST[i][j]]+['O']*(len(O_id_B))
                     domain_creator.add_atom(domain=VARS['domain'+str(int(i+1))+'B'],ref_coor=np.array(SORBATE_coors_a+O_coors_a)*[-1,1,1]-[-1.,0.06955,0.5],ids=sorbate_ids,els=sorbate_els)    
 
-        if USE_BV:
+        if USE_BV and i in DOMAINS_BV:
             #set up dynamic super cells,where water and sorbate is a library and surface is a domain instance
             def _widen_validness(value):#acceptable bond valence offset can be adjusted (here is 0.08)
                 if value<-BV_TOLERANCE:return 100
                 elif value>=-BV_TOLERANCE and value<BV_TOLERANCE:return 0
                 else:return value
+            def _widen_validness_range(value_min,value_max):#consider a range of (ideal_bv-temp_bv)
+                if (value_min<-BV_TOLERANCE and value_max>BV_TOLERANCE) or (value_min>=-BV_TOLERANCE and value_min<=BV_TOLERANCE) or (value_max>=-BV_TOLERANCE and value_max<=BV_TOLERANCE):
+                    return 0
+                elif value_min>BV_TOLERANCE:return value_min
+                else:return 100
             def _widen_validness_hydrogen_acceptor(value,H_N=0):#here consider possible contribution of hydrogen bond (~0.2)
                 if (value-H_N*0.2)<-BV_TOLERANCE:return 100
                 elif (value-H_N*0.2)>=-BV_TOLERANCE and (value-H_N*0.2)<BV_TOLERANCE:return 0
@@ -485,7 +492,8 @@ def Sim(data,VARS=VARS):
             def _widen_validness_potential_hydrogen_acceptor(value):#value=2-temp_bv(temp_bv include covalent hydrogen bond possibly)
                 if value<0.2 and value>-BV_TOLERANCE: return 0
                 elif value<-BV_TOLERANCE: return 100
-                else:return value
+                else:return value               
+                
             super_cell_water,super_cell_sorbate,super_cell_surface=None,None,None
             if WATER_NUMBER[i]!=0:
                 super_cell_water=domain_class_1.build_super_cell2_simple(VARS['domain'+str(i+1)+'A'],[0,1]+range(-(WATER_NUMBER[i]+sum([np.sum(N_list) for N_list in O_NUMBER[i]])),0))
@@ -528,15 +536,23 @@ def Sim(data,VARS=VARS):
                     #And note the maximum coordination number for O is 4
                     case_tag=len(VARS['match_lib_'+str(i+1)+'A'][key])
                     if key in map(lambda x:x+'_D'+str(i+1)+'A',COVALENT_HYDROGEN_ACCEPTOR[i]):
-                        #if consider convalent hydrogen bond
+                        #if consider convalent hydrogen bond (bv=0.68 to 0.88) while the hydrogen bond has bv from 0.13 to 0.25
                         C_H_N=COVALENT_HYDROGEN_NUMBER[i][map(lambda x:x+'_D'+str(i+1)+'A',COVALENT_HYDROGEN_ACCEPTOR[i]).index(key)]
-                        if key in map(lambda x:x+'_D'+str(i+1)+'A',POTENTIAL_HYDROGEN_ACCEPTOR[i]):#consider potential hydrogen bond
-                            bv=bv+_widen_validness_potential_hydrogen_acceptor(2-temp_bv-0.8*C_H_N)
+                        if key in map(lambda x:x+'_D'+str(i+1)+'A',POTENTIAL_HYDROGEN_ACCEPTOR[i]):#consider potential hydrogen bond (you can have or have not H-bonding)
+                            if _widen_validness_range(2-0.88*C_H_N-temp_bv,2-0.68*C_H_N-temp_bv)==0 or _widen_validness_range(2-0.88*C_H_N-temp_bv,2-0.68*C_H_N-temp_bv)==100:
+                            #if saturated already or over-saturated, then adding H-bonding wont help decrease the the total bv anyhow
+                                bv=bv+_widen_validness_range(2-0.88*C_H_N-temp_bv,2-0.68*C_H_N-temp_bv)
+                            else:
+                            #if undersaturation, then compare the cases of inclusion of H-bonding and exclusion of H-bonding. Whichever give rise to the lower bv will be used.
+                                bv=bv+min([_widen_validness_range(2-0.88*C_H_N-temp_bv,2-0.68*C_H_N-temp_bv),_widen_validness_range(2-0.88*C_H_N-temp_bv-0.25,2-0.68*C_H_N-temp_bv)])
                         else:
-                            bv=bv+_widen_validness(2-0.8*C_H_N-temp_bv)
+                            bv=bv+_widen_validness_range(2-0.88*C_H_N-temp_bv,2-0.68*C_H_N-temp_bv)
                     else:
                         if key in map(lambda x:x+'_D'+str(i+1)+'A',POTENTIAL_HYDROGEN_ACCEPTOR[i]):#consider hydrogen bond
-                            bv=bv+_widen_validness_potential_hydrogen_acceptor(2-temp_bv)
+                            if _widen_validness_range(2-temp_bv)==0 or _widen_validness_range(2-temp_bv)==100:
+                                bv=bv+_widen_validness(2-temp_bv)
+                            else:
+                                bv=bv+min([_widen_validness(2-temp_bv),_widen_validness_range(2-temp_bv-0.25,2-temp_bv-0.13)])
                         else:
                             bv=bv+_widen_validness(2-temp_bv)
                 elif 'Fe' in key:
@@ -561,13 +577,13 @@ def Sim(data,VARS=VARS):
         LB = data_set.extra_data['LB']
         dL = data_set.extra_data['dL']
         if x[0]>100:#a sign for RAXS dataset(first column is Energy which is in the order of 1000 ev)
-            sample = model2.Sample(inst, bulk, domain, unitcell,coherence=False,surface_parms={'delta1':0.,'delta2':0.1391})
+            sample = model2.Sample(inst, bulk, domain, unitcell,coherence=COHERENCE,surface_parms={'delta1':0.,'delta2':0.1391})
             rough = (1-beta)/((1-beta)**2 + 4*beta*np.sin(np.pi*(y-LB)/dL)**2)**0.5#roughness model, double check LB and dL values are correctly set up in data file
             f = SCALES[1]*rough*sample.calc_f(h, k, y,f1f2,res_el)
             F.append(abs(f))
             fom_scaler.append(WT_RAXS)
         else:#First column is l for CTR dataset, l is a relative small number (less than 10 usually)
-            sample = model.Sample(inst, bulk, domain, unitcell,coherence=True,surface_parms={'delta1':0.,'delta2':0.1391})
+            sample = model.Sample(inst, bulk, domain, unitcell,coherence=COHERENCE,surface_parms={'delta1':0.,'delta2':0.1391})
             rough = (1-beta)/((1-beta)**2 + 4*beta*np.sin(np.pi*(x-LB)/dL)**2)**0.5#roughness model, double check LB and dL values are correctly set up in data file
             f = SCALES[0]*rough*sample.calc_f(h, k, x)
             if h[0]==0 and k[0]==0:#extra scale factor for specular rod
