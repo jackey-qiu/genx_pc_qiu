@@ -31,6 +31,8 @@ SORBATE_LIST=domain_creator.create_sorbate_el_list(SORBATE,SORBATE_NUMBER)
 BV_SUM=[[1.33],[5.]]#pseudo bond valence sum for sorbate
 SORBATE_ATTACH_ATOM=[[['O1_1_0','O1_2_0']],[['O1_1_0','O1_2_0','O1_3_0']]]
 SORBATE_ATTACH_ATOM_OFFSET=[[[None,None]],[[None,None,None]]]
+ANCHOR_REFERENCE=[[None],[None]]#ref point for anchors
+ANCHOR_REFERENCE_OFFSET=[[None],[None]]
 DISCONNECT_BV_CONTRIBUTION=[{('O1_1_0','O1_2_0'):'Pb1'},{}]#set items to be {} if considering single sorbate
 #if consider hydrogen bonds#
 COVALENT_HYDROGEN_ACCEPTOR=[['O1_1_0','O1_2_0'],['O1_1_0','O1_2_0']]
@@ -210,6 +212,10 @@ for i in range(DOMAIN_NUMBER):
         elif len(SORBATE_ATTACH_ATOM[i][j])==2:#bidentate case
             ids=[SORBATE_ATTACH_ATOM[i][j][0]+'_D'+str(int(i+1))+'A',SORBATE_ATTACH_ATOM[i][j][1]+'_D'+str(int(i+1))+'A']
             offset=SORBATE_ATTACH_ATOM_OFFSET[i][j]
+            anchor,anchor_offset=None,None
+            if ANCHOR_REFERENCE[i][j]!=None:
+                anchor=ANCHOR_REFERENCE[i][j]+'_D'+str(int(i+1))+'A'
+                anchor_offset=ANCHOR_REFERENCE_OFFSET[i][j]
             SORBATE_id=vars()['SORBATE_list_domain'+str(int(i+1))+'a'][j]
             #O_index=[0]+[sum(O_NUMBER[i][0:ii+1]) for ii in range(len(O_NUMBER[i]))]
             #if O_index[0:2]==[0,0]:
@@ -218,7 +224,7 @@ for i in range(DOMAIN_NUMBER):
             O_id=[HO_id for HO_id in vars()['HO_list_domain'+str(int(i+1))+'a'] if SORBATE_id in HO_id]
             sorbate_coors=[]
             if SORBATE_LIST[i][j]=='Pb':
-                sorbate_coors=vars()['domain_class_'+str(int(i+1))].adding_sorbate_pyramid_distortion_B(domain=vars()['domain'+str(int(i+1))+'A'],top_angle=TOP_ANGLE[i][j],phi=PHI[i][j],edge_offset=[0,0],attach_atm_ids=ids,offset=offset,pb_id=SORBATE_id,O_id=O_id,mirror=MIRROR)
+                sorbate_coors=vars()['domain_class_'+str(int(i+1))].adding_sorbate_pyramid_distortion_B(domain=vars()['domain'+str(int(i+1))+'A'],top_angle=TOP_ANGLE[i][j],phi=PHI[i][j],edge_offset=[0,0],attach_atm_ids=ids,offset=offset,anchor_ref=anchor,anchor_offset=anchor_offset,pb_id=SORBATE_id,O_id=O_id,mirror=MIRROR)
             elif SORBATE_LIST[i][j]=='Sb':
                 sorbate_coors=vars()['domain_class_'+str(int(i+1))].adding_sorbate_bidentate_octahedral(domain=vars()['domain'+str(int(i+1))+'A'],theta=PHI[i][j],phi=TOP_ANGLE[i][j],attach_atm_ids=ids,offset=offset,sb_id=SORBATE_id,O_id=O_id)
             SORBATE_coors_a.append(sorbate_coors[0])
@@ -428,13 +434,17 @@ def Sim(data,VARS=VARS):
                 phi=getattr(VARS['rgh_domain'+str(int(0+1))],'phi')
                 ids=[VARS['SORBATE_ATTACH_ATOM'][i][j][0]+'_D'+str(int(i+1))+'A',VARS['SORBATE_ATTACH_ATOM'][i][j][1]+'_D'+str(int(i+1))+'A']
                 offset=VARS['SORBATE_ATTACH_ATOM_OFFSET'][i][j]
+                anchor,anchor_offset=None,None
+                if ANCHOR_REFERENCE[i][j]!=None:
+                    anchor=ANCHOR_REFERENCE[i][j]+'_D'+str(int(i+1))+'A'
+                    anchor_offset=ANCHOR_REFERENCE_OFFSET[i][j]
                 SORBATE_id=VARS['SORBATE_list_domain'+str(int(i+1))+'a'][j]
                 #O_index=[0]+[sum(VARS['O_NUMBER'][i][0:ii+1]) for ii in range(len(VARS['O_NUMBER'][i]))]
                 #O_id=VARS['HO_list_domain'+str(int(i+1))+'a'][O_index[j]:O_index[j+1]]
                 O_id=[HO_id for HO_id in VARS['HO_list_domain'+str(int(i+1))+'a'] if SORBATE_id in HO_id]
                 sorbate_coors=[]
                 if SORBATE_LIST[i][j]=='Pb':
-                    sorbate_coors=VARS['domain_class_'+str(int(i+1))].adding_sorbate_pyramid_distortion_B(domain=VARS['domain'+str(int(i+1))+'A'],top_angle=top_angle,phi=phi,edge_offset=[0,0],attach_atm_ids=ids,offset=offset,pb_id=SORBATE_id,O_id=O_id,mirror=VARS['MIRROR'])
+                    sorbate_coors=VARS['domain_class_'+str(int(i+1))].adding_sorbate_pyramid_distortion_B(domain=VARS['domain'+str(int(i+1))+'A'],top_angle=top_angle,phi=phi,edge_offset=[0,0],attach_atm_ids=ids,offset=offset,anchor_ref=anchor,anchor_offset=anchor_offset,pb_id=SORBATE_id,O_id=O_id,mirror=VARS['MIRROR'])
                 elif SORBATE_LIST[i][j]=='Sb':
                     sorbate_coors=VARS['domain_class_'+str(int(i+1))].adding_sorbate_bidentate_octahedral(domain=VARS['domain'+str(int(i+1))+'A'],theta=phi,phi=top_angle,attach_atm_ids=ids,offset=offset,sb_id=SORBATE_id,O_id=O_id)
                 SORBATE_coors_a.append(sorbate_coors[0])
@@ -713,6 +723,14 @@ consider sorbate (Pb and Sb) of any combination
     ##However, if you consider multiple domains with each domain having only one sorbate, then set the items to be {}
     ##in this case, bv contribution from Pb2 won't be account for both O1 and O2 atom.
         
+    ANCHOR_REFERENCE=[[None],[None]]
+    ANCHOR_REFERENCE_OFFSET=[[None],[None]]
+    #we use anchor reference to set up a binding configuration in a more intelligible way. We only specify the anchor ref when the two anchor points are 
+    #not on the same level. The anchor reference will be the center(Fe atom) of the octahedral coordinated by ligands including those two anchors.
+    #phi=0 will means that the sorbate is binded in a most feasible way.
+    #To ensure the bending on two symmetry site are towards right position, the sorbate attach atom may have reversed order.
+    #eg. [O1,O3] correspond to [O4px,O2] rather than [O2,O4px].
+    
     COVALENT_HYDROGEN_ACCEPTOR=[['O1_1_0','O1_2_0'],['O1_1_0','O1_2_0']]
     COVALENT_HYDROGEN_NUMBER=[[1,1],[1,1]]
     ##means in domain1 both O1 and O2 will accept one covalent hydrogen (bv contribution of 0.8)

@@ -1,8 +1,6 @@
 import numpy as np
 from numpy.linalg import inv
 import os
-
-#the original version has been saved as B3 just in case
 #here only consider the distortion caused by length difference of three edges, it is a tectrahedral configuration basically, but not a regular one
 #since the top angle can be any value in [0,2*pi/3]
 x0_v,y0_v,z0_v=np.array([1.,0.,0.]),np.array([0.,1.,0.]),np.array([0.,0.,1.])
@@ -42,14 +40,13 @@ O1,O2,O3,O4=[0.653,1.1121,1.903]*basis,[0.847,0.6121,1.903]*basis,[0.306,0.744,1
 
 class trigonal_pyramid_distortion():
     
-    def __init__(self,p0=[0.,0.,0.],p1=[2.,2.,2.],ref=None,top_angle=1.0,len_offset=[0.,0.]):
+    def __init__(self,p0=[0.,0.,0.],p1=[2.,2.,2.],top_angle=1.0,len_offset=[0.,0.]):
         #top angle is p0_A_p1 in ppt file, shoulder_angle is A_P0_CP
         #len_offset[0] is CP_P1 in ppt, the other one not specified in the file
         self.top_angle=top_angle
         self.shoulder_angle=(np.pi-top_angle)/2.
         self.p0,self.p1=np.array(p0),np.array(p1)
         self.len_offset=len_offset
-        self.ref=ref
     
     def cal_theta(self):
     #here theta angle is angle A_P0_P1 in ppt file
@@ -82,8 +79,6 @@ class trigonal_pyramid_distortion():
         ref_p=0
         if c==0:
             ref_p=p1+[0,0,1]
-        elif self.ref!=None:
-            ref_p=np.cross(p0-p1,np.cross(p0-p1,self.ref-p1))+p1
         else:
             ref_p=np.array([1.,1.,(a*(x0-1.)+b*(y0-1.))/c+z0])
         #elif b!=0.:
