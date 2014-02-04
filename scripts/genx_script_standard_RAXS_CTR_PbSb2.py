@@ -55,7 +55,7 @@ ALPHA=[[0],[3]]
 DOMAIN=[1,1]
 DOMAIN_GP=[[0,1]]#means you want to group first two and last two domains together, only group half layers or full layers together
 DOMAIN_NUMBER=len(DOMAIN)
-COHERENCE=True #want to add up in coherence?
+COHERENCE=[True,True] #want to add up in coherence?
 
 ##cal bond valence switch##
 USE_BV=True
@@ -609,7 +609,7 @@ def Sim(data,VARS=VARS):
         else:#First column is l for CTR dataset, l is a relative small number (less than 10 usually)
             sample = model.Sample(inst, bulk, domain, unitcell,coherence=COHERENCE,surface_parms={'delta1':0.,'delta2':0.1391})
             rough = (1-beta)/((1-beta)**2 + 4*beta*np.sin(np.pi*(x-LB)/dL)**2)**0.5#roughness model, double check LB and dL values are correctly set up in data file
-            f = SCALES[0]*rough*sample.calc_f(h, k, x)
+            f = SCALES[0]*rough*sample.calc_f3(h, k, x)
             if h[0]==0 and k[0]==0:#extra scale factor for specular rod
                 f=SCALES[2]*f
             F.append(abs(f))
