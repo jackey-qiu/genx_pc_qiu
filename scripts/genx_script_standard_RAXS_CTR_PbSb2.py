@@ -55,7 +55,7 @@ ALPHA=[[0],[3]]
 DOMAIN=[1,1]
 DOMAIN_GP=[[0,1]]#means you want to group first two and last two domains together, only group half layers or full layers together
 DOMAIN_NUMBER=len(DOMAIN)
-COHERENCE=[True,True] #want to add up in coherence?
+COHERENCE=[True,True] #want to add up in coherence? items inside list corresponding to each domain
 
 ##cal bond valence switch##
 USE_BV=True
@@ -295,7 +295,14 @@ for i in range(DOMAIN_NUMBER):
             add_atom(domain=vars()['domain'+str(int(i+1))+'B'],ref_coor=H2O_coors_a*[-1,1,1]-[-1.,0.06955,0.5],ids=O_ids_b,els=['O','O'])
             #group water molecules at each layer (set equivalent the oc and u during fitting)
             M=len(O_ids_a)
+            #group waters on a layer basis(every four, two from each domain)
             vars()['gp_waters_set'+str(jj+1)+'_D'+str(int(i+1))]=vars()['domain_class_'+str(int(i+1))].grouping_discrete_layer(domain=[vars()['domain'+str(int(i+1))+'A']]*M+[vars()['domain'+str(int(i+1))+'B']]*M,atom_ids=O_ids_a+O_ids_b)
+            #group each two waters on two symmetry domains together (to be used as constrain on inplane movements)
+            #group names look like: gp_Os1_D1 which will group Os1_D1A and Os1_D1B together
+            for O_id in O_ids_a:
+                index=O_ids_a.index(O_id)
+                gp_name='gp_'+O_id.rsplit('_')[0]+'_D'+str(int(i+1))
+                vars()[gp_name]=vars()['domain_class_'+str(int(i+1))].grouping_discrete_layer3(domain=[vars()['domain'+str(int(i+1))+'A']]+[vars()['domain'+str(int(i+1))+'B']],atom_ids=[O_ids_a[index],O_ids_b[index]],sym_array=[[1,0,0,0,1,0,0,0,1],[-1,0,0,0,1,0,0,0,1]])
     #set variables
     vars()['domain_class_'+str(int(i+1))].set_discrete_new_vars_batch(batch_path_head+vars()['discrete_vars_file_domain'+str(int(i+1))])
     
