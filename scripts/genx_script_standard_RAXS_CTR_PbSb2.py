@@ -670,7 +670,7 @@ def Sim(data,VARS=VARS):
             LB_dumy=np.array(LB_dumy)
             dL_dumy=np.array(dL_dumy)
             rough_dumy = (1-beta)/((1-beta)**2 + 4*beta*np.sin(np.pi*(l_dumy-LB_dumy)/dL_dumy)**2)**0.5
-            f_dumy = SCALES[0]*rough_dumy*sample.calc_f(h_dumy, k_dumy, l_dumy)
+            f_dumy = SCALES[0]*rough_dumy*sample.calc_f3(h_dumy, k_dumy, l_dumy)
             
             label=str(int(h[0]))+str(int(k[0]))+'L'
             plot_data_container_experiment[label]=np.concatenate((l[:,np.newaxis],I[:,np.newaxis],eI[:,np.newaxis]),axis=1)
