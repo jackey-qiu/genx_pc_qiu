@@ -260,6 +260,7 @@ class Sample:
         
         
     def calc_f2(self, h, k, l):
+        #here incoherence means add up all domains in-coherently, and coherence means adding up all coherently
         ftot=0
         fb = self.calc_fb(h, k, l)
         if self.coherence==True:
@@ -269,7 +270,7 @@ class Sample:
             for i in self.domain.keys():
                 ftot=ftot+abs(fb+self.calc_fs(h, k, l,[self.domain[i]['slab']]))*self.domain[i]['wt']
         return abs(ftot)*self.inst.inten
-    
+
     def calc_f3(self, h, k, l):
         #here self.coherence is a list of True (add up coherently) or False (add up in-coherently)
         ftot=0
@@ -294,6 +295,37 @@ class Sample:
             else:
                 ftot_B_IC=ftot_B_IC+abs(fb+self.calc_fs(h, k, l,[self.domain[i]['slab']]))*self.domain[i]['wt']
         ftot=abs(ftot_A_C)+ftot_A_IC+ftot_B_IC+abs(ftot_B_C)
+        
+        return abs(ftot)*self.inst.inten
+        
+    def calc_f4(self, h, k, l):
+        #now the coherence looks like [{True:[0,1]},{False:[2,3]}] which means adding up first two domains coherently
+        #and last two domains in-coherently. After calculation of structure factor for each item of the list, absolute 
+        #value of SF will be calculated followed by being summed up
+        #so [{True:[0,1]},{True:[2,3]}] is different from [{True:[0,1,2,3]}]
+        ftot=0
+        coherence=self.coherence
+        fb = self.calc_fb(h, k, l)
+        for n in range(len(coherence)):
+            ftot_A_C, ftot_A_IC=0,0
+            ftot_B_C, ftot_B_IC=0,0
+            keys_domainA=[]
+            keys_domainB=[]
+            
+            for i in coherence[n].values()[0]:
+                keys_domainA.append('domain'+str(i+1)+'A')
+                keys_domainB.append('domain'+str(i+1)+'B')
+            for i in keys_domainA:
+                if coherence[n].keys()[0]:
+                    ftot_A_C=ftot_A_C+(fb+self.calc_fs(h, k, l,[self.domain[i]['slab']]))*self.domain[i]['wt']
+                else:
+                    ftot_A_IC=ftot_A_IC+abs(fb+self.calc_fs(h, k, l,[self.domain[i]['slab']]))*self.domain[i]['wt']
+            for i in keys_domainB:
+                if coherence[n].keys()[0]:
+                    ftot_B_C=ftot_B_C+(fb+self.calc_fs(h, k, l,[self.domain[i]['slab']]))*self.domain[i]['wt']
+                else:
+                    ftot_B_IC=ftot_B_IC+abs(fb+self.calc_fs(h, k, l,[self.domain[i]['slab']]))*self.domain[i]['wt']
+            ftot=ftot+abs(ftot_A_C)+ftot_A_IC+ftot_B_IC+abs(ftot_B_C)
         
         return abs(ftot)*self.inst.inten
         
