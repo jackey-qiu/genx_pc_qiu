@@ -269,7 +269,34 @@ class Sample:
             for i in self.domain.keys():
                 ftot=ftot+abs(fb+self.calc_fs(h, k, l,[self.domain[i]['slab']]))*self.domain[i]['wt']
         return abs(ftot)*self.inst.inten
-
+    
+    def calc_f3(self, h, k, l):
+        #here self.coherence is a list of True (add up coherently) or False (add up in-coherently)
+        ftot=0
+        ftot_A_C, ftot_A_IC=0,0
+        ftot_B_C, ftot_B_IC=0,0
+        keys_domainA=[]
+        keys_domainB=[]
+        fb = self.calc_fb(h, k, l)
+        for i in self.domain.keys():
+            if "A" in i:keys_domainA.append(i)
+            if "B" in i:keys_domainB.append(i)
+        for i in keys_domainA:
+            j=int(i[-2])-1
+            if self.coherence[j]:
+                ftot_A_C=ftot_A_C+(fb+self.calc_fs(h, k, l,[self.domain[i]['slab']]))*self.domain[i]['wt']
+            else:
+                ftot_A_IC=ftot_A_IC+abs(fb+self.calc_fs(h, k, l,[self.domain[i]['slab']]))*self.domain[i]['wt']
+        for i in keys_domainB:
+            j=int(i[-2])-1
+            if self.coherence[j]:
+                ftot_B_C=ftot_B_C+(fb+self.calc_fs(h, k, l,[self.domain[i]['slab']]))*self.domain[i]['wt']
+            else:
+                ftot_B_IC=ftot_B_IC+abs(fb+self.calc_fs(h, k, l,[self.domain[i]['slab']]))*self.domain[i]['wt']
+        ftot=abs(ftot_A_C)+ftot_A_IC+ftot_B_IC+abs(ftot_B_C)
+        
+        return abs(ftot)*self.inst.inten
+        
     def turbo_calc_f(self, h, k, l):
         '''Calculate the structure factors for the sample with
         inline c code for the surface.
