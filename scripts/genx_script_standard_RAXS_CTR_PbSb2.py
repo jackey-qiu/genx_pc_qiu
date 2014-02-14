@@ -774,17 +774,23 @@ consider sorbate (Pb and Sb) of any combination
     #To ensure the bending on two symmetry site are towards right position, the sorbate attach atom may have reversed order.
     #eg. [O1,O3] correspond to [O4px,O2] rather than [O2,O4px].
     
+<<<<<<< HEAD
+=======
     COHERENCE
     #now the coherence looks like [{True:[0,1]},{False:[2,3]}] which means adding up first two domains coherently
     #and last two domains in-coherently. After calculation of structure factor for each item of the list, absolute 
     #value of SF will be calculated followed by being summed up
     #so [{True:[0,1]},{True:[2,3]}] is different from [{True:[0,1,2,3]}]
     
+<<<<<<< HEAD
     #IF the covalent_hydrogen_random set to True, then we wont exclusively define the number of covalent hydrogen. And it will try [0,1,2] covalent hydrogens
     COVALENT_HYDROGEN_RANDOM=True
     POTENTIAL_COVALENT_HYDROGEN_ACCEPTOR=[['O1_1_0','O1_2_0'],['O1_1_0','O1_2_0']]
     
     If covalent_hydrogen_random is set to false then exclusively define the number of covalent hydrogen here
+=======
+>>>>>>> 8f7e163451f0b7bb16b86c029e1535e1050c8ea2
+>>>>>>> bc6c88550be0576de2ff5d103156c7eca918134b
     COVALENT_HYDROGEN_ACCEPTOR=[['O1_1_0','O1_2_0'],['O1_1_0','O1_2_0']]
     COVALENT_HYDROGEN_NUMBER=[[1,1],[1,1]]
     ##means in domain1 both O1 and O2 will accept one covalent hydrogen (bv contribution of 0.8)
