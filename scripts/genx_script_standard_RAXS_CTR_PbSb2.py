@@ -369,8 +369,9 @@ for group in DOMAIN_GP:
             new_list.append(original_list[index_list_1[i]])
             new_list.append(original_list[index_list_2[i]])
         return new_list
-        
-    vars()['discrete_gp_names_domain_'+str(a)+'_'+str(b)]=map(lambda x:'gp_'+x[0].rsplit('_')[0][:-1]+x[0].rsplit('_')[1]+x[1].rsplit('_')[0][:-1]+x[1].rsplit('_')[1]+'_D'+str(a)+'_'+x[2].rsplit('_')[0][:-1]+x[2].rsplit('_')[1]+x[3].rsplit('_')[0][:-1]+x[3].rsplit('_')[1]+'_D'+str(b),zip(vars()['equivalent_atm_list_A_'+str(DOMAIN[group[0]])],vars()['equivalent_atm_list_B_'+str(DOMAIN[group[0]])],_reorder(vars()['equivalent_atm_list_A_'+str(DOMAIN[group[0]])]),_reorder(vars()['equivalent_atm_list_B_'+str(DOMAIN[group[0]])])))
+    #if you want to use original order, just dont _reorder inside the zip    
+    vars()['discrete_gp_names_domain_'+str(a)+'_'+str(b)]=map(lambda x:'gp_'+x[0].rsplit('_')[0][:-1]+x[0].rsplit('_')[1]+x[1].rsplit('_')[0][:-1]+x[1].rsplit('_')[1]+'_D'+str(a)+'_'+x[2].rsplit('_')[0][:-1]+x[2].rsplit('_')[1]+x[3].rsplit('_')[0][:-1]+x[3].rsplit('_')[1]+'_D'+str(b),zip(vars()['atm_list_'+str(a)+'A'],vars()['atm_list_'+str(a)+'B'],_reorder(vars()['atm_list_'+str(b)+'A']),_reorder(vars()['atm_list_'+str(b)+'B'])))
+    #and know the second layer is iron layer taken away in the half layer model
     vars()['sequence_gp_names_domain_'+str(a)+'_'+str(b)]=['gp_sequence_layer'+str(x+1)+'_'+'D'+str(a)+'_D'+str(b) for x in range(10)]
     for j in range(len(vars()['sequence_gp_list_domain_'+str(a)+'_'+str(b)])):vars()[vars()['sequence_gp_names_domain_'+str(a)+'_'+str(b)][j]]=vars()['sequence_gp_list_domain_'+str(a)+'_'+str(b)][j]
     for j in range(len(vars()['discrete_gp_list_domain_'+str(a)+'_'+str(b)])):vars()[vars()['discrete_gp_names_domain_'+str(a)+'_'+str(b)][j]]=vars()['discrete_gp_list_domain_'+str(a)+'_'+str(b)][j]
