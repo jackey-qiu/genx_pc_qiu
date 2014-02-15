@@ -76,7 +76,7 @@ if TABLE:
         for j in i:
             temp+=sum(j)
         O_N.append([temp])
-    make_grid.make_structure(map(sum,SORBATE_NUMBER),O_N,TOP_ANGLE,PHI,WATER_NUMBER,DOMAIN,Metal=SORBATE[1])
+    make_grid.make_structure(map(sum,SORBATE_NUMBER),O_N,TOP_ANGLE,PHI,WATER_NUMBER,DOMAIN,Metal=SORBATE[1],long_slab=FULL_LAYER_LONG)
 
 ##############################################set up atm ids###############################################
 
