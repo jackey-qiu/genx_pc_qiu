@@ -38,13 +38,12 @@ r2_2,2.19,*
 r2_3,2.19,*
 r2_4,2.19,*
 ############pars for water layers (tag "_1" means the first water layer)##############
-r_water_pair_1,1.5,*
-alpha_water_pair_1,0,*
-ref_pt_water_pair_x_1,0.5,*
-ref_pt_water_pair_y_1,0.5,*
-ref_pt_water_pair_z_1,2.5,*
-############other pars#########################
-scale_factor_1,1.,*
-scale_factor_2,1.,*
-dx,0.,*
-dy,0.,*
+R1,1.5,*
+R2,1.5,*
+R3,1.5,*
+alpha1,0,*
+alpha2,0,*
+alpha3,0,*
+v_shift1,1.5,*
+v_shift2,3,*
+v_shift3,4.5,*

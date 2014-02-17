@@ -48,10 +48,11 @@ MIRROR=False
 
 ##pars for interfacial waters##
 WATER_NUMBER=[0,0]
-REF_POINTS=[['HO1','HO2'],['O1_1_0','O1_2_0']]#each item inside is a list of one or couple items
+WATER_PAIR=True#add water pair each time if True, otherwise only add single water each time (only needed par is V_SHIFT) 
+REF_POINTS=[[['HO1','HO2']],[['O1_1_0','O1_2_0']]]#each item inside is a list of one or couple items, and each water set has its own ref point
 V_SHIFT=[[2.8],[2]]
-R=[[1.5],[3]]
-ALPHA=[[0],[3]]
+R=[[1.5],[3]]#use only if considering water pair
+ALPHA=[[0],[3]]#used only if considering water pair
 
 ##chemically different domain type##
 DOMAIN=[1,1]
@@ -305,22 +306,35 @@ for i in range(DOMAIN_NUMBER):
                 vars()['gp_sorbates_set'+str(j+1)+'_D'+str(int(i+1))]=vars()['domain_class_'+str(int(i+1))].grouping_discrete_layer(domain=[vars()['domain'+str(int(i+1))+'A']]*N+[vars()['domain'+str(int(i+1))+'B']]*N,atom_ids=sorbate_set_ids)
 
     if WATER_NUMBER[i]!=0:#add water molecules if any
-        for jj in range(WATER_NUMBER[i]/2):#note will add water pair (two oxygens) each time, and you can't add single water 
-            O_ids_a=vars()['Os_list_domain'+str(int(i+1))+'a'][jj*2:jj*2+2]
-            O_ids_b=vars()['Os_list_domain'+str(int(i+1))+'b'][jj*2:jj*2+2]
-            #set the first pb atm to be the ref atm(if you have two layers, same ref point but different height)
-            H2O_coors_a=vars()['domain_class_'+str(int(i+1))].add_oxygen_pair2(domain=vars()['domain'+str(int(i+1))+'A'],O_ids=O_ids_a,ref_id=map(lambda x:x+'_D'+str(i+1)+'A',REF_POINTS[i]),v_shift=V_SHIFT[i][jj],r=R[i][jj],alpha=ALPHA[i][jj])
-            domain_creator.add_atom(domain=vars()['domain'+str(int(i+1))+'B'],ref_coor=H2O_coors_a*[-1,1,1]-[-1.,0.06955,0.5],ids=O_ids_b,els=['O','O'])
-            #group water molecules at each layer (set equivalent the oc and u during fitting)
-            M=len(O_ids_a)
-            #group waters on a layer basis(every four, two from each domain)
-            vars()['gp_waters_set'+str(jj+1)+'_D'+str(int(i+1))]=vars()['domain_class_'+str(int(i+1))].grouping_discrete_layer(domain=[vars()['domain'+str(int(i+1))+'A']]*M+[vars()['domain'+str(int(i+1))+'B']]*M,atom_ids=O_ids_a+O_ids_b)
-            #group each two waters on two symmetry domains together (to be used as constrain on inplane movements)
-            #group names look like: gp_Os1_D1 which will group Os1_D1A and Os1_D1B together
-            for O_id in O_ids_a:
-                index=O_ids_a.index(O_id)
-                gp_name='gp_'+O_id.rsplit('_')[0]+'_D'+str(int(i+1))
-                vars()[gp_name]=vars()['domain_class_'+str(int(i+1))].grouping_discrete_layer3(domain=[vars()['domain'+str(int(i+1))+'A']]+[vars()['domain'+str(int(i+1))+'B']],atom_ids=[O_ids_a[index],O_ids_b[index]],sym_array=[[1,0,0,0,1,0,0,0,1],[-1,0,0,0,1,0,0,0,1]])
+        if WATER_PAIR:
+            for jj in range(WATER_NUMBER[i]/2):#note will add water pair (two oxygens) each time, and you can't add single water 
+                O_ids_a=vars()['Os_list_domain'+str(int(i+1))+'a'][jj*2:jj*2+2]
+                O_ids_b=vars()['Os_list_domain'+str(int(i+1))+'b'][jj*2:jj*2+2]
+                #set the first pb atm to be the ref atm(if you have two layers, same ref point but different height)
+                H2O_coors_a=vars()['domain_class_'+str(int(i+1))].add_oxygen_pair2B(domain=vars()['domain'+str(int(i+1))+'A'],O_ids=O_ids_a,ref_id=map(lambda x:x+'_D'+str(i+1)+'A',REF_POINTS[i][jj]),v_shift=V_SHIFT[i][jj],r=R[i][jj],alpha=ALPHA[i][jj])
+                domain_creator.add_atom(domain=vars()['domain'+str(int(i+1))+'B'],ref_coor=H2O_coors_a*[-1,1,1]-[-1.,0.06955,0.5],ids=O_ids_b,els=['O','O'])
+                #group water molecules at each layer (set equivalent the oc and u during fitting)
+                M=len(O_ids_a)
+                #group waters on a layer basis(every four, two from each domain)
+                vars()['gp_waters_set'+str(jj+1)+'_D'+str(int(i+1))]=vars()['domain_class_'+str(int(i+1))].grouping_discrete_layer(domain=[vars()['domain'+str(int(i+1))+'A']]*M+[vars()['domain'+str(int(i+1))+'B']]*M,atom_ids=O_ids_a+O_ids_b)
+                #group each two waters on two symmetry domains together (to be used as constrain on inplane movements)
+                #group names look like: gp_Os1_D1 which will group Os1_D1A and Os1_D1B together
+                for O_id in O_ids_a:
+                    index=O_ids_a.index(O_id)
+                    gp_name='gp_'+O_id.rsplit('_')[0]+'_D'+str(int(i+1))
+                    vars()[gp_name]=vars()['domain_class_'+str(int(i+1))].grouping_discrete_layer3(domain=[vars()['domain'+str(int(i+1))+'A']]+[vars()['domain'+str(int(i+1))+'B']],atom_ids=[O_ids_a[index],O_ids_b[index]],sym_array=[[1,0,0,0,1,0,0,0,1],[-1,0,0,0,1,0,0,0,1]])
+        else:
+            for jj in range(WATER_NUMBER[i]):#note will add single water each time
+                O_ids_a=[vars()['Os_list_domain'+str(int(i+1))+'a'][jj]]
+                O_ids_b=[vars()['Os_list_domain'+str(int(i+1))+'b'][jj]]
+                #set the first pb atm to be the ref atm(if you have two layers, same ref point but different height)
+                H2O_coors_a=vars()['domain_class_'+str(int(i+1))].add_single_oxygen(domain=vars()['domain'+str(int(i+1))+'A'],O_id=O_ids_a[0],ref_id=map(lambda x:x+'_D'+str(i+1)+'A',REF_POINTS[i][jj]),v_shift=V_SHIFT[i][jj])
+                domain_creator.add_atom(domain=vars()['domain'+str(int(i+1))+'B'],ref_coor=H2O_coors_a*[-1,1,1]-[-1.,0.06955,0.5],ids=O_ids_b,els=['O'])              
+                #group each two waters on two symmetry domains together (to be used as constrain on inplane movements)
+                #group names look like: gp_Os1_D1 which will group Os1_D1A and Os1_D1B together
+                gp_name='gp_'+O_ids_a[0].rsplit('_')[0]+'_D'+str(int(i+1))
+                vars()[gp_name]=vars()['domain_class_'+str(int(i+1))].grouping_discrete_layer3(domain=[vars()['domain'+str(int(i+1))+'A']]+[vars()['domain'+str(int(i+1))+'B']],atom_ids=[O_ids_a[0],O_ids_b[0]],sym_array=[[1,0,0,0,1,0,0,0,1],[-1,0,0,0,1,0,0,0,1]])
+
     #set variables
     vars()['domain_class_'+str(int(i+1))].set_discrete_new_vars_batch(batch_path_head+vars()['discrete_vars_file_domain'+str(int(i+1))])
     
@@ -511,6 +525,26 @@ def Sim(data,VARS=VARS):
                     sorbate_ids=[SORBATE_id_B]+O_id_B
                     sorbate_els=[SORBATE_LIST[i][j]]+['O']*(len(O_id_B))
                     domain_creator.add_atom(domain=VARS['domain'+str(int(i+1))+'B'],ref_coor=np.array(SORBATE_coors_a+O_coors_a)*[-1,1,1]-[-1.,0.06955,0.5],ids=sorbate_ids,els=sorbate_els)    
+        
+        if WATER_NUMBER[i]!=0:#add water molecules if any
+            if WATER_PAIR:
+                for jj in range(WATER_NUMBER[i]/2):#note will add water pair (two oxygens) each time, and you can't add single water 
+                    O_ids_a=VARS['Os_list_domain'+str(int(i+1))+'a'][jj*2:jj*2+2]
+                    O_ids_b=VARS['Os_list_domain'+str(int(i+1))+'b'][jj*2:jj*2+2]
+                    alpha=getattr(VARS['rgh_domain'+str(int(i+1))],'alpha'+str(jj+1))
+                    r=getattr(VARS['rgh_domain'+str(int(i+1))],'R'+str(jj+1))
+                    v_shift=getattr(VARS['rgh_domain'+str(int(i+1))],'v_shift'+str(jj+1))
+                    #set the first pb atm to be the ref atm(if you have two layers, same ref point but different height)
+                    H2O_coors_a=VARS['domain_class_'+str(int(i+1))].add_oxygen_pair2B(domain=VARS['domain'+str(int(i+1))+'A'],O_ids=O_ids_a,ref_id=map(lambda x:x+'_D'+str(i+1)+'A',REF_POINTS[i][jj]),v_shift,r,alpha)
+                    domain_creator.add_atom(domain=VARS['domain'+str(int(i+1))+'B'],ref_coor=H2O_coors_a*[-1,1,1]-[-1.,0.06955,0.5],ids=O_ids_b,els=['O','O'])
+            else:
+                for jj in range(WATER_NUMBER[i]):#note will add single water each time
+                    O_ids_a=[VARS['Os_list_domain'+str(int(i+1))+'a'][jj]]
+                    O_ids_b=[VARS['Os_list_domain'+str(int(i+1))+'b'][jj]]
+                    v_shift=getattr(VARS['rgh_domain'+str(int(i+1))],'v_shift'+str(jj+1))
+                    #set the first pb atm to be the ref atm(if you have two layers, same ref point but different height)
+                    H2O_coors_a=VARS['domain_class_'+str(int(i+1))].add_single_oxygen(domain=VARS['domain'+str(int(i+1))+'A'],O_id=O_ids_a,ref_id=map(lambda x:x+'_D'+str(i+1)+'A',REF_POINTS[i][jj]),v_shift)
+                    domain_creator.add_atom(domain=VARS['domain'+str(int(i+1))+'B'],ref_coor=H2O_coors_a*[-1,1,1]-[-1.,0.06955,0.5],ids=O_ids_b,els=['O'])              
 
         if USE_BV and i in DOMAINS_BV:
             #set up dynamic super cells,where water and sorbate is a library and surface is a domain instance

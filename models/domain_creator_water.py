@@ -5,7 +5,7 @@ from operator import mul
 from numpy.linalg import inv
 import hexahedra,hexahedra_distortion,tetrahedra,octahedra,tetrahedra_edge_distortion,trigonal_pyramid_distortion,trigonal_pyramid_distortion_shareface,trigonal_pyramid_distortion2,trigonal_pyramid_distortion3,trigonal_pyramid_distortion4
 import trigonal_pyramid_known_apex
-from domain_creator import extract_coor
+import domain_creator
 
 """functions in this class
 adding_oxygen: add one molecule in the frame of spherical sphere (r, theta, phi should be specified)
@@ -219,10 +219,10 @@ class domain_creator_water():
         basis=np.array([5.038,5.434,7.3707])
         ref_point=None
         if len(ref_id)==1:
-            ref_point=extract_coor(domain,ref_id)*basis+[0,0,v_shift]
+            ref_point=domain_creator.extract_coor(domain,ref_id)*basis+[0,0,v_shift]
         if len(ref_id)==2:
-            ref_point1=extract_coor(domain,ref_id[0])*basis
-            ref_point2=extract_coor(domain,ref_id[1])*basis
+            ref_point1=domain_creator.extract_coor(domain,ref_id[0])*basis
+            ref_point2=domain_creator.extract_coor(domain,ref_id[1])*basis
             ref_point=(ref_point1+ref_point2)/2+[0,0,v_shift]
         x_shift=r*np.cos(alpha)
         y_shift=r*np.sin(alpha)
@@ -241,18 +241,18 @@ class domain_creator_water():
             domain.x[O_index2],domain.y[O_index2],domain.z[O_index2]=point2[0],point2[1],point2[2]
         return np.append([point1],[point2],axis=0)
         
-    def add_oxygen_pair3(self,domain,ref_id,O_id,v_shift):
+    def add_single_oxygen(self,domain,ref_id,O_id,v_shift):
     #v_shift and r are in unit of angstrom
     #use coordinates during fitting rather than freezing the ref to the bulk position
     #here only add one water molecule each time (not a couple), so dont need r and alpha
         basis=np.array([5.038,5.434,7.3707])
         ref_point=None
         if len(ref_id)==1:
-            ref_point=extract_coor(domain,ref_id)*basis+[0,0,v_shift]
+            ref_point=(domain_creator.extract_coor(domain,ref_id)*basis+[0,0,v_shift])/basis
         if len(ref_id)==2:
-            ref_point1=extract_coor(domain,ref_id[0])*basis
-            ref_point2=extract_coor(domain,ref_id[1])*basis
-            ref_point=(ref_point1+ref_point2)/2+[0,0,v_shift]
+            ref_point1=domain_creator.extract_coor(domain,ref_id[0])*basis
+            ref_point2=domain_creator.extract_coor(domain,ref_id[1])*basis
+            ref_point=((ref_point1+ref_point2)/2+[0,0,v_shift])/basis
         O_index=None
         try:
             O_index=np.where(domain.id==O_id)[0][0]
@@ -260,7 +260,7 @@ class domain_creator_water():
             domain.add_atom( O_id, "O",  ref_point[0] ,ref_point[1], ref_point[2] ,4.,     1.00000e+00 ,     1.00000e+00 )
         if O_index!=None:
             domain.x[O_index],domain.y[O_index],domain.z[O_index]=ref_point[0],ref_point[1],ref_point[2]
-        return np.append(ref_point)
+        return np.array([ref_point])
         
     def add_oxygen_pair_sphere(self,domain,o_id_list=[],sorbate_id='O_1',r=1.,theta_list=[],phi_list=[]):
         #sorbate_coor and r are in angstrom
