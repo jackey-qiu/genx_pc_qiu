@@ -535,7 +535,7 @@ def Sim(data,VARS=VARS):
                     r=getattr(VARS['rgh_domain'+str(int(i+1))],'R'+str(jj+1))
                     v_shift=getattr(VARS['rgh_domain'+str(int(i+1))],'v_shift'+str(jj+1))
                     #set the first pb atm to be the ref atm(if you have two layers, same ref point but different height)
-                    H2O_coors_a=VARS['domain_class_'+str(int(i+1))].add_oxygen_pair2B(domain=VARS['domain'+str(int(i+1))+'A'],O_ids=O_ids_a,ref_id=map(lambda x:x+'_D'+str(i+1)+'A',REF_POINTS[i][jj]),v_shift,r,alpha)
+                    H2O_coors_a=VARS['domain_class_'+str(int(i+1))].add_oxygen_pair2B(domain=VARS['domain'+str(int(i+1))+'A'],O_ids=O_ids_a,ref_id=map(lambda x:x+'_D'+str(i+1)+'A',REF_POINTS[i][jj]),v_shift=v_shift,r=r,alpha=alpha)
                     domain_creator.add_atom(domain=VARS['domain'+str(int(i+1))+'B'],ref_coor=H2O_coors_a*[-1,1,1]-[-1.,0.06955,0.5],ids=O_ids_b,els=['O','O'])
             else:
                 for jj in range(WATER_NUMBER[i]):#note will add single water each time
@@ -543,7 +543,7 @@ def Sim(data,VARS=VARS):
                     O_ids_b=[VARS['Os_list_domain'+str(int(i+1))+'b'][jj]]
                     v_shift=getattr(VARS['rgh_domain'+str(int(i+1))],'v_shift'+str(jj+1))
                     #set the first pb atm to be the ref atm(if you have two layers, same ref point but different height)
-                    H2O_coors_a=VARS['domain_class_'+str(int(i+1))].add_single_oxygen(domain=VARS['domain'+str(int(i+1))+'A'],O_id=O_ids_a,ref_id=map(lambda x:x+'_D'+str(i+1)+'A',REF_POINTS[i][jj]),v_shift)
+                    H2O_coors_a=VARS['domain_class_'+str(int(i+1))].add_single_oxygen(domain=VARS['domain'+str(int(i+1))+'A'],O_id=O_ids_a,ref_id=map(lambda x:x+'_D'+str(i+1)+'A',REF_POINTS[i][jj]),v_shift=v_shift)
                     domain_creator.add_atom(domain=VARS['domain'+str(int(i+1))+'B'],ref_coor=H2O_coors_a*[-1,1,1]-[-1.,0.06955,0.5],ids=O_ids_b,els=['O'])              
 
         if USE_BV and i in DOMAINS_BV:
