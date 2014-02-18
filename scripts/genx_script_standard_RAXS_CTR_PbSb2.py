@@ -68,6 +68,9 @@ DOMAINS_BV=[0,1]#Domains being considered for bond valence constrain, counted fr
 ##want to output the data for plotting?##
 PLOT=False
 
+##want to print out the protonation status?##
+PRINT_PROTONATION=False
+
 ##want to make parameter table?##
 TABLE=False
 if TABLE:
@@ -613,6 +616,8 @@ def Sim(data,VARS=VARS):
                             C_H_N=[0,1,2]
                             bv_offset=[ _widen_validness_range(2-0.88*N-temp_bv,2-0.68*N-temp_bv) for N in C_H_N]
                             C_H_N=C_H_N[bv_offset.index(min(bv_offset))]
+                            if PRINT_PROTONATION:
+                                print key,C_H_N
                             if key in map(lambda x:x+'_D'+str(i+1)+'A',POTENTIAL_HYDROGEN_ACCEPTOR[i]):#consider potential hydrogen bond (you can have or have not H-bonding)
                                 if _widen_validness_range(2-0.88*C_H_N-temp_bv,2-0.68*C_H_N-temp_bv)==0 or _widen_validness_range(2-0.88*C_H_N-temp_bv,2-0.68*C_H_N-temp_bv)==100:
                                 #if saturated already or over-saturated, then adding H-bonding wont help decrease the the total bv anyhow
