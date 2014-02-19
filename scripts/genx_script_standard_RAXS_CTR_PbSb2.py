@@ -24,39 +24,39 @@ WT_BV=1#weighting for bond valence constrain (1 recommended)
 BV_TOLERANCE=0.05#ideal bv value + or - this value is acceptable
 
 ##pars for sorbates##
-SORBATE=["Pb","Sb"]#any combo of "Pb" and "Sb"
-SORBATE_NUMBER=[[1,0],[0,1]]
-O_NUMBER=[[[1],[0]],[[0],[0]]]#either zero oxygen ligand or enough ligands to complete coordinative shell
+SORBATE=["Pb"]#any combo of "Pb" and "Sb"
+SORBATE_NUMBER=[[2],[2]]
+O_NUMBER=[[[0,0]],[[0,0]]]#either zero oxygen ligand or enough ligands to complete coordinative shell
 SORBATE_LIST=domain_creator.create_sorbate_el_list(SORBATE,SORBATE_NUMBER)
-BV_SUM=[[1.33],[5.]]#pseudo bond valence sum for sorbate
-SORBATE_ATTACH_ATOM=[[['O1_1_0','O1_2_0']],[['O1_1_0','O1_2_0','O1_3_0']]]
-SORBATE_ATTACH_ATOM_OFFSET=[[[None,None]],[[None,None,None]]]
-ANCHOR_REFERENCE=[[None],[None]]#ref point for anchors
-ANCHOR_REFERENCE_OFFSET=[[None],[None]]
-DISCONNECT_BV_CONTRIBUTION=[{('O1_1_0','O1_2_0'):'Pb1'},{}]#set items to be {} if considering single sorbate
+BV_SUM=[[1.33,1.33],[1.33,1.33]]#pseudo bond valence sum for sorbate
+SORBATE_ATTACH_ATOM=[[['O1_1_0','O1_2_0'],['O1_1_0','O1_2_0']],[['O1_1_0','O1_3_0'],['O1_4_0','O1_2_0']]]
+SORBATE_ATTACH_ATOM_OFFSET=[[[None,None],[None,'+y']],[[None,None],['+x',None]]]
+ANCHOR_REFERENCE=[[None,None],['Fe1_4_0','Fe1_6_0']]#ref point for anchors
+ANCHOR_REFERENCE_OFFSET=[[None,None],[None,'+x']]
+DISCONNECT_BV_CONTRIBUTION=[{('O1_1_0','O1_2_0'):'Pb2'},{}]#set items to be {} if considering single sorbate
 #if consider hydrogen bonds#
-COVALENT_HYDROGEN_RANDOM=False
-POTENTIAL_COVALENT_HYDROGEN_ACCEPTOR=[['O1_1_0','O1_2_0'],['O1_1_0','O1_2_0']]#Will be considered only when COVALENT_HYDROGEN_RANDOM=True
-COVALENT_HYDROGEN_ACCEPTOR=[['O1_1_0','O1_2_0'],['O1_1_0','O1_2_0']]#will be considered only when COVALENT_HYDROGEN_RANDOM=False
-COVALENT_HYDROGEN_NUMBER=[[1,1],[1,1]]
-POTENTIAL_HYDROGEN_ACCEPTOR=[['O1_1_0','O1_2_0','O1_3_0','O1_4_0'],['O1_1_0','O1_2_0']]#they can accept one hydrogen bond or not
+COVALENT_HYDROGEN_RANDOM=True
+POTENTIAL_COVALENT_HYDROGEN_ACCEPTOR=[['O1_1_0','O1_2_0','O1_3_0','O1_4_0'],['O1_1_0','O1_2_0','O1_3_0','O1_4_0']]#Will be considered only when COVALENT_HYDROGEN_RANDOM=True
+COVALENT_HYDROGEN_ACCEPTOR=[['O1_1_0','O1_2_0','O1_3_0','O1_4_0'],['O1_1_0','O1_2_0','O1_3_0','O1_4_0']]#will be considered only when COVALENT_HYDROGEN_RANDOM=False
+COVALENT_HYDROGEN_NUMBER=[[1,1,1,1],[1,1,1,1]]
+POTENTIAL_HYDROGEN_ACCEPTOR=[['O1_1_0','O1_2_0','O1_3_0','O1_4_0','O1_5_0','O1_6_0'],['O1_1_0','O1_2_0','O1_3_0','O1_4_0','O1_5_0','O1_6_0']]#they can accept one hydrogen bond or not
 #geometrical parameters#
-TOP_ANGLE=[[1.38],[1.38]]
-PHI=[[0],[0]]
+TOP_ANGLE=[[1.38,1.38],[1.38,1.38]]
+PHI=[[0,0],[0,0]]
 R_S=[[1],[1]]
 MIRROR=False
 
 ##pars for interfacial waters##
 WATER_NUMBER=[0,0]
 WATER_PAIR=True#add water pair each time if True, otherwise only add single water each time (only needed par is V_SHIFT) 
-REF_POINTS=[[['HO1','HO2']],[['O1_1_0','O1_2_0']]]#each item inside is a list of one or couple items, and each water set has its own ref point
+REF_POINTS=[[['O1_1_0','O1_2_0']],[['O1_1_0','O1_2_0']]]#each item inside is a list of one or couple items, and each water set has its own ref point
 V_SHIFT=[[2.8],[2]]
-R=[[1.5],[3]]#use only if considering water pair
-ALPHA=[[0],[3]]#used only if considering water pair
+R=[[1.5],[1.5]]#use only if considering water pair
+ALPHA=[[0],[0]]#used only if considering water pair
 
 ##chemically different domain type##
 DOMAIN=[1,1]
-FULL_LAYER_LONG=1
+FULL_LAYER_LONG=0
 DOMAIN_GP=[[0,1]]#means you want to group first two and last two domains together, only group half layers or full layers together
 DOMAIN_NUMBER=len(DOMAIN)
 COHERENCE=[{True:[0,1]}] #want to add up in coherence? items inside list corresponding to each domain
@@ -80,7 +80,7 @@ if TABLE:
         for j in i:
             temp+=sum(j)
         O_N.append([temp])
-    make_grid.make_structure(map(sum,SORBATE_NUMBER),O_N,TOP_ANGLE,PHI,WATER_NUMBER,DOMAIN,Metal=SORBATE[1],long_slab=FULL_LAYER_LONG)
+    make_grid.make_structure(map(sum,SORBATE_NUMBER),O_N,TOP_ANGLE,PHI,WATER_NUMBER,DOMAIN,Metal=SORBATE[0],long_slab=FULL_LAYER_LONG)
 
 ##############################################set up atm ids###############################################
 
@@ -801,7 +801,8 @@ consider sorbate (Pb and Sb) of any combination
     gp_sorbates_set1_D1(discrete grouping for each set of sorbates (O and metal), group oc)
     gp_HO_set1_D1(discrete grouping for each set of oxygen sorbates, group u)
     gp_waters_set1_D1(discrete grouping for each set of water at same layer, group u, oc and dz)
-    gp_O1O2_O7O8_D1(sequence grouping for u, oc and dz)
+    gp_O1O2_O7O8_D1(sequence grouping for u, oc, dy, dz, or dx in an equal opposite way for O1O2 and O7O8)
+    gp_O1O2_O7O8_D1_D2(same as gp_O1O2_O7O8_D1, but group each set of atoms from two different domains, you need to set DOMAIN_GP to have it work)
 
     some print examples
     #print domain_creator.extract_coor(domain1A,'O1_1_0_D1A')
@@ -832,23 +833,18 @@ consider sorbate (Pb and Sb) of any combination
     #To ensure the bending on two symmetry site are towards right position, the sorbate attach atom may have reversed order.
     #eg. [O1,O3] correspond to [O4px,O2] rather than [O2,O4px].
     
-<<<<<<< HEAD
-=======
     COHERENCE
     #now the coherence looks like [{True:[0,1]},{False:[2,3]}] which means adding up first two domains coherently
     #and last two domains in-coherently. After calculation of structure factor for each item of the list, absolute 
     #value of SF will be calculated followed by being summed up
     #so [{True:[0,1]},{True:[2,3]}] is different from [{True:[0,1,2,3]}]
     
-<<<<<<< HEAD
-    #IF the covalent_hydrogen_random set to True, then we wont exclusively define the number of covalent hydrogen. And it will try [0,1,2] covalent hydrogens
+    #IF the covalent_hydrogen_random set to True, then we wont specifically define the number of covalent hydrogen. And it will try [0,1,2] covalent hydrogens
     COVALENT_HYDROGEN_RANDOM=True
     POTENTIAL_COVALENT_HYDROGEN_ACCEPTOR=[['O1_1_0','O1_2_0'],['O1_1_0','O1_2_0']]
     
     If covalent_hydrogen_random is set to false then exclusively define the number of covalent hydrogen here
-=======
->>>>>>> 8f7e163451f0b7bb16b86c029e1535e1050c8ea2
->>>>>>> bc6c88550be0576de2ff5d103156c7eca918134b
+
     COVALENT_HYDROGEN_ACCEPTOR=[['O1_1_0','O1_2_0'],['O1_1_0','O1_2_0']]
     COVALENT_HYDROGEN_NUMBER=[[1,1],[1,1]]
     ##means in domain1 both O1 and O2 will accept one covalent hydrogen (bv contribution of 0.8)
