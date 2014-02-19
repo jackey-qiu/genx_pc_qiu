@@ -363,19 +363,23 @@ for i in range(DOMAIN_NUMBER):
 #gp_Pb_D1D2=domain_class_1.grouping_discrete_layer3(domain=[domain1A,domain1B,domain2A,domain2B],atom_ids=['Pb1_D1A','Pb1_D1B','Pb1_D2A','Pb1_D2B'])
 #gp_Pb_D1=domain_class_1.grouping_discrete_layer([domain1A,domain1B,domain1A,domain1B],['Pb1_D1A','Pb1_D1B','Pb2_D1A','Pb2_D1B'])
 
+#based on a new symmetry operation for each atom pair at the same layer(equal opposite for x movement, same for y and z movement) 
 for group in DOMAIN_GP:
     a,b=group[0]+1,group[1]+1
-    if DOMAIN[group[0]]==1:
-        vars()['sequence_gp_list_domain_'+str(a)+'_'+str(b)]=domain_class_1.grouping_sequence_layer_new(domain=[[vars()['domain'+str(a)+'A'],vars()['domain'+str(a)+'B'],vars()['domain'+str(b)+'A'],vars()['domain'+str(b)+'B']]], first_atom_id=[['O1_1_0_D'+str(a)+'A','O1_7_0_D'+str(a)+'B','O1_1_0_D'+str(b)+'A','O1_7_0_D'+str(b)+'B']],layers_N=10)
-    elif DOMAIN[group[0]]==2:
-        vars()['sequence_gp_list_domain_'+str(a)+'_'+str(b)]=domain_class_1.grouping_sequence_layer_new(domain=[[vars()['domain'+str(a)+'A'],vars()['domain'+str(a)+'B'],vars()['domain'+str(b)+'A'],vars()['domain'+str(b)+'B']]], first_atom_id=[['O1_5_0_D'+str(a)+'A','O1_11_0_D'+str(a)+'B','O1_5_0_D'+str(b)+'A','O1_11_0_D'+str(b)+'B']],layers_N=10)
+    
+    #if DOMAIN[group[0]]==1:
+    #    vars()['sequence_gp_list_domain_'+str(a)+'_'+str(b)]=domain_class_1.grouping_sequence_layer_new(domain=[[vars()['domain'+str(a)+'A'],vars()['domain'+str(a)+'B'],vars()['domain'+str(b)+'A'],vars()['domain'+str(b)+'B']]], first_atom_id=[['O1_1_0_D'+str(a)+'A','O1_7_0_D'+str(a)+'B','O1_1_0_D'+str(b)+'A','O1_7_0_D'+str(b)+'B']],layers_N=10)
+    #elif DOMAIN[group[0]]==2:
+    #    vars()['sequence_gp_list_domain_'+str(a)+'_'+str(b)]=domain_class_1.grouping_sequence_layer_new(domain=[[vars()['domain'+str(a)+'A'],vars()['domain'+str(a)+'B'],vars()['domain'+str(b)+'A'],vars()['domain'+str(b)+'B']]], first_atom_id=[['O1_5_0_D'+str(a)+'A','O1_11_0_D'+str(a)+'B','O1_5_0_D'+str(b)+'A','O1_11_0_D'+str(b)+'B']],layers_N=10)
+    
     vars()['discrete_gp_list_domain_'+str(a)+'_'+str(b)]=[]
     def _match(value):
         if value==0:return 1
         else:return -1
     for j in range(len(vars()['atm_list_'+str(a)+'A'])):
-        vars()['discrete_gp_list_domain_'+str(a)+'_'+str(b)].append(domain_class_1.grouping_discrete_layer2(domain=[vars()['domain'+str(a)+'A'],vars()['domain'+str(a)+'B'],vars()['domain'+str(b)+'A'],vars()['domain'+str(b)+'B']],\
-                                                                   atom_ids=[vars()['atm_list_'+str(a)+'A'][j],vars()['atm_list_'+str(a)+'B'][j],vars()['atm_list_'+str(b)+'A'][j+_match(j%2)],vars()['atm_list_'+str(b)+'B'][j+_match(j%2)]],sym_array=[[1,0,0,0,1,0,0,0,1],[-1,0,0,0,1,0,0,0,1],[-1,0,0,0,1,0,0,0,1],[1,0,0,0,1,0,0,0,1]],use_sym=True))
+        if j%2==0:
+            vars()['discrete_gp_list_domain_'+str(a)+'_'+str(b)].append(domain_class_1.grouping_discrete_layer3(domain=[vars()['domain'+str(a)+'A'],vars()['domain'+str(a)+'B'],vars()['domain'+str(a)+'A'],vars()['domain'+str(a)+'B'],vars()['domain'+str(b)+'A'],vars()['domain'+str(b)+'B'],vars()['domain'+str(b)+'A'],vars()['domain'+str(b)+'B']],\
+                                                                   atom_ids=[vars()['atm_list_'+str(a)+'A'][j],vars()['atm_list_'+str(a)+'B'][j],vars()['atm_list_'+str(a)+'A'][j+_match(j%2)],vars()['atm_list_'+str(a)+'B'][j+_match(j%2)],vars()['atm_list_'+str(b)+'A'][j],vars()['atm_list_'+str(b)+'B'][j],vars()['atm_list_'+str(b)+'A'][j+_match(j%2)],vars()['atm_list_'+str(b)+'B'][j+_match(j%2)]],sym_array=[[1,0,0,0,1,0,0,0,1],[-1,0,0,0,1,0,0,0,1],[-1,0,0,0,1,0,0,0,1],[1,0,0,0,1,0,0,0,1]]*2))
     #assign names to each super atm group 
     def _reorder(original_list):
         new_list=[]
@@ -387,10 +391,10 @@ for group in DOMAIN_GP:
             new_list.append(original_list[index_list_2[i]])
         return new_list
     #if you want to use original order, just dont _reorder inside the zip    
-    vars()['discrete_gp_names_domain_'+str(a)+'_'+str(b)]=map(lambda x:'gp_'+x[0].rsplit('_')[0][:-1]+x[0].rsplit('_')[1]+x[1].rsplit('_')[0][:-1]+x[1].rsplit('_')[1]+'_D'+str(a)+'_'+x[2].rsplit('_')[0][:-1]+x[2].rsplit('_')[1]+x[3].rsplit('_')[0][:-1]+x[3].rsplit('_')[1]+'_D'+str(b),zip(vars()['atm_list_'+str(a)+'A'],vars()['atm_list_'+str(a)+'B'],_reorder(vars()['atm_list_'+str(b)+'A']),_reorder(vars()['atm_list_'+str(b)+'B'])))
+    vars()['discrete_gp_names_domain_'+str(a)+'_'+str(b)]=map(lambda x:'gp_'+x[0].rsplit('_')[0][:-1]+x[0].rsplit('_')[1]+x[1].rsplit('_')[0][:-1]+x[1].rsplit('_')[1]+'_'+x[2].rsplit('_')[0][:-1]+x[2].rsplit('_')[1]+x[3].rsplit('_')[0][:-1]+x[3].rsplit('_')[1]+'_D'+str(a)+'_D'+str(b),zip(vars()['atm_list_'+str(a)+'A'],_reorder(vars()['atm_list_'+str(a)+'A']),vars()['atm_list_'+str(a)+'B'],_reorder(vars()['atm_list_'+str(a)+'B'])))[::2]
     #and know the second layer is iron layer taken away in the half layer model
-    vars()['sequence_gp_names_domain_'+str(a)+'_'+str(b)]=['gp_sequence_layer'+str(x+1)+'_'+'D'+str(a)+'_D'+str(b) for x in range(10)]
-    for j in range(len(vars()['sequence_gp_list_domain_'+str(a)+'_'+str(b)])):vars()[vars()['sequence_gp_names_domain_'+str(a)+'_'+str(b)][j]]=vars()['sequence_gp_list_domain_'+str(a)+'_'+str(b)][j]
+    #vars()['sequence_gp_names_domain_'+str(a)+'_'+str(b)]=['gp_sequence_layer'+str(x+1)+'_'+'D'+str(a)+'_D'+str(b) for x in range(10)]
+    #for j in range(len(vars()['sequence_gp_list_domain_'+str(a)+'_'+str(b)])):vars()[vars()['sequence_gp_names_domain_'+str(a)+'_'+str(b)][j]]=vars()['sequence_gp_list_domain_'+str(a)+'_'+str(b)][j]
     for j in range(len(vars()['discrete_gp_list_domain_'+str(a)+'_'+str(b)])):vars()[vars()['discrete_gp_names_domain_'+str(a)+'_'+str(b)][j]]=vars()['discrete_gp_list_domain_'+str(a)+'_'+str(b)][j]
 
 #####################################do bond valence matching###################################
