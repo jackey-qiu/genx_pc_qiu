@@ -630,6 +630,17 @@ def Sim(data,VARS=VARS):
                             else:
                                 bv=bv+_widen_validness_range(2-0.88*C_H_N-temp_bv,2-0.68*C_H_N-temp_bv)
                                 if debug_bv:bv_container[key]=_widen_validness_range(2-0.88*C_H_N-temp_bv,2-0.68*C_H_N-temp_bv)
+                        else:#if no covalent hydrogen bond
+                            if key in map(lambda x:x+'_D'+str(i+1)+'A',POTENTIAL_HYDROGEN_ACCEPTOR[i]):#consider hydrogen bond
+                                if _widen_validness(2-temp_bv)==0 or _widen_validness(2-temp_bv)==100:
+                                    bv=bv+_widen_validness(2-temp_bv)
+                                    if debug_bv:bv_container[key]=_widen_validness(2-temp_bv)
+                                else:
+                                    bv=bv+min([_widen_validness(2-temp_bv),_widen_validness_range(2-temp_bv-0.25,2-temp_bv-0.13)])
+                                    if debug_bv:bv_container[key]=min([_widen_validness(2-temp_bv),_widen_validness_range(2-temp_bv-0.25,2-temp_bv-0.13)])
+                            else:#neither covalent hydrogen bond nor hydrogen bond
+                                bv=bv+_widen_validness(2-temp_bv)
+                                if debug_bv:bv_container[key]=_widen_validness(2-temp_bv)
                     else:
                         if key in map(lambda x:x+'_D'+str(i+1)+'A',COVALENT_HYDROGEN_ACCEPTOR[i]):
                             #if consider convalent hydrogen bond (bv=0.68 to 0.88) while the hydrogen bond has bv from 0.13 to 0.25
