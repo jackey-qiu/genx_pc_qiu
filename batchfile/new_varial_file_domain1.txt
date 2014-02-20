@@ -37,6 +37,7 @@ r2_1,2.19,*
 r2_2,2.19,*
 r2_3,2.19,*
 r2_4,2.19,*
+offset,0,*
 ############pars for water layers (tag "_1" means the first water layer)##############
 R1,1.5,*
 R2,1.5,*

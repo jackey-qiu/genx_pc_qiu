@@ -23,49 +23,50 @@ WT_RAXS=5#weighting for RAXS dataset
 WT_BV=1#weighting for bond valence constrain (1 recommended)
 BV_TOLERANCE=0.05#ideal bv value + or - this value is acceptable
 
-#this is one way to start up quickly, each time you need to specify the pickup_index, then you are all set
+#this is one way to start up quickly, each time you only need to specify the pickup_index and DOMAIN_GP if want to group different domains
 #all the global variables are pre-defined based on a reasonable assumption, but you can customized it by editing the variables below
-#item 0 to item 3 corresponding to corner-sharing at O1O2, edge-sharing at O1O3, edge-sharing at O1O4 and clean HL
-#And note it is customized specifically for Pb adsorption in a bidentate mode, wont work for Sb case in a tridentate mode
+#item 0 to item 4 corresponding to corner-sharing at O1O2, edge-sharing at O1O3, edge-sharing at O1O4, tridentate bind at O1O2O3 and clean HL
+#And note it is customized specifically for Pb/Sb adsorption in a bidentate or tridentate mode, wont work for metal binding in a monodentate mode
+#And also this fast setup only work for single sorbate system
  
-pickup_index=[0,1,2,3]
+pickup_index=[0,1,2,3,4]
 pick=lambda list:[list[i] for i in pickup_index]
 
 ##pars for sorbates##
 SORBATE=["Pb"]#any combo of "Pb" and "Sb"
-SORBATE_NUMBER=pick([[2],[2],[2],[0]])
-O_NUMBER=pick([[[0,0]],[[0,0]],[[0,0]],[[0]]])#either zero oxygen ligand or enough ligands to complete coordinative shell
+SORBATE_NUMBER=pick([[2],[2],[2],[2],[0]])
+O_NUMBER=pick([[[0,0]],[[0,0]],[[0,0]],[[0,0]],[[0]]])#either zero oxygen ligand or enough ligands to complete coordinative shell
 SORBATE_LIST=domain_creator.create_sorbate_el_list(SORBATE,SORBATE_NUMBER)
-BV_SUM=pick([[1.33,1.33],[1.33,1.33],[1.33,1.33],[]])#pseudo bond valence sum for sorbate
-SORBATE_ATTACH_ATOM=pick([[['O1_1_0','O1_2_0'],['O1_1_0','O1_2_0']],[['O1_1_0','O1_3_0'],['O1_4_0','O1_2_0']],[['O1_1_0','O1_4_0'],['O1_3_0','O1_2_0']],[]])
-SORBATE_ATTACH_ATOM_OFFSET=pick([[[None,None],[None,'+y']],[[None,None],['+x',None]],[[None,'+y'],['+x',None]],[]])
-ANCHOR_REFERENCE=pick([[None,None],['Fe1_4_0','Fe1_6_0'],['Fe1_4_0','Fe1_6_0'],[]])#ref point for anchors
-ANCHOR_REFERENCE_OFFSET=pick([[None,None],[None,'+x'],[None,'+x'],[]])
-DISCONNECT_BV_CONTRIBUTION=pick([{('O1_1_0','O1_2_0'):'Pb2'},{},{},{}])#set items to be {} if considering single sorbate
+BV_SUM=pick([[1.33,1.33],[1.33,1.33],[1.33,1.33],[2.5,2.5],[]])#pseudo bond valence sum for sorbate
+SORBATE_ATTACH_ATOM=pick([[['O1_1_0','O1_2_0'],['O1_1_0','O1_2_0']],[['O1_1_0','O1_3_0'],['O1_4_0','O1_2_0']],[['O1_1_0','O1_4_0'],['O1_3_0','O1_2_0']],[['O1_1_0','O1_2_0','O1_3_0'],['O1_2_0','O1_1_0','O1_3_0']],[]])
+SORBATE_ATTACH_ATOM_OFFSET=pick([[[None,None],[None,'+y']],[[None,None],['+x',None]],[[None,'+y'],['+x',None]],[[None,None,None],[None,'-y','+x']],[]])
+ANCHOR_REFERENCE=pick([[None,None],['Fe1_4_0','Fe1_6_0'],['Fe1_4_0','Fe1_6_0'],[],[]])#ref point for anchors
+ANCHOR_REFERENCE_OFFSET=pick([[None,None],[None,'+x'],[None,'+x'],[],[]])
+DISCONNECT_BV_CONTRIBUTION=pick([{('O1_1_0','O1_2_0'):SORBATE[0]+'2'},{},{},{('O1_1_0','O1_2_0','O1_3_0'):SORBATE[0]+'2'},{}])#set items to be {} if considering single sorbate
 #if consider hydrogen bonds#
 COVALENT_HYDROGEN_RANDOM=True
-POTENTIAL_COVALENT_HYDROGEN_ACCEPTOR=pick([['O1_1_0','O1_2_0','O1_3_0','O1_4_0']]*4)#Will be considered only when COVALENT_HYDROGEN_RANDOM=True
-COVALENT_HYDROGEN_ACCEPTOR=pick([['O1_1_0','O1_2_0','O1_3_0','O1_4_0']]*4)#will be considered only when COVALENT_HYDROGEN_RANDOM=False
-COVALENT_HYDROGEN_NUMBER=pick([[1,1,1,1]]*3+[[2,2,1,1]])
-POTENTIAL_HYDROGEN_ACCEPTOR=pick([['O1_1_0','O1_2_0','O1_3_0','O1_4_0','O1_5_0','O1_6_0']]*4)#they can accept one hydrogen bond or not
+POTENTIAL_COVALENT_HYDROGEN_ACCEPTOR=pick([['O1_1_0','O1_2_0','O1_3_0','O1_4_0']]+[['O1_1_0','O1_2_0']]*2+[['O1_1_0','O1_2_0','O1_4_0']]+[['O1_1_0','O1_2_0','O1_3_0','O1_4_0']])#Will be considered only when COVALENT_HYDROGEN_RANDOM=True
+COVALENT_HYDROGEN_ACCEPTOR=pick([['O1_1_0','O1_2_0','O1_3_0','O1_4_0']]+[['O1_1_0','O1_2_0']]*2+[['O1_1_0','O1_2_0','O1_4_0']]+[['O1_1_0','O1_2_0','O1_3_0','O1_4_0']])#will be considered only when COVALENT_HYDROGEN_RANDOM=False
+COVALENT_HYDROGEN_NUMBER=pick([[1,1,1,1]]+[[1,1]]*2+[[1,1,1]]+[[2,2,1,1]])
+POTENTIAL_HYDROGEN_ACCEPTOR=pick([['O1_1_0','O1_2_0','O1_3_0','O1_4_0','O1_5_0','O1_6_0']]*5)#they can accept one hydrogen bond or not
 #geometrical parameters#
-TOP_ANGLE=pick([[1.38,1.38],[1.38,1.38],[1.38,1.38],[]])
-PHI=pick([[0,0],[0,0],[0,0],[]])
+TOP_ANGLE=pick([[1.38,1.38],[1.38,1.38],[1.38,1.38],[],[]])
+PHI=pick([[0,0],[0,0],[0,0],[],[]])
 R_S=[[1],[1]]
 MIRROR=False
 
 ##pars for interfacial waters##
-WATER_NUMBER=pick([0,0,0,0])
+WATER_NUMBER=pick([0,0,0,0,0])
 WATER_PAIR=True#add water pair each time if True, otherwise only add single water each time (only needed par is V_SHIFT) 
-REF_POINTS=pick([[['O1_1_0','O1_2_0']]]*4)#each item inside is a list of one or couple items, and each water set has its own ref point
-V_SHIFT=pick([[2.],[2],[2],[2]])
-R=pick([[1.5],[1.5],[1.5],[1.5]])#use only if considering water pair
-ALPHA=pick([[0],[0],[0],[0]])#used only if considering water pair
+REF_POINTS=pick([[['O1_1_0','O1_2_0']]]*5)#each item inside is a list of one or couple items, and each water set has its own ref point
+V_SHIFT=pick([[2.],[2],[2],[2],[2]])
+R=pick([[1.5],[1.5],[1.5],[1.5],[1.5]])#use only if considering water pair
+ALPHA=pick([[0],[0],[0],[0],[0]])#used only if considering water pair
 
 ##chemically different domain type##
-DOMAIN=pick([1,1,1,1])
+DOMAIN=pick([1,1,1,1,1])
 FULL_LAYER_LONG=0
-DOMAIN_GP=[pick([0,1,2,3])]#means you want to group first two and last two domains together, only group half layers or full layers together
+DOMAIN_GP=[]#means you want to group first two and last two domains together, only group half layers or full layers together
 DOMAIN_NUMBER=len(DOMAIN)
 COHERENCE=[{True:range(len(pickup_index))}] #want to add up in coherence? items inside list corresponding to each domain
 
@@ -370,6 +371,9 @@ for i in range(DOMAIN_NUMBER):
 
 #gp_Pb_D1D2=domain_class_1.grouping_discrete_layer3(domain=[domain1A,domain1B,domain2A,domain2B],atom_ids=['Pb1_D1A','Pb1_D1B','Pb1_D2A','Pb1_D2B'])
 #gp_Pb_D1=domain_class_1.grouping_discrete_layer([domain1A,domain1B,domain1A,domain1B],['Pb1_D1A','Pb1_D1B','Pb2_D1A','Pb2_D1B'])
+#gp_Pb_D2=domain_class_1.grouping_discrete_layer([domain2A,domain2B,domain2A,domain2B],['Pb1_D2A','Pb1_D2B','Pb2_D2A','Pb2_D2B'])
+#gp_Pb_D3=domain_class_1.grouping_discrete_layer([domain3A,domain3B,domain3A,domain3B],['Pb1_D3A','Pb1_D3B','Pb2_D3A','Pb2_D3B'])
+
 
 #based on a new symmetry operation for each atom pair at the same layer(equal opposite for x movement, same for y and z movement) 
 for group in DOMAIN_GP:
@@ -485,8 +489,10 @@ def Sim(data,VARS=VARS):
                 sorbate_els=[SORBATE_LIST[i][j]]+['O']*(len(O_id_B))
                 domain_creator.add_atom(domain=VARS['domain'+str(int(i+1))+'B'],ref_coor=np.array(SORBATE_coors_a+O_coors_a)*[-1,1,1]-[-1.,0.06955,0.5],ids=sorbate_ids,els=sorbate_els)
             elif len(VARS['SORBATE_ATTACH_ATOM'][i][j])==2:#bidentate case
-                top_angle=getattr(VARS['rgh_domain'+str(int(0+1))],'top_angle')
-                phi=getattr(VARS['rgh_domain'+str(int(0+1))],'phi')
+                if j==0:edge_offset=getattr(VARS['rgh_domain'+str(int(i+1))],'offset')
+                else:edge_offset=-getattr(VARS['rgh_domain'+str(int(i+1))],'offset')
+                top_angle=getattr(VARS['rgh_domain'+str(int(i+1))],'top_angle')
+                phi=getattr(VARS['rgh_domain'+str(int(i+1))],'phi')
                 ids=[VARS['SORBATE_ATTACH_ATOM'][i][j][0]+'_D'+str(int(i+1))+'A',VARS['SORBATE_ATTACH_ATOM'][i][j][1]+'_D'+str(int(i+1))+'A']
                 offset=VARS['SORBATE_ATTACH_ATOM_OFFSET'][i][j]
                 anchor,anchor_offset=None,None
@@ -499,7 +505,7 @@ def Sim(data,VARS=VARS):
                 O_id=[HO_id for HO_id in VARS['HO_list_domain'+str(int(i+1))+'a'] if SORBATE_id in HO_id]
                 sorbate_coors=[]
                 if SORBATE_LIST[i][j]=='Pb':
-                    sorbate_coors=VARS['domain_class_'+str(int(i+1))].adding_sorbate_pyramid_distortion_B(domain=VARS['domain'+str(int(i+1))+'A'],top_angle=top_angle,phi=phi,edge_offset=[0,0],attach_atm_ids=ids,offset=offset,anchor_ref=anchor,anchor_offset=anchor_offset,pb_id=SORBATE_id,O_id=O_id,mirror=VARS['MIRROR'])
+                    sorbate_coors=VARS['domain_class_'+str(int(i+1))].adding_sorbate_pyramid_distortion_B(domain=VARS['domain'+str(int(i+1))+'A'],top_angle=top_angle,phi=phi,edge_offset=[edge_offset,0],attach_atm_ids=ids,offset=offset,anchor_ref=anchor,anchor_offset=anchor_offset,pb_id=SORBATE_id,O_id=O_id,mirror=VARS['MIRROR'])
                 elif SORBATE_LIST[i][j]=='Sb':
                     sorbate_coors=VARS['domain_class_'+str(int(i+1))].adding_sorbate_bidentate_octahedral(domain=VARS['domain'+str(int(i+1))+'A'],theta=phi,phi=top_angle,attach_atm_ids=ids,offset=offset,sb_id=SORBATE_id,O_id=O_id)
                 SORBATE_coors_a.append(sorbate_coors[0])
