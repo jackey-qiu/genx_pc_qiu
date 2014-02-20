@@ -23,47 +23,55 @@ WT_RAXS=5#weighting for RAXS dataset
 WT_BV=1#weighting for bond valence constrain (1 recommended)
 BV_TOLERANCE=0.05#ideal bv value + or - this value is acceptable
 
+#this is one way to start up quickly, each time you need to specify the pickup_index, then you are all set
+#all the global variables are pre-defined based on a reasonable assumption, but you can customized it by editing the variables below
+#item 0 to item 3 corresponding to corner-sharing at O1O2, edge-sharing at O1O3, edge-sharing at O1O4 and clean HL
+#And note it is customized specifically for Pb adsorption in a bidentate mode, wont work for Sb case in a tridentate mode
+ 
+pickup_index=[0,1,2,3]
+pick=lambda list:[list[i] for i in pickup_index]
+
 ##pars for sorbates##
 SORBATE=["Pb"]#any combo of "Pb" and "Sb"
-SORBATE_NUMBER=[[2],[2]]
-O_NUMBER=[[[0,0]],[[0,0]]]#either zero oxygen ligand or enough ligands to complete coordinative shell
+SORBATE_NUMBER=pick([[2],[2],[2],[0]])
+O_NUMBER=pick([[[0,0]],[[0,0]],[[0,0]],[[0]]])#either zero oxygen ligand or enough ligands to complete coordinative shell
 SORBATE_LIST=domain_creator.create_sorbate_el_list(SORBATE,SORBATE_NUMBER)
-BV_SUM=[[1.33,1.33],[1.33,1.33]]#pseudo bond valence sum for sorbate
-SORBATE_ATTACH_ATOM=[[['O1_1_0','O1_2_0'],['O1_1_0','O1_2_0']],[['O1_1_0','O1_3_0'],['O1_4_0','O1_2_0']]]
-SORBATE_ATTACH_ATOM_OFFSET=[[[None,None],[None,'+y']],[[None,None],['+x',None]]]
-ANCHOR_REFERENCE=[[None,None],['Fe1_4_0','Fe1_6_0']]#ref point for anchors
-ANCHOR_REFERENCE_OFFSET=[[None,None],[None,'+x']]
-DISCONNECT_BV_CONTRIBUTION=[{('O1_1_0','O1_2_0'):'Pb2'},{}]#set items to be {} if considering single sorbate
+BV_SUM=pick([[1.33,1.33],[1.33,1.33],[1.33,1.33],[]])#pseudo bond valence sum for sorbate
+SORBATE_ATTACH_ATOM=pick([[['O1_1_0','O1_2_0'],['O1_1_0','O1_2_0']],[['O1_1_0','O1_3_0'],['O1_4_0','O1_2_0']],[['O1_1_0','O1_4_0'],['O1_3_0','O1_2_0']],[]])
+SORBATE_ATTACH_ATOM_OFFSET=pick([[[None,None],[None,'+y']],[[None,None],['+x',None]],[[None,'+y'],['+x',None]],[]])
+ANCHOR_REFERENCE=pick([[None,None],['Fe1_4_0','Fe1_6_0'],['Fe1_4_0','Fe1_6_0'],[]])#ref point for anchors
+ANCHOR_REFERENCE_OFFSET=pick([[None,None],[None,'+x'],[None,'+x'],[]])
+DISCONNECT_BV_CONTRIBUTION=pick([{('O1_1_0','O1_2_0'):'Pb2'},{},{},{}])#set items to be {} if considering single sorbate
 #if consider hydrogen bonds#
 COVALENT_HYDROGEN_RANDOM=True
-POTENTIAL_COVALENT_HYDROGEN_ACCEPTOR=[['O1_1_0','O1_2_0','O1_3_0','O1_4_0'],['O1_1_0','O1_2_0','O1_3_0','O1_4_0']]#Will be considered only when COVALENT_HYDROGEN_RANDOM=True
-COVALENT_HYDROGEN_ACCEPTOR=[['O1_1_0','O1_2_0','O1_3_0','O1_4_0'],['O1_1_0','O1_2_0','O1_3_0','O1_4_0']]#will be considered only when COVALENT_HYDROGEN_RANDOM=False
-COVALENT_HYDROGEN_NUMBER=[[1,1,1,1],[1,1,1,1]]
-POTENTIAL_HYDROGEN_ACCEPTOR=[['O1_1_0','O1_2_0','O1_3_0','O1_4_0','O1_5_0','O1_6_0'],['O1_1_0','O1_2_0','O1_3_0','O1_4_0','O1_5_0','O1_6_0']]#they can accept one hydrogen bond or not
+POTENTIAL_COVALENT_HYDROGEN_ACCEPTOR=pick([['O1_1_0','O1_2_0','O1_3_0','O1_4_0']]*4)#Will be considered only when COVALENT_HYDROGEN_RANDOM=True
+COVALENT_HYDROGEN_ACCEPTOR=pick([['O1_1_0','O1_2_0','O1_3_0','O1_4_0']]*4)#will be considered only when COVALENT_HYDROGEN_RANDOM=False
+COVALENT_HYDROGEN_NUMBER=pick([[1,1,1,1]]*3+[[2,2,1,1]])
+POTENTIAL_HYDROGEN_ACCEPTOR=pick([['O1_1_0','O1_2_0','O1_3_0','O1_4_0','O1_5_0','O1_6_0']]*4)#they can accept one hydrogen bond or not
 #geometrical parameters#
-TOP_ANGLE=[[1.38,1.38],[1.38,1.38]]
-PHI=[[0,0],[0,0]]
+TOP_ANGLE=pick([[1.38,1.38],[1.38,1.38],[1.38,1.38],[]])
+PHI=pick([[0,0],[0,0],[0,0],[]])
 R_S=[[1],[1]]
 MIRROR=False
 
 ##pars for interfacial waters##
-WATER_NUMBER=[0,0]
+WATER_NUMBER=pick([0,0,0,0])
 WATER_PAIR=True#add water pair each time if True, otherwise only add single water each time (only needed par is V_SHIFT) 
-REF_POINTS=[[['O1_1_0','O1_2_0']],[['O1_1_0','O1_2_0']]]#each item inside is a list of one or couple items, and each water set has its own ref point
-V_SHIFT=[[2.8],[2]]
-R=[[1.5],[1.5]]#use only if considering water pair
-ALPHA=[[0],[0]]#used only if considering water pair
+REF_POINTS=pick([[['O1_1_0','O1_2_0']]]*4)#each item inside is a list of one or couple items, and each water set has its own ref point
+V_SHIFT=pick([[2.],[2],[2],[2]])
+R=pick([[1.5],[1.5],[1.5],[1.5]])#use only if considering water pair
+ALPHA=pick([[0],[0],[0],[0]])#used only if considering water pair
 
 ##chemically different domain type##
-DOMAIN=[1,1]
+DOMAIN=pick([1,1,1,1])
 FULL_LAYER_LONG=0
-DOMAIN_GP=[[0,1]]#means you want to group first two and last two domains together, only group half layers or full layers together
+DOMAIN_GP=[pick([0,1,2,3])]#means you want to group first two and last two domains together, only group half layers or full layers together
 DOMAIN_NUMBER=len(DOMAIN)
-COHERENCE=[{True:[0,1]}] #want to add up in coherence? items inside list corresponding to each domain
+COHERENCE=[{True:range(len(pickup_index))}] #want to add up in coherence? items inside list corresponding to each domain
 
 ##cal bond valence switch##
 USE_BV=True
-DOMAINS_BV=[0,1]#Domains being considered for bond valence constrain, counted from 0
+DOMAINS_BV=range(len(pickup_index))#Domains being considered for bond valence constrain, counted from 0
 
 ##want to output the data for plotting?##
 PLOT=False
