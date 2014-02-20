@@ -80,6 +80,9 @@ PLOT=False
 ##want to print out the protonation status?##
 PRINT_PROTONATION=False
 
+##want to print the xyz files to build a 3D structure?##
+PRINT_MODEL_FILES=False
+
 ##want to make parameter table?##
 TABLE=False
 if TABLE:
@@ -353,7 +356,7 @@ for i in range(DOMAIN_NUMBER):
 ######################################do grouping###############################################
 for i in range(DOMAIN_NUMBER):
     #note the grouping here is on a layer basis, ie atoms of same layer are groupped together (4 atms grouped together in sequence grouping)
-    #you may group in symmetry, then atoms of same layer are not independent (and know the use_sym set to false here)
+    #you may group in symmetry, then atoms of same layer are not independent. Know here the symmetry (equal opposite) is impressively defined in the function
     if DOMAIN[i]==1:
         vars()['atm_gp_list_domain'+str(int(i+1))]=vars()['domain_class_'+str(int(i+1))].grouping_sequence_layer_new2(domain=[[vars()['domain'+str(int(i+1))+'A'],vars()['domain'+str(int(i+1))+'B']]], first_atom_id=[['O1_1_0_D'+str(int(i+1))+'A','O1_7_0_D'+str(int(i+1))+'B']],layers_N=10)
     elif DOMAIN[i]==2:
@@ -368,12 +371,10 @@ for i in range(DOMAIN_NUMBER):
         vars()['atm_gp_discrete_list_domain'+str(int(i+1))].append(vars()['domain_class_'+str(int(i+1))].grouping_discrete_layer3(domain=[vars()['domain'+str(int(i+1))+'A'],vars()['domain'+str(int(i+1))+'B']],\
                                                                    atom_ids=[vars()['ids_domain'+str(int(i+1))+'A'][j],vars()['ids_domain'+str(int(i+1))+'B'][j]],sym_array=[[1.,0.,0.,0.,1.,0.,0.,0.,1.],[-1.,0.,0.,0.,1.,0.,0.,0.,1.]]))
     for j in range(len(vars()['discrete_gp_names_domain'+str(int(i+1))])):vars()[vars()['discrete_gp_names_domain'+str(int(i+1))][j]]=vars()['atm_gp_discrete_list_domain'+str(int(i+1))][j]
-
+    if sum(SORBATE_NUMBER[i])!=0:
+        vars()['gp_'+SORBATE[0]+'_D'+str(i+1)]=domain_class_1.grouping_discrete_layer3(domain=[vars()['domain'+str(int(i+1))+'A'],vars()['domain'+str(int(i+1))+'B']]*2,atom_ids=['Pb1_D'+str(i+1)+'A','Pb1_D'+str(i+1)+'B','Pb2_D'+str(i+1)+'A','Pb2_D'+str(i+1)+'B'],sym_array=[[1.,0.,0.,0.,1.,0.,0.,0.,1.],[-1.,0.,0.,0.,1.,0.,0.,0.,1.],[-1.,0.,0.,0.,1.,0.,0.,0.,1.],[1.,0.,0.,0.,1.,0.,0.,0.,1.]])
 #gp_Pb_D1D2=domain_class_1.grouping_discrete_layer3(domain=[domain1A,domain1B,domain2A,domain2B],atom_ids=['Pb1_D1A','Pb1_D1B','Pb1_D2A','Pb1_D2B'])
 #gp_Pb_D1=domain_class_1.grouping_discrete_layer([domain1A,domain1B,domain1A,domain1B],['Pb1_D1A','Pb1_D1B','Pb2_D1A','Pb2_D1B'])
-#gp_Pb_D2=domain_class_1.grouping_discrete_layer([domain2A,domain2B,domain2A,domain2B],['Pb1_D2A','Pb1_D2B','Pb2_D2A','Pb2_D2B'])
-#gp_Pb_D3=domain_class_1.grouping_discrete_layer([domain3A,domain3B,domain3A,domain3B],['Pb1_D3A','Pb1_D3B','Pb2_D3A','Pb2_D3B'])
-
 
 #based on a new symmetry operation for each atom pair at the same layer(equal opposite for x movement, same for y and z movement) 
 for group in DOMAIN_GP:
@@ -728,7 +729,9 @@ def Sim(data,VARS=VARS):
             fom_scaler.append(1)
     #print domain_creator.extract_coor(domain1B,'Pb1_D1B')
     #print domain_creator.extract_component(domain1A,'O1_1_0_D1A',['dx1','dy2','dz3'])  
-    #domain_creator.print_data(N_sorbate=2,domain=domain1A,z_shift=1,half_layer=True,full_layer_long=FULL_LAYER_LONG,save_file='D://model2.xyz')    
+    if PRINT_MODEL_FILES:
+        for i in range(DOMAIN_NUMBER):
+            domain_creator.print_data(N_sorbate=SORBATE_NUMBER[i][0],domain=VARS['domain'+str(1+1)+'A'],z_shift=1,half_layer=DOMAIN[i]-2,full_layer_long=FULL_LAYER_LONG,save_file='D://'+'Model_domain'+str(i+1)+'.xyz')    
     #export the model results for plotting if PLOT set to true
     #domain_creator.layer_spacing_calculator(domain1A,12,True)
     #print domain_class_1.cal_bond_valence1(domain_class_1.build_super_cell2(domain1A,[0,1,4,5]+range(-6,0)),'Pb1_D1A',3,False)
