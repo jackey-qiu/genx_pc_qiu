@@ -732,7 +732,7 @@ def Sim(data,VARS=VARS):
     #print domain_creator.extract_component(domain1A,'O1_1_0_D1A',['dx1','dy2','dz3'])  
     if PRINT_MODEL_FILES:
         for i in range(DOMAIN_NUMBER):
-            domain_creator.print_data(N_sorbate=SORBATE_NUMBER[i][0],domain=VARS['domain'+str(1+1)+'A'],z_shift=1,half_layer=DOMAIN[i]-2,full_layer_long=FULL_LAYER_LONG,save_file='D://'+'Model_domain'+str(i+1)+'.xyz')    
+            domain_creator.print_data(N_sorbate=SORBATE_NUMBER[i][0],domain=VARS['domain'+str(i+1)+'A'],z_shift=1,half_layer=DOMAIN[i]-2,full_layer_long=FULL_LAYER_LONG,save_file='D://'+'Model_domain'+str(i+1)+'.xyz')    
     #export the model results for plotting if PLOT set to true
     #domain_creator.layer_spacing_calculator(domain1A,12,True)
     #print domain_class_1.cal_bond_valence1(domain_class_1.build_super_cell2(domain1A,[0,1,4,5]+range(-6,0)),'Pb1_D1A',3,False)
@@ -779,7 +779,7 @@ def Sim(data,VARS=VARS):
             LB_dumy=np.array(LB_dumy)
             dL_dumy=np.array(dL_dumy)
             rough_dumy = (1-beta)/((1-beta)**2 + 4*beta*np.sin(np.pi*(l_dumy-LB_dumy)/dL_dumy)**2)**0.5
-            f_dumy = SCALES[0]*rough_dumy*sample.calc_f3(h_dumy, k_dumy, l_dumy)
+            f_dumy = SCALES[0]*rough_dumy*sample.calc_f4(h_dumy, k_dumy, l_dumy)
             
             label=str(int(h[0]))+str(int(k[0]))+'L'
             plot_data_container_experiment[label]=np.concatenate((l[:,np.newaxis],I[:,np.newaxis],eI[:,np.newaxis]),axis=1)

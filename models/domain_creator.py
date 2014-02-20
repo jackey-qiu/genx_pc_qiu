@@ -152,7 +152,7 @@ def print_data(N_sorbate=4,domain='',z_shift=1,half_layer=False,full_layer_long=
             index=index_all[0:22]+index_all[42:42+N_sorbate]
         else:
             index=index_all[0:12]+index_all[32:32+N_sorbate]
-    if half_layer==True:
+    if half_layer:
         index.pop(2)
         index.pop(2)
     f=open(save_file,'w')
