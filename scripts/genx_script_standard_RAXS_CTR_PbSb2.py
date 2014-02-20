@@ -5,7 +5,8 @@ from datetime import datetime
 import numpy as np
 import sys,pickle,__main__
 import models.domain_creator as domain_creator
-sys.path.append("D:\Google Drive\useful codes")
+sys.path.append("D:\\Google Drive\\useful codes")
+sys.path.append("C:\\Users\\jackey\\Google Drive\\useful codes")
 try:
     import make_parameter_table_GenX as make_grid
 except:pass
