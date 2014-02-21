@@ -966,8 +966,7 @@ class Slab:
         elif self.T_factor=='u':
             return  self.x + self.dx1+self.dx2+self.dx3+self.dx4, self.y + self.dy1+self.dy2+self.dy3+self.dy4, self.z + self.dz1+ self.dz2+ self.dz3+self.dz4,\
                    self.el, self.u+self.du, (self.oc+self.doc)*self.m*self.slab_oc, self.c
-        
-    
+                 
     def _extract_ids(self):
         'Extract the ids of the atoms'
         return [self.name + '.' + str(id) for id in self.id]
