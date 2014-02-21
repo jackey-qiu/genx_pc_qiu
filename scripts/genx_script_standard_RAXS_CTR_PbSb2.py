@@ -81,6 +81,9 @@ PLOT=False
 ##want to print out the protonation status?##
 PRINT_PROTONATION=False
 
+##want to print bond valence?##
+PRRINT_BV=False
+
 ##want to print the xyz files to build a 3D structure?##
 PRINT_MODEL_FILES=False
 
@@ -625,7 +628,7 @@ def Sim(data,VARS=VARS):
                         if 'Pb' in key:el='Pb'
                         elif 'Sb' in key:el='Sb'
                     temp_bv=domain_class_1.cal_bond_valence1_new2B(super_cell_sorbate,key,el,2.5,VARS['match_lib_'+str(i+1)+'A'][key],50,False)['total_valence']
-                #print key, temp_bv
+                if PRINT_BV:print key, temp_bv
                 #consider possible hydrogen bond and hydroxyl bond fro oxygen atoms
                 if 'O' in key:
                     #For O you may consider possible binding to proton (+0.8) 
