@@ -23,14 +23,16 @@ batch_path_head='/u1/uaf/cqiu/batchfile/'
 WT_RAXS=5#weighting for RAXS dataset
 WT_BV=1#weighting for bond valence constrain (1 recommended)
 BV_TOLERANCE=0.05#ideal bv value + or - this value is acceptable
+FULL_LAYER_LONG=0
 
 #this is one way to start up quickly, each time you only need to specify the pickup_index and DOMAIN_GP if want to group different domains
 #all the global variables are pre-defined based on a reasonable assumption, but you can customized it by editing the variables below
 #item 0 to item 4 corresponding to corner-sharing at O1O2, edge-sharing at O1O3, edge-sharing at O1O4, tridentate bind at O1O2O3 and clean HL
+#item 5 to item 8 corresponding to Full layer with corner-sharing, two edge-sharing and tridentate corner,edge-sharing binding
 #And note it is customized specifically for Pb/Sb adsorption in a bidentate or tridentate mode, wont work for metal binding in a monodentate mode
 #And also this fast setup only work for single sorbate system
  
-pickup_index=[0,1,2,3,4]
+pickup_index=[0,1,2,3,4,5,6,7,8]
 pick=lambda list:[list[i] for i in pickup_index]
 
 ##pars for sorbates##
@@ -48,43 +50,57 @@ BV_SUM_HL=[[1.33,1.33],[1.33,1.33],[1.33,1.33],[2.5,2.5],[]]#pseudo bond valence
 BV_SUM_FL=[[1.33,1.33],[1.33,1.33],[1.33,1.33],[2.5,2.5]]#pseudo bond valence sum for sorbate
 BV_SUM=pick(BV_SUM_HL+BV_SUM_FL)#pseudo bond valence sum for sorbate
 
-SORBATE_ATTACH_ATOM_HL=[[['O1_1_0','O1_2_0'],['O1_1_0','O1_2_0']],[['O1_1_0','O1_3_0'],['O1_4_0','O1_2_0']],[['O1_1_0','O1_4_0'],['O1_3_0','O1_2_0']],[['O1_1_0','O1_2_0','O1_3_0'],['O1_2_0','O1_1_0','O1_3_0']],[]]
-SORBATE_ATTACH_ATOM_FL=[[['O1_1_0','O1_2_0'],['O1_1_0','O1_2_0']],[['O1_1_0','O1_3_0'],['O1_4_0','O1_2_0']],[['O1_1_0','O1_4_0'],['O1_3_0','O1_2_0']],[['O1_1_0','O1_2_0','O1_3_0'],['O1_2_0','O1_1_0','O1_3_0']]]
+SORBATE_ATTACH_ATOM_HL=[[['O1_1_0','O1_2_0'],['O1_1_0','O1_2_0']],[['O1_1_0','O1_3_0'],['O1_4_0','O1_2_0']],[['O1_1_0','O1_4_0'],['O1_3_0','O1_2_0']],[['O1_1_0','O1_2_0','O1_3_0'],['O1_1_0','O1_2_0','O1_4_0']],[]]
+if FULL_LAYER_LONG:
+    SORBATE_ATTACH_ATOM_FL=[[['O1_11_t','O1_12_t'],['O1_11_t','O1_12_t']],[['O1_11_t','O1_1_0'],['O1_2_0','O1_12_t']],[['O1_11_t','O1_2_0'],['O1_1_0','O1_12_t']],[['O1_11_t','O1_12_t','O1_2_0'],['O1_11_t','O1_12_t','O1_1_0']]]
+else:
+    SORBATE_ATTACH_ATOM_FL=[[['O1_5_0','O1_6_0'],['O1_5_0','O1_6_0']],[['O1_5_0','O1_7_0'],['O1_8_0','O1_6_0']],[['O1_5_0','O1_8_0'],['O1_7_0','O1_6_0']],[['O1_6_0','O1_5_0','O1_7_0'],['O1_6_0','O1_5_0','O1_8_0']]]
 SORBATE_ATTACH_ATOM=pick(SORBATE_ATTACH_ATOM_HL+SORBATE_ATTACH_ATOM_FL)
 
-
-SORBATE_ATTACH_ATOM_OFFSET_HL=[[[None,None],[None,'+y']],[[None,None],['+x',None]],[[None,'+y'],['+x',None]],[[None,None,None],[None,'-y','+x']],[]]
-SORBATE_ATTACH_ATOM_OFFSET_FL=[[[None,None],[None,'+y']],[[None,None],['+x',None]],[[None,'+y'],['+x',None]],[[None,None,None],[None,'-y','+x']]]
+SORBATE_ATTACH_ATOM_OFFSET_HL=[[[None,None],[None,'+y']],[[None,None],['+x',None]],[[None,'+y'],['+x',None]],[[None,None,None],['-y',None,'+x']],[]]
+if FULL_LAYER_LONG:
+    SORBATE_ATTACH_ATOM_OFFSET_FL=[[[None,None],[None,'+y']],[[None,'-x'],[None,None]],[[None,'-x'],['-y',None]],[[None,None,'-x'],[None,'+y',None]]]
+else:
+    SORBATE_ATTACH_ATOM_OFFSET_FL=[[[None,None],[None,'+y']],[[None,'+x'],[None,None]],[[None,'+x'],['-y',None]],[['+y',None,None],[None,None,'+x']]]
 SORBATE_ATTACH_ATOM_OFFSET=pick(SORBATE_ATTACH_ATOM_OFFSET_HL+SORBATE_ATTACH_ATOM_OFFSET_FL)
 
 ANCHOR_REFERENCE_HL=[[None,None],['Fe1_4_0','Fe1_6_0'],['Fe1_4_0','Fe1_6_0'],[],[]]#ref point for anchors
-ANCHOR_REFERENCE_FL=[[None,None],['Fe1_4_0','Fe1_6_0'],['Fe1_4_0','Fe1_6_0'],[]]#ref point for anchors
+if FULL_LAYER_LONG:ANCHOR_REFERENCE_FL=[[None,None],['Fe1_2_0','Fe1_3_0'],['Fe1_2_0','Fe1_3_0'],[]]#ref point for anchors
+else:ANCHOR_REFERENCE_FL=[[None,None],['Fe1_8_0','Fe1_9_0'],['Fe1_8_0','Fe1_9_0'],[]]#ref point for anchors
+
 ANCHOR_REFERENCE=pick(ANCHOR_REFERENCE_HL+ANCHOR_REFERENCE_FL)#ref point for anchors
 
 ANCHOR_REFERENCE_OFFSET_HL=[[None,None],[None,'+x'],[None,'+x'],[],[]]
-ANCHOR_REFERENCE_OFFSET_FL=[[None,None],[None,'+x'],[None,'+x'],[]]
+if FULL_LAYER_LONG:ANCHOR_REFERENCE_OFFSET_FL=[[None,None],[None,None],[None,None],[]]
+else:ANCHOR_REFERENCE_OFFSET_FL=[[None,None],['+x',None],['+x',None],[]]
+
 ANCHOR_REFERENCE_OFFSET=pick(ANCHOR_REFERENCE_OFFSET_HL+ANCHOR_REFERENCE_OFFSET_FL)
 
-DISCONNECT_BV_CONTRIBUTION_HL=[{('O1_1_0','O1_2_0'):SORBATE[0]+'2'},{},{},{('O1_1_0','O1_2_0','O1_3_0'):SORBATE[0]+'2'},{}]#set items to be {} if considering single sorbate
-DISCONNECT_BV_CONTRIBUTION_FL=[{('O1_1_0','O1_2_0'):SORBATE[0]+'2'},{},{},{('O1_1_0','O1_2_0','O1_3_0'):SORBATE[0]+'2'}]#set items to be {} if considering single sorbate
+DISCONNECT_BV_CONTRIBUTION_HL=[{('O1_1_0','O1_2_0'):SORBATE[0]+'2'},{},{},{('O1_1_0','O1_2_0'):SORBATE[0]+'2'},{}]#set items to be {} if considering single sorbate
+if FULL_LAYER_LONG:DISCONNECT_BV_CONTRIBUTION_FL=[{('O1_11_t','O1_12_t'):SORBATE[0]+'2'},{},{},{('O1_11_t','O1_12_t'):SORBATE[0]+'2'}]#set items to be {} if considering single sorbate
+else:DISCONNECT_BV_CONTRIBUTION_FL=[{('O1_5_0','O1_6_0'):SORBATE[0]+'2'},{},{},{('O1_5_0','O1_6_0'):SORBATE[0]+'2'}]#set items to be {} if considering single sorbate
+
 DISCONNECT_BV_CONTRIBUTION=pick(DISCONNECT_BV_CONTRIBUTION_HL+DISCONNECT_BV_CONTRIBUTION_FL)#set items to be {} if considering single sorbate
 
 #if consider hydrogen bonds#
 COVALENT_HYDROGEN_RANDOM=True
-POTENTIAL_COVALENT_HYDROGEN_ACCEPTOR_HL=[['O1_1_0','O1_2_0','O1_3_0','O1_4_0']]+[['O1_1_0','O1_2_0']]*2+[['O1_1_0','O1_2_0','O1_4_0']]+[['O1_1_0','O1_2_0','O1_3_0','O1_4_0']]#Will be considered only when COVALENT_HYDROGEN_RANDOM=True
-POTENTIAL_COVALENT_HYDROGEN_ACCEPTOR_FL=[['O1_1_0','O1_2_0','O1_3_0','O1_4_0']]+[['O1_1_0','O1_2_0']]*2+[['O1_1_0','O1_2_0','O1_4_0']]#Will be considered only when COVALENT_HYDROGEN_RANDOM=True
+POTENTIAL_COVALENT_HYDROGEN_ACCEPTOR_HL=[['O1_1_0','O1_2_0','O1_3_0','O1_4_0']]+[['O1_1_0','O1_2_0']]*2+[['O1_1_0','O1_2_0']]+[['O1_1_0','O1_2_0','O1_3_0','O1_4_0']]#Will be considered only when COVALENT_HYDROGEN_RANDOM=True
+if FULL_LAYER_LONG:POTENTIAL_COVALENT_HYDROGEN_ACCEPTOR_FL=[['O1_11_t','O1_12_t','O1_1_0','O1_2_0']]+[['O1_11_t','O1_12_t']]*2+[['O1_11_t','O1_12_t']]#Will be considered only when COVALENT_HYDROGEN_RANDOM=True
+else:POTENTIAL_COVALENT_HYDROGEN_ACCEPTOR_FL=[['O1_5_0','O1_6_0','O1_7_0','O1_8_0']]+[['O1_5_0','O1_6_0']]*2+[['O1_5_0','O1_6_0']]#Will be considered only when COVALENT_HYDROGEN_RANDOM=True
 POTENTIAL_COVALENT_HYDROGEN_ACCEPTOR=pick(POTENTIAL_COVALENT_HYDROGEN_ACCEPTOR_HL+POTENTIAL_COVALENT_HYDROGEN_ACCEPTOR_FL)#Will be considered only when COVALENT_HYDROGEN_RANDOM=True
 
 COVALENT_HYDROGEN_ACCEPTOR_HL=[['O1_1_0','O1_2_0','O1_3_0','O1_4_0']]+[['O1_1_0','O1_2_0']]*2+[['O1_1_0','O1_2_0','O1_4_0']]+[['O1_1_0','O1_2_0','O1_3_0','O1_4_0']]#will be considered only when COVALENT_HYDROGEN_RANDOM=False
-COVALENT_HYDROGEN_ACCEPTOR_FL=[['O1_1_0','O1_2_0','O1_3_0','O1_4_0']]+[['O1_1_0','O1_2_0']]*2+[['O1_1_0','O1_2_0','O1_4_0']]#will be considered only when COVALENT_HYDROGEN_RANDOM=False
+if FULL_LAYER_LONG:COVALENT_HYDROGEN_ACCEPTOR_FL=[['O1_11_t','O1_12_t','O1_1_0','O1_2_0']]+[['O1_11_t','O1_12_t']]*2+[['O1_11_t','O1_12_t']]#will be considered only when COVALENT_HYDROGEN_RANDOM=False
+else:COVALENT_HYDROGEN_ACCEPTOR_FL=[['O1_5_0','O1_6_0','O1_7_0','O1_8_0']]+[['O1_5_0','O1_6_0']]*2+[['O1_5_0','O1_6_0']]#will be considered only when COVALENT_HYDROGEN_RANDOM=False
 COVALENT_HYDROGEN_ACCEPTOR=pick(COVALENT_HYDROGEN_ACCEPTOR_HL+COVALENT_HYDROGEN_ACCEPTOR_FL)#will be considered only when COVALENT_HYDROGEN_RANDOM=False
 
-COVALENT_HYDROGEN_NUMBER_HL=[[1,1,1,1]]+[[1,1]]*2+[[1,1,1]]+[[2,2,1,1]]
-COVALENT_HYDROGEN_NUMBER_FL=[[1,1,1,1]]+[[1,1]]*2+[[1,1,1]]
+COVALENT_HYDROGEN_NUMBER_HL=[[1,1,1,1]]+[[1,1]]*2+[[1,1]]+[[2,2,1,1]]
+COVALENT_HYDROGEN_NUMBER_FL=[[1,1,1,1]]+[[1,1]]*2+[[1,1]]
 COVALENT_HYDROGEN_NUMBER=pick(COVALENT_HYDROGEN_NUMBER_HL+COVALENT_HYDROGEN_NUMBER_FL)
 
 POTENTIAL_HYDROGEN_ACCEPTOR_HL=[['O1_1_0','O1_2_0','O1_3_0','O1_4_0','O1_5_0','O1_6_0']]*5#they can accept one hydrogen bond or not
-POTENTIAL_HYDROGEN_ACCEPTOR_FL=[['O1_1_0','O1_2_0','O1_3_0','O1_4_0','O1_5_0','O1_6_0']]*4#they can accept one hydrogen bond or not
+if FULL_LAYER_LONG:POTENTIAL_HYDROGEN_ACCEPTOR_FL=[['O1_11_t','O1_12_t','O1_1_0','O1_2_0']]*4#they can accept one hydrogen bond or not
+else:POTENTIAL_HYDROGEN_ACCEPTOR_FL=[['O1_5_0','O1_6_0','O1_7_0','O1_8_0']]*4#they can accept one hydrogen bond or not
 POTENTIAL_HYDROGEN_ACCEPTOR=pick(POTENTIAL_HYDROGEN_ACCEPTOR_HL+POTENTIAL_HYDROGEN_ACCEPTOR_FL)#they can accept one hydrogen bond or not
 
 #geometrical parameters#
@@ -103,7 +119,8 @@ MIRROR=False
 WATER_NUMBER=pick([0,0,0,0,0,0,0,0,0])
 WATER_PAIR=True#add water pair each time if True, otherwise only add single water each time (only needed par is V_SHIFT) 
 REF_POINTS_HL=[[['O1_1_0','O1_2_0']]]*5#each item inside is a list of one or couple items, and each water set has its own ref point
-REF_POINTS_FL=[[['O1_1_0','O1_2_0']]]*4#each item inside is a list of one or couple items, and each water set has its own ref point
+if FULL_LAYER_LONG:REF_POINTS_FL=[[['O1_11_t','O1_12_t']]]*4#each item inside is a list of one or couple items, and each water set has its own ref point
+else:REF_POINTS_FL=[[['O1_5_0','O1_6_0']]]*4#each item inside is a list of one or couple items, and each water set has its own ref point
 REF_POINTS=pick(REF_POINTS_HL+REF_POINTS_FL)#each item inside is a list of one or couple items, and each water set has its own ref point
 
 V_SHIFT=pick([[2.],[2],[2],[2],[2],[2],[2],[2],[2]])
@@ -112,7 +129,6 @@ ALPHA=pick([[0],[0],[0],[0],[0],[0],[0],[0],[0]])#used only if considering water
 
 ##chemically different domain type##
 DOMAIN=pick([1,1,1,1,1,2,2,2,2])
-FULL_LAYER_LONG=0
 DOMAIN_GP=[]#means you want to group first two and last two domains together, only group half layers or full layers together
 DOMAIN_NUMBER=len(DOMAIN)
 COHERENCE=[{True:range(len(pickup_index))}] #want to add up in coherence? items inside list corresponding to each domain
