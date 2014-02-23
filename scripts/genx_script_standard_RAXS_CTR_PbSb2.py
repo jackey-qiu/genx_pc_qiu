@@ -438,7 +438,7 @@ for i in range(DOMAIN_NUMBER):
                                                                    atom_ids=[vars()['ids_domain'+str(int(i+1))+'A'][j],vars()['ids_domain'+str(int(i+1))+'B'][j]],sym_array=[[1.,0.,0.,0.,1.,0.,0.,0.,1.],[-1.,0.,0.,0.,1.,0.,0.,0.,1.]]))
     for j in range(len(vars()['discrete_gp_names_domain'+str(int(i+1))])):vars()[vars()['discrete_gp_names_domain'+str(int(i+1))][j]]=vars()['atm_gp_discrete_list_domain'+str(int(i+1))][j]
     if sum(SORBATE_NUMBER[i])!=0:
-        vars()['gp_'+SORBATE[0]+'_D'+str(i+1)]=domain_class_1.grouping_discrete_layer3(domain=[vars()['domain'+str(int(i+1))+'A'],vars()['domain'+str(int(i+1))+'B']]*2,atom_ids=['Pb1_D'+str(i+1)+'A','Pb1_D'+str(i+1)+'B','Pb2_D'+str(i+1)+'A','Pb2_D'+str(i+1)+'B'],sym_array=[[1.,0.,0.,0.,1.,0.,0.,0.,1.],[-1.,0.,0.,0.,1.,0.,0.,0.,1.],[-1.,0.,0.,0.,1.,0.,0.,0.,1.],[1.,0.,0.,0.,1.,0.,0.,0.,1.]])
+        vars()['gp_'+SORBATE[0]+'_D'+str(i+1)]=domain_class_1.grouping_discrete_layer3(domain=[vars()['domain'+str(int(i+1))+'A'],vars()['domain'+str(int(i+1))+'B']]*2,atom_ids=[SORBATE[0]+'1_D'+str(i+1)+'A',SORBATE[0]+'1_D'+str(i+1)+'B',SORBATE[0]+'2_D'+str(i+1)+'A',SORBATE[0]+'2_D'+str(i+1)+'B'],sym_array=[[1.,0.,0.,0.,1.,0.,0.,0.,1.],[-1.,0.,0.,0.,1.,0.,0.,0.,1.],[-1.,0.,0.,0.,1.,0.,0.,0.,1.],[1.,0.,0.,0.,1.,0.,0.,0.,1.]])
 #gp_Pb_D1D2=domain_class_1.grouping_discrete_layer3(domain=[domain1A,domain1B,domain2A,domain2B],atom_ids=['Pb1_D1A','Pb1_D1B','Pb1_D2A','Pb1_D2B'])
 #gp_Pb_D1=domain_class_1.grouping_discrete_layer([domain1A,domain1B,domain1A,domain1B],['Pb1_D1A','Pb1_D1B','Pb2_D1A','Pb2_D1B'])
 
