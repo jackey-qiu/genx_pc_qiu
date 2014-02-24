@@ -36,7 +36,7 @@ FULL_LAYER_LONG=0
 #And you also need to manually change values of some global vars
 #ONLY consider this mode if you want to have two symmetry site being binded on two domains
 #eg. pickup_index=[1,1,4] combined with sym_site_index=[[0],[1],[0,1]] means two symmetry sites split into two domains
-#Now you need to group domain1 and domain2 together by setting DOMAIN_GP=[[0,1]], and change some global vars   
+#Now you need to group domain1 and domain2 together by setting DOMAIN_GP=[[0,1]], and change some global vars (covalent hydrogen acceptor should include the OH ligand)   
  
 pickup_index=[0,1,2,3,4,5,6,7,8]
 sym_site_index=[[0,1]]*9
@@ -582,7 +582,7 @@ def Sim(data,VARS=VARS):
                 sorbate_els=[SORBATE_LIST[i][j]]+['O']*(len(O_id_B))
                 domain_creator.add_atom(domain=VARS['domain'+str(int(i+1))+'B'],ref_coor=np.array(SORBATE_coors_a+O_coors_a)*[-1,1,1]-[-1.,0.06955,0.5],ids=sorbate_ids,els=sorbate_els)
             elif len(VARS['SORBATE_ATTACH_ATOM'][i][j])==2:#bidentate case
-                if j==0:edge_offset=getattr(VARS['rgh_domain'+str(int(i+1))],'offset')
+                if sym_site_index[i][j]==0:edge_offset=getattr(VARS['rgh_domain'+str(int(i+1))],'offset')
                 else:edge_offset=-getattr(VARS['rgh_domain'+str(int(i+1))],'offset')
                 top_angle=getattr(VARS['rgh_domain'+str(int(i+1))],'top_angle')
                 phi=getattr(VARS['rgh_domain'+str(int(i+1))],'phi')
