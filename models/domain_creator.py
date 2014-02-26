@@ -924,6 +924,55 @@ class domain_creator(domain_creator_water,domain_creator_sorbate,domain_creator_
             f.close()
         return bond_valence_container
     
+    def cal_bond_valence1_new2B3(self,domain,center_atom_id,center_atom_el,searching_range=2.5,coordinated_atms=[],wt=100,print_file=False):
+        #different from new2B:consider a very soft limit for cation cation distance cutoff (1. instead of 2.3), everything else is the same
+        #purposely be used to include sorbates into one domain
+        bond_valence_container={}
+        basis=np.array([5.038,5.434,7.3707])
+        f2=lambda p1,p2:np.sqrt(np.sum((p1-p2)**2))
+        #f2=lambda p1,p2:spatial.distance.cdist([p1],[p2])
+        index=(center_atom_id,center_atom_el)
+        #print center_atom_id,f1(domain,index)
+        for key in domain.keys():
+            
+            dist=f2(domain[key]*basis,domain[index]*basis)
+            #print domain.id[i],center_atom_id,dist
+            if (dist<=searching_range)&(dist!=0.):
+                
+                r0=0
+                if ((index[1]=='Pb')&(key[1]=='O'))|((index[1]=='O')&(key[1]=='Pb')):r0=r0_Pb
+                elif ((index[1]=='Fe')&(key[1]=='O'))|((index[1]=='O')&(key[1]=='Fe')):r0=1.759
+                elif ((index[1]=='Sb')&(key[1]=='O'))|((index[1]=='O')&(key[1]=='Sb')):r0=1.973
+                elif ((index[1]=='O')&(key[1]=='O')):
+                    if dist<2.:
+                        r0=2.#arbitrary r0 here, ensure oxygens not too close to each other
+                    else:r0=-1
+                else:
+                    if dist<1:
+                        r0=10.#exclude the situation where cations are closer than the searching range (2.5A in this case)
+                    else:r0=-10
+                sum_check=0
+                for atm in coordinated_atms:
+                    if atm in key[0]:
+                        sum_check+=1
+                #print "sum_check",sum_check
+                if sum_check==1:
+                    bond_valence_container[key[0]]=np.exp((r0-dist)/0.37)
+                else:
+                    bond_valence_container[key[0]]=np.exp((r0-dist)/0.37)*wt
+                #print domain.id[i],f1(domain,i)
+        sum_valence=0.
+        for key in bond_valence_container.keys():
+            sum_valence=sum_valence+bond_valence_container[key]
+        bond_valence_container['total_valence']=sum_valence
+        if print_file==True:
+            f=open('/home/tlab/sphalerite/jackey/model2/files_pb/bond_valence_'+center_atom_id+'.txt','w')
+            for i in bond_valence_container.keys():
+                s = '%-5s   %7.5e\n' % (i,bond_valence_container[i])
+                f.write(s)
+            f.close()
+        return bond_valence_container
+        
     def cal_bond_valence1_new2B_2(self,domain,center_atom_id,center_atom_el,searching_range=2.5,coordinated_atms=[],wt=100,print_file=False):
         #different from new2B:now consider panalty for distortion associated with bond length
         bond_valence_container={}

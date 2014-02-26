@@ -584,6 +584,8 @@ def Sim(data,VARS=VARS):
             elif len(VARS['SORBATE_ATTACH_ATOM'][i][j])==2:#bidentate case
                 if sym_site_index[i][j]==0:edge_offset=getattr(VARS['rgh_domain'+str(int(i+1))],'offset')
                 else:edge_offset=-getattr(VARS['rgh_domain'+str(int(i+1))],'offset')
+                edge_offset2=getattr(VARS['rgh_domain'+str(int(i+1))],'offset2')
+                angle_offset=getattr(VARS['rgh_domain'+str(int(i+1))],'angle_offset')
                 top_angle=getattr(VARS['rgh_domain'+str(int(i+1))],'top_angle')
                 phi=getattr(VARS['rgh_domain'+str(int(i+1))],'phi')
                 ids=[VARS['SORBATE_ATTACH_ATOM'][i][j][0]+'_D'+str(int(i+1))+'A',VARS['SORBATE_ATTACH_ATOM'][i][j][1]+'_D'+str(int(i+1))+'A']
@@ -598,7 +600,7 @@ def Sim(data,VARS=VARS):
                 O_id=[HO_id for HO_id in VARS['HO_list_domain'+str(int(i+1))+'a'] if SORBATE_id in HO_id]
                 sorbate_coors=[]
                 if SORBATE_LIST[i][j]=='Pb':
-                    sorbate_coors=VARS['domain_class_'+str(int(i+1))].adding_sorbate_pyramid_distortion_B(domain=VARS['domain'+str(int(i+1))+'A'],top_angle=top_angle,phi=phi,edge_offset=[edge_offset,0],attach_atm_ids=ids,offset=offset,anchor_ref=anchor,anchor_offset=anchor_offset,pb_id=SORBATE_id,O_id=O_id,mirror=VARS['MIRROR'])
+                    sorbate_coors=VARS['domain_class_'+str(int(i+1))].adding_sorbate_pyramid_distortion_B2(domain=VARS['domain'+str(int(i+1))+'A'],top_angle=top_angle,phi=phi,edge_offset=[edge_offset,edge_offset2],attach_atm_ids=ids,offset=offset,anchor_ref=anchor,anchor_offset=anchor_offset,pb_id=SORBATE_id,O_id=O_id,mirror=VARS['MIRROR'],angle_offset=angle_offset)
                 elif SORBATE_LIST[i][j]=='Sb':
                     sorbate_coors=VARS['domain_class_'+str(int(i+1))].adding_sorbate_bidentate_octahedral(domain=VARS['domain'+str(int(i+1))+'A'],theta=phi,phi=top_angle,attach_atm_ids=ids,offset=offset,sb_id=SORBATE_id,O_id=O_id)
                 SORBATE_coors_a.append(sorbate_coors[0])
@@ -823,7 +825,7 @@ def Sim(data,VARS=VARS):
     #print domain_creator.extract_component(domain2A,'Pb1_D2A',['dx1','dy2','dz3'])  
     if PRINT_MODEL_FILES:
         for i in range(DOMAIN_NUMBER):
-            domain_creator.print_data(N_sorbate=SORBATE_NUMBER[i][0],domain=VARS['domain'+str(i+1)+'A'],z_shift=1,half_layer=DOMAIN[i]-2,full_layer_long=FULL_LAYER_LONG,save_file='D://'+'Model_domain'+str(i+1)+'.xyz')    
+            domain_creator.print_data(N_sorbate=SORBATE_NUMBER[i][0]+sum(O_NUMBER[i][0]),domain=VARS['domain'+str(i+1)+'A'],z_shift=1,half_layer=DOMAIN[i]-2,full_layer_long=FULL_LAYER_LONG,save_file='D://'+'Model_domain'+str(i+1)+'.xyz')    
     #export the model results for plotting if PLOT set to true
     #domain_creator.layer_spacing_calculator(domain1A,12,True)
     #print domain_class_1.cal_bond_valence1(domain_class_1.build_super_cell2(domain1A,[0,1,4,5]+range(-6,0)),'Pb1_D1A',3,False)
