@@ -117,7 +117,7 @@ PHI_FL=[[0,0],[0,0],[0,0],[0,0]]
 PHI=deep_pick(PHI_HL+PHI_FL)
 
 R_S=[[1],[1]]
-MIRROR=False
+MIRROR=pick([False,False,True,None,None,False,False,True,None])
 
 ##pars for interfacial waters##
 WATER_NUMBER=pick([0,0,0,0,0,0,0,0,0])
@@ -290,7 +290,7 @@ for i in range(DOMAIN_NUMBER):
             #O_id=vars()['HO_list_domain'+str(int(i+1))+'a'][O_index[j]:O_index[j+1]]#O_ide is a list of str
             sorbate_coors=[]
             if SORBATE_LIST[i][j]=='Pb':
-                sorbate_coors=vars()['domain_class_'+str(int(i+1))].adding_sorbate_pyramid_monodentate(domain=vars()['domain'+str(int(i+1))+'A'],top_angle=TOP_ANGLE[i][j],phi=PHI[i][j],r=R_S[i][j],attach_atm_ids=ids,offset=offset,pb_id=SORBATE_id,O_id=O_id,mirror=MIRROR)           
+                sorbate_coors=vars()['domain_class_'+str(int(i+1))].adding_sorbate_pyramid_monodentate(domain=vars()['domain'+str(int(i+1))+'A'],top_angle=TOP_ANGLE[i][j],phi=PHI[i][j],r=R_S[i][j],attach_atm_ids=ids,offset=offset,pb_id=SORBATE_id,O_id=O_id,mirror=MIRROR[i])           
             elif SORBATE_LIST[i][j]=='Sb':
                 sorbate_coors=vars()['domain_class_'+str(int(i+1))].adding_sorbate_octahedral_monodentate(domain=vars()['domain'+str(int(i+1))+'A'],phi=PHI[i][j],r=R_S[i][j],attach_atm_id=ids,offset=offset,sb_id=SORBATE_id,O_id=O_id)           
             SORBATE_coors_a.append(sorbate_coors[0])
@@ -327,7 +327,7 @@ for i in range(DOMAIN_NUMBER):
             O_id=[HO_id for HO_id in vars()['HO_list_domain'+str(int(i+1))+'a'] if SORBATE_id in HO_id]
             sorbate_coors=[]
             if SORBATE_LIST[i][j]=='Pb':
-                sorbate_coors=vars()['domain_class_'+str(int(i+1))].adding_sorbate_pyramid_distortion_B(domain=vars()['domain'+str(int(i+1))+'A'],top_angle=TOP_ANGLE[i][j],phi=PHI[i][j],edge_offset=[0,0],attach_atm_ids=ids,offset=offset,anchor_ref=anchor,anchor_offset=anchor_offset,pb_id=SORBATE_id,O_id=O_id,mirror=MIRROR)
+                sorbate_coors=vars()['domain_class_'+str(int(i+1))].adding_sorbate_pyramid_distortion_B(domain=vars()['domain'+str(int(i+1))+'A'],top_angle=TOP_ANGLE[i][j],phi=PHI[i][j],edge_offset=[0,0],attach_atm_ids=ids,offset=offset,anchor_ref=anchor,anchor_offset=anchor_offset,pb_id=SORBATE_id,O_id=O_id,mirror=MIRROR[i])
             elif SORBATE_LIST[i][j]=='Sb':
                 sorbate_coors=vars()['domain_class_'+str(int(i+1))].adding_sorbate_bidentate_octahedral(domain=vars()['domain'+str(int(i+1))+'A'],theta=PHI[i][j],phi=TOP_ANGLE[i][j],attach_atm_ids=ids,offset=offset,sb_id=SORBATE_id,O_id=O_id)
             SORBATE_coors_a.append(sorbate_coors[0])
@@ -570,7 +570,7 @@ def Sim(data,VARS=VARS):
                 #O_id=VARS['HO_list_domain'+str(int(i+1))+'a'][O_index[j]:O_index[j+1]]#O_ide is a list of str
                 sorbate_coors=[]
                 if SORBATE_LIST[i][j]=='Pb':
-                    sorbate_coors=VARS['domain_class_'+str(int(i+1))].adding_sorbate_pyramid_monodentate(domain=VARS['domain'+str(int(i+1))+'A'],top_angle=top_angle,phi=phi,r=r,attach_atm_ids=ids,offset=offset,pb_id=SORBATE_id,O_id=O_id,mirror=VARS['MIRROR'])           
+                    sorbate_coors=VARS['domain_class_'+str(int(i+1))].adding_sorbate_pyramid_monodentate(domain=VARS['domain'+str(int(i+1))+'A'],top_angle=top_angle,phi=phi,r=r,attach_atm_ids=ids,offset=offset,pb_id=SORBATE_id,O_id=O_id,mirror=VARS['MIRROR'][i])           
                 elif SORBATE_LIST[i][j]=='Sb':
                     sorbate_coors=VARS['domain_class_'+str(int(i+1))].adding_sorbate_octahedral_monodentate(domain=VARS['domain'+str(int(i+1))+'A'],phi=phi,r=r,attach_atm_id=ids,offset=offset,sb_id=SORBATE_id,O_id=O_id)           
                 SORBATE_coors_a.append(sorbate_coors[0])
@@ -600,7 +600,7 @@ def Sim(data,VARS=VARS):
                 O_id=[HO_id for HO_id in VARS['HO_list_domain'+str(int(i+1))+'a'] if SORBATE_id in HO_id]
                 sorbate_coors=[]
                 if SORBATE_LIST[i][j]=='Pb':
-                    sorbate_coors=VARS['domain_class_'+str(int(i+1))].adding_sorbate_pyramid_distortion_B2(domain=VARS['domain'+str(int(i+1))+'A'],top_angle=top_angle,phi=phi,edge_offset=[edge_offset,edge_offset2],attach_atm_ids=ids,offset=offset,anchor_ref=anchor,anchor_offset=anchor_offset,pb_id=SORBATE_id,O_id=O_id,mirror=VARS['MIRROR'],angle_offset=angle_offset)
+                    sorbate_coors=VARS['domain_class_'+str(int(i+1))].adding_sorbate_pyramid_distortion_B2(domain=VARS['domain'+str(int(i+1))+'A'],top_angle=top_angle,phi=phi,edge_offset=[edge_offset,edge_offset2],attach_atm_ids=ids,offset=offset,anchor_ref=anchor,anchor_offset=anchor_offset,pb_id=SORBATE_id,O_id=O_id,mirror=VARS['MIRROR'][i],angle_offset=angle_offset)
                 elif SORBATE_LIST[i][j]=='Sb':
                     sorbate_coors=VARS['domain_class_'+str(int(i+1))].adding_sorbate_bidentate_octahedral(domain=VARS['domain'+str(int(i+1))+'A'],theta=phi,phi=top_angle,attach_atm_ids=ids,offset=offset,sb_id=SORBATE_id,O_id=O_id)
                 SORBATE_coors_a.append(sorbate_coors[0])
