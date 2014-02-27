@@ -778,6 +778,23 @@ class domain_creator(domain_creator_water,domain_creator_sorbate,domain_creator_
                 offset.append(None)
         return atm_ids,offset
         
+    def find_neighbors2(self,domain,id,searching_range=2.3):
+        neighbor_container={}
+        full_offset=['+x','-x','+y','-y','+x-y','+x+y','-x+y','-x-y']
+        basis=np.array([5.038,5.434,7.3707])
+        f1=lambda domain,index:np.array([domain.x[index]+domain.dx1[index]+domain.dx2[index]+domain.dx3[index],domain.y[index]+domain.dy1[index]+domain.dy2[index]+domain.dy3[index],domain.z[index]+domain.dz1[index]+domain.dz2[index]+domain.dz3[index]])*basis
+        f2=lambda p1,p2:np.sqrt(np.sum((p1-p2)**2))
+        #print domain.id,id
+        index=np.where(domain.id==id)[0][0]
+        
+        for i in range(len(domain.id)):
+            if (f2(f1(domain,index),f1(domain,i))<=searching_range)&(f2(f1(domain,index),f1(domain,i))!=0.):
+                neighbor_container[domain.id[i]]=f2(f1(domain,index),f1(domain,i))
+        print "neighbors of ",id," is as following:"
+        for key in neighbor_container.keys():
+            print key,neighbor_container[key]
+        return None
+        
     def create_match_lib(self,domain,id_list):
         basis=np.array([5.038,5.434,7.3707])
         match_lib={}
@@ -923,7 +940,8 @@ class domain_creator(domain_creator_water,domain_creator_sorbate,domain_creator_
                 f.write(s)
             f.close()
         return bond_valence_container
-    
+        
+
     def cal_bond_valence1_new2B3(self,domain,center_atom_id,center_atom_el,searching_range=2.5,coordinated_atms=[],wt=100,print_file=False):
         #different from new2B:consider a very soft limit for cation cation distance cutoff (1. instead of 2.3), everything else is the same
         #purposely be used to include sorbates into one domain

@@ -123,7 +123,8 @@ class trigonal_pyramid_distortion():
         p2_new=np.array([r*np.cos(phi)*np.sin(theta),r*np.sin(phi)*np.sin(theta),r*np.cos(theta)])
         _p2=np.dot(inv(T),p2_new)+origin
         _p2_v=_p2-self.apex
-        scale=(f2(_p2,self.apex)+self.len_offset[1])/f2(_p2,self.apex)
+        #scale to the shorter length between apex and p0 or p1
+        scale=(min([f2(self.p0,self.apex),f2(self.p1,self.apex)])+self.len_offset[1])/f2(_p2,self.apex)
         p2_v=_p2_v*scale
         self.p2=p2_v+self.apex
         
