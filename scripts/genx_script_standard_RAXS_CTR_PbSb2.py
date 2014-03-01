@@ -51,11 +51,9 @@ SORBATE_NUMBER=pick(SORBATE_NUMBER_HL+SORBATE_NUMBER_FL)
 O_NUMBER_HL=[[[0,0]],[[0,0]],[[0,0]],[[0,0]],[[0,0]]]#either zero oxygen ligand or enough ligands to complete coordinative shell
 O_NUMBER_FL=[[[0,0]],[[0,0]],[[0,0]],[[0,0]]]#either zero oxygen ligand or enough ligands to complete coordinative shell
 O_NUMBER=pick(O_NUMBER_HL+O_NUMBER_FL)
-
 SORBATE_LIST=domain_creator.create_sorbate_el_list(SORBATE,SORBATE_NUMBER)
-BV_SUM_HL=[[1.33,1.33],[1.33,1.33],[1.33,1.33],[2.5,2.5],[]]#pseudo bond valence sum for sorbate
-BV_SUM_FL=[[1.33,1.33],[1.33,1.33],[1.33,1.33],[2.5,2.5]]#pseudo bond valence sum for sorbate
-BV_SUM=pick(BV_SUM_HL+BV_SUM_FL)#pseudo bond valence sum for sorbate
+
+METAL_BV={'Pb':[1.0,1.5],'Sb':[4.,5.]}#range of acceptable metal bv
 
 SORBATE_ATTACH_ATOM_HL=[[['O1_1_0','O1_2_0'],['O1_1_0','O1_2_0']],[['O1_1_0','O1_3_0'],['O1_4_0','O1_2_0']],[['O1_1_0','O1_4_0'],['O1_3_0','O1_2_0']],[['O1_1_0','O1_2_0','O1_3_0'],['O1_1_0','O1_2_0','O1_4_0']],[[],[]]]
 if FULL_LAYER_LONG:
@@ -785,8 +783,11 @@ def Sim(data,VARS=VARS):
                     bv=bv+_widen_validness(3-temp_bv)
                     if debug_bv:bv_container[key]=_widen_validness(3-temp_bv)
                 elif ('Pb' in key) or ('Sb' in key):
-                    bv=bv+_widen_validness(BV_SUM[i][j]-temp_bv)
-                    if debug_bv:bv_container[key]=_widen_validness(BV_SUM[i][j]-temp_bv)
+                    metal_bv_range=[]
+                    if 'Pb' in key:metal_bv_range=METAL_BV['Pb']
+                    elif 'Sb' in key:metal_bv_range=METAL_BV['Sb']
+                    bv=bv+_widen_validness_range(metal_bv_range[0]-temp_bv,metal_bv_range[1]-temp_bv)
+                    if debug_bv:bv_container[key]=_widen_validness_range(metal_bv_range[0]-temp_bv,metal_bv_range[1]-temp_bv)
     if debug_bv:
         for i in bv_container.keys():
             print i,bv_container[i]
