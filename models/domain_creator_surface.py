@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import models.sxrd_new1 as model
 #to make compatible to historical runs
-import models.sxrd_test5_sym_new_test_new66_2_3 as model2
+#import models.sxrd_test5_sym_new_test_new66_2_3 as model2
 from models.utils import UserVars
 import numpy as np
 from operator import mul

@@ -154,6 +154,20 @@ class domain_creator_sorbate():
         new_domain_B.id=map(lambda x:x+self.domain_tag+'B',new_domain_B.id)
         return new_domain_A.copy(),new_domain_B.copy()
         
+    def adding_distal_ligand(self,domain=None,id=None,ref=[],r=2,theta=0,phi=0,basis=np.array([5.038,5.434,7.3707])):
+        xyz_new=[r*np.cos(phi)*np.sin(theta),r*np.sin(phi)*np.sin(theta),r*np.cos(theta)]/basis
+        xyz_original=xyz_new+ref
+        sorbate_index=None
+        try:
+            sorbate_index=np.where(domain.id==id)[0][0]
+        except:
+            domain.add_atom( id, "O",  xyz_original[0] ,xyz_original[1], xyz_original[2] ,0.5,     1.00000e+00 ,     1.00000e+00 )
+        if sorbate_index!=None:
+            domain.x[sorbate_index]=xyz_original[0]
+            domain.y[sorbate_index]=xyz_original[1]
+            domain.z[sorbate_index]=xyz_original[2]
+        return xyz_original
+        
     def adding_pb_share_triple(self,domain,attach_atm_ids=['id1','id2','id3'],offset=[None,None,None],pb_id='pb_id'):
         #the pb will be placed in a plane determined by three points,and lead position is equally distant from the three points
         p_O1_index=np.where(domain.id==attach_atm_ids[0])
