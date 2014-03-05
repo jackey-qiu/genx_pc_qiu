@@ -79,9 +79,9 @@ if FULL_LAYER_LONG:ANCHOR_REFERENCE_OFFSET_FL=[[None,None],[None,None],[None,Non
 else:ANCHOR_REFERENCE_OFFSET_FL=[[None,None],['+x',None],['+x',None],[None,None]]
 ANCHOR_REFERENCE_OFFSET=deep_pick(ANCHOR_REFERENCE_OFFSET_HL+ANCHOR_REFERENCE_OFFSET_FL)
 
-DISCONNECT_BV_CONTRIBUTION_HL=[{('O1_1_0','O1_2_0'):SORBATE[0]+'2'},{},{},{('O1_1_0','O1_2_0'):SORBATE[0]+'2'},{}]#set items to be {} if considering single sorbate
-if FULL_LAYER_LONG:DISCONNECT_BV_CONTRIBUTION_FL=[{('O1_11_t','O1_12_t'):SORBATE[0]+'2'},{},{},{('O1_11_t','O1_12_t'):SORBATE[0]+'2'}]#set items to be {} if considering single sorbate
-else:DISCONNECT_BV_CONTRIBUTION_FL=[{('O1_5_0','O1_6_0'):SORBATE[0]+'2'},{},{},{('O1_5_0','O1_6_0'):SORBATE[0]+'2'}]#set items to be {} if considering single sorbate
+DISCONNECT_BV_CONTRIBUTION_HL=[{('O1_1_0','O1_2_0'):[SORBATE[0]+'2']},{},{},{('O1_1_0','O1_2_0'):[SORBATE[0]+'2']},{}]#set items to be {} if considering single sorbate
+if FULL_LAYER_LONG:DISCONNECT_BV_CONTRIBUTION_FL=[{('O1_11_t','O1_12_t'):[SORBATE[0]+'2']},{},{},{('O1_11_t','O1_12_t'):[SORBATE[0]+'2']}]#set items to be {} if considering single sorbate
+else:DISCONNECT_BV_CONTRIBUTION_FL=[{('O1_5_0','O1_6_0'):[SORBATE[0]+'2']},{},{},{('O1_5_0','O1_6_0'):[SORBATE[0]+'2']}]#set items to be {} if considering single sorbate
 DISCONNECT_BV_CONTRIBUTION=pick(DISCONNECT_BV_CONTRIBUTION_HL+DISCONNECT_BV_CONTRIBUTION_FL)#set items to be {} if considering single sorbate
 
 #if consider hydrogen bonds#
@@ -519,8 +519,9 @@ if USE_BV:
             ids=map(lambda x:x+'_D'+str(i+1)+'A',DISCONNECT_BV_CONTRIBUTION[i].keys()[0])
             value=DISCONNECT_BV_CONTRIBUTION[i][DISCONNECT_BV_CONTRIBUTION[i].keys()[0]]
             for id in ids:
-                index_temp=vars()['match_lib_'+str(int(i+1))+'A'][id].index(filter(lambda x:value in x,vars()['match_lib_'+str(int(i+1))+'A'][id])[0])
-                del vars()['match_lib_'+str(int(i+1))+'A'][id][index_temp]
+                for each_value in value:
+                    index_temp=vars()['match_lib_'+str(int(i+1))+'A'][id].index(filter(lambda x:each_value in x,vars()['match_lib_'+str(int(i+1))+'A'][id])[0])
+                    del vars()['match_lib_'+str(int(i+1))+'A'][id][index_temp]
 #####################################specify f1f2 here###################################
 res_el='Pb'
 f1f2_file='raxs_Pb_formatted.f1f2'
@@ -964,8 +965,10 @@ consider sorbate (Pb and Sb) of any combination
     COVALENT_HYDROGEN_RANDOM=True
     POTENTIAL_COVALENT_HYDROGEN_ACCEPTOR=[['O1_1_0','O1_2_0'],['O1_1_0','O1_2_0']]
     
-    If covalent_hydrogen_random is set to false then exclusively define the number of covalent hydrogen here
-
+    If covalent_hydrogen_random is set to false then explicitly define the number of covalent hydrogen here
+    
+    ADD_DISTAL_LIGAND_WILD=True means adding distal oxygen ligand in a spherical coordinated system with specified r, theta and phi. Otherwise the distal oxygen are added based on the return value of geometry module
+    
     COVALENT_HYDROGEN_ACCEPTOR=[['O1_1_0','O1_2_0'],['O1_1_0','O1_2_0']]
     COVALENT_HYDROGEN_NUMBER=[[1,1],[1,1]]
     ##means in domain1 both O1 and O2 will accept one covalent hydrogen (bv contribution of 0.8)
