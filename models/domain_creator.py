@@ -916,9 +916,10 @@ class domain_creator(domain_creator_water,domain_creator_sorbate,domain_creator_
                         r0=2.#arbitrary r0 here, ensure oxygens not too close to each other
                     else:r0=-1
                 else:
-                    if dist<2.3:
-                        r0=10.#exclude the situation where cations are closer than the searching range (2.5A in this case)
-                    else:r0=-10
+                    r0=-10#allow short sorbate-sorbate distance for consideration of multiple sorbate within one average structure
+                    #if dist<2.3:
+                    #    r0=10.#exclude the situation where cations are closer than the searching range (2.5A in this case)
+                    #else:r0=-10
                 sum_check=0
                 for atm in coordinated_atms:
                     if atm in key[0]:
