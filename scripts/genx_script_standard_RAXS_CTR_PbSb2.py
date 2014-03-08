@@ -53,6 +53,7 @@ O_NUMBER_FL=[[[0,0]],[[0,0]],[[0,0]],[[0,0]],[[0,0]]]#either zero oxygen ligand 
 O_NUMBER=pick(O_NUMBER_HL+O_NUMBER_FL)
 SORBATE_LIST=domain_creator.create_sorbate_el_list(SORBATE,SORBATE_NUMBER)
 ADD_DISTAL_LIGAND_WILD=False
+COUNT_DISTAL_OXYGEN=True#True then consider bond valence also for distal oxygen,otherwise skip the bv contribution from distal oxygen
 METAL_BV={'Pb':[1.0,1.5],'Sb':[4.,5.]}#range of acceptable metal bv
 
 SORBATE_ATTACH_ATOM_HL=[[['O1_1_0','O1_2_0'],['O1_1_0','O1_2_0']],[['O1_1_0','O1_3_0'],['O1_4_0','O1_2_0']],[['O1_1_0','O1_4_0'],['O1_3_0','O1_2_0']],[['O1_1_0','O1_2_0','O1_3_0'],['O1_1_0','O1_2_0','O1_4_0']],[[],[]]]
@@ -719,12 +720,14 @@ def Sim(data,VARS=VARS):
                     temp_bv=domain_class_1.cal_bond_valence4B(super_cell_surface,key,VARS['match_lib_'+str(i+1)+'A'][key])
                 else:
                     #searching included in this algorithem
-                    el=None
-                    if "HO" in key:el="O"
-                    else:
-                        if 'Pb' in key:el='Pb'
-                        elif 'Sb' in key:el='Sb'
-                    temp_bv=domain_class_1.cal_bond_valence1_new2B(super_cell_sorbate,key,el,2.5,VARS['match_lib_'+str(i+1)+'A'][key],50,False)['total_valence']
+                    if "HO" in key and COUNT_DISTAL_OXYGEN:
+                        temp_bv=domain_class_1.cal_bond_valence1_new2B(super_cell_sorbate,key,'O',2.5,VARS['match_lib_'+str(i+1)+'A'][key],50,False)['total_valence']
+                    elif "HO" not in key:
+                        el=None
+                        if 'Pb' in key and "HO" not in key:el='Pb'
+                        elif 'Sb' in key and "HO" not in key:el='Sb'
+                        temp_bv=domain_class_1.cal_bond_valence1_new2B(super_cell_sorbate,key,el,2.5,VARS['match_lib_'+str(i+1)+'A'][key],50,False)['total_valence']
+                    else:temp_bv=2
                 if PRINT_BV:print key, temp_bv
                 #consider possible hydrogen bond and hydroxyl bond fro oxygen atoms
                 if 'O' in key:
