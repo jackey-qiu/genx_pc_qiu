@@ -46,10 +46,11 @@ class share_face():
         #pass in the vector of three known vertices
         self.face=face
 
-    def share_face_init(self,flag='right_triangle'):
+    def share_face_init(self,flag='right_triangle',dr=0):
         #octahedra has a high symmetrical configuration,there are only two types of share face.
         #flag 'right_triangle' means the shared face is defined by a right triangle with two equal lateral and the other one
         #passing through body center;'regular_triangle' means the shared face is defined by a regular triangle
+        #dr is used for fitting purpose, set this to be 0 to get a regular octahedral
         p0,p1,p2=self.face[0,:],self.face[1,:],self.face[2,:]
         #consider the possible unregular shape for the known triangle
         dist_list=[np.sqrt(np.sum((p0-p1)**2)),np.sqrt(np.sum((p1-p2)**2)),np.sqrt(np.sum((p0-p2)**2))]
@@ -80,20 +81,20 @@ class share_face():
                     center_point_org=2*origin-center_point_org
                 return center_point_org
             self.center_point=_cal_center(p0,p1,p2)
-        self._find_the_other_three(self.center_point,p0,p1,p2,flag)
+        self._find_the_other_three(self.center_point,p0,p1,p2,flag,dr)
         
-    def _find_the_other_three(self,center_point,p0,p1,p2,flag):
+    def _find_the_other_three(self,center_point,p0,p1,p2,flag,dr):
         dist_list=[np.sqrt(np.sum((p0-p1)**2)),np.sqrt(np.sum((p1-p2)**2)),np.sqrt(np.sum((p0-p2)**2))]
         index=dist_list.index(max(dist_list))
         
         if flag=='right_triangle':
-            def _cal_points(center_point,p0,p1,p2):
+            def _cal_points(center_point,p0,p1,p2,dr):
                 #here p0-->p1 is the long lateral
                 z_v=f3(np.zeros(3),p2-center_point)
                 x_v=f3(np.zeros(3),p0-center_point)
                 y_v=np.cross(z_v,x_v)
                 T=f1(x0_v,y0_v,z0_v,x_v,y_v,z_v)
-                r=f2(center_point,p0)
+                r=f2(center_point,p0)+dr
                 p3_new=np.array([r*np.cos(np.pi/2)*np.sin(np.pi/2),r*np.sin(np.pi/2)*np.sin(np.pi/2),0])
                 p4_new=np.array([r*np.cos(3*np.pi/2)*np.sin(np.pi/2),r*np.sin(3*np.pi/2)*np.sin(np.pi/2),0])
                 p3_old=np.dot(inv(T),p3_new)+center_point
@@ -101,20 +102,20 @@ class share_face():
                 p5_old=2*center_point-p2
                 return T,r,p3_old,p4_old,p5_old
             if index==0:#p0-->p1 long lateral
-                self.T,self.r,self.p3,self.p4,self.p5=_cal_points(center_point,p0,p1,p2)
+                self.T,self.r,self.p3,self.p4,self.p5=_cal_points(center_point,p0,p1,p2,dr)
             elif index==1:#p1-->p2 long lateral
-                self.T,self.r,self.p3,self.p4,self.p5=_cal_points(center_point,p1,p2,p0)
+                self.T,self.r,self.p3,self.p4,self.p5=_cal_points(center_point,p1,p2,p0,dr)
             elif index==2:#p0-->p2 long lateral
-                self.T,self.r,self.p3,self.p4,self.p5=_cal_points(center_point,p0,p2,p1)
+                self.T,self.r,self.p3,self.p4,self.p5=_cal_points(center_point,p0,p2,p1,dr)
         elif flag=='regular_triangle':
             x_v=f3(np.zeros(3),p2-center_point)
             y_v=f3(np.zeros(3),p0-center_point)
             z_v=np.cross(x_v,x_v)
             self.T=f1(x0_v,y0_v,z0_v,x_v,y_v,z_v)
             self.r=f2(center_point,p0)
-            self.p3=2*center_point-p0
-            self.p4=2*center_point-p1
-            self.p5=2*center_point-p2
+            self.p3=(center_point-p0)*((self.r+dr)/self.r)+center_point
+            self.p4=(center_point-p1)*((self.r+dr)/self.r)+center_point
+            self.p5=(center_point-p2)*((self.r+dr)/self.r)+center_point
              
     def cal_point_in_fit(self,r,theta,phi):
         #during fitting,use the same coordinate system, but a different origin

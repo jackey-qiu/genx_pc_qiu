@@ -392,7 +392,43 @@ for i in range(DOMAIN_NUMBER):
                 sorbate_set_ids=[SORBATE_id]+[SORBATE_id_B]
                 N=len(sorbate_set_ids)/2
                 vars()['gp_sorbates_set'+str(j+1)+'_D'+str(int(i+1))]=vars()['domain_class_'+str(int(i+1))].grouping_discrete_layer3(domain=[vars()['domain'+str(int(i+1))+'A']]*N+[vars()['domain'+str(int(i+1))+'B']]*N,atom_ids=sorbate_set_ids)
+        else:#add an outer-sphere case here
+            #ids=SORBATE_ATTACH_ATOM[i][j][0]+'_D'+str(int(i+1))+'A'
+            #print ids
+            #offset=SORBATE_ATTACH_ATOM_OFFSET[i][j][0]
+            SORBATE_id=vars()['SORBATE_list_domain'+str(int(i+1))+'a'][j]#pb_id is a str NOT list
+            #O_index=[0]+[sum(O_NUMBER[i][0:ii+1]) for ii in range(len(O_NUMBER[i]))]
+            #for [1,2,2], which means inside one domain there are 1OH corresponding to pb1, 2 OH's corresponding to pb2 and so son.
+            #will return [0,1,3,5], O_id extract OH according to O_index
+            O_id=[HO_id for HO_id in vars()['HO_list_domain'+str(int(i+1))+'a'] if SORBATE_id in HO_id]
+            #print SORBATE_id,O_id,vars()['HO_list_domain'+str(int(i+1))+'a']
+            #O_id=vars()['HO_list_domain'+str(int(i+1))+'a'][O_index[j]:O_index[j+1]]#O_ide is a list of str
+            sorbate_coors=[]
+            if SORBATE_LIST[i][j]=='Pb':
+                sorbate_coors=vars()['domain_class_'+str(int(i+1))].outer_sphere_complex(domain=vars()['domain'+str(int(i+1))+'A'],cent_point=[0.5,0.5,2.1],r0=1.62,r1=1.46,phi=0.,pb_id=SORBATE_id,O_ids=O_id,distal_oxygen=True)           
+            elif SORBATE_LIST[i][j]=='Sb':
+                sorbate_coors=vars()['domain_class_'+str(int(i+1))].outer_sphere_complex_oct(domain=vars()['domain'+str(int(i+1))+'A'],cent_point=[0.5,0.5,2.1],r0=1.62,phi=0.,Sb_id=SORBATE_id,O_ids=O_id,distal_oxygen=True)           
 
+            SORBATE_coors_a.append(sorbate_coors[0])
+            if O_id!=[]:
+                [O_coors_a.append(sorbate_coors[k]) for k in range(len(sorbate_coors))[1:]]
+            SORBATE_id_B=vars()['SORBATE_list_domain'+str(int(i+1))+'b'][j]
+            O_id_B=[HO_id for HO_id in vars()['HO_list_domain'+str(int(i+1))+'b'] if SORBATE_id_B in HO_id]
+            #now put on sorbate on the symmetrically related domain
+            sorbate_ids=[SORBATE_id_B]+O_id_B
+            sorbate_els=[SORBATE_LIST[i][j]]+['O']*(len(O_id_B))
+            domain_creator.add_atom(domain=vars()['domain'+str(int(i+1))+'B'],ref_coor=np.array(SORBATE_coors_a+O_coors_a)*[-1,1,1]-[-1.,0.06955,0.5],ids=sorbate_ids,els=sorbate_els)
+            #grouping sorbates (each set of Pb and HO, set the occupancy equivalent during fitting, looks like gp_sorbates_set1_D1)
+            #also group the oxygen sorbate to set equivalent u during fitting (looks like gp_HO_set1_D1)
+            sorbate_set_ids=[SORBATE_id]+O_id+[SORBATE_id_B]+O_id_B
+            HO_set_ids=O_id+O_id_B
+            N=len(sorbate_set_ids)/2
+            M=len(O_id)
+            vars()['gp_sorbates_set'+str(j+1)+'_D'+str(int(i+1))]=vars()['domain_class_'+str(int(i+1))].grouping_discrete_layer3(domain=[vars()['domain'+str(int(i+1))+'A']]*N+[vars()['domain'+str(int(i+1))+'B']]*N,atom_ids=sorbate_set_ids)
+            #if O_NUMBER[i][j]!=0:
+            if M!=0:
+                vars()['gp_HO_set'+str(j+1)+'_D'+str(int(i+1))]=vars()['domain_class_'+str(int(i+1))].grouping_discrete_layer3(domain=[vars()['domain'+str(int(i+1))+'A']]*M+[vars()['domain'+str(int(i+1))+'B']]*M,atom_ids=HO_set_ids)
+            
     if WATER_NUMBER[i]!=0:#add water molecules if any
         if WATER_PAIR:
             for jj in range(WATER_NUMBER[i]/2):#note will add water pair (two oxygens) each time, and you can't add single water 
@@ -650,20 +686,48 @@ def Sim(data,VARS=VARS):
                     elif SORBATE_LIST[i][j]=='Sb':
                         ids=[VARS['SORBATE_ATTACH_ATOM'][i][j][0]+'_D'+str(int(i+1))+'A',VARS['SORBATE_ATTACH_ATOM'][i][j][1]+'_D'+str(int(i+1))+'A',VARS['SORBATE_ATTACH_ATOM'][i][j][2]+'_D'+str(int(i+1))+'A']
                         offset=VARS['SORBATE_ATTACH_ATOM_OFFSET'][i][j]
+                        dr=getattr(VARS['rgh_domain'+str(int(i+1))],'dr_oct')
                         SORBATE_id=VARS['SORBATE_list_domain'+str(int(i+1))+'a'][j]
                         #O_index=[0]+[sum(VARS['O_NUMBER'][i][0:ii+1]) for ii in range(len(VARS['O_NUMBER'][i]))]
                         #O_id=VARS['HO_list_domain'+str(int(i+1))+'a'][O_index[j]:O_index[j+1]]
                         O_id=[HO_id for HO_id in VARS['HO_list_domain'+str(int(i+1))+'a'] if SORBATE_id in HO_id]
-                        sorbate_coors=VARS['domain_class_'+str(int(i+1))].adding_share_triple_octahedra(domain=VARS['domain'+str(int(i+1))+'A'],attach_atm_ids_ref=ids[0:2],attach_atm_id_third=[ids[-1]],offset=offset,sorbate_id=SORBATE_id,sorbate_oxygen_ids=O_id)
+                        sorbate_coors=VARS['domain_class_'+str(int(i+1))].adding_share_triple_octahedra(domain=VARS['domain'+str(int(i+1))+'A'],attach_atm_ids_ref=ids[0:2],attach_atm_id_third=[ids[-1]],offset=offset,sorbate_id=SORBATE_id,sorbate_oxygen_ids=O_id,dr=dr)
                         SORBATE_coors_a.append(sorbate_coors[0])
-                        [O_coors_a.append(sorbate_coors[k]) for k in range(len(sorbate_coors))[1:]]
+                        sorbate_offset=domain_creator.extract_coor(VARS['domain'+str(int(i+1))+'A'],SORBATE_id)-domain_creator.extract_coor2(VARS['domain'+str(int(i+1))+'A'],SORBATE_id)
+                        [O_coors_a.append(sorbate_coors[k]+sorbate_offset) for k in range(len(sorbate_coors))[1:]]
                         SORBATE_id_B=VARS['SORBATE_list_domain'+str(int(i+1))+'b'][j]
                         O_id_B=[HO_id for HO_id in VARS['HO_list_domain'+str(int(i+1))+'b'] if SORBATE_id_B in HO_id]
                         #now put on sorbate on the symmetrically related domain
                         sorbate_ids=[SORBATE_id_B]+O_id_B
                         sorbate_els=[SORBATE_LIST[i][j]]+['O']*(len(O_id_B))
                         domain_creator.add_atom(domain=VARS['domain'+str(int(i+1))+'B'],ref_coor=np.array(SORBATE_coors_a+O_coors_a)*[-1,1,1]-[-1.,0.06955,0.5],ids=sorbate_ids,els=sorbate_els)    
-        
+                else:#outer-sphere case
+                    phi=getattr(VARS['rgh_domain'+str(int(i+1))],'phi_OS')
+                    r0=getattr(VARS['rgh_domain'+str(int(i+1))],'r0_OS')
+                    r1=getattr(VARS['rgh_domain'+str(int(i+1))],'r1_OS')
+                    ct_offset_dx=getattr(VARS['rgh_domain'+str(int(i+1))],'ct_offset_dx_OS')
+                    ct_offset_dy=getattr(VARS['rgh_domain'+str(int(i+1))],'ct_offset_dy_OS')
+                    ct_offset_dz=getattr(VARS['rgh_domain'+str(int(i+1))],'ct_offset_dz_OS')
+                    SORBATE_id=VARS['SORBATE_list_domain'+str(int(i+1))+'a'][j]#pb_id is a str NOT list
+                    #O_index=[0]+[sum(VARS['O_NUMBER'][i][0:ii+1]) for ii in range(len(VARS['O_NUMBER'][i]))]
+                    #for [1,2,2], which means inside one domain there are 1OH corresponding to pb1, 2 OH's corresponding to pb2 and so son.
+                    #will return [0,1,3,5], O_id extract OH according to O_index
+                    O_id=[HO_id for HO_id in VARS['HO_list_domain'+str(int(i+1))+'a'] if SORBATE_id in HO_id]
+                    #O_id=VARS['HO_list_domain'+str(int(i+1))+'a'][O_index[j]:O_index[j+1]]#O_ide is a list of str
+                    sorbate_coors=[]
+                    if SORBATE_LIST[i][j]=='Pb':
+                        sorbate_coors=VARS['domain_class_'+str(int(i+1))].outer_sphere_complex(domain=vars()['domain'+str(int(i+1))+'A'],cent_point=[0.5+ct_offset_dx,0.5+ct_offset_dy,2.1+ct_offset_dz],r0=r0,r1=r1,phi=phi,pb_id=SORBATE_id,O_ids=O_id,distal_oxygen=True)           
+                    elif SORBATE_LIST[i][j]=='Sb':#to be completed
+                        sorbate_coors=VARS['domain_class_'+str(int(i+1))].outer_sphere_complex_oct(domain=vars()['domain'+str(int(i+1))+'A'],cent_point=[0.5+ct_offset_dx,0.5+ct_offset_dy,2.1+ct_offset_dz],r0=r0,phi=phi,Sb_id=SORBATE_id,O_ids=O_id,distal_oxygen=True)           
+                    SORBATE_coors_a.append(sorbate_coors[0])
+                    [O_coors_a.append(sorbate_coors[k]) for k in range(len(sorbate_coors))[1:]]
+                    SORBATE_id_B=VARS['SORBATE_list_domain'+str(int(i+1))+'b'][j]
+                    O_id_B=[HO_id for HO_id in VARS['HO_list_domain'+str(int(i+1))+'b'] if SORBATE_id_B in HO_id]
+                    #now put on sorbate on the symmetrically related domain
+                    sorbate_ids=[SORBATE_id_B]+O_id_B
+                    sorbate_els=[SORBATE_LIST[i][j]]+['O']*(len(O_id_B))
+                    domain_creator.add_atom(domain=VARS['domain'+str(int(i+1))+'B'],ref_coor=np.array(SORBATE_coors_a+O_coors_a)*[-1,1,1]-[-1.,0.06955,0.5],ids=sorbate_ids,els=sorbate_els)
+
         if WATER_NUMBER[i]!=0:#add water molecules if any
             if WATER_PAIR:
                 for jj in range(WATER_NUMBER[i]/2):#note will add water pair (two oxygens) each time, and you can't add single water 

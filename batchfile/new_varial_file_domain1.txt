@@ -8,6 +8,7 @@ top_angle,1.,*
 top_angle1_1,1.,*
 top_angle1_2,1.,*
 phi,0.,*
+phi_OS,0,*
 phi_1,0.,*
 phi_2,0.,*
 phi1_1,0,*
@@ -27,6 +28,12 @@ theta2_2,0,*
 theta2_3,0,*
 theta2_4,0,*
 r,2.25,*
+r0_OS,2.2,*
+r1_OS,2.,*
+dr_oct,0,*
+ct_offset_dx_OS,0,*
+ct_offset_dy_OS,0,*
+ct_offset_dz_OS,0,*
 r_1,2.25,*
 r_2,2.25,*
 r1_1,2.19,*
