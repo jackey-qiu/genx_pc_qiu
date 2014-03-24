@@ -31,6 +31,9 @@ r,2.25,*
 r0_OS,2.2,*
 r1_OS,2.,*
 dr_oct,0,*
+dr1_oct,0,*
+dr2_oct,0,*
+dr3_oct,0,*
 ct_offset_dx_OS,0,*
 ct_offset_dy_OS,0,*
 ct_offset_dz_OS,0,*

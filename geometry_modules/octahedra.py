@@ -46,7 +46,7 @@ class share_face():
         #pass in the vector of three known vertices
         self.face=face
 
-    def share_face_init(self,flag='right_triangle',dr=0):
+    def share_face_init(self,flag='right_triangle',dr=[0,0,0]):
         #octahedra has a high symmetrical configuration,there are only two types of share face.
         #flag 'right_triangle' means the shared face is defined by a right triangle with two equal lateral and the other one
         #passing through body center;'regular_triangle' means the shared face is defined by a regular triangle
@@ -113,9 +113,9 @@ class share_face():
             z_v=np.cross(x_v,x_v)
             self.T=f1(x0_v,y0_v,z0_v,x_v,y_v,z_v)
             self.r=f2(center_point,p0)
-            self.p3=(center_point-p0)*((self.r+dr)/self.r)+center_point
-            self.p4=(center_point-p1)*((self.r+dr)/self.r)+center_point
-            self.p5=(center_point-p2)*((self.r+dr)/self.r)+center_point
+            self.p3=(center_point-p0)*((self.r+dr[0])/self.r)+center_point
+            self.p4=(center_point-p1)*((self.r+dr[1])/self.r)+center_point
+            self.p5=(center_point-p2)*((self.r+dr[2])/self.r)+center_point
             #print f2(self.center_point,self.p3),f2(self.center_point,self.p4)
              
     def cal_point_in_fit(self,r,theta,phi):

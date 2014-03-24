@@ -686,7 +686,7 @@ def Sim(data,VARS=VARS):
                     elif SORBATE_LIST[i][j]=='Sb':
                         ids=[VARS['SORBATE_ATTACH_ATOM'][i][j][0]+'_D'+str(int(i+1))+'A',VARS['SORBATE_ATTACH_ATOM'][i][j][1]+'_D'+str(int(i+1))+'A',VARS['SORBATE_ATTACH_ATOM'][i][j][2]+'_D'+str(int(i+1))+'A']
                         offset=VARS['SORBATE_ATTACH_ATOM_OFFSET'][i][j]
-                        dr=getattr(VARS['rgh_domain'+str(int(i+1))],'dr_oct')
+                        dr=[getattr(VARS['rgh_domain'+str(int(i+1))],'dr1_oct'),getattr(VARS['rgh_domain'+str(int(i+1))],'dr2_oct'),getattr(VARS['rgh_domain'+str(int(i+1))],'dr3_oct')]
                         SORBATE_id=VARS['SORBATE_list_domain'+str(int(i+1))+'a'][j]
                         #O_index=[0]+[sum(VARS['O_NUMBER'][i][0:ii+1]) for ii in range(len(VARS['O_NUMBER'][i]))]
                         #O_id=VARS['HO_list_domain'+str(int(i+1))+'a'][O_index[j]:O_index[j+1]]

@@ -369,7 +369,7 @@ class domain_creator_sorbate():
         #_add_sorbate(domain=domain,id_sorbate=attach_atm_id_third[0],el='O',sorbate_v=(p_O3-_translate_offset_symbols(offset[2]))/basis)
         return pyramid_distortion.apex/basis
         
-    def adding_share_triple_octahedra(self,domain,attach_atm_ids_ref=['id1','id2'],attach_atm_id_third=['id3'],offset=[None,None,None],sorbate_id='Sb_id',sorbate_oxygen_ids=['HO1','HO2','HO3'],dr=0):
+    def adding_share_triple_octahedra(self,domain,attach_atm_ids_ref=['id1','id2'],attach_atm_id_third=['id3'],offset=[None,None,None],sorbate_id='Sb_id',sorbate_oxygen_ids=['HO1','HO2','HO3'],dr=[0,0,0]):
         #here only consider the configuration of regular octahedra
         #and here consider the tridentate complexation configuration 
         #two steps:
