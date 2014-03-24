@@ -42,7 +42,7 @@ O11_top,O12_top=[0.153,0.9452,2.097]*basis,[0.347,0.4452,2.097]*basis
 anchor1,anchor2=O1,O2
 
 class share_face():
-    def __init__(self,face=np.array([[0.,0.,0.],[0.5,0.5,0.5],[1.0,1.0,1.0]])):
+    def __init__(self,face=np.array([[0.,0.,2.5],[2.5,0,0.],[0,2.5,0]])):
         #pass in the vector of three known vertices
         self.face=face
 
@@ -116,6 +116,7 @@ class share_face():
             self.p3=(center_point-p0)*((self.r+dr)/self.r)+center_point
             self.p4=(center_point-p1)*((self.r+dr)/self.r)+center_point
             self.p5=(center_point-p2)*((self.r+dr)/self.r)+center_point
+            #print f2(self.center_point,self.p3),f2(self.center_point,self.p4)
              
     def cal_point_in_fit(self,r,theta,phi):
         #during fitting,use the same coordinate system, but a different origin
@@ -131,11 +132,11 @@ class share_face():
         f.write('7\n#\n')
         s = '%-5s   %7.5e   %7.5e   %7.5e\n' % ('Sb', self.center_point[0],self.center_point[1],self.center_point[2])
         f.write(s)
-        s = '%-5s   %7.5e   %7.5e   %7.5e\n' % ('O', self.corner[0],self.corner[1],self.corner[2])
+        s = '%-5s   %7.5e   %7.5e   %7.5e\n' % ('O', self.face[0,:][0],self.face[0,:][1],self.face[0,:][2])
         f.write(s)
-        s = '%-5s   %7.5e   %7.5e   %7.5e\n' % ('O', self.p1[0],self.p1[1],self.p1[2])
+        s = '%-5s   %7.5e   %7.5e   %7.5e\n' % ('O', self.face[1,:][0],self.face[1,:][1],self.face[1,:][2])
         f.write(s)
-        s = '%-5s   %7.5e   %7.5e   %7.5e\n' % ('O', self.p2[0],self.p2[1],self.p2[2])
+        s = '%-5s   %7.5e   %7.5e   %7.5e\n' % ('O', self.face[2,:][0],self.face[2,:][1],self.face[2,:][2])
         f.write(s)
         s = '%-5s   %7.5e   %7.5e   %7.5e\n' % ('O', self.p3[0],self.p3[1],self.p3[2])
         f.write(s)

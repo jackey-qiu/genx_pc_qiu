@@ -693,8 +693,8 @@ def Sim(data,VARS=VARS):
                         O_id=[HO_id for HO_id in VARS['HO_list_domain'+str(int(i+1))+'a'] if SORBATE_id in HO_id]
                         sorbate_coors=VARS['domain_class_'+str(int(i+1))].adding_share_triple_octahedra(domain=VARS['domain'+str(int(i+1))+'A'],attach_atm_ids_ref=ids[0:2],attach_atm_id_third=[ids[-1]],offset=offset,sorbate_id=SORBATE_id,sorbate_oxygen_ids=O_id,dr=dr)
                         SORBATE_coors_a.append(sorbate_coors[0])
-                        sorbate_offset=domain_creator.extract_coor(VARS['domain'+str(int(i+1))+'A'],SORBATE_id)-domain_creator.extract_coor2(VARS['domain'+str(int(i+1))+'A'],SORBATE_id)
-                        [O_coors_a.append(sorbate_coors[k]+sorbate_offset) for k in range(len(sorbate_coors))[1:]]
+                        #sorbate_offset=domain_creator.extract_coor(VARS['domain'+str(int(i+1))+'A'],SORBATE_id)-domain_creator.extract_coor2(VARS['domain'+str(int(i+1))+'A'],SORBATE_id)
+                        [O_coors_a.append(sorbate_coors[k]) for k in range(len(sorbate_coors))[1:]]
                         SORBATE_id_B=VARS['SORBATE_list_domain'+str(int(i+1))+'b'][j]
                         O_id_B=[HO_id for HO_id in VARS['HO_list_domain'+str(int(i+1))+'b'] if SORBATE_id_B in HO_id]
                         #now put on sorbate on the symmetrically related domain
@@ -716,9 +716,9 @@ def Sim(data,VARS=VARS):
                     #O_id=VARS['HO_list_domain'+str(int(i+1))+'a'][O_index[j]:O_index[j+1]]#O_ide is a list of str
                     sorbate_coors=[]
                     if SORBATE_LIST[i][j]=='Pb':
-                        sorbate_coors=VARS['domain_class_'+str(int(i+1))].outer_sphere_complex(domain=vars()['domain'+str(int(i+1))+'A'],cent_point=[0.5+ct_offset_dx,0.5+ct_offset_dy,2.1+ct_offset_dz],r0=r0,r1=r1,phi=phi,pb_id=SORBATE_id,O_ids=O_id,distal_oxygen=True)           
+                        sorbate_coors=VARS['domain_class_'+str(int(i+1))].outer_sphere_complex(domain=VARS['domain'+str(int(i+1))+'A'],cent_point=[0.5+ct_offset_dx,0.5+ct_offset_dy,2.1+ct_offset_dz],r0=r0,r1=r1,phi=phi,pb_id=SORBATE_id,O_ids=O_id,distal_oxygen=True)           
                     elif SORBATE_LIST[i][j]=='Sb':#to be completed
-                        sorbate_coors=VARS['domain_class_'+str(int(i+1))].outer_sphere_complex_oct(domain=vars()['domain'+str(int(i+1))+'A'],cent_point=[0.5+ct_offset_dx,0.5+ct_offset_dy,2.1+ct_offset_dz],r0=r0,phi=phi,Sb_id=SORBATE_id,O_ids=O_id,distal_oxygen=True)           
+                        sorbate_coors=VARS['domain_class_'+str(int(i+1))].outer_sphere_complex_oct(domain=VARS['domain'+str(int(i+1))+'A'],cent_point=[0.5+ct_offset_dx,0.5+ct_offset_dy,2.1+ct_offset_dz],r0=r0,phi=phi,Sb_id=SORBATE_id,O_ids=O_id,distal_oxygen=True)           
                     SORBATE_coors_a.append(sorbate_coors[0])
                     [O_coors_a.append(sorbate_coors[k]) for k in range(len(sorbate_coors))[1:]]
                     SORBATE_id_B=VARS['SORBATE_list_domain'+str(int(i+1))+'b'][j]

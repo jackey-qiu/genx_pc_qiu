@@ -394,7 +394,7 @@ class domain_creator_sorbate():
 
         f2=lambda p1,p2:np.sqrt(np.sum((p1-p2)**2))
         pt_ct=lambda domain,p_O1_index,symbol:np.array([domain.x[p_O1_index][0]+domain.dx1[p_O1_index][0]+domain.dx2[p_O1_index][0]+domain.dx3[p_O1_index][0],domain.y[p_O1_index][0]+domain.dy1[p_O1_index][0]+domain.dy2[p_O1_index][0]+domain.dy3[p_O1_index][0],domain.z[p_O1_index][0]+domain.dz1[p_O1_index][0]+domain.dz2[p_O1_index][0]+domain.dz3[p_O1_index][0]])+_translate_offset_symbols(symbol)
-        dxdydz=lambda domain,p_O1_index:np.array([domain.dx1[p_O1_index][0]+domain.dx2[p_O1_index][0]+domain.dx3[p_O1_index][0],domain.dy1[p_O1_index][0]+domain.dy2[p_O1_index][0]+domain.dy3[p_O1_index][0],domain.dz1[p_O1_index][0]+domain.dz2[p_O1_index][0]+domain.dz3[p_O1_index][0]])
+        dxdydz=lambda domain,p_O1_index:np.array([domain.dx1[p_O1_index]+domain.dx2[p_O1_index]+domain.dx3[p_O1_index],domain.dy1[p_O1_index]+domain.dy2[p_O1_index]+domain.dy3[p_O1_index],domain.dz1[p_O1_index]+domain.dz2[p_O1_index]+domain.dz3[p_O1_index]])
 
                        
         def _cal_coor_o3(p0,p1,p3):
@@ -418,6 +418,7 @@ class domain_creator_sorbate():
         p_O2=pt_ct(domain,p_O2_index,offset[1])*basis
         p_O3_old=pt_ct(domain,p_O3_index,offset[2])*basis
         p_O3=_cal_coor_o3(p_O1,p_O2,p_O3_old)
+        #print "sensor 1",f2(p_O1,p_O2),f2(p_O1,p_O3),f2(p_O2,p_O3)
         #print p_O1,p_O2,p_O3
         octahedra_case=octahedra.share_face(np.array([p_O1,p_O2,p_O3]))
         octahedra_case.share_face_init(flag='regular_triangle',dr=dr)
@@ -435,10 +436,13 @@ class domain_creator_sorbate():
                 if el!='O':sorbate_index_global=sorbate_index
                 
         _add_sorbate(domain=domain,id_sorbate=sorbate_id,el='Sb',sorbate_v=octahedra_case.center_point/basis)
+        
+        #print "sensor2",f2(octahedra_case.center_point,octahedra_case.p3),f2(octahedra_case.center_point,octahedra_case.p4)
+        #print domain.dx1[np.where(domain.id==sorbate_id)[0][0]]
         try:
-            _add_sorbate(domain=domain,id_sorbate=sorbate_oxygen_ids[0],el='O',sorbate_v=octahedra_case.p3/basis)
-            _add_sorbate(domain=domain,id_sorbate=sorbate_oxygen_ids[1],el='O',sorbate_v=octahedra_case.p4/basis)
-            _add_sorbate(domain=domain,id_sorbate=sorbate_oxygen_ids[2],el='O',sorbate_v=octahedra_case.p5/basis)
+            _add_sorbate(domain=domain,id_sorbate=sorbate_oxygen_ids[0],el='O',sorbate_v=octahedra_case.p3/basis+dxdydz(domain,np.where(domain.id==sorbate_id)[0][0]))
+            _add_sorbate(domain=domain,id_sorbate=sorbate_oxygen_ids[1],el='O',sorbate_v=octahedra_case.p4/basis+dxdydz(domain,np.where(domain.id==sorbate_id)[0][0]))
+            _add_sorbate(domain=domain,id_sorbate=sorbate_oxygen_ids[2],el='O',sorbate_v=octahedra_case.p5/basis+dxdydz(domain,np.where(domain.id==sorbate_id)[0][0]))
         except:
             pass
         #print octahedra_case.p3/basis,dxdydz(domain,sorbate_index_global)
