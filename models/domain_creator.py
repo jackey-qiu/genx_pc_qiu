@@ -183,6 +183,15 @@ def print_data_for_ROD(N_atm=40,domain='',save_file='D:\\Google Drive\\useful co
     f.close()
     f2.close()
     
+def print_data_for_postrun_test(domain='',save_file='D:\\half_layer_postrun_test.txt'):
+    data=domain._extract_values()
+    index=range(len(data[0]))
+    f=open(save_file,'w')
+    for i in index:
+        s = '%s,%s,%6.5f,%6.5f,%6.5f,%6.5f,%6.5f,%6.5f\n' % (domain.id[i][0:-4],data[3][i],data[0][i],data[1][i],data[2][i],data[4][i],data[5][i],1)
+        f.write(s)
+    f.close()
+    
 def create_list(ids,off_set_begin,start_N):
     ids_processed=[[],[]]
     off_set=[None,'+x','-x','+y','-y','+x+y','+x-y','-x+y','-x-y']
