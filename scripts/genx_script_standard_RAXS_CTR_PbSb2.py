@@ -22,7 +22,7 @@ if COUNT_TIME:t_0=datetime.now()
 batch_path_head='/u1/uaf/cqiu/batchfile/'
 WT_RAXS=5#weighting for RAXS dataset
 WT_BV=1#weighting for bond valence constrain (1 recommended)
-BV_TOLERANCE=0.05#ideal bv value + or - this value is acceptable
+BV_TOLERANCE=0.08#ideal bv value + or - this value is acceptable
 FULL_LAYER_LONG=0
 
 #this is one way to start up quickly, each time you only need to specify the pickup_index and DOMAIN_GP if want to group different domains
@@ -88,7 +88,7 @@ else:DISCONNECT_BV_CONTRIBUTION_FL=[{('O1_5_0','O1_6_0'):[SORBATE[0]+'2']},{},{}
 DISCONNECT_BV_CONTRIBUTION=pick(DISCONNECT_BV_CONTRIBUTION_HL+DISCONNECT_BV_CONTRIBUTION_FL)#set items to be {} if considering single sorbate
 
 #if consider hydrogen bonds#
-COVALENT_HYDROGEN_RANDOM=True
+COVALENT_HYDROGEN_RANDOM=False
 POTENTIAL_COVALENT_HYDROGEN_ACCEPTOR_HL=[['O1_1_0','O1_2_0','O1_3_0','O1_4_0']]+[['O1_1_0','O1_2_0']]*3+[['O1_1_0','O1_2_0']]+[['O1_1_0','O1_2_0','O1_3_0','O1_4_0']]#Will be considered only when COVALENT_HYDROGEN_RANDOM=True
 if FULL_LAYER_LONG:POTENTIAL_COVALENT_HYDROGEN_ACCEPTOR_FL=[['O1_11_t','O1_12_t','O1_1_0','O1_2_0']]+[['O1_11_t','O1_12_t']]*2+[['O1_11_t','O1_12_t']]+[['O1_11_t','O1_12_t','O1_1_0','O1_2_0']]#Will be considered only when COVALENT_HYDROGEN_RANDOM=True
 else:POTENTIAL_COVALENT_HYDROGEN_ACCEPTOR_FL=[['O1_5_0','O1_6_0','O1_7_0','O1_8_0']]+[['O1_5_0','O1_6_0']]*2+[['O1_5_0','O1_6_0']]+[['O1_5_0','O1_6_0','O1_7_0','O1_8_0']]#Will be considered only when COVALENT_HYDROGEN_RANDOM=True
