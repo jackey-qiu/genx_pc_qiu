@@ -912,9 +912,9 @@ class domain_creator(domain_creator_water,domain_creator_sorbate,domain_creator_
                 elif ((index[1]=='Fe')&(key[1]=='O'))|((index[1]=='O')&(key[1]=='Fe')):r0=1.759
                 elif ((index[1]=='Sb')&(key[1]=='O'))|((index[1]=='O')&(key[1]=='Sb')):r0=1.973
                 elif ((index[1]=='O')&(key[1]=='O')):
-                    if dist<2.:
-                        r0=2.#arbitrary r0 here, ensure oxygens not too close to each other
-                    else:r0=-1
+                    if dist<2.65:
+                        r0=20.#arbitrary r0 here, ensure oxygens are more than 2.65A apart
+                    else:r0=-10
                 else:
                     r0=-10#allow short sorbate-sorbate distance for consideration of multiple sorbate within one average structure
                     #if dist<2.3:

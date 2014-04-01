@@ -140,6 +140,7 @@ COHERENCE=[{True:range(len(pickup_index))}] #want to add up in coherence? items 
 
 ##cal bond valence switch##
 USE_BV=True
+SEARCH_MODE_FOR_SURFACE_ATOMS=False#If true then cal bond valence of surface atoms based on searching within a spherical region
 DOMAINS_BV=range(len(pickup_index))#Domains being considered for bond valence constrain, counted from 0
 
 ##want to output the data for plotting?##
@@ -778,13 +779,19 @@ def Sim(data,VARS=VARS):
                 super_cell_water=domain_class_1.build_super_cell2_simple(VARS['domain'+str(i+1)+'A'],[0,1]+range(-(WATER_NUMBER[i]+sum([np.sum(N_list) for N_list in O_NUMBER[i]])),0))
             if DOMAIN[i]==1:
                 super_cell_sorbate=domain_class_1.build_super_cell2_simple(VARS['domain'+str(i+1)+'A'],[0,1]+range(4,8)+range(-(sum(SORBATE_NUMBER[i])+sum([np.sum(N_list) for N_list in O_NUMBER[i]])+WATER_NUMBER[i]),0))
-                super_cell_surface=VARS['domain'+str(i+1)+'A'].copy()
-                #delete the first iron layer atoms if considering a half layer
-                super_cell_surface.del_atom(super_cell_surface.id[2])
-                super_cell_surface.del_atom(super_cell_surface.id[2])
+                if SEARCH_MODE_FOR_SURFACE_ATOMS:
+                    super_cell_surface=domain_class_1.build_super_cell2_simple(VARS['domain'+str(i+1)+'A'],[0,1]+range(4,25)+range(-(sum(SORBATE_NUMBER[i])+sum([np.sum(N_list) for N_list in O_NUMBER[i]])+WATER_NUMBER[i]),0))
+                else:
+                    super_cell_surface=VARS['domain'+str(i+1)+'A'].copy()
+                    #delete the first iron layer atoms if considering a half layer
+                    super_cell_surface.del_atom(super_cell_surface.id[2])
+                    super_cell_surface.del_atom(super_cell_surface.id[2])
             elif DOMAIN[i]==2:
                 super_cell_sorbate=domain_class_1.build_super_cell2_simple(VARS['domain'+str(i+1)+'A'],[0,1]+range(2,6)+range(-(sum(SORBATE_NUMBER[i])+sum([np.sum(N_list) for N_list in O_NUMBER[i]])+WATER_NUMBER[i]),0))
-                super_cell_surface=VARS['domain'+str(i+1)+'A'].copy()
+                if SEARCH_MODE_FOR_SURFACE_ATOMS:
+                    super_cell_surface=domain_class_1.build_super_cell2_simple(VARS['domain'+str(i+1)+'A'],range(0,25)+range(-(sum(SORBATE_NUMBER[i])+sum([np.sum(N_list) for N_list in O_NUMBER[i]])+WATER_NUMBER[i]),0))
+                else:
+                    super_cell_surface=VARS['domain'+str(i+1)+'A'].copy()
             
             #consider hydrogen bond only among interfacial water molecules and top surface Oxygen layer and Oxygen ligand
             if WATER_NUMBER[i]!=0:
@@ -799,8 +806,14 @@ def Sim(data,VARS=VARS):
             for key in VARS['match_lib_'+str(i+1)+'A'].keys():
                 temp_bv=None
                 if ([sorbate not in key for sorbate in SORBATE]==[True]*len(SORBATE)) and ("HO" not in key):
-                    #no searching in this algorithem
-                    temp_bv=domain_class_1.cal_bond_valence4B(super_cell_surface,key,VARS['match_lib_'+str(i+1)+'A'][key])
+                    if SEARCH_MODE_FOR_SURFACE_ATOMS:#cal temp_bv based on searching within spherical region
+                        el=None
+                        if "Fe" in key: el="Fe"
+                        elif "O" in key: el="O"
+                        temp_bv=domain_class_1.cal_bond_valence1_new2B(super_cell_surface,key,el,2.8,VARS['match_lib_'+str(i+1)+'A'][key],50,False)['total_valence']
+                    else:
+                        #no searching in this algorithem
+                        temp_bv=domain_class_1.cal_bond_valence4B(super_cell_surface,key,VARS['match_lib_'+str(i+1)+'A'][key])
                 else:
                     #searching included in this algorithem
                     if "HO" in key and COUNT_DISTAL_OXYGEN:
