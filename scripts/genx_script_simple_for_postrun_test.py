@@ -248,6 +248,7 @@ try:
 except:
     batch_path_head='\\'.join(__main__.__file__.rsplit('\\')[:-1])+'\\batchfile\\'
     domain_creator.add_atom_in_slab(bulk,batch_path_head+'bulk.str')
+#each domain corresponds to one structure_file_postrun_testN.txt file, which include both surface atom and sorbates(including water and distals)
 for i in range(DOMAIN_NUMBER):
     domain_creator.add_atom_in_slab(vars()['ref_domain'+str(i+1)],batch_path_head+'structure_file_postrun_test'+str(i+1)+'.txt')
 

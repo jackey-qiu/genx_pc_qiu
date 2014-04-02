@@ -1103,8 +1103,8 @@ class domain_creator(domain_creator_water,domain_creator_sorbate,domain_creator_
                 elif ((index[1]=='Fe')&(key[1]=='O'))|((index[1]=='O')&(key[1]=='Fe')):r0=1.759
                 elif ((index[1]=='Sb')&(key[1]=='O'))|((index[1]=='O')&(key[1]=='Sb')):r0=1.973
                 elif ((index[1]=='O')&(key[1]=='O')):
-                    if dist<2.6:#2.6 A is the typical distance for hydrogen bond with bond valence equivalent to 0.25 v.u.
-                        r0=2.#arbitrary r0 here, ensure oxygens not too close to each other
+                    if dist<2.65:#2.6 A is the typical distance for hydrogen bond with bond valence equivalent to 0.25 v.u.
+                        r0=20.#arbitrary r0 here, ensure oxygens not too close to each other
                     else:r0=-1
                 else:
                     if dist<2.3:
