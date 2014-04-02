@@ -183,8 +183,8 @@ def print_data_for_ROD(N_atm=40,domain='',save_file='D:\\Google Drive\\useful co
     f.close()
     f2.close()
     
-def print_data_for_postrun_test(domain='',save_file='D:\\half_layer_postrun_test.txt'):
-    data=domain._extract_values()
+def print_data_for_postrun_test(domain='',save_file='D:\\structure_file_postrun_test1.txt'):
+    data=domain._extract_values2()
     index=range(len(data[0]))
     f=open(save_file,'w')
     for i in index:
@@ -610,6 +610,25 @@ class domain_creator(domain_creator_water,domain_creator_sorbate,domain_creator_
         for id in self.id_list[:(self.terminated_layer+5)*2]:
             #print id in new_domain_B.id
             new_domain_B.del_atom(id)
+        new_domain_A.id=map(lambda x:x+self.domain_tag+'A',new_domain_A.id)
+        new_domain_B.id=map(lambda x:x+self.domain_tag+'B',new_domain_B.id)
+        return new_domain_A.copy(),new_domain_B.copy()
+        
+    def create_equivalent_domains_3(self):
+        new_domain_A=self.ref_domain.copy()
+        new_domain_B=self.ref_domain.copy()
+        new_domain_B.x,new_domain_B.y,new_domain_B.z=1-new_domain_B.x,new_domain_B.y-0.06955,new_domain_B.z-0.5
+        for id in self.id_list[:self.terminated_layer*2]:
+            if id!=[]:
+                new_domain_A.del_atom(id)
+        #number 5 here is crystal specific, here is the case for hematite
+        temp_ids=[]
+        for i in range(len(self.id_list)):
+            #print id in new_domain_B.id
+            if new_domain_B.z[i]<0:
+                temp_ids.append(new_domain_B.id[i])
+        for id in temp_ids:new_domain_B.del_atom(id)
+        new_domain_B.id=new_domain_A.id[10:]
         new_domain_A.id=map(lambda x:x+self.domain_tag+'A',new_domain_A.id)
         new_domain_B.id=map(lambda x:x+self.domain_tag+'B',new_domain_B.id)
         return new_domain_A.copy(),new_domain_B.copy()
