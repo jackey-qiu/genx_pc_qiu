@@ -167,6 +167,42 @@ class domain_creator_sorbate():
             domain.y[sorbate_index]=xyz_original[1]
             domain.z[sorbate_index]=xyz_original[2]
         return xyz_original
+    
+    def adding_distal_ligand_on_biset_plane(self,domain=None,sorbate_id='',HO_id='',attach_atm_ids=[],attach_atm_offsets=[],r=2,phi=0):
+        p_O1_index=np.where(domain.id==attach_atm_ids[0])
+        p_O2_index=np.where(domain.id==attach_atm_ids[1])
+        p_sorbate_index=np.where(domain.id==sorbate_id)
+        p_HO_index=np.where(domain.id==HO_id)
+        basis=np.array([5.038,5.434,7.3707])
+        
+        def _translate_offset_symbols(symbol):
+            if symbol=='-x':return np.array([-1.,0.,0.])
+            elif symbol=='+x':return np.array([1.,0.,0.])
+            elif symbol=='-y':return np.array([0.,-1.,0.])
+            elif symbol=='+y':return np.array([0.,1.,0.])
+            elif symbol==None:return np.array([0.,0.,0.])
+
+        pt_ct=lambda domain,p_O1_index,symbol:np.array([domain.x[p_O1_index][0]+domain.dx1[p_O1_index][0]+domain.dx2[p_O1_index][0]+domain.dx3[p_O1_index][0],domain.y[p_O1_index][0]+domain.dy1[p_O1_index][0]+domain.dy2[p_O1_index][0]+domain.dy3[p_O1_index][0],domain.z[p_O1_index][0]+domain.dz1[p_O1_index][0]+domain.dz2[p_O1_index][0]+domain.dz3[p_O1_index][0]])+_translate_offset_symbols(symbol)
+
+        p_O1_coor=pt_ct(domain,p_O1_index,attach_atm_offsets[0])*basis
+        p_O2_coor=pt_ct(domain,p_O2_index,attach_atm_offsets[1])*basis
+        p_sorbate_coor=pt_ct(domain,p_sorbate_index,None)*basis
+        unit_vector_S_O1=f3(np.zeros(3),p_O1_coor-p_sorbate_coor)
+        unit_vector_S_O2=f3(np.zeros(3),p_O2_coor-p_sorbate_coor)
+        y_v_new=f3(np.zeros(3),np.cross(unit_vector_S_O1,unit_vector_S_O2))
+        x_v_new=f3(np.zeros(3),unit_vector_S_O1+unit_vector_S_O2)
+        z_v_new=np.cross(x_v_new,y_v_new)
+        T=f1(x0_v,y0_v,z0_v,x_v_new,y_v_new,z_v_new)
+        
+        xyz_new=[r*np.cos(phi)*np.sin(np.pi/2),r*np.sin(phi)*np.sin(np.pi/2),r*np.cos(np.pi/2)]
+        #print f2(np.dot(inv(T),xyz_new)+p_sorbate_coor,p_sorbate_coor)
+        xyz_org=(np.dot(inv(T),xyz_new)+p_sorbate_coor)/basis
+
+        domain.x[p_HO_index]=xyz_org[0]
+        domain.y[p_HO_index]=xyz_org[1]
+        domain.z[p_HO_index]=xyz_org[2]
+        
+        return xyz_org      
         
     def adding_pb_share_triple(self,domain,attach_atm_ids=['id1','id2','id3'],offset=[None,None,None],pb_id='pb_id'):
         #the pb will be placed in a plane determined by three points,and lead position is equally distant from the three points
