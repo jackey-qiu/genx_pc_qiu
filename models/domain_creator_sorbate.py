@@ -85,6 +85,26 @@ grid_match_lib[7]={2:'-y',3:'-x-y',4:'-x',5:None,6:None,1:'-y',8:None,9:'-x'}
 grid_match_lib[8]={2:'-y',3:'-y',4:None,5:None,6:None,7:None,1:'-y',9:None}
 grid_match_lib[9]={2:'-y',3:'-y',4:None,5:None,6:'+x',7:'+x',8:None,1:'+x-y'}
 
+def rotate_along_one_axis(domain=None,pass_point_id='',rotation_ids=[],rotation_vector=[],rotation_angle=None,basis=np.array([5.038,5.434,7.3707])):
+    #note it works only when the dxdydz==0, if not rewrite the assignment part at line106
+    pt_ct=lambda domain,p_O1_index:np.array([domain.x[p_O1_index][0]+domain.dx1[p_O1_index][0]+domain.dx2[p_O1_index][0]+domain.dx3[p_O1_index][0],domain.y[p_O1_index][0]+domain.dy1[p_O1_index][0]+domain.dy2[p_O1_index][0]+domain.dy3[p_O1_index][0],domain.z[p_O1_index][0]+domain.dz1[p_O1_index][0]+domain.dz2[p_O1_index][0]+domain.dz3[p_O1_index][0]])*basis
+    u,v,w=rotation_vector[0],rotation_vector[1],rotation_vector[2]
+    pass_point_index=np.where(domain.id==pass_point_id)
+    rotation_index=[np.where(domain.id==rotation_id) for rotation_id in rotation_ids]
+    pass_point_coor=pt_ct(domain,pass_point_index)
+    a,b,c=pass_point_coor[0],pass_point_coor[1],pass_point_coor[2]
+    rotation_coors=[pt_ct(domain,index) for index in rotation_index]
+    def _rotation(x,y,z,a,b,c,u,v,w,theta):
+        L=u**2+v**2+w**2
+        x_value=((a*(v**2+w**2)-u*(b*v+c*w-u*x-v*y-w*z))*(1-np.cos(theta))+L*x*np.cos(theta)+L**0.5*(-c*v+b*w-w*y+v*z)*np.sin(theta))/L
+        y_value=((b*(u**2+w**2)-v*(a*u+c*w-u*x-v*y-w*z))*(1-np.cos(theta))+L*y*np.cos(theta)+L**0.5*(c*u-a*w+w*x-u*z)*np.sin(theta))/L
+        z_value=((c*(u**2+v**2)-w*(a*u+b*v-u*x-v*y-w*z))*(1-np.cos(theta))+L*z*np.cos(theta)+L**0.5*(-b*u+a*v-v*x+u*y)*np.sin(theta))/L
+        return [x_value,y_value,z_value]
+    for i in range(len(rotation_coors)):
+        index=rotation_index[i]
+        x,y,z=rotation_coors[index][0],rotation_coors[index][1],rotation_coors[index][2]
+        domain.x[index],domain.y[index],domain.z[index]=_rotation(x,y,z,a,b,c,u,v,w,rotation_angle)/basis
+        
 class domain_creator_sorbate():
     def __init__(self,ref_domain,id_list,terminated_layer=0,domain_tag='_D1',new_var_module=None):
         #id_list is a list of id in the order of ref_domain,terminated_layer is the index number of layer to be considered
