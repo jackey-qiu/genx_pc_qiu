@@ -391,6 +391,7 @@ def create_sorbate_match_lib4(metal=['Pb'],HO_list=['HO1_Pb_D1A'],anchors=[['O1_
     return match_lib
     
 def create_sorbate_match_lib4_test(metal=['Pb'],HO_list=['HO1_Pb_D1A'],anchors=[['O1_2_0','O1_1_0']],anchor_offsets=[['+y',None]],domain_tag=1):
+    #a bug fixed here compared to the previous function
     match_lib_metal={}
     match_lib_HO={}
     match_lib_O={}
@@ -1010,7 +1011,7 @@ class domain_creator(domain_creator_water,domain_creator_sorbate,domain_creator_
                 elif ((index[1]=='Fe')&(key[1]=='O'))|((index[1]=='O')&(key[1]=='Fe')):r0=1.759
                 elif ((index[1]=='Sb')&(key[1]=='O'))|((index[1]=='O')&(key[1]=='Sb')):r0=1.973
                 elif ((index[1]=='O')&(key[1]=='O')):
-                    if dist<2.:
+                    if dist<2.5:
                         r0=20.#arbitrary r0 here, ensure oxygens are more than 2.65A apart
                     else:r0=-10
                 else:

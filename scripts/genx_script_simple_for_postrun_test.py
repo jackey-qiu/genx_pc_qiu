@@ -479,7 +479,7 @@ def Sim(data,VARS=VARS):
 
                 super_cell_sorbate=domain_class_1.build_super_cell2_simple(VARS['domain'+str(i+1)+'A'],[0,1]+range(4,8)+range(-(sum(SORBATE_NUMBER[i])/NN+sum([np.sum(N_list) for N_list in O_NUMBER[i]])/NN+WATER_NUMBER[i]),0))
                 if SEARCH_MODE_FOR_SURFACE_ATOMS:
-                    super_cell_surface=domain_class_1.build_super_cell2_simple(VARS['domain'+str(i+1)+'A'],[0,1]+range(4,25)+range(-(sum(SORBATE_NUMBER[i])/NN+sum([np.sum(N_list) for N_list in O_NUMBER[i]])/NN+WATER_NUMBER[i]),0))
+                    super_cell_surface=domain_class_1.build_super_cell2_simple(VARS['domain'+str(i+1)+'A'],[0,1]+range(4,30)+range(-(sum(SORBATE_NUMBER[i])/NN+sum([np.sum(N_list) for N_list in O_NUMBER[i]])/NN+WATER_NUMBER[i]),0))
                 else:
                     super_cell_surface=VARS['domain'+str(i+1)+'A'].copy()
                     #delete the first iron layer atoms if considering a half layer
@@ -488,7 +488,7 @@ def Sim(data,VARS=VARS):
             elif DOMAIN[i]==2:
                 super_cell_sorbate=domain_class_1.build_super_cell2_simple(VARS['domain'+str(i+1)+'A'],[0,1]+range(2,6)+range(-(sum(SORBATE_NUMBER[i])/2+sum([np.sum(N_list) for N_list in O_NUMBER[i]])/2+WATER_NUMBER[i]),0))
                 if SEARCH_MODE_FOR_SURFACE_ATOMS:
-                    super_cell_surface=domain_class_1.build_super_cell2_simple(VARS['domain'+str(i+1)+'A'],range(0,25)+range(-(sum(SORBATE_NUMBER[i])+sum([np.sum(N_list) for N_list in O_NUMBER[i]])+WATER_NUMBER[i]),0))
+                    super_cell_surface=domain_class_1.build_super_cell2_simple(VARS['domain'+str(i+1)+'A'],range(0,30)+range(-(sum(SORBATE_NUMBER[i])+sum([np.sum(N_list) for N_list in O_NUMBER[i]])+WATER_NUMBER[i]),0))
                 else:
                     super_cell_surface=VARS['domain'+str(i+1)+'A'].copy()
             
