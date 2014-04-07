@@ -390,6 +390,51 @@ def create_sorbate_match_lib4(metal=['Pb'],HO_list=['HO1_Pb_D1A'],anchors=[['O1_
             
     return match_lib
     
+def create_sorbate_match_lib4_test(metal=['Pb'],HO_list=['HO1_Pb_D1A'],anchors=[['O1_2_0','O1_1_0']],anchor_offsets=[['+y',None]],domain_tag=1):
+    match_lib_metal={}
+    match_lib_HO={}
+    match_lib_O={}
+    match_lib={}
+    N_sorbate=len(metal)
+    shaffle=lambda a,b:[each+b for each in a]
+    def _change_direction(tag):
+        if tag==None:return None
+        elif tag[0]=='-':return '+'+tag[1:]
+        elif tag[0]=='+':return '-'+tag[1:]
+            
+    for i in range(N_sorbate):
+        try:
+            match_lib_metal[metal[i]+str(i+1)+'_D'+str(domain_tag)+'A']=[[HO_id for HO_id in HO_list if metal[i]+str(i+1) in HO_id]+shaffle(anchors[i],'_D'+str(domain_tag)+'A'),[None]*len([HO_id for HO_id in HO_list if metal[i]+str(i+1) in HO_id])+anchor_offsets[i]]
+        except:
+            match_lib_metal[metal[i]+str(i+1)+'_D'+str(domain_tag)+'A']=[shaffle(anchors[i],'_D'+str(domain_tag)+'A'),anchor_offsets[i]]
+        for j in range(len(HO_list)):
+            if metal[i]+str(i+1) in HO_list[j]:
+                match_lib_HO[HO_list[j]]=[[metal[i]+str(i+1)+'_D'+str(domain_tag)+'A'],[None]]
+        for k in range(len(anchors[i])):
+            if anchors[i][k]+'_D'+str(domain_tag)+'A' in match_lib_O.keys():
+                first_item=match_lib_O[anchors[i][k]+'_D'+str(domain_tag)+'A'][0]
+                second_item=match_lib_O[anchors[i][k]+'_D'+str(domain_tag)+'A'][1]
+                match_lib_O[anchors[i][k]+'_D'+str(domain_tag)+'A']=[first_item+[metal[i]+str(i+1)+'_D'+str(domain_tag)+'A'],second_item+[_change_direction(anchor_offsets[i][k])]]
+            else:
+                match_lib_O[anchors[i][k]+'_D'+str(domain_tag)+'A']=[[metal[i]+str(i+1)+'_D'+str(domain_tag)+'A'],[_change_direction(anchor_offsets[i][k])]]
+    for key in match_lib_metal.keys():
+        try:
+            match_lib[key]=[match_lib[key][0]+match_lib_metal[key][0],match_lib[key][1]+match_lib_metal[key][1]]
+        except:
+            match_lib[key]=match_lib_metal[key]
+    for key in match_lib_HO.keys():
+        try:
+            match_lib[key]=[match_lib[key][0]+match_lib_HO[key][0],match_lib[key][1]+match_lib_HO[key][1]]
+        except:
+            match_lib[key]=match_lib_HO[key]
+    for key in match_lib_O.keys():
+        try:
+            match_lib[key]=[match_lib[key][0]+match_lib_O[key][0],match_lib[key][1]+match_lib_O[key][1]]
+        except:
+            match_lib[key]=match_lib_O[key]
+            
+    return match_lib
+    
 def create_sorbate_match_lib(metal='Pb',O_list=[['HO1_D1A']],anchors=[['O1_2_0','O1_1_0']],anchor_offsets=[['+y',None]],domain_tag=1):
     match_lib_metal={}
     match_lib_HO={}
@@ -965,7 +1010,7 @@ class domain_creator(domain_creator_water,domain_creator_sorbate,domain_creator_
                 elif ((index[1]=='Fe')&(key[1]=='O'))|((index[1]=='O')&(key[1]=='Fe')):r0=1.759
                 elif ((index[1]=='Sb')&(key[1]=='O'))|((index[1]=='O')&(key[1]=='Sb')):r0=1.973
                 elif ((index[1]=='O')&(key[1]=='O')):
-                    if dist<2.65:
+                    if dist<2.:
                         r0=20.#arbitrary r0 here, ensure oxygens are more than 2.65A apart
                     else:r0=-10
                 else:

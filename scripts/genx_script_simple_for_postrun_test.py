@@ -380,7 +380,7 @@ if USE_BV:
     for i in range(DOMAIN_NUMBER):
         lib_sorbate={}
         if SORBATE_NUMBER[i]!=0:
-            lib_sorbate=domain_creator.create_sorbate_match_lib4(metal=SORBATE_LIST[i],HO_list=vars()['HO_list_domain'+str(int(i+1))+'a'],anchors=SORBATE_ATTACH_ATOM[i],anchor_offsets=SORBATE_ATTACH_ATOM_OFFSET[i],domain_tag=i+1)
+            lib_sorbate=domain_creator.create_sorbate_match_lib4_test(metal=SORBATE_LIST[i],HO_list=vars()['HO_list_domain'+str(int(i+1))+'a'],anchors=SORBATE_ATTACH_ATOM[i],anchor_offsets=SORBATE_ATTACH_ATOM_OFFSET[i],domain_tag=i+1)
         if DOMAIN[i]==1:
             vars()['match_lib_'+str(int(i+1))+'A']=domain_creator.create_match_lib_before_fitting(domain_class=vars()['domain_class_'+str(int(i+1))+'BV'],domain=vars()['domain_class_'+str(int(i+1))+'BV'].build_super_cell(ref_domain=vars()['domain_class_'+str(int(i+1))+'BV'].create_equivalent_domains_2()[0],rem_atom_ids=['Fe1_2_0_D'+str(int(i+1))+'A','Fe1_3_0_D'+str(int(i+1))+'A']),atm_list=vars()['atm_list_'+str(int(i+1))+'A'],search_range=2.3)
             vars()['match_lib_'+str(int(i+1))+'A']=domain_creator.merge_two_libs(vars()['match_lib_'+str(int(i+1))+'A'],lib_sorbate)
@@ -423,6 +423,29 @@ def Sim(data,VARS=VARS):
         total_wt=total_wt+vars()['wt_domain'+str(int(i+1))]
 
         #update sorbates
+        #note this part is completely FYI to compute the coordinative ligands (NOT metal sorbates)
+        for j in range(sum(VARS['SORBATE_NUMBER'][i])):
+            SORBATE_coors_a=[]
+            O_coors_a=[]
+            SORBATE_id=VARS['SORBATE_list_domain'+str(int(i+1))+'a'][j]
+            O_id=[HO_id for HO_id in VARS['HO_list_domain'+str(int(i+1))+'a'] if SORBATE_id in HO_id]
+            if i==1:
+                for ligand_id in range(len(O_id)):
+                    domain_class_1.adding_distal_ligand(domain=VARS['domain'+str(int(i+1))+'A'],id=O_id[ligand_id],ref=domain_creator.extract_coor(VARS['domain'+str(int(i+1))+'A'],SORBATE_id),r=getattr(VARS['rgh_domain'+str(int(i+1))],'r'+str(j+1)+'_'+str(ligand_id+1)),theta=getattr(VARS['rgh_domain'+str(int(i+1))],'theta'+str(j+1)+'_'+str(ligand_id+1)),phi=getattr(VARS['rgh_domain'+str(int(i+1))],'phi'+str(j+1)+'_'+str(ligand_id+1)))
+                O_coors_a=domain_creator.rotate_along_one_axis(domain=VARS['domain'+str(int(i+1))+'A'],pass_point_id=SORBATE_id,rotation_ids=O_id,rotation_vector=[0,1,0],rotation_angle=getattr(VARS['rgh_domain'+str(int(i+1))],'theta'),basis=np.array([5.038,5.434,7.3707]))
+            else:
+                r=getattr(VARS['rgh_domain'+str(int(i+1))],'r')
+                phi=getattr(VARS['rgh_domain'+str(int(i+1))],'phi'+str(j+1)+'_1')
+                ids=[VARS['SORBATE_ATTACH_ATOM'][i][j][0]+'_D'+str(int(i+1))+'A',VARS['SORBATE_ATTACH_ATOM'][i][j][1]+'_D'+str(int(i+1))+'A']
+                offset=VARS['SORBATE_ATTACH_ATOM_OFFSET'][i][j]
+                O_coors_a.append(domain_class_1.adding_distal_ligand_on_biset_plane(domain=VARS['domain'+str(int(i+1))+'A'],sorbate_id=SORBATE_id,HO_id=O_id[0],attach_atm_ids=ids,attach_atm_offsets=offset,r=r,phi=phi))
+            SORBATE_id_B=VARS['SORBATE_list_domain'+str(int(i+1))+'b'][j]
+            O_id_B=[HO_id for HO_id in VARS['HO_list_domain'+str(int(i+1))+'b'] if SORBATE_id_B in HO_id]
+            #now put on sorbate on the symmetrically related domain
+            sorbate_ids=O_id_B
+            sorbate_els=['O']*(len(O_id_B))
+            if O_coors_a!=[]:
+                domain_creator.add_atom(domain=VARS['domain'+str(int(i+1))+'B'],ref_coor=np.array(O_coors_a)*[-1,1,1]-[-1.,0.06955,0.5],ids=sorbate_ids,els=sorbate_els)    
 
         if USE_BV and i in DOMAINS_BV:
             #set up dynamic super cells,where water and sorbate is a library and surface is a domain instance
@@ -446,11 +469,15 @@ def Sim(data,VARS=VARS):
                 
             super_cell_water,super_cell_sorbate,super_cell_surface=None,None,None
             if WATER_NUMBER[i]!=0:
-                super_cell_water=domain_class_1.build_super_cell2_simple(VARS['domain'+str(i+1)+'A'],[0,1]+range(-(WATER_NUMBER[i]+sum([np.sum(N_list) for N_list in O_NUMBER[i]])),0))
+                super_cell_water=domain_class_1.build_super_cell2_simple(VARS['domain'+str(i+1)+'A'],[0,1]+range(-(sum(SORBATE_NUMBER[i])+WATER_NUMBER[i]+sum([np.sum(N_list) for N_list in O_NUMBER[i]])),0))
             if DOMAIN[i]==1:
-                super_cell_sorbate=domain_class_1.build_super_cell2_simple(VARS['domain'+str(i+1)+'A'],[0,1]+range(4,8)+range(-(sum(SORBATE_NUMBER[i])+sum([np.sum(N_list) for N_list in O_NUMBER[i]])+WATER_NUMBER[i]),0))
+                def _return_right_value(value):
+                    if value:return value
+                    else:return 1
+                NN=_return_right_value(sum(SORBATE_NUMBER[i]))
+                super_cell_sorbate=domain_class_1.build_super_cell2_simple(VARS['domain'+str(i+1)+'A'],[0,1]+range(4,8)+range(-(sum(SORBATE_NUMBER[i])/NN+sum([np.sum(N_list) for N_list in O_NUMBER[i]])/NN+WATER_NUMBER[i]),0))
                 if SEARCH_MODE_FOR_SURFACE_ATOMS:
-                    super_cell_surface=domain_class_1.build_super_cell2_simple(VARS['domain'+str(i+1)+'A'],[0,1]+range(4,25)+range(-(sum(SORBATE_NUMBER[i])+sum([np.sum(N_list) for N_list in O_NUMBER[i]])+WATER_NUMBER[i]),0))
+                    super_cell_surface=domain_class_1.build_super_cell2_simple(VARS['domain'+str(i+1)+'A'],[0,1]+range(4,25)+range(-(sum(SORBATE_NUMBER[i])/NN+sum([np.sum(N_list) for N_list in O_NUMBER[i]])/NN+WATER_NUMBER[i]),0))
                 else:
                     super_cell_surface=VARS['domain'+str(i+1)+'A'].copy()
                     #delete the first iron layer atoms if considering a half layer
@@ -480,19 +507,26 @@ def Sim(data,VARS=VARS):
                         el=None
                         if "Fe" in key: el="Fe"
                         elif "O" in key: el="O"
-                        temp_bv=domain_class_1.cal_bond_valence1_new2B(super_cell_surface,key,el,2.8,VARS['match_lib_'+str(i+1)+'A'][key],50,False)['total_valence']
+                        temp_bv=domain_class_1.cal_bond_valence1_new2B(super_cell_surface,key,el,2.5,VARS['match_lib_'+str(i+1)+'A'][key],50,False)['total_valence']
                     else:
                         #no searching in this algorithem
                         temp_bv=domain_class_1.cal_bond_valence4B(super_cell_surface,key,VARS['match_lib_'+str(i+1)+'A'][key])
                 else:
                     #searching included in this algorithem
                     if "HO" in key and COUNT_DISTAL_OXYGEN:
-                        temp_bv=domain_class_1.cal_bond_valence1_new2B(super_cell_sorbate,key,'O',2.5,VARS['match_lib_'+str(i+1)+'A'][key],50,False)['total_valence']
+                        try:
+                            temp_bv=domain_class_1.cal_bond_valence1_new2B(super_cell_sorbate,key,'O',2.5,VARS['match_lib_'+str(i+1)+'A'][key],50,False)['total_valence']
+                        except:
+                            temp_bv=2
                     elif "HO" not in key:
                         el=None
                         if 'Pb' in key and "HO" not in key:el='Pb'
                         elif 'Sb' in key and "HO" not in key:el='Sb'
-                        temp_bv=domain_class_1.cal_bond_valence1_new2B(super_cell_sorbate,key,el,2.5,VARS['match_lib_'+str(i+1)+'A'][key],50,False)['total_valence']
+                        try:
+                            temp_bv=domain_class_1.cal_bond_valence1_new2B(super_cell_sorbate,key,el,2.5,VARS['match_lib_'+str(i+1)+'A'][key],50,False)['total_valence']
+                        except:
+                            if el=='Pb':temp_bv=2
+                            elif el=='Sb':temp_bv=5
                     else:temp_bv=2
                 if PRINT_BV:print key, temp_bv
                 #consider possible hydrogen bond and hydroxyl bond fro oxygen atoms
