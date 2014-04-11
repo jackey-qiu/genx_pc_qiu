@@ -716,8 +716,8 @@ class domain_creator_sorbate():
             anchor=pt_ct(domain,anchor_index,anchor_offset)*basis
         #print "O1",p_O1
         #print "O2",p_O2
-        pyramid_distortion=trigonal_pyramid_distortion_B2.trigonal_pyramid_distortion(p0=p_O1,p1=p_O2,ref=anchor,top_angle=top_angle,len_offset=edge_offset)
-        pyramid_distortion.all_in_all(switch=switch,phi=phi,mirror=mirror,angle_offset=angle_offset)
+        pyramid_distortion=trigonal_pyramid_distortion_B2.trigonal_pyramid_distortion(p0=p_O1,p1=p_O2,ref=anchor,top_angle=top_angle/180*np.pi,len_offset=edge_offset)
+        pyramid_distortion.all_in_all(switch=switch,phi=phi/180*np.pi,mirror=mirror,angle_offset=angle_offset/180*np.pi)
         #print "apex",pyramid_distortion.apex-[0,0.75587,7.3707]
         #print "p2",pyramid_distortion.p2-[0,0.75587,7.3707]
         def _add_sorbate(domain=None,id_sorbate=None,el='Pb',sorbate_v=[]):
@@ -972,6 +972,7 @@ class domain_creator_sorbate():
         a,b,c=5.038,5.434,7.3707
         r0=r_Pb_O*np.sin(O_Pb_O_ang/2*np.pi/180)/np.cos(np.pi/6)
         r1=r_Pb_O*(np.square(np.cos(O_Pb_O_ang/2*np.pi/180))-np.square(np.sin(O_Pb_O_ang/2*np.pi/180))*np.square(np.tan(np.pi/6)))**0.5
+        phi=phi/180*np.pi
         p1_x,p1_y,p1_z=r0*np.cos(phi)*np.sin(np.pi/2.)/a+cent_point[0],r0*np.sin(phi)*np.sin(np.pi/2.)/b+cent_point[1],r0*np.cos(np.pi/2.)/c+cent_point[2]
         p2_x,p2_y,p2_z=r0*np.cos(phi+2*np.pi/3)*np.sin(np.pi/2.)/a+cent_point[0],r0*np.sin(phi+2*np.pi/3)*np.sin(np.pi/2.)/b+cent_point[1],r0*np.cos(np.pi/2.)/c+cent_point[2]
         p3_x,p3_y,p3_z=r0*np.cos(phi+4*np.pi/3)*np.sin(np.pi/2.)/a+cent_point[0],r0*np.sin(phi+4*np.pi/3)*np.sin(np.pi/2.)/b+cent_point[1],r0*np.cos(np.pi/2.)/c+cent_point[2]

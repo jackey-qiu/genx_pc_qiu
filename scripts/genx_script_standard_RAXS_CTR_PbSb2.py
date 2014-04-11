@@ -714,9 +714,9 @@ def Sim(data,VARS=VARS):
                     ct_offset_dy=getattr(VARS['rgh_domain'+str(int(i+1))],'ct_offset_dy_OS')
                     ct_offset_dz=getattr(VARS['rgh_domain'+str(int(i+1))],'ct_offset_dz_OS')
                     ref_x,ref_y=0.75,0
-                    if j==1:
+                    if (j+i)%2==1:
                         ref_y=0.5
-                        phi=np.pi-phi
+                        phi=180-phi#note all angles in degree
                         ct_offset_dx=-getattr(VARS['rgh_domain'+str(int(i+1))],'ct_offset_dx_OS')
                     SORBATE_id=VARS['SORBATE_list_domain'+str(int(i+1))+'a'][j]#pb_id is a str NOT list
                     #O_index=[0]+[sum(VARS['O_NUMBER'][i][0:ii+1]) for ii in range(len(VARS['O_NUMBER'][i]))]
