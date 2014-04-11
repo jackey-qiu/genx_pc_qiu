@@ -838,8 +838,8 @@ def Sim(data,VARS=VARS):
                         try:
                             temp_bv=domain_class_1.cal_bond_valence1_new2B(super_cell_sorbate,key,el,2.5,VARS['match_lib_'+str(i+1)+'A'][key],50,False)['total_valence']
                         except:
-                            if el=='Pb':temp_bv=2
-                            elif el=='Sb':temp_bv=5
+                            if el=='Pb':temp_bv=METAL_BV['Pb'][i][0]
+                            elif el=='Sb':temp_bv=METAL_BV['Sb'][i][0]
                     else:temp_bv=2
                 if PRINT_BV:print key, temp_bv
                 #consider possible hydrogen bond and hydroxyl bond fro oxygen atoms
