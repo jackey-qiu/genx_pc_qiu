@@ -43,11 +43,15 @@ sym_site_index=[[0,1]]*3
 
 pick=lambda list:[list[i] for i in pickup_index]
 deep_pick=lambda list:[[list[pickup_index[i]][j] for j in sym_site_index[i]] for i in range(len(pickup_index))]
+
+COHERENCE=[{True:range(len(pickup_index))}] #want to add up in coherence? items inside list corresponding to each domain
+
 ##cal bond valence switch##
 USE_BV=True
 SEARCH_MODE_FOR_SURFACE_ATOMS=False#If true then cal bond valence of surface atoms based on searching within a spherical region
 DOMAINS_BV=range(len(pickup_index))#Domains being considered for bond valence constrain, counted from 0
-METAL_BV={'Pb':[[1.0,1.5]]*3,'Sb':[[4.,5.]]*3}#range of acceptable metal bv
+METAL_BV={'Pb':[[1.0,1.5]]*3,'Sb':[[4.,5.]]*3}#range of acceptable metal bv in each domain
+DOMAIN_GP=[]#means you want to group first two and last two domains together, only group half layers or full layers together
 ##want to output the data for plotting?##
 PLOT=False
 ##want to print out the protonation status?##
@@ -148,9 +152,7 @@ ALPHA=pick([[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0],[0]])#used only if c
 
 ##chemically different domain type##
 DOMAIN=pick([1,1,1,1,1,1,1,2,2,2,2,2,2])
-DOMAIN_GP=[]#means you want to group first two and last two domains together, only group half layers or full layers together
 DOMAIN_NUMBER=len(DOMAIN)
-COHERENCE=[{True:range(len(pickup_index))}] #want to add up in coherence? items inside list corresponding to each domain
 
 ##want to make parameter table?##
 TABLE=False
@@ -403,7 +405,7 @@ for i in range(DOMAIN_NUMBER):
             #O_id=vars()['HO_list_domain'+str(int(i+1))+'a'][O_index[j]:O_index[j+1]]#O_ide is a list of str
             sorbate_coors=[]
             if SORBATE_LIST[i][j]=='Pb':
-                sorbate_coors=vars()['domain_class_'+str(int(i+1))].outer_sphere_complex(domain=vars()['domain'+str(int(i+1))+'A'],cent_point=[0.75,0.+j*0.5,2.1],r0=1.62,r1=1.46,phi=j*np.pi-0,pb_id=SORBATE_id,O_ids=O_id,distal_oxygen=True)           
+                sorbate_coors=vars()['domain_class_'+str(int(i+1))].outer_sphere_complex_2(domain=vars()['domain'+str(int(i+1))+'A'],cent_point=[0.75,0.+j*0.5,2.1],r_Pb_O=2.28,O_Pb_O_ang=70,phi=j*np.pi-0,pb_id=SORBATE_id,O_ids=O_id,distal_oxygen=True)           
             elif SORBATE_LIST[i][j]=='Sb':
                 sorbate_coors=vars()['domain_class_'+str(int(i+1))].outer_sphere_complex_oct(domain=vars()['domain'+str(int(i+1))+'A'],cent_point=[0.75,0.+j*0.5,2.1],r0=1.62,phi=j*np.pi-0,Sb_id=SORBATE_id,O_ids=O_id,distal_oxygen=True)           
 
@@ -520,15 +522,15 @@ for group in DOMAIN_GP:
         if j%2==0:
             vars()['discrete_gp_list_domain_'+str(a)+'_'+str(b)].append(domain_class_1.grouping_discrete_layer3(domain=[vars()['domain'+str(a)+'A'],vars()['domain'+str(a)+'B'],vars()['domain'+str(a)+'A'],vars()['domain'+str(a)+'B'],vars()['domain'+str(b)+'A'],vars()['domain'+str(b)+'B'],vars()['domain'+str(b)+'A'],vars()['domain'+str(b)+'B']],\
                                                                    atom_ids=[vars()['atm_list_'+str(a)+'A'][j],vars()['atm_list_'+str(a)+'B'][j],vars()['atm_list_'+str(a)+'A'][j+_match(j%2)],vars()['atm_list_'+str(a)+'B'][j+_match(j%2)],vars()['atm_list_'+str(b)+'A'][j],vars()['atm_list_'+str(b)+'B'][j],vars()['atm_list_'+str(b)+'A'][j+_match(j%2)],vars()['atm_list_'+str(b)+'B'][j+_match(j%2)]],sym_array=[[1,0,0,0,1,0,0,0,1],[-1,0,0,0,1,0,0,0,1],[-1,0,0,0,1,0,0,0,1],[1,0,0,0,1,0,0,0,1]]*2))
-    if vars()['SORBATE_list_domain'+str(a)+'a']!=[]:
+    if vars()['SORBATE_list_domain'+str(a)+'a']!=[] and vars()['SORBATE_list_domain'+str(b)+'b']!=[]:
         for j in range(len(vars()['SORBATE_list_domain'+str(a)+'a'])):
             vars()['discrete_gp_list_sorbate_domain_'+str(a)+'_'+str(b)].append(domain_class_1.grouping_discrete_layer3(domain=[vars()['domain'+str(a)+'A'],vars()['domain'+str(a)+'B'],vars()['domain'+str(b)+'A'],vars()['domain'+str(b)+'B']],\
                                                                        atom_ids=[vars()['SORBATE_list_domain'+str(a)+'a'][j],vars()['SORBATE_list_domain'+str(a)+'b'][j],vars()['SORBATE_list_domain'+str(b)+'a'][j],vars()['SORBATE_list_domain'+str(b)+'b'][j]],sym_array=[[1,0,0,0,1,0,0,0,1],[-1,0,0,0,1,0,0,0,1],[-1,0,0,0,1,0,0,0,1],[1,0,0,0,1,0,0,0,1]]))
-    if vars()['HO_list_domain'+str(a)+'a']!=[]:
+    if vars()['HO_list_domain'+str(a)+'a']!=[] and vars()['HO_list_domain'+str(b)+'b']!=[]:
         for j in range(len(vars()['HO_list_domain'+str(a)+'a'])):
             vars()['discrete_gp_list_HO_domain_'+str(a)+'_'+str(b)].append(domain_class_1.grouping_discrete_layer3(domain=[vars()['domain'+str(a)+'A'],vars()['domain'+str(a)+'B'],vars()['domain'+str(b)+'A'],vars()['domain'+str(b)+'B']],\
                                                                        atom_ids=[vars()['HO_list_domain'+str(a)+'a'][j],vars()['HO_list_domain'+str(a)+'b'][j],vars()['HO_list_domain'+str(b)+'a'][j],vars()['HO_list_domain'+str(b)+'b'][j]],sym_array=[[1,0,0,0,1,0,0,0,1],[-1,0,0,0,1,0,0,0,1],[-1,0,0,0,1,0,0,0,1],[1,0,0,0,1,0,0,0,1]]))
-    if vars()['Os_list_domain'+str(a)+'a']!=[]:
+    if vars()['Os_list_domain'+str(a)+'a']!=[] and vars()['Os_list_domain'+str(b)+'b']!=[]:
         for j in range(len(vars()['Os_list_domain'+str(a)+'a'])):
             vars()['discrete_gp_list_Os_domain_'+str(a)+'_'+str(b)].append(domain_class_1.grouping_discrete_layer3(domain=[vars()['domain'+str(a)+'A'],vars()['domain'+str(a)+'B'],vars()['domain'+str(b)+'A'],vars()['domain'+str(b)+'B']],\
                                                                        atom_ids=[vars()['Os_list_domain'+str(a)+'a'][j],vars()['Os_list_domain'+str(a)+'b'][j],vars()['Os_list_domain'+str(b)+'a'][j],vars()['Os_list_domain'+str(b)+'b'][j]],sym_array=[[1,0,0,0,1,0,0,0,1],[-1,0,0,0,1,0,0,0,1],[-1,0,0,0,1,0,0,0,1],[1,0,0,0,1,0,0,0,1]]))
@@ -706,8 +708,8 @@ def Sim(data,VARS=VARS):
                         domain_creator.add_atom(domain=VARS['domain'+str(int(i+1))+'B'],ref_coor=np.array(SORBATE_coors_a+O_coors_a)*[-1,1,1]-[-1.,0.06955,0.5],ids=sorbate_ids,els=sorbate_els)    
                 else:#outer-sphere case
                     phi=getattr(VARS['rgh_domain'+str(int(i+1))],'phi_OS')
-                    r0=getattr(VARS['rgh_domain'+str(int(i+1))],'r0_OS')
-                    r1=getattr(VARS['rgh_domain'+str(int(i+1))],'r1_OS')
+                    r_Pb_O=getattr(VARS['rgh_domain'+str(int(i+1))],'r0_OS')
+                    O_Pb_O_ang=getattr(VARS['rgh_domain'+str(int(i+1))],'top_angle')
                     ct_offset_dx=getattr(VARS['rgh_domain'+str(int(i+1))],'ct_offset_dx_OS')
                     ct_offset_dy=getattr(VARS['rgh_domain'+str(int(i+1))],'ct_offset_dy_OS')
                     ct_offset_dz=getattr(VARS['rgh_domain'+str(int(i+1))],'ct_offset_dz_OS')
@@ -724,7 +726,7 @@ def Sim(data,VARS=VARS):
                     #O_id=VARS['HO_list_domain'+str(int(i+1))+'a'][O_index[j]:O_index[j+1]]#O_ide is a list of str
                     sorbate_coors=[]
                     if SORBATE_LIST[i][j]=='Pb':
-                        sorbate_coors=VARS['domain_class_'+str(int(i+1))].outer_sphere_complex(domain=VARS['domain'+str(int(i+1))+'A'],cent_point=[ref_x+ct_offset_dx,ref_y+ct_offset_dy,2.1+ct_offset_dz],r0=r0,r1=r1,phi=phi,pb_id=SORBATE_id,O_ids=O_id,distal_oxygen=True)           
+                        sorbate_coors=VARS['domain_class_'+str(int(i+1))].outer_sphere_complex_2(domain=VARS['domain'+str(int(i+1))+'A'],cent_point=[ref_x+ct_offset_dx,ref_y+ct_offset_dy,2.1+ct_offset_dz],r_Pb_O=r_Pb_O,O_Pb_O_ang=O_Pb_O_ang,phi=phi,pb_id=SORBATE_id,O_ids=O_id,distal_oxygen=True)           
                     elif SORBATE_LIST[i][j]=='Sb':#to be completed
                         sorbate_coors=VARS['domain_class_'+str(int(i+1))].outer_sphere_complex_oct(domain=VARS['domain'+str(int(i+1))+'A'],cent_point=[ref_x+ct_offset_dx,ref_y+ct_offset_dy,2.1+ct_offset_dz],r0=r0,phi=phi,Sb_id=SORBATE_id,O_ids=O_id,distal_oxygen=True)           
                     SORBATE_coors_a.append(sorbate_coors[0])
