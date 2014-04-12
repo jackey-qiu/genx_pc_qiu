@@ -22,9 +22,9 @@ if COUNT_TIME:t_0=datetime.now()
 batch_path_head='/u1/uaf/cqiu/batchfile/'
 WT_RAXS=5#weighting for RAXS dataset
 WT_BV=1#weighting for bond valence constrain (1 recommended)
-BV_TOLERANCE=[-0.08,0.08]#ideal bv value + or - this value is acceptable
-USE_TOP_ANGLE=False#fit top angle if true otherwise fit the Pb-O bond length (used in bidentate case)
+BV_TOLERANCE=0.08#ideal bv value + or - this value is acceptable
 FULL_LAYER_LONG=0
+USE_TOP_ANGLE=1#fit top angle if true otherwise fit the Pb-O bond length (used in bidentate case)
 
 #this is one way to start up quickly, each time you only need to specify the pickup_index and DOMAIN_GP if want to group different domains
 #all the global variables are pre-defined based on a reasonable assumption, but you can customized it by editing the variables below
@@ -38,21 +38,9 @@ FULL_LAYER_LONG=0
 #ONLY consider this mode if you want to have two symmetry site being binded on two domains
 #eg. pickup_index=[1,1,4] combined with sym_site_index=[[0],[1],[0,1]] means two symmetry sites split into two domains
 #Now you need to group domain1 and domain2 together by setting DOMAIN_GP=[[0,1]], and change some global vars (covalent hydrogen acceptor should include the OH ligand)   
-
-'''
-To setup model, follow steps as follows:
-1)set pickup_index and sym_site_index, after which the majority setup work has been done
-2)set the METAL_BV depending on how you consider the structure model
-You may need to edit some items, which are not called by deep_pick but by pick
-3)You need to edit the SORBATE_NUMBER and O_NUMBER in the case of single sorbate
-4)you need to also edit DISCONNECT_BV_CONTRIBUTION in the single sorbate case
-The other items should fine to stay unedited.
-5)Edit DOMAIN_GP if you want to group two domains together
-Don't touch the other global parameters unless necessary!!!
-''' 
-
+ 
 pickup_index=[2,6,11,11]
-sym_site_index=[[0,1]]*2+[[0]]+[[1]]
+sym_site_index=[[0,1]]*2+[[0],[1]]
 
 pick=lambda list:[list[i] for i in pickup_index]
 deep_pick=lambda list:[[list[pickup_index[i]][j] for j in sym_site_index[i]] for i in range(len(pickup_index))]
@@ -60,20 +48,19 @@ deep_pick=lambda list:[[list[pickup_index[i]][j] for j in sym_site_index[i]] for
 COHERENCE=[{True:range(len(pickup_index))}] #want to add up in coherence? items inside list corresponding to each domain
 
 ##cal bond valence switch##
-USE_BV=True
-SEARCH_MODE_FOR_SURFACE_ATOMS=True#If true then cal bond valence of surface atoms based on searching within a spherical region
-DOMAINS_BV=range(len(pickup_index))#Domains being considered for bond valence constrain, counted from 0
+USE_BV=1
+SEARCH_MODE_FOR_SURFACE_ATOMS=False#If true then cal bond valence of surface atoms based on searching within a spherical region
+DOMAINS_BV=[0,1,2]#Domains being considered for bond valence constrain, counted from 0
 METAL_BV={'Pb':[[1,1.2]]*2+[[1.3,1.8]]*2,'Sb':[[4.,5.]]*3}#range of acceptable metal bv in each domain
-debug_bv=False
 DOMAIN_GP=[[0,1],[2,3]]#means you want to group first two and last two domains together, only group half layers or full layers together
 ##want to output the data for plotting?##
-PLOT=False
+PLOT=0
 ##want to print out the protonation status?##
 PRINT_PROTONATION=False
 ##want to print bond valence?##
-PRINT_BV=False
+PRINT_BV=0
 ##count distal oxygen for bv?##
-COUNT_DISTAL_OXYGEN=False#True then consider bond valence also for distal oxygen,otherwise skip the bv contribution from distal oxygen
+COUNT_DISTAL_OXYGEN=0#True then consider bond valence also for distal oxygen,otherwise skip the bv contribution from distal oxygen
 ADD_DISTAL_LIGAND_WILD=False
 ##want to print the xyz files to build a 3D structure?##
 PRINT_MODEL_FILES=0
@@ -573,7 +560,7 @@ for group in DOMAIN_GP:
     if vars()['Os_list_domain'+str(a)+'a']!=[]:
         for j in range(len(vars()['discrete_gp_list_Os_domain_'+str(a)+'_'+str(b)])):vars()[vars()['discrete_gp_names_Os_domain_'+str(a)+'_'+str(b)][j]]=vars()['discrete_gp_list_Os_domain_'+str(a)+'_'+str(b)][j]
 
-
+#print discrete_gp_names_sorbate_domain_3_4
 #####################################do bond valence matching###################################
 if USE_BV:
     for i in range(DOMAIN_NUMBER):
@@ -606,20 +593,21 @@ def Sim(data,VARS=VARS):
     F =[]
     bv=0
     bv_container={}
+    debug_bv=0
     fom_scaler=[]
     beta=rgh.beta
     SCALES=[getattr(rgh,scale) for scale in scales]
     total_wt=0
     domain={}
 
-    #rgh_domain4.setWt(rgh_domain3.getWt())
-    #rgh_domain4.setCt_offset_dx_OS(rgh_domain3.getCt_offset_dx_OS())
-    #rgh_domain4.setCt_offset_dz_OS(rgh_domain3.getCt_offset_dz_OS())
-    #rgh_domain4.setCt_offset_dy_OS(rgh_domain3.getCt_offset_dy_OS())
-    #rgh_domain4.setTop_angle(rgh_domain3.getTop_angle())
-    #rgh_domain4.setR0_OS(rgh_domain3.getR0_OS())
-    #rgh_domain4.setPhi_OS(rgh_domain3.getPhi_OS())
-    
+    rgh_domain4.setWt(rgh_domain3.getWt())
+    rgh_domain4.setCt_offset_dx_OS(rgh_domain3.getCt_offset_dx_OS())
+    rgh_domain4.setCt_offset_dz_OS(rgh_domain3.getCt_offset_dz_OS())
+    rgh_domain4.setCt_offset_dy_OS(rgh_domain3.getCt_offset_dy_OS())
+    rgh_domain4.setTop_angle(rgh_domain3.getTop_angle())
+    rgh_domain4.setR0_OS(rgh_domain3.getR0_OS())
+    rgh_domain4.setPhi_OS(rgh_domain3.getPhi_OS())
+
     for i in range(DOMAIN_NUMBER):
         #extract the fitting par values in the associated attribute and then do the scaling(initiation+processing, actually update the fitting parameter values)
         #VARS['domain_class_'+str(int(i+1))].init_sim_batch(batch_path_head+VARS['sim_batch_file_domain'+str(int(i+1))])
@@ -663,15 +651,10 @@ def Sim(data,VARS=VARS):
                     else:edge_offset=-getattr(VARS['rgh_domain'+str(int(i+1))],'offset')
                     edge_offset2=getattr(VARS['rgh_domain'+str(int(i+1))],'offset2')
                     angle_offset=getattr(VARS['rgh_domain'+str(int(i+1))],'angle_offset')
-                    top_angle=getattr(VARS['rgh_domain'+str(int(i+1))],'top_angle')                                       
+                    top_angle=getattr(VARS['rgh_domain'+str(int(i+1))],'top_angle')
                     phi=getattr(VARS['rgh_domain'+str(int(i+1))],'phi')
                     ids=[VARS['SORBATE_ATTACH_ATOM'][i][j][0]+'_D'+str(int(i+1))+'A',VARS['SORBATE_ATTACH_ATOM'][i][j][1]+'_D'+str(int(i+1))+'A']
                     offset=VARS['SORBATE_ATTACH_ATOM_OFFSET'][i][j]
-                    if not USE_TOP_ANGLE:
-                        r1=getattr(VARS['rgh_domain'+str(int(i+1))],'r') 
-                        r2=r1+getattr(VARS['rgh_domain'+str(int(i+1))],'offset')
-                        l=domain_creator.extract_coor_offset(domain=VARS['domain'+str(int(i+1))+'A'],id=ids,offset=offset,basis=[5.038,5.434,7.3707])
-                        top_angle=np.arccos((r1**2+r2**2-l**2)/2/r1/r2)*180/np.pi
                     anchor,anchor_offset=None,None
                     if ANCHOR_REFERENCE[i][j]!=None:
                         anchor=ANCHOR_REFERENCE[i][j]+'_D'+str(int(i+1))+'A'
@@ -742,7 +725,7 @@ def Sim(data,VARS=VARS):
                     ref_x,ref_y=0.75,0
                     if (j+i)%2==1:
                         ref_y=0.5
-                        phi=180-phi#note all angles in degree
+                        phi=180-phi
                         ct_offset_dx=-getattr(VARS['rgh_domain'+str(int(i+1))],'ct_offset_dx_OS')
                     SORBATE_id=VARS['SORBATE_list_domain'+str(int(i+1))+'a'][j]#pb_id is a str NOT list
                     #O_index=[0]+[sum(VARS['O_NUMBER'][i][0:ii+1]) for ii in range(len(VARS['O_NUMBER'][i]))]
@@ -787,21 +770,21 @@ def Sim(data,VARS=VARS):
         if USE_BV and i in DOMAINS_BV:
             #set up dynamic super cells,where water and sorbate is a library and surface is a domain instance
             def _widen_validness(value):#acceptable bond valence offset can be adjusted (here is 0.08)
-                if value<BV_TOLERANCE[0]:return 100
-                elif value>=BV_TOLERANCE[0] and value<BV_TOLERANCE[1]:return 0
+                if value<-BV_TOLERANCE:return 100
+                elif value>=-BV_TOLERANCE and value<BV_TOLERANCE:return 0
                 else:return value
             def _widen_validness_range(value_min,value_max):#consider a range of (ideal_bv-temp_bv)
-                if (value_min<BV_TOLERANCE[0] and value_max>BV_TOLERANCE[1]) or (value_min>=BV_TOLERANCE[0] and value_min<=BV_TOLERANCE[1]) or (value_max>=BV_TOLERANCE[0] and value_max<=BV_TOLERANCE[1]):
+                if (value_min<-BV_TOLERANCE and value_max>BV_TOLERANCE) or (value_min>=-BV_TOLERANCE and value_min<=BV_TOLERANCE) or (value_max>=-BV_TOLERANCE and value_max<=BV_TOLERANCE):
                     return 0
-                elif value_min>BV_TOLERANCE[1]:return value_min
+                elif value_min>BV_TOLERANCE:return value_min
                 else:return 100
             def _widen_validness_hydrogen_acceptor(value,H_N=0):#here consider possible contribution of hydrogen bond (~0.2)
-                if (value-H_N*0.2)<BV_TOLERANCE[0]:return 100
-                elif (value-H_N*0.2)>=BV_TOLERANCE[0] and (value-H_N*0.2)<BV_TOLERANCE[1]:return 0
+                if (value-H_N*0.2)<-BV_TOLERANCE:return 100
+                elif (value-H_N*0.2)>=-BV_TOLERANCE and (value-H_N*0.2)<BV_TOLERANCE:return 0
                 else:return (value-H_N*0.2)
             def _widen_validness_potential_hydrogen_acceptor(value):#value=2-temp_bv(temp_bv include covalent hydrogen bond possibly)
-                if value<0.2 and value>BV_TOLERANCE[0]: return 0
-                elif value<BV_TOLERANCE[0]: return 100
+                if value<0.2 and value>-BV_TOLERANCE: return 0
+                elif value<-BV_TOLERANCE: return 100
                 else:return value               
                 
             super_cell_water,super_cell_sorbate,super_cell_surface=None,None,None
@@ -813,10 +796,10 @@ def Sim(data,VARS=VARS):
                 else:return 1
             NN=_return_right_value(sum(SORBATE_NUMBER[i]))
             if DOMAIN[i]==1:
-                #note here if there are two symmetry pair, then only consider one of the couple for bv consideration, the other one will be skipped in the try except statement
+
                 super_cell_sorbate=domain_class_1.build_super_cell2_simple(VARS['domain'+str(i+1)+'A'],[0,1]+range(4,8)+range(-(sum(SORBATE_NUMBER[i])/NN+sum([np.sum(N_list) for N_list in O_NUMBER[i]])/NN+WATER_NUMBER[i]),0))
                 if SEARCH_MODE_FOR_SURFACE_ATOMS:
-                    super_cell_surface=domain_class_1.build_super_cell2_simple(VARS['domain'+str(i+1)+'A'],[0,1]+range(4,30)+range(-(sum(SORBATE_NUMBER[i])+sum([np.sum(N_list) for N_list in O_NUMBER[i]])+WATER_NUMBER[i]),0))
+                    super_cell_surface=domain_class_1.build_super_cell2_simple(VARS['domain'+str(i+1)+'A'],[0,1]+range(4,30)+range(-(sum(SORBATE_NUMBER[i])/NN+sum([np.sum(N_list) for N_list in O_NUMBER[i]])/NN+WATER_NUMBER[i]),0))
                 else:
                     super_cell_surface=VARS['domain'+str(i+1)+'A'].copy()
                     #delete the first iron layer atoms if considering a half layer

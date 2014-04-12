@@ -57,6 +57,20 @@ def extract_coor(domain,id):
     y=domain.y[index]+domain.dy1[index]+domain.dy2[index]+domain.dy3[index]
     z=domain.z[index]+domain.dz1[index]+domain.dz2[index]+domain.dz3[index]
     return np.array([x,y,z])
+    
+def translate_offset_symbols(symbol):
+    if symbol=='-x':return np.array([-1.,0.,0.])
+    elif symbol=='+x':return np.array([1.,0.,0.])
+    elif symbol=='-y':return np.array([0.,-1.,0.])
+    elif symbol=='+y':return np.array([0.,1.,0.])
+    elif symbol==None:return np.array([0.,0.,0.])
+    
+def extract_coor_offset(domain,id=['id1','id2'],offset=[],basis=[5.038,5.434,7.3707]):
+    coors=[extract_coor(domain,each_id) for each_id in id]
+    offsets=[translate_offset_symbols(each_offset) for each_offset in offset]
+
+    coors_offset=[coors[i]+offsets[i] for i in range(len(coors))]
+    return f2(coors_offset[0]*basis,coors_offset[1]*basis)
 
 def layer_spacing_calculator(domain,layer_N,half_layer):
     print "bulk structure (A), fit structure (A), percentage of change in fit"
