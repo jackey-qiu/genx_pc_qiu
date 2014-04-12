@@ -37,7 +37,19 @@ FULL_LAYER_LONG=0
 #ONLY consider this mode if you want to have two symmetry site being binded on two domains
 #eg. pickup_index=[1,1,4] combined with sym_site_index=[[0],[1],[0,1]] means two symmetry sites split into two domains
 #Now you need to group domain1 and domain2 together by setting DOMAIN_GP=[[0,1]], and change some global vars (covalent hydrogen acceptor should include the OH ligand)   
- 
+
+'''
+To setup model, follow steps as follows:
+1)set pickup_index and sym_site_index, after which the majority setup work has been done
+2)set the METAL_BV depending on how you consider the structure model
+You may need to edit some items, which are not called by deep_pick but by pick
+3)You need to edit the SORBATE_NUMBER and O_NUMBER in the case of single sorbate
+4)you need to also edit DISCONNECT_BV_CONTRIBUTION in the single sorbate case
+The other items should fine to stay unedited.
+5)Edit DOMAIN_GP if you want to group two domains together
+Don't touch the other global parameters unless necessary!!!
+''' 
+
 pickup_index=[2,6,11]
 sym_site_index=[[0,1]]*3
 
@@ -48,9 +60,10 @@ COHERENCE=[{True:range(len(pickup_index))}] #want to add up in coherence? items 
 
 ##cal bond valence switch##
 USE_BV=True
-SEARCH_MODE_FOR_SURFACE_ATOMS=False#If true then cal bond valence of surface atoms based on searching within a spherical region
+SEARCH_MODE_FOR_SURFACE_ATOMS=True#If true then cal bond valence of surface atoms based on searching within a spherical region
 DOMAINS_BV=range(len(pickup_index))#Domains being considered for bond valence constrain, counted from 0
 METAL_BV={'Pb':[[1.0,1.5]]*3,'Sb':[[4.,5.]]*3}#range of acceptable metal bv in each domain
+debug_bv=False
 DOMAIN_GP=[]#means you want to group first two and last two domains together, only group half layers or full layers together
 ##want to output the data for plotting?##
 PLOT=False
@@ -59,10 +72,10 @@ PRINT_PROTONATION=False
 ##want to print bond valence?##
 PRINT_BV=False
 ##count distal oxygen for bv?##
-COUNT_DISTAL_OXYGEN=True#True then consider bond valence also for distal oxygen,otherwise skip the bv contribution from distal oxygen
+COUNT_DISTAL_OXYGEN=False#True then consider bond valence also for distal oxygen,otherwise skip the bv contribution from distal oxygen
 ADD_DISTAL_LIGAND_WILD=False
 ##want to print the xyz files to build a 3D structure?##
-PRINT_MODEL_FILES=1
+PRINT_MODEL_FILES=0
 ##pars for sorbates##
 SORBATE=["Pb"]#any combo of "Pb" and "Sb"
 UPDATE_SORBATE_IN_SIM=True#you may not want to update the sorbate in sim function based on the frame of geometry, then turn this off
@@ -592,7 +605,6 @@ def Sim(data,VARS=VARS):
     F =[]
     bv=0
     bv_container={}
-    debug_bv=False
     fom_scaler=[]
     beta=rgh.beta
     SCALES=[getattr(rgh,scale) for scale in scales]
@@ -787,10 +799,10 @@ def Sim(data,VARS=VARS):
                 else:return 1
             NN=_return_right_value(sum(SORBATE_NUMBER[i]))
             if DOMAIN[i]==1:
-
+                #note here if there are two symmetry pair, then only consider one of the couple for bv consideration, the other one will be skipped in the try except statement
                 super_cell_sorbate=domain_class_1.build_super_cell2_simple(VARS['domain'+str(i+1)+'A'],[0,1]+range(4,8)+range(-(sum(SORBATE_NUMBER[i])/NN+sum([np.sum(N_list) for N_list in O_NUMBER[i]])/NN+WATER_NUMBER[i]),0))
                 if SEARCH_MODE_FOR_SURFACE_ATOMS:
-                    super_cell_surface=domain_class_1.build_super_cell2_simple(VARS['domain'+str(i+1)+'A'],[0,1]+range(4,30)+range(-(sum(SORBATE_NUMBER[i])/NN+sum([np.sum(N_list) for N_list in O_NUMBER[i]])/NN+WATER_NUMBER[i]),0))
+                    super_cell_surface=domain_class_1.build_super_cell2_simple(VARS['domain'+str(i+1)+'A'],[0,1]+range(4,30)+range(-(sum(SORBATE_NUMBER[i])+sum([np.sum(N_list) for N_list in O_NUMBER[i]])+WATER_NUMBER[i]),0))
                 else:
                     super_cell_surface=VARS['domain'+str(i+1)+'A'].copy()
                     #delete the first iron layer atoms if considering a half layer
@@ -915,7 +927,8 @@ def Sim(data,VARS=VARS):
                     if debug_bv:bv_container[key]=_widen_validness_range(metal_bv_range[0]-temp_bv,metal_bv_range[1]-temp_bv)
     if debug_bv:
         for i in bv_container.keys():
-            print i,bv_container[i]
+            if bv_container[i]!=0:
+                print i,bv_container[i]
     #set up multiple domains
     #note for each domain there are two sub domains which symmetrically related to each other, so have equivalent wt
     for i in range(DOMAIN_NUMBER):
