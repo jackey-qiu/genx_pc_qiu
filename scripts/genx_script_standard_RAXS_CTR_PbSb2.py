@@ -22,7 +22,7 @@ if COUNT_TIME:t_0=datetime.now()
 batch_path_head='/u1/uaf/cqiu/batchfile/'
 WT_RAXS=5#weighting for RAXS dataset
 WT_BV=1#weighting for bond valence constrain (1 recommended)
-BV_TOLERANCE=0.08#ideal bv value + or - this value is acceptable
+BV_TOLERANCE=[-0.08,0.08]#ideal bv value + or - this value is acceptable
 FULL_LAYER_LONG=0
 
 #this is one way to start up quickly, each time you only need to specify the pickup_index and DOMAIN_GP if want to group different domains
@@ -773,21 +773,21 @@ def Sim(data,VARS=VARS):
         if USE_BV and i in DOMAINS_BV:
             #set up dynamic super cells,where water and sorbate is a library and surface is a domain instance
             def _widen_validness(value):#acceptable bond valence offset can be adjusted (here is 0.08)
-                if value<-BV_TOLERANCE:return 100
-                elif value>=-BV_TOLERANCE and value<BV_TOLERANCE:return 0
+                if value<BV_TOLERANCE[0]:return 100
+                elif value>=BV_TOLERANCE[0] and value<BV_TOLERANCE[1]:return 0
                 else:return value
             def _widen_validness_range(value_min,value_max):#consider a range of (ideal_bv-temp_bv)
-                if (value_min<-BV_TOLERANCE and value_max>BV_TOLERANCE) or (value_min>=-BV_TOLERANCE and value_min<=BV_TOLERANCE) or (value_max>=-BV_TOLERANCE and value_max<=BV_TOLERANCE):
+                if (value_min<BV_TOLERANCE[0] and value_max>BV_TOLERANCE[1]) or (value_min>=BV_TOLERANCE[0] and value_min<=BV_TOLERANCE[1]) or (value_max>=BV_TOLERANCE[0] and value_max<=BV_TOLERANCE[1]):
                     return 0
-                elif value_min>BV_TOLERANCE:return value_min
+                elif value_min>BV_TOLERANCE[1]:return value_min
                 else:return 100
             def _widen_validness_hydrogen_acceptor(value,H_N=0):#here consider possible contribution of hydrogen bond (~0.2)
-                if (value-H_N*0.2)<-BV_TOLERANCE:return 100
-                elif (value-H_N*0.2)>=-BV_TOLERANCE and (value-H_N*0.2)<BV_TOLERANCE:return 0
+                if (value-H_N*0.2)<BV_TOLERANCE[0]:return 100
+                elif (value-H_N*0.2)>=BV_TOLERANCE[0] and (value-H_N*0.2)<BV_TOLERANCE[1]:return 0
                 else:return (value-H_N*0.2)
             def _widen_validness_potential_hydrogen_acceptor(value):#value=2-temp_bv(temp_bv include covalent hydrogen bond possibly)
-                if value<0.2 and value>-BV_TOLERANCE: return 0
-                elif value<-BV_TOLERANCE: return 100
+                if value<0.2 and value>BV_TOLERANCE[0]: return 0
+                elif value<BV_TOLERANCE[0]: return 100
                 else:return value               
                 
             super_cell_water,super_cell_sorbate,super_cell_surface=None,None,None
