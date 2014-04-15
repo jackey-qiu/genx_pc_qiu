@@ -279,11 +279,27 @@ else:
 
 ##setup domains
 for i in range(DOMAIN_NUMBER):
+    vars()['HB_MATCH_'+str(i+1)]={}
+    HB_MATCH=vars()['HB_MATCH_'+str(i+1)]
     vars()['domain_class_'+str(int(i+1))]=domain_creator.domain_creator(ref_domain=vars()['ref_domain'+str(int(DOMAIN[i]))],id_list=vars()['ref_id_list_'+str(int(DOMAIN[i]))],terminated_layer=0,domain_tag='_D'+str(int(i+1)),new_var_module=vars()['rgh_domain'+str(int(i+1))])
     vars()['domain'+str(int(i+1))+'A']=vars()['domain_class_'+str(int(i+1))].domain_A
     vars()['domain'+str(int(i+1))+'B']=vars()['domain_class_'+str(int(i+1))].domain_B
     vars(vars()['domain_class_'+str(int(i+1))])['domainA']=vars()['domain'+str(int(i+1))+'A']
     vars(vars()['domain_class_'+str(int(i+1))])['domainB']=vars()['domain'+str(int(i+1))+'B']
+    
+    #Adding hydrogen to pre-defined hydrogen acceptor
+    for i_H in range(len(COVALENT_HYDROGEN_ACCEPTOR[i])):
+        for j_H in range(COVALENT_HYDROGEN_NUMBER[i][i_H]):
+            vars()['rgh_domain'+str(int(i+1))].new_var('r_H_'+str(i_H+1)+'_'+str(j_H+1), 1.)
+            vars()['rgh_domain'+str(int(i+1))].new_var('phi_H_'+str(i_H+1)+'_'+str(j_H+1), 0.)
+            vars()['rgh_domain'+str(int(i+1))].new_var('theta_H_'+str(i_H+1)+'_'+str(j_H+1), 0.)
+            coor=vars()['domain_class_'+str(int(i+1))].adding_hydrogen(domain=vars()['domain'+str(int(i+1))+'A'],N_of_HB=j_H,ref_id=COVALENT_HYDROGEN_ACCEPTOR[i][i_H]+'_D'+str(i+1)+'A',r=getattr(vars()['rgh_domain'+str(int(i+1))],'r_H_'+str(i_H+1))+'_'+str(j_H+1),theta=getattr(vars()['rgh_domain'+str(int(i+1))],'theta_H_'+str(i_H+1)+'_'+str(j_H+1)),phi=getattr(vars()['rgh_domain'+str(int(i+1))],'phi_H_'+str(i_H+1)+'_'+str(j_H+1)))
+            domain_creator.add_atom(domain=vars()['domain'+str(int(i+1))+'B'],ref_coor=np.array(coor)*[-1,1,1]-[-1.,0.06955,0.5],ids=['HB'+str(j_H+1)+'_'+COVALENT_HYDROGEN_ACCEPTOR[i][i_H]+'_D'+str(i+1)+'B'],els=['H'])
+            if COVALENT_HYDROGEN_ACCEPTOR[i][i_H]+'_D'+str(i+1)+'A' in HB_MATCH.keys():
+                HB_MATCH[COVALENT_HYDROGEN_ACCEPTOR[i][i_H]+'_D'+str(i+1)+'A']=HB_MATCH[COVALENT_HYDROGEN_ACCEPTOR[i][i_H]+'_D'+str(i+1)+'A'].append('HB'+str(j_H+1)+'_'+COVALENT_HYDROGEN_ACCEPTOR[i][i_H]+'_D'+str(i+1)+'A')
+            else:
+                HB_MATCH[COVALENT_HYDROGEN_ACCEPTOR[i][i_H]+'_D'+str(i+1)+'A']=['HB'+str(j_H+1)+'_'+COVALENT_HYDROGEN_ACCEPTOR[i][i_H]+'_D'+str(i+1)+'A']
+            HB_MATCH['HB'+str(j_H+1)+'_'+COVALENT_HYDROGEN_ACCEPTOR[i][i_H]+'_D'+str(i+1)+'A']=[COVALENT_HYDROGEN_ACCEPTOR[i][i_H]+'_D'+str(i+1)+'A']
     #Adding sorbates to domainA and domainB
     for j in range(sum(SORBATE_NUMBER[i])):
         SORBATE_coors_a=[]
@@ -593,6 +609,11 @@ if USE_BV:
                 for each_value in value:
                     index_temp=vars()['match_lib_'+str(int(i+1))+'A'][id].index(filter(lambda x:each_value in x,vars()['match_lib_'+str(int(i+1))+'A'][id])[0])
                     del vars()['match_lib_'+str(int(i+1))+'A'][id][index_temp]
+        for key in vars()['HB_MATCH_'+str(i+1)].keys():
+            if key not in vars()['match_lib_'+str(int(i+1))+'A'].keys():
+                vars()['match_lib_'+str(int(i+1))+'A'][key]=vars()['HB_MATCH_'+str(i+1)][key]
+            else:
+                vars()['match_lib_'+str(int(i+1))+'A'][key]=vars()['match_lib_'+str(int(i+1))+'A'][key].append(vars()['HB_MATCH_'+str(i+1)][key])
 #####################################specify f1f2 here###################################
 res_el='Pb'
 f1f2_file='raxs_Pb_formatted.f1f2'
@@ -630,6 +651,11 @@ def Sim(data,VARS=VARS):
 
         #update sorbates
         if UPDATE_SORBATE_IN_SIM:
+            for i_H in range(len(COVALENT_HYDROGEN_ACCEPTOR[i])):
+                for j_H in range(COVALENT_HYDROGEN_NUMBER[i][i_H]):
+                    coor=vars()['domain_class_'+str(int(i+1))].adding_hydrogen(domain=VARS['domain'+str(int(i+1))+'A'],N_of_HB=j_H,ref_id=COVALENT_HYDROGEN_ACCEPTOR[i][i_H]+'_D'+str(i+1)+'A',r=getattr(VARS['rgh_domain'+str(int(i+1))],'r_H_'+str(i_H+1))+'_'+str(j_H+1),theta=getattr(VARS['rgh_domain'+str(int(i+1))],'theta_H_'+str(i_H+1)+'_'+str(j_H+1)),phi=getattr(VARS['rgh_domain'+str(int(i+1))],'phi_H_'+str(i_H+1)+'_'+str(j_H+1)))
+                    domain_creator.add_atom(domain=VARS['domain'+str(int(i+1))+'B'],ref_coor=np.array(coor)*[-1,1,1]-[-1.,0.06955,0.5],ids=['HB'+str(j_H+1)+'_'+COVALENT_HYDROGEN_ACCEPTOR[i][i_H]+'_D'+str(i+1)+'B'],els=['H'])
+
             for j in range(sum(VARS['SORBATE_NUMBER'][i])):
                 SORBATE_coors_a=[]
                 O_coors_a=[]
@@ -872,64 +898,8 @@ def Sim(data,VARS=VARS):
                 if 'O' in key:
                     #For O you may consider possible binding to proton (+0.8) 
                     #And note the maximum coordination number for O is 4
-                    case_tag=len(VARS['match_lib_'+str(i+1)+'A'][key])
-                    if COVALENT_HYDROGEN_RANDOM==True:
-                        if key in map(lambda x:x+'_D'+str(i+1)+'A',POTENTIAL_COVALENT_HYDROGEN_ACCEPTOR[i]):
-                            C_H_N=[0,1,2]
-                            bv_offset=[ _widen_validness_range(2-0.88*N-temp_bv,2-0.68*N-temp_bv) for N in C_H_N]
-                            C_H_N=C_H_N[bv_offset.index(min(bv_offset))]
-                            if PRINT_PROTONATION:
-                                print key,C_H_N
-                            if key in map(lambda x:x+'_D'+str(i+1)+'A',POTENTIAL_HYDROGEN_ACCEPTOR[i]):#consider potential hydrogen bond (you can have or have not H-bonding)
-                                if _widen_validness_range(2-0.88*C_H_N-temp_bv,2-0.68*C_H_N-temp_bv)==0 or _widen_validness_range(2-0.88*C_H_N-temp_bv,2-0.68*C_H_N-temp_bv)==100:
-                                #if saturated already or over-saturated, then adding H-bonding wont help decrease the the total bv anyhow
-                                    bv=bv+_widen_validness_range(2-0.88*C_H_N-temp_bv,2-0.68*C_H_N-temp_bv)
-                                    if debug_bv:bv_container[key]=_widen_validness_range(2-0.88*C_H_N-temp_bv,2-0.68*C_H_N-temp_bv)
-                                else:
-                                #if undersaturation, then compare the cases of inclusion of H-bonding and exclusion of H-bonding. Whichever give rise to the lower bv will be used.
-                                    bv=bv+min([_widen_validness_range(2-0.88*C_H_N-temp_bv,2-0.68*C_H_N-temp_bv),_widen_validness_range(2-0.88*C_H_N-temp_bv-0.25,2-0.68*C_H_N-temp_bv)])
-                                    if debug_bv:bv_container[key]=min([_widen_validness_range(2-0.88*C_H_N-temp_bv,2-0.68*C_H_N-temp_bv),_widen_validness_range(2-0.88*C_H_N-temp_bv-0.25,2-0.68*C_H_N-temp_bv)])
-                            else:
-                                bv=bv+_widen_validness_range(2-0.88*C_H_N-temp_bv,2-0.68*C_H_N-temp_bv)
-                                if debug_bv:bv_container[key]=_widen_validness_range(2-0.88*C_H_N-temp_bv,2-0.68*C_H_N-temp_bv)
-                        else:#if no covalent hydrogen bond
-                            if key in map(lambda x:x+'_D'+str(i+1)+'A',POTENTIAL_HYDROGEN_ACCEPTOR[i]):#consider hydrogen bond
-                                if _widen_validness(2-temp_bv)==0 or _widen_validness(2-temp_bv)==100:
-                                    bv=bv+_widen_validness(2-temp_bv)
-                                    if debug_bv:bv_container[key]=_widen_validness(2-temp_bv)
-                                else:
-                                    bv=bv+min([_widen_validness(2-temp_bv),_widen_validness_range(2-temp_bv-0.25,2-temp_bv-0.13)])
-                                    if debug_bv:bv_container[key]=min([_widen_validness(2-temp_bv),_widen_validness_range(2-temp_bv-0.25,2-temp_bv-0.13)])
-                            else:#neither covalent hydrogen bond nor hydrogen bond
-                                bv=bv+_widen_validness(2-temp_bv)
-                                if debug_bv:bv_container[key]=_widen_validness(2-temp_bv)
-                    else:
-                        if key in map(lambda x:x+'_D'+str(i+1)+'A',COVALENT_HYDROGEN_ACCEPTOR[i]):
-                            #if consider convalent hydrogen bond (bv=0.68 to 0.88) while the hydrogen bond has bv from 0.13 to 0.25
-                            C_H_N=COVALENT_HYDROGEN_NUMBER[i][map(lambda x:x+'_D'+str(i+1)+'A',COVALENT_HYDROGEN_ACCEPTOR[i]).index(key)]
-                            if key in map(lambda x:x+'_D'+str(i+1)+'A',POTENTIAL_HYDROGEN_ACCEPTOR[i]):#consider potential hydrogen bond (you can have or have not H-bonding)
-                                if _widen_validness_range(2-0.88*C_H_N-temp_bv,2-0.68*C_H_N-temp_bv)==0 or _widen_validness_range(2-0.88*C_H_N-temp_bv,2-0.68*C_H_N-temp_bv)==100:
-                                #if saturated already or over-saturated, then adding H-bonding wont help decrease the the total bv anyhow
-                                    bv=bv+_widen_validness_range(2-0.88*C_H_N-temp_bv,2-0.68*C_H_N-temp_bv)
-                                    if debug_bv:bv_container[key]=_widen_validness_range(2-0.88*C_H_N-temp_bv,2-0.68*C_H_N-temp_bv)
-                                else:
-                                #if undersaturation, then compare the cases of inclusion of H-bonding and exclusion of H-bonding. Whichever give rise to the lower bv will be used.
-                                    bv=bv+min([_widen_validness_range(2-0.88*C_H_N-temp_bv,2-0.68*C_H_N-temp_bv),_widen_validness_range(2-0.88*C_H_N-temp_bv-0.25,2-0.68*C_H_N-temp_bv)])
-                                    if debug_bv:bv_container[key]=min([_widen_validness_range(2-0.88*C_H_N-temp_bv,2-0.68*C_H_N-temp_bv),_widen_validness_range(2-0.88*C_H_N-temp_bv-0.25,2-0.68*C_H_N-temp_bv)])
-                            else:
-                                bv=bv+_widen_validness_range(2-0.88*C_H_N-temp_bv,2-0.68*C_H_N-temp_bv)
-                                if debug_bv:bv_container[key]=_widen_validness_range(2-0.88*C_H_N-temp_bv,2-0.68*C_H_N-temp_bv)
-                        else:
-                            if key in map(lambda x:x+'_D'+str(i+1)+'A',POTENTIAL_HYDROGEN_ACCEPTOR[i]):#consider hydrogen bond
-                                if _widen_validness(2-temp_bv)==0 or _widen_validness(2-temp_bv)==100:
-                                    bv=bv+_widen_validness(2-temp_bv)
-                                    if debug_bv:bv_container[key]=_widen_validness(2-temp_bv)
-                                else:
-                                    bv=bv+min([_widen_validness(2-temp_bv),_widen_validness_range(2-temp_bv-0.25,2-temp_bv-0.13)])
-                                    if debug_bv:bv_container[key]=min([_widen_validness(2-temp_bv),_widen_validness_range(2-temp_bv-0.25,2-temp_bv-0.13)])
-                            else:
-                                bv=bv+_widen_validness(2-temp_bv)
-                                if debug_bv:bv_container[key]=_widen_validness(2-temp_bv)
+                    bv=bv+_widen_validness(2-temp_bv)
+                    if debug_bv:bv_container[key]=_widen_validness(2-temp_bv)
                 elif 'Fe' in key:
                     bv=bv+_widen_validness(3-temp_bv)
                     if debug_bv:bv_container[key]=_widen_validness(3-temp_bv)

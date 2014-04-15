@@ -1021,6 +1021,7 @@ class domain_creator(domain_creator_water,domain_creator_sorbate,domain_creator_
             if (dist<=searching_range)&(dist!=0.):
                 
                 r0=0
+                if ((index[1]=='H')&(key[1]=='O'))|((index[1]=='O')&(key[1]=='H')):r0=0.677
                 if ((index[1]=='Pb')&(key[1]=='O'))|((index[1]=='O')&(key[1]=='Pb')):r0=r0_Pb
                 elif ((index[1]=='Fe')&(key[1]=='O'))|((index[1]=='O')&(key[1]=='Fe')):r0=1.759
                 elif ((index[1]=='Sb')&(key[1]=='O'))|((index[1]=='O')&(key[1]=='Sb')):r0=1.973
@@ -1035,11 +1036,16 @@ class domain_creator(domain_creator_water,domain_creator_sorbate,domain_creator_
                     #else:r0=-10
                 sum_check=0
                 for atm in coordinated_atms:
-                    if atm in key[0]:
+                    if atm in key[0] and :
+                        sum_check+=1
+                    elif 'HB' in key[0]:
                         sum_check+=1
                 #print "sum_check",sum_check
-                if sum_check==1:
-                    bond_valence_container[key[0]]=np.exp((r0-dist)/0.37)
+                if sum_check>=1:
+                    if r0==0.677:
+                        bond_valence_container[key[0]]=0.24/(dist-r0)
+                    else:
+                        bond_valence_container[key[0]]=np.exp((r0-dist)/0.37)
                 else:
                     bond_valence_container[key[0]]=np.exp((r0-dist)/0.37)*wt
                 #print domain.id[i],f1(domain,i)

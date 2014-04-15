@@ -187,6 +187,24 @@ class domain_creator_sorbate():
             domain.y[sorbate_index]=xyz_original[1]
             domain.z[sorbate_index]=xyz_original[2]
         return xyz_original
+        
+    def adding_hydrogen(self,domain=None,N_of_HB=0,ref_id='',r=1,theta=0,phi=0,basis=np.array([5.038,5.434,7.3707])):
+        id='HB'+str(N_of_HB+1)+'_'+ref_id
+        pt_ct=lambda domain,p_O1_index:np.array([domain.x[p_O1_index][0]+domain.dx1[p_O1_index][0]+domain.dx2[p_O1_index][0]+domain.dx3[p_O1_index][0],domain.y[p_O1_index][0]+domain.dy1[p_O1_index][0]+domain.dy2[p_O1_index][0]+domain.dy3[p_O1_index][0],domain.z[p_O1_index][0]+domain.dz1[p_O1_index][0]+domain.dz2[p_O1_index][0]+domain.dz3[p_O1_index][0]])
+        xyz_new=[r*np.cos(phi)*np.sin(theta),r*np.sin(phi)*np.sin(theta),r*np.cos(theta)]/basis
+        ref_index=np.where(domain.id==ref_id)[0][0]
+        ref=pt_ct(domain,ref_index)
+        xyz_original=xyz_new+ref
+        sorbate_index=None
+        try:
+            sorbate_index=np.where(domain.id==id)[0][0]
+        except:
+            domain.add_atom( id, "H",  xyz_original[0] ,xyz_original[1], xyz_original[2] ,0.5,     1.00000e+00 ,     1.00000e+00 )
+        if sorbate_index!=None:
+            domain.x[sorbate_index]=xyz_original[0]
+            domain.y[sorbate_index]=xyz_original[1]
+            domain.z[sorbate_index]=xyz_original[2]
+        return xyz_original
     
     def adding_distal_ligand_on_biset_plane(self,domain=None,sorbate_id='',HO_id='',attach_atm_ids=[],attach_atm_offsets=[],r=2,phi=0):
         p_O1_index=np.where(domain.id==attach_atm_ids[0])
