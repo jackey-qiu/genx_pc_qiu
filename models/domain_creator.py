@@ -1029,25 +1029,40 @@ class domain_creator(domain_creator_water,domain_creator_sorbate,domain_creator_
                     if dist<2.5:
                         r0=20.#arbitrary r0 here, ensure oxygens are more than 2.65A apart
                     else:r0=-10
+                elif ((index[1]=='H')&(key[1]=='H')):
+                    if dist<1.5:
+                        r0=0.677
+                        dist=0.67 #arbitrary distance to ensure the bv result is a huge number
+                    else:
+                        r0=0.677
+                        dist=20 #arbitrary distance to ensure the bv result is a tiny tiny number
                 else:
-                    r0=-10#allow short sorbate-sorbate distance for consideration of multiple sorbate within one average structure
-                    #if dist<2.3:
-                    #    r0=10.#exclude the situation where cations are closer than the searching range (2.5A in this case)
-                    #else:r0=-10
+                    if ((index[1]!='H')&(key[1]!='H')):
+                        r0=-10#allow short sorbate-sorbate distance for consideration of multiple sorbate within one average structure
+                    else:
+                        if dist<2:#cations are not allowed to be closer than 2A to hydrogen atom
+                            r0=0.677
+                            dist=0.67
+                        else:#ignore it if the distance bw cation and Hydrogen is less than 2.5 but higher than 2. A
+                            r0=0.677
+                            dist=20
                 sum_check=0
                 for atm in coordinated_atms:
-                    if atm in key[0] and :
+                    if atm in key[0]:
                         sum_check+=1
                     elif 'HB' in key[0]:
                         sum_check+=1
                 #print "sum_check",sum_check
-                if sum_check>=1:
+                if sum_check==1:
                     if r0==0.677:
                         bond_valence_container[key[0]]=0.24/(dist-r0)
                     else:
                         bond_valence_container[key[0]]=np.exp((r0-dist)/0.37)
                 else:
-                    bond_valence_container[key[0]]=np.exp((r0-dist)/0.37)*wt
+                    if r0==0.677:
+                        bond_valence_container[key[0]]=0.24/(dist-r0)
+                    else:
+                        bond_valence_container[key[0]]=np.exp((r0-dist)/0.37)*wt
                 #print domain.id[i],f1(domain,i)
         sum_valence=0.
         for key in bond_valence_container.keys():
@@ -1540,14 +1555,17 @@ class domain_creator(domain_creator_water,domain_creator_sorbate,domain_creator_
             #dist=scipy.spatial.distance.cdist([f1(domain,index)],[f1(domain,index2)])
             r0=0
             if ((domain.el[index]=='Pb')&(domain.el[index2]=='O'))|((domain.el[index2]=='Pb')&(domain.el[index]=='O')):r0=r0_Pb
+            elif ((domain.el[index]=='H')&(domain.el[index2]=='O'))|((domain.el[index2]=='O')&(domain.el[index]=='H')):r0=0.677
             elif ((domain.el[index]=='Fe')&(domain.el[index2]=='O'))|((domain.el[index2]=='Fe')&(domain.el[index]=='O')):r0=1.759
             elif ((domain.el[index]=='Sb')&(domain.el[index2]=='O'))|((domain.el[index2]=='Sb')&(domain.el[index]=='O')):r0=1.973
             else:#when two atoms are too close, the structure explose with high r0, so we are expecting a high bond valence value here.
                 if dist<2.:r0=10
                 else:r0=0.
             if dist<3.:#take it counted only when they are not two far away
-                BV=BV+np.exp((r0-dist)/0.37)
-            
+                if r0==0.677:
+                    BV=BV+0.241/(dist-r0)
+                else:
+                    BV=BV+np.exp((r0-dist)/0.37)
         return BV
         
     def cal_bv_deficience(self,bv_container):
