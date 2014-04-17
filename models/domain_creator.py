@@ -1032,7 +1032,7 @@ class domain_creator(domain_creator_water,domain_creator_sorbate,domain_creator_
                 elif ((index[1]=='H')&(key[1]=='H')):
                     if dist<1.5:
                         r0=0.677
-                        dist=0.67 #arbitrary distance to ensure the bv result is a huge number
+                        dist=0.679 #arbitrary distance to ensure the bv result is a huge number
                     else:
                         r0=0.677
                         dist=20 #arbitrary distance to ensure the bv result is a tiny tiny number
@@ -1042,7 +1042,7 @@ class domain_creator(domain_creator_water,domain_creator_sorbate,domain_creator_
                     else:
                         if dist<2:#cations are not allowed to be closer than 2A to hydrogen atom
                             r0=0.677
-                            dist=0.67
+                            dist=0.679
                         else:#ignore it if the distance bw cation and Hydrogen is less than 2.5 but higher than 2. A
                             r0=0.677
                             dist=20
