@@ -214,7 +214,7 @@ class domain_creator_water():
         return np.append([point1],[point2],axis=0)
 
     def add_oxygen_pair2B(self,domain,ref_id,O_ids,v_shift,r,alpha):
-    #v_shift and r are in unit of angstrom
+    #v_shift and r are in unit of angstrom, and phi in degree
     #use coordinates during fitting rather than freezing the ref to the bulk position
         basis=np.array([5.038,5.434,7.3707])
         ref_point=None
@@ -224,8 +224,8 @@ class domain_creator_water():
             ref_point1=domain_creator.extract_coor(domain,ref_id[0])*basis
             ref_point2=domain_creator.extract_coor(domain,ref_id[1])*basis
             ref_point=(ref_point1+ref_point2)/2+[0,0,v_shift]
-        x_shift=r*np.cos(alpha)
-        y_shift=r*np.sin(alpha)
+        x_shift=r*np.cos(alpha/180*np.pi)
+        y_shift=r*np.sin(alpha/180*np.pi)
         point1=np.array([ref_point[0]-x_shift,ref_point[1]-y_shift,ref_point[2]])/basis
         point2=np.array([ref_point[0]+x_shift,ref_point[1]+y_shift,ref_point[2]])/basis
         O_index1=None
