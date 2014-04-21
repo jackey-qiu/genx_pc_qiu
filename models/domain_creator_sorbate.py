@@ -189,6 +189,8 @@ class domain_creator_sorbate():
         return xyz_original
         
     def adding_hydrogen(self,domain=None,N_of_HB=0,ref_id='',r=1,theta=0,phi=0,basis=np.array([5.038,5.434,7.3707])):
+        theta=theta/180*np.pi
+        phi=phi/180*np.pi
         id='HB'+str(N_of_HB+1)+'_'+ref_id
         pt_ct=lambda domain,p_O1_index:np.array([domain.x[p_O1_index]+domain.dx1[p_O1_index]+domain.dx2[p_O1_index]+domain.dx3[p_O1_index],domain.y[p_O1_index]+domain.dy1[p_O1_index]+domain.dy2[p_O1_index]+domain.dy3[p_O1_index],domain.z[p_O1_index]+domain.dz1[p_O1_index]+domain.dz2[p_O1_index]+domain.dz3[p_O1_index]])
         xyz_new=[r*np.cos(phi)*np.sin(theta),r*np.sin(phi)*np.sin(theta),r*np.cos(theta)]/basis
