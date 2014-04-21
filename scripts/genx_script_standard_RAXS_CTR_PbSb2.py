@@ -1059,12 +1059,12 @@ def Sim(data,VARS=VARS):
     #print domain_creator.extract_coor(domain1A,'HO1_Pb1_D1A')
     #print domain_creator.extract_component(domain2A,'Pb1_D2A',['dx1','dy2','dz3'])  
     if PRINT_MODEL_FILES:
-        N_HB_SURFACE=sum(COVALENT_HYDROGEN_NUMBER[i])
-        N_HB_DISTAL=sum(PROTONATION_DISTAL_OXYGEN[i])
-        total_sorbate_number=sum(SORBATE_NUMBER[i])+sum([np.sum(N_list) for N_list in O_NUMBER[i]])
-        water_number=WATER_NUMBER[i]*3
-        TOTAL_NUMBER=N_HB_SURFACE+N_HB_DISTAL+total_sorbate_number+water_number
         for i in range(DOMAIN_NUMBER):
+            N_HB_SURFACE=sum(COVALENT_HYDROGEN_NUMBER[i])
+            N_HB_DISTAL=sum(PROTONATION_DISTAL_OXYGEN[i])
+            total_sorbate_number=sum(SORBATE_NUMBER[i])+sum([np.sum(N_list) for N_list in O_NUMBER[i]])
+            water_number=WATER_NUMBER[i]*3
+            TOTAL_NUMBER=N_HB_SURFACE+N_HB_DISTAL+total_sorbate_number+water_number
             domain_creator.print_data(N_sorbate=TOTAL_NUMBER,domain=VARS['domain'+str(i+1)+'A'],z_shift=1,half_layer=DOMAIN[i]-2,full_layer_long=FULL_LAYER_LONG,save_file='D://'+'Model_domain'+str(i+1)+'.xyz')    
     #export the model results for plotting if PLOT set to true
     #domain_creator.layer_spacing_calculator(domain1A,12,True)
