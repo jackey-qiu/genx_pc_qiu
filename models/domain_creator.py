@@ -49,7 +49,7 @@ f2=lambda p1,p2:np.sqrt(np.sum((p1-p2)**2))
 #anonymous function f3 is to calculate the coordinates of basis with magnitude of 1.,p1 and p2 are coordinates for two known points, the 
 #direction of the basis is pointing from p1 to p2
 f3=lambda p1,p2:(1./f2(p1,p2))*(p2-p1)+p1
-
+    
 #extract xyz for atom with id in domain
 def extract_coor(domain,id):
     index=np.where(domain.id==id)[0][0]
