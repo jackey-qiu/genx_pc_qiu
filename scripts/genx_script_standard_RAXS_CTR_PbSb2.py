@@ -22,9 +22,10 @@ if COUNT_TIME:t_0=datetime.now()
 batch_path_head='/u1/uaf/cqiu/batchfile/'
 WT_RAXS=5#weighting for RAXS dataset
 WT_BV=1#weighting for bond valence constrain (1 recommended)
-BV_TOLERANCE=[-0.08,0.08]#ideal bv value + or - this value is acceptable
+BV_TOLERANCE=[-0.1,0.08]#ideal bv value + or - this value is acceptable
 USE_TOP_ANGLE=False#fit top angle if true otherwise fit the Pb-O bond length (used in bidentate case)
 FULL_LAYER_LONG=0
+INCLUDE_HYDROGEN=0
 
 #this is one way to start up quickly, each time you only need to specify the pickup_index and DOMAIN_GP if want to group different domains
 #all the global variables are pre-defined based on a reasonable assumption, but you can customized it by editing the variables below
@@ -52,8 +53,8 @@ The other items should fine to stay unedited.
 Don't touch the other global parameters unless necessary!!!
 ''' 
 
-pickup_index=[2]
-sym_site_index=[[0,1]]
+pickup_index=[2,6,11,11]
+sym_site_index=[[0,1]]*2+[[0]]+[[1]]
 
 pick=lambda list:[list[i] for i in pickup_index]
 deep_pick=lambda list:[[list[pickup_index[i]][j] for j in sym_site_index[i]] for i in range(len(pickup_index))]
@@ -64,10 +65,10 @@ COHERENCE=[{True:range(len(pickup_index))}] #want to add up in coherence? items 
 USE_BV=True
 SEARCH_MODE_FOR_SURFACE_ATOMS=True#If true then cal bond valence of surface atoms based on searching within a spherical region
 DOMAINS_BV=range(len(pickup_index))#Domains being considered for bond valence constrain, counted from 0
-METAL_BV={'Pb':[[1,1.2]]*2+[[1.3,1.8]]*2,'Sb':[[4.,5.]]*3}#range of acceptable metal bv in each domain
+METAL_BV={'Pb':[[1.3,1.8]]*4,'Sb':[[4.,5.]]*3}#range of acceptable metal bv in each domain
 R0_BV={('Fe','O'):1.759,('H','O'):0.677,('Pb','O'):2.04,('Sb','O'):1.973}#r0 for different couples
 debug_bv=False
-DOMAIN_GP=[]#means you want to group first two and last two domains together, only group half layers or full layers together
+DOMAIN_GP=[[0,1],[2,3]]#means you want to group first two and last two domains together, only group half layers or full layers together
 ##want to output the data for plotting?##
 PLOT=False
 ##want to print out the protonation status?##
@@ -124,6 +125,12 @@ else:DISCONNECT_BV_CONTRIBUTION_FL=[{('O1_5_0','O1_6_0'):[SORBATE[0]+'2']},{},{}
 DISCONNECT_BV_CONTRIBUTION=pick(DISCONNECT_BV_CONTRIBUTION_HL+DISCONNECT_BV_CONTRIBUTION_FL)#set items to be {} if considering single sorbate
 
 #if consider hydrogen bonds#
+COVALENT_HYDROGEN_RANDOM=False
+POTENTIAL_COVALENT_HYDROGEN_ACCEPTOR_HL=[['O1_1_0','O1_2_0','O1_3_0','O1_4_0']]+[['O1_1_0','O1_2_0']]*3+[['O1_1_0','O1_2_0']]+[['O1_1_0','O1_2_0','O1_3_0','O1_4_0']]*2#Will be considered only when COVALENT_HYDROGEN_RANDOM=True
+if FULL_LAYER_LONG:POTENTIAL_COVALENT_HYDROGEN_ACCEPTOR_FL=[['O1_11_t','O1_12_t','O1_1_0','O1_2_0']]+[['O1_11_t','O1_12_t']]*2+[['O1_11_t','O1_12_t']]+[['O1_11_t','O1_12_t','O1_1_0','O1_2_0']]*2#Will be considered only when COVALENT_HYDROGEN_RANDOM=True
+else:POTENTIAL_COVALENT_HYDROGEN_ACCEPTOR_FL=[['O1_5_0','O1_6_0','O1_7_0','O1_8_0']]+[['O1_5_0','O1_6_0']]*2+[['O1_5_0','O1_6_0']]+[['O1_5_0','O1_6_0','O1_7_0','O1_8_0']]*2#Will be considered only when COVALENT_HYDROGEN_RANDOM=True
+POTENTIAL_COVALENT_HYDROGEN_ACCEPTOR=pick(POTENTIAL_COVALENT_HYDROGEN_ACCEPTOR_HL+POTENTIAL_COVALENT_HYDROGEN_ACCEPTOR_FL)#Will be considered only when COVALENT_HYDROGEN_RANDOM=True
+
 COVALENT_HYDROGEN_ACCEPTOR_HL=[['O1_1_0','O1_2_0','O1_3_0','O1_4_0']]+[['O1_1_0','O1_2_0']]*3+[['O1_1_0','O1_2_0']]+[['O1_1_0','O1_2_0','O1_3_0','O1_4_0']]*2#will be considered only when COVALENT_HYDROGEN_RANDOM=False
 if FULL_LAYER_LONG:COVALENT_HYDROGEN_ACCEPTOR_FL=[['O1_11_t','O1_12_t','O1_1_0','O1_2_0']]+[['O1_11_t','O1_12_t']]*2+[['O1_11_t','O1_12_t']]+[['O1_11_t','O1_12_t','O1_1_0','O1_2_0']]*2#will be considered only when COVALENT_HYDROGEN_RANDOM=False
 else:COVALENT_HYDROGEN_ACCEPTOR_FL=[['O1_5_0','O1_6_0','O1_7_0','O1_8_0']]+[['O1_5_0','O1_6_0']]*2+[['O1_5_0','O1_6_0']]+[['O1_5_0','O1_6_0','O1_7_0','O1_8_0']]*2#will be considered only when COVALENT_HYDROGEN_RANDOM=False
@@ -133,10 +140,15 @@ COVALENT_HYDROGEN_NUMBER_HL=[[1,1,1,1]]+[[1,1]]*3+[[1,1]]+[[2,2,1,1]]*2
 COVALENT_HYDROGEN_NUMBER_FL=[[1,1,1,1]]+[[1,1]]*2+[[1,1]]+[[2,2,1,1]]*2
 COVALENT_HYDROGEN_NUMBER=pick(COVALENT_HYDROGEN_NUMBER_HL+COVALENT_HYDROGEN_NUMBER_FL)
 
+POTENTIAL_HYDROGEN_ACCEPTOR_HL=[['O1_1_0','O1_2_0','O1_3_0','O1_4_0','O1_5_0','O1_6_0']]*7#they can accept one hydrogen bond or not
+if FULL_LAYER_LONG:POTENTIAL_HYDROGEN_ACCEPTOR_FL=[['O1_11_t','O1_12_t','O1_1_0','O1_2_0']]*6#they can accept one hydrogen bond or not
+else:POTENTIAL_HYDROGEN_ACCEPTOR_FL=[['O1_5_0','O1_6_0','O1_7_0','O1_8_0']]*6#they can accept one hydrogen bond or not
+POTENTIAL_HYDROGEN_ACCEPTOR=pick(POTENTIAL_HYDROGEN_ACCEPTOR_HL+POTENTIAL_HYDROGEN_ACCEPTOR_FL)#they can accept one hydrogen bond or not
+
 MIRROR=pick([False,False,True,None,None,False,False,True,None,None,None,None,None])
 
 ##pars for interfacial waters##
-WATER_NUMBER=pick([0,0,2,0,0,0,0,0,0,0,0,0,0])
+WATER_NUMBER=pick([0,0,0,0,0,0,0,0,0,0,0,0,0])
 WATER_PAIR=True#add water pair each time if True, otherwise only add single water each time (only needed par is V_SHIFT) 
 REF_POINTS_HL=[[['O1_1_0','O1_2_0']]]*7#each item inside is a list of one or couple items, and each water set has its own ref point
 if FULL_LAYER_LONG:REF_POINTS_FL=[[['O1_11_t','O1_12_t']]]*6#each item inside is a list of one or couple items, and each water set has its own ref point
@@ -290,18 +302,19 @@ for i in range(DOMAIN_NUMBER):
     vars(vars()['domain_class_'+str(int(i+1))])['domainB']=vars()['domain'+str(int(i+1))+'B']
     
     #Adding hydrogen to pre-defined hydrogen acceptor of surface oxygens
-    for i_H in range(len(COVALENT_HYDROGEN_ACCEPTOR[i])):
-        for j_H in range(COVALENT_HYDROGEN_NUMBER[i][i_H]):
-            vars()['rgh_domain'+str(int(i+1))].new_var('r_H_'+str(i_H+1)+'_'+str(j_H+1), 1.)
-            vars()['rgh_domain'+str(int(i+1))].new_var('phi_H_'+str(i_H+1)+'_'+str(j_H+1), 0.)
-            vars()['rgh_domain'+str(int(i+1))].new_var('theta_H_'+str(i_H+1)+'_'+str(j_H+1), 0.)
-            coor=vars()['domain_class_'+str(int(i+1))].adding_hydrogen(domain=vars()['domain'+str(int(i+1))+'A'],N_of_HB=j_H,ref_id=COVALENT_HYDROGEN_ACCEPTOR[i][i_H]+'_D'+str(i+1)+'A',r=getattr(vars()['rgh_domain'+str(int(i+1))],'r_H_'+str(i_H+1)+'_'+str(j_H+1)),theta=getattr(vars()['rgh_domain'+str(int(i+1))],'theta_H_'+str(i_H+1)+'_'+str(j_H+1)),phi=getattr(vars()['rgh_domain'+str(int(i+1))],'phi_H_'+str(i_H+1)+'_'+str(j_H+1)))
-            domain_creator.add_atom(domain=vars()['domain'+str(int(i+1))+'B'],ref_coor=[np.array(coor)*[-1,1,1]-[-1.,0.06955,0.5]],ids=['HB'+str(j_H+1)+'_'+COVALENT_HYDROGEN_ACCEPTOR[i][i_H]+'_D'+str(i+1)+'B'],els=['H'])
-            if COVALENT_HYDROGEN_ACCEPTOR[i][i_H]+'_D'+str(i+1)+'A' in HB_MATCH.keys():
-                HB_MATCH[COVALENT_HYDROGEN_ACCEPTOR[i][i_H]+'_D'+str(i+1)+'A'].append('HB'+str(j_H+1)+'_'+COVALENT_HYDROGEN_ACCEPTOR[i][i_H]+'_D'+str(i+1)+'A')
-            else:
-                HB_MATCH[COVALENT_HYDROGEN_ACCEPTOR[i][i_H]+'_D'+str(i+1)+'A']=['HB'+str(j_H+1)+'_'+COVALENT_HYDROGEN_ACCEPTOR[i][i_H]+'_D'+str(i+1)+'A']
-            HB_MATCH['HB'+str(j_H+1)+'_'+COVALENT_HYDROGEN_ACCEPTOR[i][i_H]+'_D'+str(i+1)+'A']=[COVALENT_HYDROGEN_ACCEPTOR[i][i_H]+'_D'+str(i+1)+'A']
+    if INCLUDE_HYDROGEN:
+        for i_H in range(len(COVALENT_HYDROGEN_ACCEPTOR[i])):
+            for j_H in range(COVALENT_HYDROGEN_NUMBER[i][i_H]):
+                vars()['rgh_domain'+str(int(i+1))].new_var('r_H_'+str(i_H+1)+'_'+str(j_H+1), 1.)
+                vars()['rgh_domain'+str(int(i+1))].new_var('phi_H_'+str(i_H+1)+'_'+str(j_H+1), 0.)
+                vars()['rgh_domain'+str(int(i+1))].new_var('theta_H_'+str(i_H+1)+'_'+str(j_H+1), 0.)
+                coor=vars()['domain_class_'+str(int(i+1))].adding_hydrogen(domain=vars()['domain'+str(int(i+1))+'A'],N_of_HB=j_H,ref_id=COVALENT_HYDROGEN_ACCEPTOR[i][i_H]+'_D'+str(i+1)+'A',r=getattr(vars()['rgh_domain'+str(int(i+1))],'r_H_'+str(i_H+1)+'_'+str(j_H+1)),theta=getattr(vars()['rgh_domain'+str(int(i+1))],'theta_H_'+str(i_H+1)+'_'+str(j_H+1)),phi=getattr(vars()['rgh_domain'+str(int(i+1))],'phi_H_'+str(i_H+1)+'_'+str(j_H+1)))
+                domain_creator.add_atom(domain=vars()['domain'+str(int(i+1))+'B'],ref_coor=[np.array(coor)*[-1,1,1]-[-1.,0.06955,0.5]],ids=['HB'+str(j_H+1)+'_'+COVALENT_HYDROGEN_ACCEPTOR[i][i_H]+'_D'+str(i+1)+'B'],els=['H'])
+                if COVALENT_HYDROGEN_ACCEPTOR[i][i_H]+'_D'+str(i+1)+'A' in HB_MATCH.keys():
+                    HB_MATCH[COVALENT_HYDROGEN_ACCEPTOR[i][i_H]+'_D'+str(i+1)+'A'].append('HB'+str(j_H+1)+'_'+COVALENT_HYDROGEN_ACCEPTOR[i][i_H]+'_D'+str(i+1)+'A')
+                else:
+                    HB_MATCH[COVALENT_HYDROGEN_ACCEPTOR[i][i_H]+'_D'+str(i+1)+'A']=['HB'+str(j_H+1)+'_'+COVALENT_HYDROGEN_ACCEPTOR[i][i_H]+'_D'+str(i+1)+'A']
+                HB_MATCH['HB'+str(j_H+1)+'_'+COVALENT_HYDROGEN_ACCEPTOR[i][i_H]+'_D'+str(i+1)+'A']=[COVALENT_HYDROGEN_ACCEPTOR[i][i_H]+'_D'+str(i+1)+'A']
     #Adding sorbates to domainA and domainB
     for j in range(sum(SORBATE_NUMBER[i])):
         SORBATE_coors_a=[]
@@ -489,19 +502,20 @@ for i in range(DOMAIN_NUMBER):
             #if O_NUMBER[i][j]!=0:
             if M!=0:
                 vars()['gp_HO_set'+str(j+1)+'_D'+str(int(i+1))]=vars()['domain_class_'+str(int(i+1))].grouping_discrete_layer3(domain=[vars()['domain'+str(int(i+1))+'A']]*M+[vars()['domain'+str(int(i+1))+'B']]*M,atom_ids=HO_set_ids)
-            
-    for i_distal in range(len(vars()['HO_list_domain'+str(int(i+1))+'a'])):#add hydrogen to distal oxygens if any
-        for j_distal in range(PROTONATION_DISTAL_OXYGEN[i][i_distal]):
-            vars()['rgh_domain'+str(int(i+1))].new_var('r_H_D_'+str(i_distal+1)+'_'+str(j_distal+1), 1.)
-            vars()['rgh_domain'+str(int(i+1))].new_var('phi_H_D_'+str(i_distal+1)+'_'+str(j_distal+1), 0.)
-            vars()['rgh_domain'+str(int(i+1))].new_var('theta_H_D_'+str(i_distal+1)+'_'+str(j_distal+1), 0.)
-            coor=vars()['domain_class_'+str(int(i+1))].adding_hydrogen(domain=vars()['domain'+str(int(i+1))+'A'],N_of_HB=j_distal,ref_id=vars()['HO_list_domain'+str(int(i+1))+'a'][i_distal],r=getattr(vars()['rgh_domain'+str(int(i+1))],'r_H_D_'+str(i_distal+1)+'_'+str(j_distal+1)),theta=getattr(vars()['rgh_domain'+str(int(i+1))],'theta_H_D_'+str(i_distal+1)+'_'+str(j_distal+1)),phi=getattr(vars()['rgh_domain'+str(int(i+1))],'phi_H_D_'+str(i_distal+1)+'_'+str(j_distal+1)))
-            domain_creator.add_atom(domain=vars()['domain'+str(int(i+1))+'B'],ref_coor=[np.array(coor)*[-1,1,1]-[-1.,0.06955,0.5]],ids=['HB'+str(j_distal+1)+'_'+vars()['HO_list_domain'+str(int(i+1))+'b'][i_distal]],els=['H'])
-            if vars()['HO_list_domain'+str(int(i+1))+'a'][i_distal] in HB_MATCH.keys():
-                HB_MATCH[vars()['HO_list_domain'+str(int(i+1))+'a'][i_distal]].append('HB'+str(j_distal+1)+'_'+vars()['HO_list_domain'+str(int(i+1))+'a'][i_distal])
-            else:
-                HB_MATCH[vars()['HO_list_domain'+str(int(i+1))+'a'][i_distal]]=['HB'+str(j_distal+1)+'_'+vars()['HO_list_domain'+str(int(i+1))+'a'][i_distal]]
-            HB_MATCH['HB'+str(j_distal+1)+'_'+vars()['HO_list_domain'+str(int(i+1))+'a'][i_distal]]=[vars()['HO_list_domain'+str(int(i+1))+'a'][i_distal]]
+    
+    if INCLUDE_HYDROGEN:        
+        for i_distal in range(len(vars()['HO_list_domain'+str(int(i+1))+'a'])):#add hydrogen to distal oxygens if any
+            for j_distal in range(PROTONATION_DISTAL_OXYGEN[i][i_distal]):
+                vars()['rgh_domain'+str(int(i+1))].new_var('r_H_D_'+str(i_distal+1)+'_'+str(j_distal+1), 1.)
+                vars()['rgh_domain'+str(int(i+1))].new_var('phi_H_D_'+str(i_distal+1)+'_'+str(j_distal+1), 0.)
+                vars()['rgh_domain'+str(int(i+1))].new_var('theta_H_D_'+str(i_distal+1)+'_'+str(j_distal+1), 0.)
+                coor=vars()['domain_class_'+str(int(i+1))].adding_hydrogen(domain=vars()['domain'+str(int(i+1))+'A'],N_of_HB=j_distal,ref_id=vars()['HO_list_domain'+str(int(i+1))+'a'][i_distal],r=getattr(vars()['rgh_domain'+str(int(i+1))],'r_H_D_'+str(i_distal+1)+'_'+str(j_distal+1)),theta=getattr(vars()['rgh_domain'+str(int(i+1))],'theta_H_D_'+str(i_distal+1)+'_'+str(j_distal+1)),phi=getattr(vars()['rgh_domain'+str(int(i+1))],'phi_H_D_'+str(i_distal+1)+'_'+str(j_distal+1)))
+                domain_creator.add_atom(domain=vars()['domain'+str(int(i+1))+'B'],ref_coor=[np.array(coor)*[-1,1,1]-[-1.,0.06955,0.5]],ids=['HB'+str(j_distal+1)+'_'+vars()['HO_list_domain'+str(int(i+1))+'b'][i_distal]],els=['H'])
+                if vars()['HO_list_domain'+str(int(i+1))+'a'][i_distal] in HB_MATCH.keys():
+                    HB_MATCH[vars()['HO_list_domain'+str(int(i+1))+'a'][i_distal]].append('HB'+str(j_distal+1)+'_'+vars()['HO_list_domain'+str(int(i+1))+'a'][i_distal])
+                else:
+                    HB_MATCH[vars()['HO_list_domain'+str(int(i+1))+'a'][i_distal]]=['HB'+str(j_distal+1)+'_'+vars()['HO_list_domain'+str(int(i+1))+'a'][i_distal]]
+                HB_MATCH['HB'+str(j_distal+1)+'_'+vars()['HO_list_domain'+str(int(i+1))+'a'][i_distal]]=[vars()['HO_list_domain'+str(int(i+1))+'a'][i_distal]]
 
     if WATER_NUMBER[i]!=0:#add water molecules if any
         if WATER_PAIR:
@@ -525,19 +539,20 @@ for i in range(DOMAIN_NUMBER):
                     index=O_ids_a.index(O_id)
                     gp_name='gp_'+O_id.rsplit('_')[0]+'_D'+str(int(i+1))
                     vars()[gp_name]=vars()['domain_class_'+str(int(i+1))].grouping_discrete_layer3(domain=[vars()['domain'+str(int(i+1))+'A']]+[vars()['domain'+str(int(i+1))+'B']],atom_ids=[O_ids_a[index],O_ids_b[index]],sym_array=[[1,0,0,0,1,0,0,0,1],[-1,0,0,0,1,0,0,0,1]])
-                #add two hydrogen for each oxygen
-                for i_water in [0,1]:#two waters considered here
-                    for j_water in [0,1]:#doubly protonated for each water
-                        vars()['rgh_domain'+str(int(i+1))].new_var('r_H_W_'+str(jj+1)+'_'+str(i_water+1)+'_'+str(j_water+1), 1.)
-                        vars()['rgh_domain'+str(int(i+1))].new_var('phi_H_W_'+str(jj+1)+'_'+str(i_water+1)+'_'+str(j_water+1), 0.)
-                        vars()['rgh_domain'+str(int(i+1))].new_var('theta_H_W_'+str(jj+1)+'_'+str(i_water+1)+'_'+str(j_water+1), 0.)
-                        coor=vars()['domain_class_'+str(int(i+1))].adding_hydrogen(domain=vars()['domain'+str(int(i+1))+'A'],N_of_HB=j_water,ref_id=O_ids_a[i_water],r=getattr(vars()['rgh_domain'+str(int(i+1))],'r_H_W_'+str(jj+1)+'_'+str(i_water+1)+'_'+str(j_water+1)),theta=getattr(vars()['rgh_domain'+str(int(i+1))],'theta_H_W_'+str(jj+1)+'_'+str(i_water+1)+'_'+str(j_water+1)),phi=getattr(vars()['rgh_domain'+str(int(i+1))],'phi_H_W_'+str(jj+1)+'_'+str(i_water+1)+'_'+str(j_water+1)))
-                        domain_creator.add_atom(domain=vars()['domain'+str(int(i+1))+'B'],ref_coor=[np.array(coor)*[-1,1,1]-[-1.,0.06955,0.5]],ids=['HB'+str(j_water+1)+'_'+O_ids_b[i_water]],els=['H'])
-                        if O_ids_a[i_water] in HB_MATCH.keys():
-                            HB_MATCH[O_ids_a[i_water]].append('HB'+str(j_water+1)+'_'+O_ids_a[i_water])
-                        else:
-                            HB_MATCH[O_ids_a[i_water]]=['HB'+str(j_water+1)+'_'+O_ids_a[i_water]]
-                        HB_MATCH['HB'+str(j_water+1)+'_'+O_ids_a[i_water]]=[O_ids_a[i_water]]
+                if INCLUDE_HYDROGEN:
+                    #add two hydrogen for each oxygen
+                    for i_water in [0,1]:#two waters considered here
+                        for j_water in [0,1]:#doubly protonated for each water
+                            vars()['rgh_domain'+str(int(i+1))].new_var('r_H_W_'+str(jj+1)+'_'+str(i_water+1)+'_'+str(j_water+1), 1.)
+                            vars()['rgh_domain'+str(int(i+1))].new_var('phi_H_W_'+str(jj+1)+'_'+str(i_water+1)+'_'+str(j_water+1), 0.)
+                            vars()['rgh_domain'+str(int(i+1))].new_var('theta_H_W_'+str(jj+1)+'_'+str(i_water+1)+'_'+str(j_water+1), 0.)
+                            coor=vars()['domain_class_'+str(int(i+1))].adding_hydrogen(domain=vars()['domain'+str(int(i+1))+'A'],N_of_HB=j_water,ref_id=O_ids_a[i_water],r=getattr(vars()['rgh_domain'+str(int(i+1))],'r_H_W_'+str(jj+1)+'_'+str(i_water+1)+'_'+str(j_water+1)),theta=getattr(vars()['rgh_domain'+str(int(i+1))],'theta_H_W_'+str(jj+1)+'_'+str(i_water+1)+'_'+str(j_water+1)),phi=getattr(vars()['rgh_domain'+str(int(i+1))],'phi_H_W_'+str(jj+1)+'_'+str(i_water+1)+'_'+str(j_water+1)))
+                            domain_creator.add_atom(domain=vars()['domain'+str(int(i+1))+'B'],ref_coor=[np.array(coor)*[-1,1,1]-[-1.,0.06955,0.5]],ids=['HB'+str(j_water+1)+'_'+O_ids_b[i_water]],els=['H'])
+                            if O_ids_a[i_water] in HB_MATCH.keys():
+                                HB_MATCH[O_ids_a[i_water]].append('HB'+str(j_water+1)+'_'+O_ids_a[i_water])
+                            else:
+                                HB_MATCH[O_ids_a[i_water]]=['HB'+str(j_water+1)+'_'+O_ids_a[i_water]]
+                            HB_MATCH['HB'+str(j_water+1)+'_'+O_ids_a[i_water]]=[O_ids_a[i_water]]
 
         else:
             for jj in range(WATER_NUMBER[i]):#note will add single water each time
@@ -552,19 +567,21 @@ for i in range(DOMAIN_NUMBER):
                 #group names look like: gp_Os1_D1 which will group Os1_D1A and Os1_D1B together
                 gp_name='gp_'+O_ids_a[0].rsplit('_')[0]+'_D'+str(int(i+1))
                 vars()[gp_name]=vars()['domain_class_'+str(int(i+1))].grouping_discrete_layer3(domain=[vars()['domain'+str(int(i+1))+'A']]+[vars()['domain'+str(int(i+1))+'B']],atom_ids=[O_ids_a[0],O_ids_b[0]],sym_array=[[1,0,0,0,1,0,0,0,1],[-1,0,0,0,1,0,0,0,1]])
-                #add two hydrogen to each oxygen of one water
-                for i_water in [0]:#single waters considered    
-                    for j_water in [0,1]:#doubly protonated for each water
-                        vars()['rgh_domain'+str(int(i+1))].new_var('r_H_W_'+str(jj+1)+'_'+str(i_water+1)+'_'+str(j_water+1), 1.)
-                        vars()['rgh_domain'+str(int(i+1))].new_var('phi_H_W_'+str(jj+1)+'_'+str(i_water+1)+'_'+str(j_water+1), 0.)
-                        vars()['rgh_domain'+str(int(i+1))].new_var('theta_H_W_'+str(jj+1)+'_'+str(i_water+1)+'_'+str(j_water+1), 0.)
-                        coor=vars()['domain_class_'+str(int(i+1))].adding_hydrogen(domain=vars()['domain'+str(int(i+1))+'A'],N_of_HB=j_water,ref_id=O_ids_a[i_water],r=getattr(vars()['rgh_domain'+str(int(i+1))],'r_H_W_'+str(jj+1)+'_'+str(i_water+1)+'_'+str(j_water+1)),theta=getattr(vars()['rgh_domain'+str(int(i+1))],'theta_H_W_'+str(jj+1)+'_'+str(i_water+1)+'_'+str(j_water+1)),phi=getattr(vars()['rgh_domain'+str(int(i+1))],'phi_H_W_'+str(jj+1)+'_'+str(i_water+1)+'_'+str(j_water+1)))
-                        domain_creator.add_atom(domain=vars()['domain'+str(int(i+1))+'B'],ref_coor=[np.array(coor)*[-1,1,1]-[-1.,0.06955,0.5]],ids=['HB'+str(j_water+1)+'_'+O_ids_b[i_water]],els=['H'])
-                        if O_ids_a[i_water] in HB_MATCH.keys():
-                            HB_MATCH[O_ids_a[i_water]].append('HB'+str(j_water+1)+'_'+O_ids_a[i_water])
-                        else:
-                            HB_MATCH[O_ids_a[i_water]]=['HB'+str(j_water+1)+'_'+O_ids_a[i_water]]
-                        HB_MATCH['HB'+str(j_water+1)+'_'+O_ids_a[i_water]]=[O_ids_a[i_water]]
+                
+                if INCLUDE_HYDROGEN:
+                    #add two hydrogen to each oxygen of one water
+                    for i_water in [0]:#single waters considered    
+                        for j_water in [0,1]:#doubly protonated for each water
+                            vars()['rgh_domain'+str(int(i+1))].new_var('r_H_W_'+str(jj+1)+'_'+str(i_water+1)+'_'+str(j_water+1), 1.)
+                            vars()['rgh_domain'+str(int(i+1))].new_var('phi_H_W_'+str(jj+1)+'_'+str(i_water+1)+'_'+str(j_water+1), 0.)
+                            vars()['rgh_domain'+str(int(i+1))].new_var('theta_H_W_'+str(jj+1)+'_'+str(i_water+1)+'_'+str(j_water+1), 0.)
+                            coor=vars()['domain_class_'+str(int(i+1))].adding_hydrogen(domain=vars()['domain'+str(int(i+1))+'A'],N_of_HB=j_water,ref_id=O_ids_a[i_water],r=getattr(vars()['rgh_domain'+str(int(i+1))],'r_H_W_'+str(jj+1)+'_'+str(i_water+1)+'_'+str(j_water+1)),theta=getattr(vars()['rgh_domain'+str(int(i+1))],'theta_H_W_'+str(jj+1)+'_'+str(i_water+1)+'_'+str(j_water+1)),phi=getattr(vars()['rgh_domain'+str(int(i+1))],'phi_H_W_'+str(jj+1)+'_'+str(i_water+1)+'_'+str(j_water+1)))
+                            domain_creator.add_atom(domain=vars()['domain'+str(int(i+1))+'B'],ref_coor=[np.array(coor)*[-1,1,1]-[-1.,0.06955,0.5]],ids=['HB'+str(j_water+1)+'_'+O_ids_b[i_water]],els=['H'])
+                            if O_ids_a[i_water] in HB_MATCH.keys():
+                                HB_MATCH[O_ids_a[i_water]].append('HB'+str(j_water+1)+'_'+O_ids_a[i_water])
+                            else:
+                                HB_MATCH[O_ids_a[i_water]]=['HB'+str(j_water+1)+'_'+O_ids_a[i_water]]
+                            HB_MATCH['HB'+str(j_water+1)+'_'+O_ids_a[i_water]]=[O_ids_a[i_water]]
     #set variables
     #vars()['domain_class_'+str(int(i+1))].set_discrete_new_vars_batch(batch_path_head+vars()['discrete_vars_file_domain'+str(int(i+1))])
     
@@ -685,12 +702,13 @@ if USE_BV:
                 for each_value in value:
                     index_temp=vars()['match_lib_'+str(int(i+1))+'A'][id].index(filter(lambda x:each_value in x,vars()['match_lib_'+str(int(i+1))+'A'][id])[0])
                     del vars()['match_lib_'+str(int(i+1))+'A'][id][index_temp]
-        #print HB_MATCH_1
-        for key in vars()['HB_MATCH_'+str(i+1)].keys():
-            if key not in vars()['match_lib_'+str(int(i+1))+'A'].keys():
-                vars()['match_lib_'+str(int(i+1))+'A'][key]=vars()['HB_MATCH_'+str(i+1)][key]
-            else:
-                vars()['match_lib_'+str(int(i+1))+'A'][key]=vars()['match_lib_'+str(int(i+1))+'A'][key]+vars()['HB_MATCH_'+str(i+1)][key]
+        if INCLUDE_HYDROGEN:
+            #print HB_MATCH_1
+            for key in vars()['HB_MATCH_'+str(i+1)].keys():
+                if key not in vars()['match_lib_'+str(int(i+1))+'A'].keys():
+                    vars()['match_lib_'+str(int(i+1))+'A'][key]=vars()['HB_MATCH_'+str(i+1)][key]
+                else:
+                    vars()['match_lib_'+str(int(i+1))+'A'][key]=vars()['match_lib_'+str(int(i+1))+'A'][key]+vars()['HB_MATCH_'+str(i+1)][key]
 #####################################specify f1f2 here###################################
 res_el='Pb'
 f1f2_file='raxs_Pb_formatted.f1f2'
@@ -709,6 +727,15 @@ def Sim(data,VARS=VARS):
     SCALES=[getattr(rgh,scale) for scale in scales]
     total_wt=0
     domain={}
+    
+    
+    #rgh_domain4.setWt(rgh_domain3.getWt())
+    #rgh_domain4.setCt_offset_dx_OS(rgh_domain3.getCt_offset_dx_OS())
+    #rgh_domain4.setCt_offset_dz_OS(rgh_domain3.getCt_offset_dz_OS())
+    #rgh_domain4.setCt_offset_dy_OS(rgh_domain3.getCt_offset_dy_OS())
+    #rgh_domain4.setTop_angle_OS(rgh_domain3.getTop_angle_OS())
+    #rgh_domain4.setR0_OS(rgh_domain3.getR0_OS())
+    #rgh_domain4.setPhi_OS(rgh_domain3.getPhi_OS())
     
     """
     rgh_domain5.setCt_offset_dx_OS(rgh_domain4.getCt_offset_dx_OS())
@@ -740,11 +767,12 @@ def Sim(data,VARS=VARS):
         vars()['wt_domain'+str(int(i+1))]=VARS['rgh_domain'+str(int(i+1))].wt
         total_wt=total_wt+vars()['wt_domain'+str(int(i+1))]
         
-        #update hydrogen for surface oxygens
-        for i_H in range(len(COVALENT_HYDROGEN_ACCEPTOR[i])):
-            for j_H in range(COVALENT_HYDROGEN_NUMBER[i][i_H]):
-                coor=VARS['domain_class_'+str(int(i+1))].adding_hydrogen(domain=VARS['domain'+str(int(i+1))+'A'],N_of_HB=j_H,ref_id=COVALENT_HYDROGEN_ACCEPTOR[i][i_H]+'_D'+str(i+1)+'A',r=getattr(VARS['rgh_domain'+str(int(i+1))],'r_H_'+str(i_H+1)+'_'+str(j_H+1)),theta=getattr(VARS['rgh_domain'+str(int(i+1))],'theta_H_'+str(i_H+1)+'_'+str(j_H+1)),phi=getattr(VARS['rgh_domain'+str(int(i+1))],'phi_H_'+str(i_H+1)+'_'+str(j_H+1)))
-                domain_creator.add_atom(domain=VARS['domain'+str(int(i+1))+'B'],ref_coor=[np.array(coor)*[-1,1,1]-[-1.,0.06955,0.5]],ids=['HB'+str(j_H+1)+'_'+COVALENT_HYDROGEN_ACCEPTOR[i][i_H]+'_D'+str(i+1)+'B'],els=['H'])
+        if INCLUDE_HYDROGEN:
+            #update hydrogen for surface oxygens
+            for i_H in range(len(COVALENT_HYDROGEN_ACCEPTOR[i])):
+                for j_H in range(COVALENT_HYDROGEN_NUMBER[i][i_H]):
+                    coor=VARS['domain_class_'+str(int(i+1))].adding_hydrogen(domain=VARS['domain'+str(int(i+1))+'A'],N_of_HB=j_H,ref_id=COVALENT_HYDROGEN_ACCEPTOR[i][i_H]+'_D'+str(i+1)+'A',r=getattr(VARS['rgh_domain'+str(int(i+1))],'r_H_'+str(i_H+1)+'_'+str(j_H+1)),theta=getattr(VARS['rgh_domain'+str(int(i+1))],'theta_H_'+str(i_H+1)+'_'+str(j_H+1)),phi=getattr(VARS['rgh_domain'+str(int(i+1))],'phi_H_'+str(i_H+1)+'_'+str(j_H+1)))
+                    domain_creator.add_atom(domain=VARS['domain'+str(int(i+1))+'B'],ref_coor=[np.array(coor)*[-1,1,1]-[-1.,0.06955,0.5]],ids=['HB'+str(j_H+1)+'_'+COVALENT_HYDROGEN_ACCEPTOR[i][i_H]+'_D'+str(i+1)+'B'],els=['H'])
 
         #update sorbates
         if UPDATE_SORBATE_IN_SIM:
@@ -883,11 +911,12 @@ def Sim(data,VARS=VARS):
                     sorbate_els=[SORBATE_LIST[i][j]]+['O']*(len(O_id_B))
                     domain_creator.add_atom(domain=VARS['domain'+str(int(i+1))+'B'],ref_coor=np.array(SORBATE_coors_a+O_coors_a)*[-1,1,1]-[-1.,0.06955,0.5],ids=sorbate_ids,els=sorbate_els)
         
-        #update hydrogen for distal oxygens
-        for i_distal in range(len(VARS['HO_list_domain'+str(int(i+1))+'a'])):
-            for j_distal in range(PROTONATION_DISTAL_OXYGEN[i][i_distal]):
-                coor=VARS['domain_class_'+str(int(i+1))].adding_hydrogen(domain=VARS['domain'+str(int(i+1))+'A'],N_of_HB=j_distal,ref_id=VARS['HO_list_domain'+str(int(i+1))+'a'][i_distal],r=getattr(VARS['rgh_domain'+str(int(i+1))],'r_H_D_'+str(i_distal+1)+'_'+str(j_distal+1)),theta=getattr(VARS['rgh_domain'+str(int(i+1))],'theta_H_D_'+str(i_distal+1)+'_'+str(j_distal+1)),phi=getattr(VARS['rgh_domain'+str(int(i+1))],'phi_H_D_'+str(i_distal+1)+'_'+str(j_distal+1)))
-                domain_creator.add_atom(domain=VARS['domain'+str(int(i+1))+'B'],ref_coor=[np.array(coor)*[-1,1,1]-[-1.,0.06955,0.5]],ids=['HB'+str(j_distal+1)+'_'+VARS['HO_list_domain'+str(int(i+1))+'b'][i_distal]],els=['H'])
+        if INCLUDE_HYDROGEN:
+            #update hydrogen for distal oxygens
+            for i_distal in range(len(VARS['HO_list_domain'+str(int(i+1))+'a'])):
+                for j_distal in range(PROTONATION_DISTAL_OXYGEN[i][i_distal]):
+                    coor=VARS['domain_class_'+str(int(i+1))].adding_hydrogen(domain=VARS['domain'+str(int(i+1))+'A'],N_of_HB=j_distal,ref_id=VARS['HO_list_domain'+str(int(i+1))+'a'][i_distal],r=getattr(VARS['rgh_domain'+str(int(i+1))],'r_H_D_'+str(i_distal+1)+'_'+str(j_distal+1)),theta=getattr(VARS['rgh_domain'+str(int(i+1))],'theta_H_D_'+str(i_distal+1)+'_'+str(j_distal+1)),phi=getattr(VARS['rgh_domain'+str(int(i+1))],'phi_H_D_'+str(i_distal+1)+'_'+str(j_distal+1)))
+                    domain_creator.add_atom(domain=VARS['domain'+str(int(i+1))+'B'],ref_coor=[np.array(coor)*[-1,1,1]-[-1.,0.06955,0.5]],ids=['HB'+str(j_distal+1)+'_'+VARS['HO_list_domain'+str(int(i+1))+'b'][i_distal]],els=['H'])
 
         if WATER_NUMBER[i]!=0:#add water molecules if any
             if WATER_PAIR:
@@ -900,11 +929,12 @@ def Sim(data,VARS=VARS):
                     #set the first pb atm to be the ref atm(if you have two layers, same ref point but different height)
                     H2O_coors_a=VARS['domain_class_'+str(int(i+1))].add_oxygen_pair2B(domain=VARS['domain'+str(int(i+1))+'A'],O_ids=O_ids_a,ref_id=map(lambda x:x+'_D'+str(i+1)+'A',REF_POINTS[i][jj]),v_shift=v_shift,r=r,alpha=alpha)
                     domain_creator.add_atom(domain=VARS['domain'+str(int(i+1))+'B'],ref_coor=H2O_coors_a*[-1,1,1]-[-1.,0.06955,0.5],ids=O_ids_b,els=['O','O'])
-                    #update hydrogen for water molecules
-                    for i_water in [0,1]:#two waters considered    
-                        for j_water in [0,1]:#doubly protonated for each water
-                            coor=VARS['domain_class_'+str(int(i+1))].adding_hydrogen(domain=VARS['domain'+str(int(i+1))+'A'],N_of_HB=j_water,ref_id=O_ids_a[i_water],r=getattr(VARS['rgh_domain'+str(int(i+1))],'r_H_W_'+str(jj+1)+'_'+str(i_water+1)+'_'+str(j_water+1)),theta=getattr(VARS['rgh_domain'+str(int(i+1))],'theta_H_W_'+str(jj+1)+'_'+str(i_water+1)+'_'+str(j_water+1)),phi=getattr(VARS['rgh_domain'+str(int(i+1))],'phi_H_W_'+str(jj+1)+'_'+str(i_water+1)+'_'+str(j_water+1)))
-                            domain_creator.add_atom(domain=VARS['domain'+str(int(i+1))+'B'],ref_coor=[np.array(coor)*[-1,1,1]-[-1.,0.06955,0.5]],ids=['HB'+str(j_water+1)+'_'+O_ids_b[i_water]],els=['H'])
+                    if INCLUDE_HYDROGEN:
+                        #update hydrogen for water molecules
+                        for i_water in [0,1]:#two waters considered    
+                            for j_water in [0,1]:#doubly protonated for each water
+                                coor=VARS['domain_class_'+str(int(i+1))].adding_hydrogen(domain=VARS['domain'+str(int(i+1))+'A'],N_of_HB=j_water,ref_id=O_ids_a[i_water],r=getattr(VARS['rgh_domain'+str(int(i+1))],'r_H_W_'+str(jj+1)+'_'+str(i_water+1)+'_'+str(j_water+1)),theta=getattr(VARS['rgh_domain'+str(int(i+1))],'theta_H_W_'+str(jj+1)+'_'+str(i_water+1)+'_'+str(j_water+1)),phi=getattr(VARS['rgh_domain'+str(int(i+1))],'phi_H_W_'+str(jj+1)+'_'+str(i_water+1)+'_'+str(j_water+1)))
+                                domain_creator.add_atom(domain=VARS['domain'+str(int(i+1))+'B'],ref_coor=[np.array(coor)*[-1,1,1]-[-1.,0.06955,0.5]],ids=['HB'+str(j_water+1)+'_'+O_ids_b[i_water]],els=['H'])
 
             else:
                 for jj in range(WATER_NUMBER[i]):#note will add single water each time
@@ -914,11 +944,12 @@ def Sim(data,VARS=VARS):
                     #set the first pb atm to be the ref atm(if you have two layers, same ref point but different height)
                     H2O_coors_a=VARS['domain_class_'+str(int(i+1))].add_single_oxygen(domain=VARS['domain'+str(int(i+1))+'A'],O_id=O_ids_a,ref_id=map(lambda x:x+'_D'+str(i+1)+'A',REF_POINTS[i][jj]),v_shift=v_shift)
                     domain_creator.add_atom(domain=VARS['domain'+str(int(i+1))+'B'],ref_coor=H2O_coors_a*[-1,1,1]-[-1.,0.06955,0.5],ids=O_ids_b,els=['O'])              
-                    #update hydrogen for water molecules
-                    for i_water in [0]:#two waters considered    
-                        for j_water in [0,1]:#doubly protonated for each water
-                            coor=VARS['domain_class_'+str(int(i+1))].adding_hydrogen(domain=VARS['domain'+str(int(i+1))+'A'],N_of_HB=j_water,ref_id=O_ids_a[i_water],r=getattr(VARS['rgh_domain'+str(int(i+1))],'r_H_W_'+str(i_water+1)+'_'+str(i_water+1)+'_'+str(j_water+1)),theta=getattr(VARS['rgh_domain'+str(int(i+1))],'theta_H_W_'+str(i_water+1)+'_'+str(i_water+1)+'_'+str(j_water+1)),phi=getattr(VARS['rgh_domain'+str(int(i+1))],'phi_H_W_'+str(i_water+1)+'_'+str(i_water+1)+'_'+str(j_water+1)))
-                            domain_creator.add_atom(domain=VARS['domain'+str(int(i+1))+'B'],ref_coor=[np.array(coor)*[-1,1,1]-[-1.,0.06955,0.5]],ids=['HB'+str(j_water+1)+'_'+O_ids_b[i_water]],els=['H'])
+                    if INCLUDE_HYDROGEN:
+                        #update hydrogen for water molecules
+                        for i_water in [0]:#two waters considered    
+                            for j_water in [0,1]:#doubly protonated for each water
+                                coor=VARS['domain_class_'+str(int(i+1))].adding_hydrogen(domain=VARS['domain'+str(int(i+1))+'A'],N_of_HB=j_water,ref_id=O_ids_a[i_water],r=getattr(VARS['rgh_domain'+str(int(i+1))],'r_H_W_'+str(i_water+1)+'_'+str(i_water+1)+'_'+str(j_water+1)),theta=getattr(VARS['rgh_domain'+str(int(i+1))],'theta_H_W_'+str(i_water+1)+'_'+str(i_water+1)+'_'+str(j_water+1)),phi=getattr(VARS['rgh_domain'+str(int(i+1))],'phi_H_W_'+str(i_water+1)+'_'+str(i_water+1)+'_'+str(j_water+1)))
+                                domain_creator.add_atom(domain=VARS['domain'+str(int(i+1))+'B'],ref_coor=[np.array(coor)*[-1,1,1]-[-1.,0.06955,0.5]],ids=['HB'+str(j_water+1)+'_'+O_ids_b[i_water]],els=['H'])
 
         if USE_BV and i in DOMAINS_BV:
             #set up dynamic super cells,where water and sorbate is a library and surface is a domain instance
@@ -940,24 +971,37 @@ def Sim(data,VARS=VARS):
                 elif value<BV_TOLERANCE[0]: return 100
                 else:return value               
                 
-            super_cell_sorbate,super_cell_surface=None,None
+            super_cell_sorbate,super_cell_surface,super_cell_water=None,None,None
+            if WATER_NUMBER[i]!=0:
+                super_cell_water=domain_class_1.build_super_cell2_simple(VARS['domain'+str(i+1)+'A'],[0,1]+range(-(sum(SORBATE_NUMBER[i])+WATER_NUMBER[i]+sum([np.sum(N_list) for N_list in O_NUMBER[i]])),0))
 
             def _return_right_value(value):
                 if value:return value
                 else:return 1
             NN=_return_right_value(sum(SORBATE_NUMBER[i]))#number of sorbate sets(1 or 2)
-            N_HB_SURFACE=sum(COVALENT_HYDROGEN_NUMBER[i])#number of hydrogen for surface oxygens
-            N_HB_DISTAL=sum(PROTONATION_DISTAL_OXYGEN[i])#number of hydrogen for distal oxygens
+            N_HB_SURFACE,N_HB_DISTAL=0,0
+            if INCLUDE_HYDROGEN:
+                N_HB_SURFACE=sum(COVALENT_HYDROGEN_NUMBER[i])#number of hydrogen for surface oxygens
+                N_HB_DISTAL=sum(PROTONATION_DISTAL_OXYGEN[i])#number of hydrogen for distal oxygens
             total_sorbate_number=sum(SORBATE_NUMBER[i])+sum([np.sum(N_list) for N_list in O_NUMBER[i]])
             #the idea is that we want to have only one set of sorbate and hydrogen within each domain (ie don't count symmetry counterpart twice)
-            segment1=range(-(N_HB_DISTAL/NN+WATER_NUMBER[i]*3),0)
-            segment2=range(-(WATER_NUMBER[i]*3+N_HB_DISTAL+total_sorbate_number/NN),-(WATER_NUMBER[i]*3+N_HB_DISTAL))
-            segment3=range(-(WATER_NUMBER[i]*3+N_HB_DISTAL+total_sorbate_number+N_HB_SURFACE),-(WATER_NUMBER[i]*3+N_HB_DISTAL+total_sorbate_number))
+            segment1=range(-(N_HB_DISTAL/NN+WATER_NUMBER[i]),0)
+            segment2=range(-(WATER_NUMBER[i]+N_HB_DISTAL+total_sorbate_number/NN),-(WATER_NUMBER[i]+N_HB_DISTAL))
+            segment2_surface=range(-(WATER_NUMBER[i]+N_HB_DISTAL+total_sorbate_number),-(WATER_NUMBER[i]+N_HB_DISTAL))
+            segment3=range(-(WATER_NUMBER[i]+N_HB_DISTAL+total_sorbate_number+N_HB_SURFACE),-(WATER_NUMBER[i]+N_HB_DISTAL+total_sorbate_number))
+            if INCLUDE_HYDROGEN:
+                segment1=range(-(N_HB_DISTAL/NN+WATER_NUMBER[i]*3),0)
+                segment2=range(-(WATER_NUMBER[i]*3+N_HB_DISTAL+total_sorbate_number/NN),-(WATER_NUMBER[i]*3+N_HB_DISTAL))
+                segment3=range(-(WATER_NUMBER[i]*3+N_HB_DISTAL+total_sorbate_number+N_HB_SURFACE),-(WATER_NUMBER[i]*3+N_HB_DISTAL+total_sorbate_number))
             if DOMAIN[i]==1:
                 #note here if there are two symmetry pair, then only consider one of the couple for bv consideration, the other one will be skipped in the try except statement
                 super_cell_sorbate=domain_class_1.build_super_cell2_simple(VARS['domain'+str(i+1)+'A'],[0,1]+range(4,8)+segment1+segment2+segment3)
                 if SEARCH_MODE_FOR_SURFACE_ATOMS:
-                    super_cell_surface=domain_class_1.build_super_cell2_simple(VARS['domain'+str(i+1)+'A'],[0,1]+range(4,30)+segment1+segment2+segment3)
+                    if not INCLUDE_HYDROGEN:
+                        super_cell_surface=domain_class_1.build_super_cell2_simple(VARS['domain'+str(i+1)+'A'],[0,1]+range(4,30)+segment1+segment2_surface+segment3)
+                    else:
+                        super_cell_surface=domain_class_1.build_super_cell2_simple(VARS['domain'+str(i+1)+'A'],[0,1]+range(4,30)+segment1+segment2+segment3)
+
                 else:
                     super_cell_surface=VARS['domain'+str(i+1)+'A'].copy()
                     #delete the first iron layer atoms if considering a half layer
@@ -966,10 +1010,21 @@ def Sim(data,VARS=VARS):
             elif DOMAIN[i]==2:
                 super_cell_sorbate=domain_class_1.build_super_cell2_simple(VARS['domain'+str(i+1)+'A'],[0,6]+segment1+segment2+segment3)
                 if SEARCH_MODE_FOR_SURFACE_ATOMS:
-                    super_cell_surface=domain_class_1.build_super_cell2_simple(VARS['domain'+str(i+1)+'A'],range(0,30)+segment1+segment2+segment3)
+                    if INCLUDE_HYDROGEN:
+                        super_cell_surface=domain_class_1.build_super_cell2_simple(VARS['domain'+str(i+1)+'A'],range(0,30)+segment1+segment2+segment3)
+                    else:
+                        super_cell_surface=domain_class_1.build_super_cell2_simple(VARS['domain'+str(i+1)+'A'],range(0,30)+segment1+segment2_surface+segment3)
                 else:
                     super_cell_surface=VARS['domain'+str(i+1)+'A'].copy()
-
+            
+            #consider hydrogen bond only among interfacial water molecules and top surface Oxygen layer and Oxygen ligand
+            if not INCLUDE_HYDROGEN:
+                if WATER_NUMBER[i]!=0:
+                    water_ids=VARS['Os_list_domain'+str(int(i+1))+'a']
+                    for id in water_ids:
+                        tmp_bv=domain_class_1.cal_hydrogen_bond_valence2B(super_cell_water,id,3.,2.5)
+                        bv=bv+tmp_bv
+                        if debug_bv:bv_container[id]=tmp_bv
             #cal bv for surface atoms and sorbates
             #only consdier domainA since domain B is symmetry related to domainA
             for key in VARS['match_lib_'+str(i+1)+'A'].keys():
@@ -989,7 +1044,7 @@ def Sim(data,VARS=VARS):
                         temp_bv=domain_class_1.cal_bond_valence4B(super_cell_surface,key,VARS['match_lib_'+str(i+1)+'A'][key])
                 else:#sorbates including water
                     #searching included in this algorithem
-                    if "HO" in key:#distal oxygen and its associated hydrogen
+                    if "HO" in key and COUNT_DISTAL_OXYGEN:#distal oxygen and its associated hydrogen
                         el="O"
                         if "HB" in key:
                             el="H"
@@ -1003,6 +1058,8 @@ def Sim(data,VARS=VARS):
                                 temp_bv=domain_class_1.cal_bond_valence1_new2B_4(super_cell_sorbate,key,el,2.5,VARS['match_lib_'+str(i+1)+'A'][key],1,False,R0_BV)['total_valence']
                             except:
                                 temp_bv=1
+                    elif "HO" in key and not COUNT_DISTAL_OXYGEN:
+                        temp_bv=2
                     elif "Os" in key:#water and the associated hydrogen
                         el="O"
                         if "HB" in key:
@@ -1024,14 +1081,76 @@ def Sim(data,VARS=VARS):
                 if PRINT_BV:print key, temp_bv
                 #consider possible hydrogen bond and hydroxyl bond fro oxygen atoms
                 if 'O' in key:
-                    #For O you may consider possible binding to proton (+0.8) 
-                    #And note the maximum coordination number for O is 4
-                    if "HB" not in key:
-                        bv=bv+_widen_validness(2-temp_bv)
-                        if debug_bv:bv_container[key]=_widen_validness(2-temp_bv)
+                    if INCLUDE_HYDROGEN:
+                        #For O you may consider possible binding to proton (+0.8) 
+                        #And note the maximum coordination number for O is 4
+                        if "HB" not in key:
+                            bv=bv+_widen_validness(2-temp_bv)
+                            if debug_bv:bv_container[key]=_widen_validness(2-temp_bv)
+                        else:
+                            bv=bv+_widen_validness(1-temp_bv)
+                            if debug_bv:bv_container[key]=_widen_validness(2-temp_bv)
                     else:
-                        bv=bv+_widen_validness(1-temp_bv)
-                        if debug_bv:bv_container[key]=_widen_validness(2-temp_bv)
+                        #For O you may consider possible binding to proton (+0.8) 
+                        #And note the maximum coordination number for O is 4
+                        case_tag=len(VARS['match_lib_'+str(i+1)+'A'][key])
+                        if COVALENT_HYDROGEN_RANDOM==True:
+                            if key in map(lambda x:x+'_D'+str(i+1)+'A',POTENTIAL_COVALENT_HYDROGEN_ACCEPTOR[i]):
+                                C_H_N=[0,1,2]
+                                bv_offset=[ _widen_validness_range(2-0.88*N-temp_bv,2-0.68*N-temp_bv) for N in C_H_N]
+                                C_H_N=C_H_N[bv_offset.index(min(bv_offset))]
+                                if PRINT_PROTONATION:
+                                    print key,C_H_N
+                                if key in map(lambda x:x+'_D'+str(i+1)+'A',POTENTIAL_HYDROGEN_ACCEPTOR[i]):#consider potential hydrogen bond (you can have or have not H-bonding)
+                                    if _widen_validness_range(2-0.88*C_H_N-temp_bv,2-0.68*C_H_N-temp_bv)==0 or _widen_validness_range(2-0.88*C_H_N-temp_bv,2-0.68*C_H_N-temp_bv)==100:
+                                    #if saturated already or over-saturated, then adding H-bonding wont help decrease the the total bv anyhow
+                                        bv=bv+_widen_validness_range(2-0.88*C_H_N-temp_bv,2-0.68*C_H_N-temp_bv)
+                                        if debug_bv:bv_container[key]=_widen_validness_range(2-0.88*C_H_N-temp_bv,2-0.68*C_H_N-temp_bv)
+                                    else:
+                                    #if undersaturation, then compare the cases of inclusion of H-bonding and exclusion of H-bonding. Whichever give rise to the lower bv will be used.
+                                        bv=bv+min([_widen_validness_range(2-0.88*C_H_N-temp_bv,2-0.68*C_H_N-temp_bv),_widen_validness_range(2-0.88*C_H_N-temp_bv-0.25,2-0.68*C_H_N-temp_bv)])
+                                        if debug_bv:bv_container[key]=min([_widen_validness_range(2-0.88*C_H_N-temp_bv,2-0.68*C_H_N-temp_bv),_widen_validness_range(2-0.88*C_H_N-temp_bv-0.25,2-0.68*C_H_N-temp_bv)])
+                                else:
+                                    bv=bv+_widen_validness_range(2-0.88*C_H_N-temp_bv,2-0.68*C_H_N-temp_bv)
+                                    if debug_bv:bv_container[key]=_widen_validness_range(2-0.88*C_H_N-temp_bv,2-0.68*C_H_N-temp_bv)
+                            else:#if no covalent hydrogen bond
+                                if key in map(lambda x:x+'_D'+str(i+1)+'A',POTENTIAL_HYDROGEN_ACCEPTOR[i]):#consider hydrogen bond
+                                    if _widen_validness(2-temp_bv)==0 or _widen_validness(2-temp_bv)==100:
+                                        bv=bv+_widen_validness(2-temp_bv)
+                                        if debug_bv:bv_container[key]=_widen_validness(2-temp_bv)
+                                    else:
+                                        bv=bv+min([_widen_validness(2-temp_bv),_widen_validness_range(2-temp_bv-0.25,2-temp_bv-0.13)])
+                                        if debug_bv:bv_container[key]=min([_widen_validness(2-temp_bv),_widen_validness_range(2-temp_bv-0.25,2-temp_bv-0.13)])
+                                else:#neither covalent hydrogen bond nor hydrogen bond
+                                    bv=bv+_widen_validness(2-temp_bv)
+                                    if debug_bv:bv_container[key]=_widen_validness(2-temp_bv)
+                        else:
+                            if key in map(lambda x:x+'_D'+str(i+1)+'A',COVALENT_HYDROGEN_ACCEPTOR[i]):
+                                #if consider convalent hydrogen bond (bv=0.68 to 0.88) while the hydrogen bond has bv from 0.13 to 0.25
+                                C_H_N=COVALENT_HYDROGEN_NUMBER[i][map(lambda x:x+'_D'+str(i+1)+'A',COVALENT_HYDROGEN_ACCEPTOR[i]).index(key)]
+                                if key in map(lambda x:x+'_D'+str(i+1)+'A',POTENTIAL_HYDROGEN_ACCEPTOR[i]):#consider potential hydrogen bond (you can have or have not H-bonding)
+                                    if _widen_validness_range(2-0.88*C_H_N-temp_bv,2-0.68*C_H_N-temp_bv)==0 or _widen_validness_range(2-0.88*C_H_N-temp_bv,2-0.68*C_H_N-temp_bv)==100:
+                                    #if saturated already or over-saturated, then adding H-bonding wont help decrease the the total bv anyhow
+                                        bv=bv+_widen_validness_range(2-0.88*C_H_N-temp_bv,2-0.68*C_H_N-temp_bv)
+                                        if debug_bv:bv_container[key]=_widen_validness_range(2-0.88*C_H_N-temp_bv,2-0.68*C_H_N-temp_bv)
+                                    else:
+                                    #if undersaturation, then compare the cases of inclusion of H-bonding and exclusion of H-bonding. Whichever give rise to the lower bv will be used.
+                                        bv=bv+min([_widen_validness_range(2-0.88*C_H_N-temp_bv,2-0.68*C_H_N-temp_bv),_widen_validness_range(2-0.88*C_H_N-temp_bv-0.25,2-0.68*C_H_N-temp_bv)])
+                                        if debug_bv:bv_container[key]=min([_widen_validness_range(2-0.88*C_H_N-temp_bv,2-0.68*C_H_N-temp_bv),_widen_validness_range(2-0.88*C_H_N-temp_bv-0.25,2-0.68*C_H_N-temp_bv)])
+                                else:
+                                    bv=bv+_widen_validness_range(2-0.88*C_H_N-temp_bv,2-0.68*C_H_N-temp_bv)
+                                    if debug_bv:bv_container[key]=_widen_validness_range(2-0.88*C_H_N-temp_bv,2-0.68*C_H_N-temp_bv)
+                            else:
+                                if key in map(lambda x:x+'_D'+str(i+1)+'A',POTENTIAL_HYDROGEN_ACCEPTOR[i]):#consider hydrogen bond
+                                    if _widen_validness(2-temp_bv)==0 or _widen_validness(2-temp_bv)==100:
+                                        bv=bv+_widen_validness(2-temp_bv)
+                                        if debug_bv:bv_container[key]=_widen_validness(2-temp_bv)
+                                    else:
+                                        bv=bv+min([_widen_validness(2-temp_bv),_widen_validness_range(2-temp_bv-0.25,2-temp_bv-0.13)])
+                                        if debug_bv:bv_container[key]=min([_widen_validness(2-temp_bv),_widen_validness_range(2-temp_bv-0.25,2-temp_bv-0.13)])
+                                else:
+                                    bv=bv+_widen_validness(2-temp_bv)
+                                    if debug_bv:bv_container[key]=_widen_validness(2-temp_bv)
                 elif 'Fe' in key:
                     bv=bv+_widen_validness(3-temp_bv)
                     if debug_bv:bv_container[key]=_widen_validness(3-temp_bv)
@@ -1086,7 +1205,9 @@ def Sim(data,VARS=VARS):
             N_HB_DISTAL=sum(PROTONATION_DISTAL_OXYGEN[i])
             total_sorbate_number=sum(SORBATE_NUMBER[i])+sum([np.sum(N_list) for N_list in O_NUMBER[i]])
             water_number=WATER_NUMBER[i]*3
-            TOTAL_NUMBER=N_HB_SURFACE+N_HB_DISTAL+total_sorbate_number+water_number
+            TOTAL_NUMBER=total_sorbate_number+water_number/3
+            if INCLUDE_HYDROGEN:
+                TOTAL_NUMBER=N_HB_SURFACE+N_HB_DISTAL+total_sorbate_number+water_number
             domain_creator.print_data(N_sorbate=TOTAL_NUMBER,domain=VARS['domain'+str(i+1)+'A'],z_shift=1,half_layer=DOMAIN[i]-2,full_layer_long=FULL_LAYER_LONG,save_file='D://'+'Model_domain'+str(i+1)+'.xyz')    
     #export the model results for plotting if PLOT set to true
     #domain_creator.layer_spacing_calculator(domain1A,12,True)
