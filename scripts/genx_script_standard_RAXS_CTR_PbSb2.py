@@ -29,16 +29,19 @@ INCLUDE_HYDROGEN=0
 
 #this is one way to start up quickly, each time you only need to specify the pickup_index and DOMAIN_GP if want to group different domains
 #all the global variables are pre-defined based on a reasonable assumption, but you can customized it by editing the variables below
-#item 0 to item 4 corresponding to corner-sharing at O1O2, edge-sharing at O1O3, edge-sharing at O1O4, tridentate bind at O1O2O3 and clean HL
-#item 5 to item 9 corresponding to Full layer with corner-sharing, two edge-sharing and tridentate corner,edge-sharing binding and clean FL
-#And note it is customized specifically for Pb/Sb adsorption in a bidentate or tridentate mode, wont work for metal binding in a monodentate mode
-#And also this fast setup only work for single type of sorbate system
-
 #if you want to build a model on single sorbate atom basis (each domain only has one sorbate atom), you will also need to specify the sym_site_index
 #And you also need to manually change values of some global vars
 #ONLY consider this mode if you want to have two symmetry site being binded on two domains
 #eg. pickup_index=[1,1,4] combined with sym_site_index=[[0],[1],[0,1]] means two symmetry sites split into two domains
 #Now you need to group domain1 and domain2 together by setting DOMAIN_GP=[[0,1]], and change some global vars (covalent hydrogen acceptor should include the OH ligand)   
+##matching index##
+"""
+HL-->0          1           2           3           4           5           6  
+CS(O1O2)        CS(O2O3)    ES(O1O3)    ES(O1O4)    TD(O1O2O3)  OS          Clean
+
+FL-->7          8           9           10          11          12
+CS(O5O6)        ES(O5O7)    ES(O5O8)    TD(O5O6O7)  OS          Clean
+"""
 
 '''
 To setup model, follow steps as follows:
