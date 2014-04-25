@@ -326,7 +326,7 @@ class Sample:
                 else:
                     ftot_B_IC=ftot_B_IC+abs(fb+self.calc_fs(h, k, l,[self.domain[i]['slab']]))*self.domain[i]['wt']
             ftot=ftot+abs(ftot_A_C)+ftot_A_IC+ftot_B_IC+abs(ftot_B_C)
-        
+
         return abs(ftot)*self.inst.inten
         
     def turbo_calc_f(self, h, k, l):

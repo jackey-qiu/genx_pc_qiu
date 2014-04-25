@@ -179,6 +179,31 @@ def print_data(N_sorbate=4,domain='',z_shift=1,half_layer=False,full_layer_long=
             s = '%-5s   %7.5e   %7.5e   %7.5e\n' % (data[3][i],data[0][i]*5.038,(data[1][i]-0.1391)*5.434,(data[2][i]-z_shift)*7.3707)
             f.write(s)
     f.close()
+    
+def print_data_for_publication(N_sorbate=4,domain='',z_shift=1,half_layer=False,full_layer_long=0,save_file='D://model.xyz'):
+    data=domain._extract_values()
+    index_all=range(len(data[0]))
+    index=None
+    if half_layer:
+        index=index_all[0:20]+index_all[40:40+N_sorbate]
+    else:
+        if full_layer_long:
+            index=index_all[0:22]+index_all[42:42+N_sorbate]
+        else:
+            index=index_all[0:12]+index_all[32:32+N_sorbate]
+    if half_layer:
+        index.pop(2)
+        index.pop(2)
+    f=open(save_file,'w')
+    f.write(str(len(index))+'\n#\n')
+    for i in index:
+        if i==index[-1]:
+            s = '%-5s\t%5.3f\t%5.3f\t%5.3f\t%5.3f\t%5.3f\t%5.3f\t%4.2f\t%4.2f' % (data[3][i],data[0][i],data[1][i]-0.1391,data[2][i]-z_shift,(data[0][i]-domain.x[i])*5.038,(data[1][i]-domain.y[i])*5.434,(data[2][i]-domain.z[i])*7.3707,domain.u[i],domain.oc[i])
+            f.write(s)
+        else:
+            s = '%-5s\t%5.3f\t%5.3f\t%5.3f\t%5.3f\t%5.3f\t%5.3f\t%4.2f\t%4.2f\n' % (data[3][i],data[0][i],data[1][i]-0.1391,data[2][i]-z_shift,(data[0][i]-domain.x[i])*5.038,(data[1][i]-domain.y[i])*5.434,(data[2][i]-domain.z[i])*7.3707,domain.u[i],domain.oc[i])
+            f.write(s)
+    f.close()
 
 #function to export ref fit file (a connection between GenX output and ROD input)
 #NOTE:only print out surface atoms, and no sorbates

@@ -729,13 +729,13 @@ def Sim(data,VARS=VARS):
     domain={}
     
     
-    #rgh_domain4.setWt(rgh_domain3.getWt())
-    #rgh_domain4.setCt_offset_dx_OS(rgh_domain3.getCt_offset_dx_OS())
-    #rgh_domain4.setCt_offset_dz_OS(rgh_domain3.getCt_offset_dz_OS())
-    #rgh_domain4.setCt_offset_dy_OS(rgh_domain3.getCt_offset_dy_OS())
-    #rgh_domain4.setTop_angle_OS(rgh_domain3.getTop_angle_OS())
-    #rgh_domain4.setR0_OS(rgh_domain3.getR0_OS())
-    #rgh_domain4.setPhi_OS(rgh_domain3.getPhi_OS())
+    rgh_domain4.setWt(rgh_domain3.getWt())
+    rgh_domain4.setCt_offset_dx_OS(rgh_domain3.getCt_offset_dx_OS())
+    rgh_domain4.setCt_offset_dz_OS(rgh_domain3.getCt_offset_dz_OS())
+    rgh_domain4.setCt_offset_dy_OS(rgh_domain3.getCt_offset_dy_OS())
+    rgh_domain4.setTop_angle_OS(rgh_domain3.getTop_angle_OS())
+    rgh_domain4.setR0_OS(rgh_domain3.getR0_OS())
+    rgh_domain4.setPhi_OS(rgh_domain3.getPhi_OS())
     
     """
     rgh_domain5.setCt_offset_dx_OS(rgh_domain4.getCt_offset_dx_OS())
@@ -973,7 +973,10 @@ def Sim(data,VARS=VARS):
                 
             super_cell_sorbate,super_cell_surface,super_cell_water=None,None,None
             if WATER_NUMBER[i]!=0:
-                super_cell_water=domain_class_1.build_super_cell2_simple(VARS['domain'+str(i+1)+'A'],[0,1]+range(-(sum(SORBATE_NUMBER[i])+WATER_NUMBER[i]+sum([np.sum(N_list) for N_list in O_NUMBER[i]])),0))
+                if DOMAIN[i]==1:
+                    super_cell_water=domain_class_1.build_super_cell2_simple(VARS['domain'+str(i+1)+'A'],[0,1]+[4,5]+range(-(sum(SORBATE_NUMBER[i])+WATER_NUMBER[i]+sum([np.sum(N_list) for N_list in O_NUMBER[i]])),0))
+                elif DOMAIN[i]==2:
+                    super_cell_water=domain_class_1.build_super_cell2_simple(VARS['domain'+str(i+1)+'A'],[0,1,2,3]+range(-(sum(SORBATE_NUMBER[i])+WATER_NUMBER[i]+sum([np.sum(N_list) for N_list in O_NUMBER[i]])),0))
 
             def _return_right_value(value):
                 if value:return value
