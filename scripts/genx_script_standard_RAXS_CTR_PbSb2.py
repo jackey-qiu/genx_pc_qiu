@@ -731,7 +731,7 @@ def Sim(data,VARS=VARS):
     total_wt=0
     domain={}
     
-    
+    """
     rgh_domain4.setWt(rgh_domain3.getWt())
     rgh_domain4.setCt_offset_dx_OS(rgh_domain3.getCt_offset_dx_OS())
     rgh_domain4.setCt_offset_dz_OS(rgh_domain3.getCt_offset_dz_OS())
@@ -740,7 +740,6 @@ def Sim(data,VARS=VARS):
     rgh_domain4.setR0_OS(rgh_domain3.getR0_OS())
     rgh_domain4.setPhi_OS(rgh_domain3.getPhi_OS())
     
-    """
     rgh_domain5.setCt_offset_dx_OS(rgh_domain4.getCt_offset_dx_OS())
     rgh_domain5.setCt_offset_dz_OS(rgh_domain4.getCt_offset_dz_OS())
     rgh_domain5.setCt_offset_dy_OS(rgh_domain4.getCt_offset_dy_OS())
