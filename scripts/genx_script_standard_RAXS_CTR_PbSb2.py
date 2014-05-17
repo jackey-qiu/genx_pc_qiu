@@ -68,7 +68,7 @@ COHERENCE=[{True:range(len(pickup_index))}] #want to add up in coherence? items 
 USE_BV=True
 SEARCH_MODE_FOR_SURFACE_ATOMS=True#If true then cal bond valence of surface atoms based on searching within a spherical region
 DOMAINS_BV=range(len(pickup_index))#Domains being considered for bond valence constrain, counted from 0
-METAL_BV={'Pb':[[1.3,1.8]]*4,'Sb':[[4.,5.]]*3}#range of acceptable metal bv in each domain
+METAL_BV={'Pb':[[1.,1.2]]*2+[[0,1.8]]*2,'Sb':[[4.,5.]]*3}#range of acceptable metal bv in each domain
 R0_BV={('Fe','O'):1.759,('H','O'):0.677,('Pb','O'):2.04,('Sb','O'):1.973}#r0 for different couples
 debug_bv=False
 DOMAIN_GP=[[0,1],[2,3]]#means you want to group first two and last two domains together, only group half layers or full layers together
@@ -90,8 +90,8 @@ SORBATE_NUMBER_HL=[[2],[2],[2],[2],[2],[2],[0]]
 SORBATE_NUMBER_FL=[[2],[2],[2],[2],[1],[0]]
 SORBATE_NUMBER=pick(SORBATE_NUMBER_HL+SORBATE_NUMBER_FL)
 
-O_NUMBER_HL=[[[0,0]],[[0,0]],[[1,1]],[[0,0]],[[0,0]],[[3,3]],[[0,0]]]#either zero oxygen ligand or enough ligands to complete coordinative shell
-O_NUMBER_FL=[[[0,0]],[[0,0]],[[0,0]],[[0,0]],[[3]],[[0,0]]]#either zero oxygen ligand or enough ligands to complete coordinative shell
+O_NUMBER_HL=[[[0,0]],[[0,0]],[[0,0]],[[0,0]],[[0,0]],[[0,0]],[[0,0]]]#either zero oxygen ligand or enough ligands to complete coordinative shell
+O_NUMBER_FL=[[[0,0]],[[0,0]],[[0,0]],[[0,0]],[[0]],[[0,0]]]#either zero oxygen ligand or enough ligands to complete coordinative shell
 O_NUMBER=pick(O_NUMBER_HL+O_NUMBER_FL)
 PROTONATION_DISTAL_OXYGEN=[[2,2],[0,0]]#Protonation of distal oxygens, any number in [0,1,2], where 1 means singly protonated, two means doubly protonated
 
@@ -1301,6 +1301,9 @@ consider sorbate (Pb and Sb) of any combination
         HB1_Os1_D1A, HB2_Os1_D1A(doubly protonated water oxygen)-->r[phi,theta]_H_W_1_1_1, r[phi,theta]_H_W_1_1_2 (first number in the tag is the index of water set (single or paired), and the second the index of water in each set (at most 2 for water pair), and the last one for index of hydrogen atom)
     ############group names###########
     gp_Pb1_D1(discrete grouping for sorbate, group u dx dy dz)
+    gp_HO1_D1(discrete grouping for HO1 from different sorbate in domain1, ie one of HO1 from sorbate1 and the other from sorbate2 if any)
+    gp_Pb1_D1_D2(group Pb1 atom together from two domains, same for gp_HO1_D1_D2)
+    gp_Pb_D1(group two symmetry related Pb atoms together, ie Pb1 and Pb2 if there are two sorbate atoms)
     gp_O1O7_D1(discrete grouping for surface atms, group dx dy in symmetry)
     gp_sorbates_set1_D1(discrete grouping for each set of sorbates (O and metal), group oc)
     gp_HO_set1_D1(discrete grouping for each set of oxygen sorbates, group u)
