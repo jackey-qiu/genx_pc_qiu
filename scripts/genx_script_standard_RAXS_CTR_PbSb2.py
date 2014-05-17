@@ -166,12 +166,25 @@ DOMAIN_NUMBER=len(DOMAIN)
 TABLE=False
 if TABLE:
     O_N=[]
+    binding_mode=[]
     for i in O_NUMBER:
         temp=0
         for j in i:
             temp+=sum(j)
         O_N.append([temp])
-    make_grid.make_structure(map(sum,SORBATE_NUMBER),O_N,TOP_ANGLE,PHI,WATER_NUMBER,DOMAIN,Metal=SORBATE[0],long_slab=FULL_LAYER_LONG)
+    for i in range(DOMAIN_NUMBER):
+        if SORBATE_LIST[i]==[]:
+            binding_mode.append(None)
+        else:
+            if len(SORBATE_ATTACH_ATOM[i][0])==1:
+                binding_mode.append('MD')
+            elif len(SORBATE_ATTACH_ATOM[i][0])==2:
+                binding_mode.append('BD')
+            elif len(SORBATE_ATTACH_ATOM[i][0])==3:
+                binding_mode.append('TD')   
+            else:
+                binding_mode.append('OS')
+    make_grid.make_structure(map(sum,SORBATE_NUMBER),O_N,WATER_NUMBER,DOMAIN,Metal=SORBATE[0],binding_mode=binding_mode,long_slab=FULL_LAYER_LONG)
 
 #function to group outer-sphere pars from different domains (to be placed inside sim function)
 def set_OS(domain_names=['domain5','domain4']):
@@ -373,9 +386,9 @@ for i in range(DOMAIN_NUMBER):
                 vars()['rgh_domain'+str(int(i+1))].new_var('phi_BD', 0.)
                 vars()['rgh_domain'+str(int(i+1))].new_var('top_angle_BD', 0.)
                 vars()['rgh_domain'+str(int(i+1))].new_var('r_BD', 2.27)
-                [vars()['rgh_domain'+str(int(i+1))].new_var('r1_'+str(KK+1)+'_BD', 2.27) for KK in range(3)]
-                [vars()['rgh_domain'+str(int(i+1))].new_var('theta1_'+str(KK+1)+'_BD', 0) for KK in range(3)]
-                [vars()['rgh_domain'+str(int(i+1))].new_var('phi1_'+str(KK+1)+'_BD', 0) for KK in range(3)]
+                [vars()['rgh_domain'+str(int(i+1))].new_var('r1_'+str(KK+1)+'_BD', 2.27) for KK in range(1)]
+                [vars()['rgh_domain'+str(int(i+1))].new_var('theta1_'+str(KK+1)+'_BD', 0) for KK in range(1)]
+                [vars()['rgh_domain'+str(int(i+1))].new_var('phi1_'+str(KK+1)+'_BD', 0) for KK in range(1)]
                 
             ids=[SORBATE_ATTACH_ATOM[i][j][0]+'_D'+str(int(i+1))+'A',SORBATE_ATTACH_ATOM[i][j][1]+'_D'+str(int(i+1))+'A']
             offset=SORBATE_ATTACH_ATOM_OFFSET[i][j]
@@ -478,13 +491,16 @@ for i in range(DOMAIN_NUMBER):
             #for [1,2,2], which means inside one domain there are 1OH corresponding to pb1, 2 OH's corresponding to pb2 and so son.
             #will return [0,1,3,5], O_id extract OH according to O_index
             O_id=[HO_id for HO_id in vars()['HO_list_domain'+str(int(i+1))+'a'] if SORBATE_id in HO_id]
+            consider_distal=False
+            if O_id!=[]:
+                consider_distal=True
             #print SORBATE_id,O_id,vars()['HO_list_domain'+str(int(i+1))+'a']
             #O_id=vars()['HO_list_domain'+str(int(i+1))+'a'][O_index[j]:O_index[j+1]]#O_ide is a list of str
             sorbate_coors=[]
             if SORBATE_LIST[i][j]=='Pb':
-                sorbate_coors=vars()['domain_class_'+str(int(i+1))].outer_sphere_complex_2(domain=vars()['domain'+str(int(i+1))+'A'],cent_point=[0.75,0.+j*0.5,2.1],r_Pb_O=2.28,O_Pb_O_ang=70,phi=j*np.pi-0,pb_id=SORBATE_id,O_ids=O_id,distal_oxygen=True)           
+                sorbate_coors=vars()['domain_class_'+str(int(i+1))].outer_sphere_complex_2(domain=vars()['domain'+str(int(i+1))+'A'],cent_point=[0.75,0.+j*0.5,2.1],r_Pb_O=2.28,O_Pb_O_ang=70,phi=j*np.pi-0,pb_id=SORBATE_id,O_ids=O_id,distal_oxygen=consider_distal)           
             elif SORBATE_LIST[i][j]=='Sb':
-                sorbate_coors=vars()['domain_class_'+str(int(i+1))].outer_sphere_complex_oct(domain=vars()['domain'+str(int(i+1))+'A'],cent_point=[0.75,0.+j*0.5,2.1],r0=1.62,phi=j*np.pi-0,Sb_id=SORBATE_id,O_ids=O_id,distal_oxygen=True)           
+                sorbate_coors=vars()['domain_class_'+str(int(i+1))].outer_sphere_complex_oct(domain=vars()['domain'+str(int(i+1))+'A'],cent_point=[0.75,0.+j*0.5,2.1],r0=1.62,phi=j*np.pi-0,Sb_id=SORBATE_id,O_ids=O_id,distal_oxygen=consider_distal)           
 
             SORBATE_coors_a.append(sorbate_coors[0])
             if O_id!=[]:
@@ -898,12 +914,15 @@ def Sim(data,VARS=VARS):
                     #for [1,2,2], which means inside one domain there are 1OH corresponding to pb1, 2 OH's corresponding to pb2 and so son.
                     #will return [0,1,3,5], O_id extract OH according to O_index
                     O_id=[HO_id for HO_id in VARS['HO_list_domain'+str(int(i+1))+'a'] if SORBATE_id in HO_id]
+                    consider_distal=False
+                    if O_id!=[]:
+                        consider_distal=True
                     #O_id=VARS['HO_list_domain'+str(int(i+1))+'a'][O_index[j]:O_index[j+1]]#O_ide is a list of str
                     sorbate_coors=[]
                     if SORBATE_LIST[i][j]=='Pb':
-                        sorbate_coors=VARS['domain_class_'+str(int(i+1))].outer_sphere_complex_2(domain=VARS['domain'+str(int(i+1))+'A'],cent_point=[ref_x+ct_offset_dx,ref_y+ct_offset_dy,2.1+ct_offset_dz],r_Pb_O=r_Pb_O,O_Pb_O_ang=O_Pb_O_ang,phi=phi,pb_id=SORBATE_id,O_ids=O_id,distal_oxygen=True)           
+                        sorbate_coors=VARS['domain_class_'+str(int(i+1))].outer_sphere_complex_2(domain=VARS['domain'+str(int(i+1))+'A'],cent_point=[ref_x+ct_offset_dx,ref_y+ct_offset_dy,2.1+ct_offset_dz],r_Pb_O=r_Pb_O,O_Pb_O_ang=O_Pb_O_ang,phi=phi,pb_id=SORBATE_id,O_ids=O_id,distal_oxygen=consider_distal)           
                     elif SORBATE_LIST[i][j]=='Sb':#to be completed
-                        sorbate_coors=VARS['domain_class_'+str(int(i+1))].outer_sphere_complex_oct(domain=VARS['domain'+str(int(i+1))+'A'],cent_point=[ref_x+ct_offset_dx,ref_y+ct_offset_dy,2.1+ct_offset_dz],r0=r0,phi=phi,Sb_id=SORBATE_id,O_ids=O_id,distal_oxygen=True)           
+                        sorbate_coors=VARS['domain_class_'+str(int(i+1))].outer_sphere_complex_oct(domain=VARS['domain'+str(int(i+1))+'A'],cent_point=[ref_x+ct_offset_dx,ref_y+ct_offset_dy,2.1+ct_offset_dz],r0=r0,phi=phi,Sb_id=SORBATE_id,O_ids=O_id,distal_oxygen=consider_distal)           
                     SORBATE_coors_a.append(sorbate_coors[0])
                     [O_coors_a.append(sorbate_coors[k]) for k in range(len(sorbate_coors))[1:]]
                     SORBATE_id_B=VARS['SORBATE_list_domain'+str(int(i+1))+'b'][j]
