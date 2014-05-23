@@ -22,7 +22,7 @@ if COUNT_TIME:t_0=datetime.now()
 batch_path_head='/u1/uaf/cqiu/batchfile/'
 WT_RAXS=5#weighting for RAXS dataset
 WT_BV=1#weighting for bond valence constrain (1 recommended)
-BV_TOLERANCE=[-0.1,0.08]#ideal bv value + or - this value is acceptable
+BV_TOLERANCE=[-0.08,0.08]#ideal bv value + or - this value is acceptable
 USE_TOP_ANGLE=False#fit top angle if true otherwise fit the Pb-O bond length (used in bidentate case)
 FULL_LAYER_LONG=0
 INCLUDE_HYDROGEN=0
@@ -56,8 +56,8 @@ The other items should fine to stay unedited.
 Don't touch the other global parameters unless necessary!!!
 ''' 
 
-pickup_index=[2,6,11,11]
-sym_site_index=[[0,1]]*2+[[0]]+[[1]]
+pickup_index=[4,6]
+sym_site_index=[[0,1]]*2
 
 pick=lambda list:[list[i] for i in pickup_index]
 deep_pick=lambda list:[[list[pickup_index[i]][j] for j in sym_site_index[i]] for i in range(len(pickup_index))]
@@ -68,10 +68,10 @@ COHERENCE=[{True:range(len(pickup_index))}] #want to add up in coherence? items 
 USE_BV=True
 SEARCH_MODE_FOR_SURFACE_ATOMS=True#If true then cal bond valence of surface atoms based on searching within a spherical region
 DOMAINS_BV=range(len(pickup_index))#Domains being considered for bond valence constrain, counted from 0
-METAL_BV={'Pb':[[1.,1.2]]*2+[[0,1.8]]*2,'Sb':[[4.,5.]]*3}#range of acceptable metal bv in each domain
+METAL_BV={'Pb':[[1.,1.2]]*2+[[0,1.8]]*2,'Sb':[[4.8,5.]]*3}#range of acceptable metal bv in each domain
 R0_BV={('Fe','O'):1.759,('H','O'):0.677,('Pb','O'):2.04,('Sb','O'):1.973}#r0 for different couples
 debug_bv=False
-DOMAIN_GP=[[0,1],[2,3]]#means you want to group first two and last two domains together, only group half layers or full layers together
+DOMAIN_GP=[]#means you want to group first two and last two domains together, only group half layers or full layers together
 ##want to output the data for plotting?##
 PLOT=False
 ##want to print out the protonation status?##
@@ -80,17 +80,17 @@ PRINT_PROTONATION=False
 PRINT_BV=False
 ##count distal oxygen for bv?##
 COUNT_DISTAL_OXYGEN=False#True then consider bond valence also for distal oxygen,otherwise skip the bv contribution from distal oxygen
-ADD_DISTAL_LIGAND_WILD=False
+ADD_DISTAL_LIGAND_WILD=True
 ##want to print the xyz files to build a 3D structure?##
 PRINT_MODEL_FILES=0
 ##pars for sorbates##
-SORBATE=["Pb"]#any combo of "Pb" and "Sb"
+SORBATE=["Sb"]#any combo of "Pb" and "Sb"
 UPDATE_SORBATE_IN_SIM=True#you may not want to update the sorbate in sim function based on the frame of geometry, then turn this off
 SORBATE_NUMBER_HL=[[2],[2],[2],[2],[2],[2],[0]]
 SORBATE_NUMBER_FL=[[2],[2],[2],[2],[1],[0]]
 SORBATE_NUMBER=pick(SORBATE_NUMBER_HL+SORBATE_NUMBER_FL)
 
-O_NUMBER_HL=[[[0,0]],[[0,0]],[[0,0]],[[0,0]],[[0,0]],[[0,0]],[[0,0]]]#either zero oxygen ligand or enough ligands to complete coordinative shell
+O_NUMBER_HL=[[[0,0]],[[0,0]],[[0,0]],[[0,0]],[[3,3]],[[0,0]],[[0,0]]]#either zero oxygen ligand or enough ligands to complete coordinative shell
 O_NUMBER_FL=[[[0,0]],[[0,0]],[[0,0]],[[0,0]],[[0]],[[0,0]]]#either zero oxygen ligand or enough ligands to complete coordinative shell
 O_NUMBER=pick(O_NUMBER_HL+O_NUMBER_FL)
 PROTONATION_DISTAL_OXYGEN=[[2,2],[0,0]]#Protonation of distal oxygens, any number in [0,1,2], where 1 means singly protonated, two means doubly protonated
@@ -726,6 +726,7 @@ if USE_BV:
         elif DOMAIN[i]==2:
             vars()['match_lib_'+str(int(i+1))+'A']=domain_creator.create_match_lib_before_fitting(domain_class=vars()['domain_class_'+str(int(i+1))],domain=vars()['domain_class_'+str(int(i+1))].build_super_cell(ref_domain=vars()['domain_class_'+str(int(i+1))].create_equivalent_domains_2()[0],rem_atom_ids=None),atm_list=vars()['atm_list_'+str(int(i+1))+'A'],search_range=2.3)
             vars()['match_lib_'+str(int(i+1))+'A']=domain_creator.merge_two_libs(vars()['match_lib_'+str(int(i+1))+'A'],lib_sorbate)
+        """
         if DISCONNECT_BV_CONTRIBUTION[i]!={}:
             ids=map(lambda x:x+'_D'+str(i+1)+'A',DISCONNECT_BV_CONTRIBUTION[i].keys()[0])
             value=DISCONNECT_BV_CONTRIBUTION[i][DISCONNECT_BV_CONTRIBUTION[i].keys()[0]]
@@ -733,6 +734,7 @@ if USE_BV:
                 for each_value in value:
                     index_temp=vars()['match_lib_'+str(int(i+1))+'A'][id].index(filter(lambda x:each_value in x,vars()['match_lib_'+str(int(i+1))+'A'][id])[0])
                     del vars()['match_lib_'+str(int(i+1))+'A'][id][index_temp]
+        """
         if INCLUDE_HYDROGEN:
             #print HB_MATCH_1
             for key in vars()['HB_MATCH_'+str(i+1)].keys():
@@ -1024,10 +1026,16 @@ def Sim(data,VARS=VARS):
                 N_HB_DISTAL=sum(PROTONATION_DISTAL_OXYGEN[i])#number of hydrogen for distal oxygens
             total_sorbate_number=sum(SORBATE_NUMBER[i])+sum([np.sum(N_list) for N_list in O_NUMBER[i]])
             #the idea is that we want to have only one set of sorbate and hydrogen within each domain (ie don't count symmetry counterpart twice)
+            """
             segment1=range(-(N_HB_DISTAL/NN+WATER_NUMBER[i]),0)
             segment2=range(-(WATER_NUMBER[i]+N_HB_DISTAL+total_sorbate_number/NN),-(WATER_NUMBER[i]+N_HB_DISTAL))
             segment2_surface=range(-(WATER_NUMBER[i]+N_HB_DISTAL+total_sorbate_number),-(WATER_NUMBER[i]+N_HB_DISTAL))
             segment3=range(-(WATER_NUMBER[i]+N_HB_DISTAL+total_sorbate_number+N_HB_SURFACE),-(WATER_NUMBER[i]+N_HB_DISTAL+total_sorbate_number))
+            """
+            segment1=range(-WATER_NUMBER[i],0)
+            segment2=range(-(WATER_NUMBER[i]+total_sorbate_number/NN),-(WATER_NUMBER[i]))
+            segment3=range(-(WATER_NUMBER[i]+total_sorbate_number),-(WATER_NUMBER[i]+total_sorbate_number))
+
             if INCLUDE_HYDROGEN:
                 segment1=range(-(N_HB_DISTAL/NN+WATER_NUMBER[i]*3),0)
                 segment2=range(-(WATER_NUMBER[i]*3+N_HB_DISTAL+total_sorbate_number/NN),-(WATER_NUMBER[i]*3+N_HB_DISTAL))
@@ -1036,11 +1044,13 @@ def Sim(data,VARS=VARS):
                 #note here if there are two symmetry pair, then only consider one of the couple for bv consideration, the other one will be skipped in the try except statement
                 super_cell_sorbate=domain_class_1.build_super_cell2_simple(VARS['domain'+str(i+1)+'A'],[0,1]+range(4,8)+segment1+segment2+segment3)
                 if SEARCH_MODE_FOR_SURFACE_ATOMS:
+                    super_cell_surface=domain_class_1.build_super_cell2_simple(VARS['domain'+str(i+1)+'A'],[0,1]+range(4,30)+segment1+segment2+segment3)
+                    """
                     if not INCLUDE_HYDROGEN:
                         super_cell_surface=domain_class_1.build_super_cell2_simple(VARS['domain'+str(i+1)+'A'],[0,1]+range(4,30)+segment1+segment2_surface+segment3)
                     else:
                         super_cell_surface=domain_class_1.build_super_cell2_simple(VARS['domain'+str(i+1)+'A'],[0,1]+range(4,30)+segment1+segment2+segment3)
-
+                    """
                 else:
                     super_cell_surface=VARS['domain'+str(i+1)+'A'].copy()
                     #delete the first iron layer atoms if considering a half layer
@@ -1049,10 +1059,13 @@ def Sim(data,VARS=VARS):
             elif DOMAIN[i]==2:
                 super_cell_sorbate=domain_class_1.build_super_cell2_simple(VARS['domain'+str(i+1)+'A'],[0,6]+segment1+segment2+segment3)
                 if SEARCH_MODE_FOR_SURFACE_ATOMS:
+                    super_cell_surface=domain_class_1.build_super_cell2_simple(VARS['domain'+str(i+1)+'A'],range(0,30)+segment1+segment2+segment3)
+                    """
                     if INCLUDE_HYDROGEN:
                         super_cell_surface=domain_class_1.build_super_cell2_simple(VARS['domain'+str(i+1)+'A'],range(0,30)+segment1+segment2+segment3)
                     else:
                         super_cell_surface=domain_class_1.build_super_cell2_simple(VARS['domain'+str(i+1)+'A'],range(0,30)+segment1+segment2_surface+segment3)
+                    """
                 else:
                     super_cell_surface=VARS['domain'+str(i+1)+'A'].copy()
             

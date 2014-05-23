@@ -175,7 +175,7 @@ class domain_creator_sorbate():
         return new_domain_A.copy(),new_domain_B.copy()
         
     def adding_distal_ligand(self,domain=None,id=None,ref=[],r=2,theta=0,phi=0,basis=np.array([5.038,5.434,7.3707])):
-        theta,phi=theta/180*np.pi/2,phi/180*np.pi/2
+        theta,phi=theta/180*np.pi,phi/180*np.pi
         xyz_new=[r*np.cos(phi)*np.sin(theta),r*np.sin(phi)*np.sin(theta),r*np.cos(theta)]/basis
         xyz_original=xyz_new+ref
         sorbate_index=None

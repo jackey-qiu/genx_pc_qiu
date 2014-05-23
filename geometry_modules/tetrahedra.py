@@ -53,7 +53,22 @@ class share_face():
         z=r*np.cos(theta)
         point_in_original_coor=np.dot(inv(self.T),np.array([x,y,z]))+self.center_point
         return point_in_original_coor
+        
+    def print_xyz(self,file="D:\\test.xyz"):
+        f=open(file,"w")
+        f.write('5\n#\n')
+        s = '%-5s   %7.5e   %7.5e   %7.5e\n' % ('Sb', self.center_point[0],self.center_point[1],self.center_point[2])
+        f.write(s)
+        s = '%-5s   %7.5e   %7.5e   %7.5e\n' % ('O', self.face[0,:][0],self.face[0,:][1],self.face[0,:][2])
+        f.write(s)
+        s = '%-5s   %7.5e   %7.5e   %7.5e\n' % ('O', self.face[1,:][0],self.face[1,:][1],self.face[1,:][2])
+        f.write(s)
+        s = '%-5s   %7.5e   %7.5e   %7.5e\n' % ('O', self.face[2,:][0],self.face[2,:][1],self.face[2,:][2])
+        f.write(s)
+        s = '%-5s   %7.5e   %7.5e   %7.5e\n' % ('O', self.p3[0],self.p3[1],self.p3[2])
+        f.write(s)
 
+        f.close()  
 class share_edge(share_face):
     def __init__(self,edge=np.array([[0.,0.,0.],[0.5,0.5,0.5]])):
         self.edge=edge
@@ -92,7 +107,7 @@ class share_edge(share_face):
         z1_v=np.cross(x1_v,y1_v)
         T=f1(x0_v,y0_v,z0_v,x1_v,y1_v,z1_v)
         #note the r is different from that in the case above
-        #note in this case, phi can be either pi/2 or 4pi/3, theta can be any value in the range of [0,pi]
+        #note in this case, phi can be either 0 or pi, theta can be any value in the range of [0,pi]
         r=dist/2*np.sqrt(3.)
         x_p2=r*np.cos(phi)*np.sin(theta)
         y_p2=r*np.sin(phi)*np.sin(theta)
