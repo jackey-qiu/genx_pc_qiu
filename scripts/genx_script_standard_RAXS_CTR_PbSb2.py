@@ -1088,12 +1088,12 @@ def Sim(data,VARS=VARS):
                         elif "O" in key and "HB" not in key: el="O"
                         elif "HB" in key: el="H"
                         if el=="H":
-                            temp_bv=domain_class_1.cal_bond_valence1_new2B_4(super_cell_surface,key,el,2.5,VARS['match_lib_'+str(i+1)+'A'][key],1,False,R0_BV)['total_valence']
+                            temp_bv=domain_class_1.cal_bond_valence1_new2B_4(super_cell_surface,key,el,2.5,VARS['match_lib_'+str(i+1)+'A'][key],1,False,R0_BV,2.5)['total_valence']
                         else:
-                            temp_bv=domain_class_1.cal_bond_valence1_new2B_4(super_cell_surface,key,el,2.5,VARS['match_lib_'+str(i+1)+'A'][key],50,False,R0_BV)['total_valence']
+                            temp_bv=domain_class_1.cal_bond_valence1_new2B_4(super_cell_surface,key,el,2.5,VARS['match_lib_'+str(i+1)+'A'][key],50,False,R0_BV,2.5)['total_valence']
                     else:
                         #no searching in this algorithem
-                        temp_bv=domain_class_1.cal_bond_valence4B(super_cell_surface,key,VARS['match_lib_'+str(i+1)+'A'][key])
+                        temp_bv=domain_class_1.cal_bond_valence4B(super_cell_surface,key,VARS['match_lib_'+str(i+1)+'A'][key],2.5)
                 else:#sorbates including water
                     #searching included in this algorithem
                     if "HO" in key and COUNT_DISTAL_OXYGEN:#distal oxygen and its associated hydrogen
@@ -1102,12 +1102,12 @@ def Sim(data,VARS=VARS):
                             el="H"
                         if el=="O":
                             try:
-                                temp_bv=domain_class_1.cal_bond_valence1_new2B_4(super_cell_sorbate,key,el,2.5,VARS['match_lib_'+str(i+1)+'A'][key],50,False,R0_BV)['total_valence']
+                                temp_bv=domain_class_1.cal_bond_valence1_new2B_4(super_cell_sorbate,key,el,2.5,VARS['match_lib_'+str(i+1)+'A'][key],50,False,R0_BV,2.5)['total_valence']
                             except:
                                 temp_bv=2
                         else:
                             try:
-                                temp_bv=domain_class_1.cal_bond_valence1_new2B_4(super_cell_sorbate,key,el,2.5,VARS['match_lib_'+str(i+1)+'A'][key],1,False,R0_BV)['total_valence']
+                                temp_bv=domain_class_1.cal_bond_valence1_new2B_4(super_cell_sorbate,key,el,2.5,VARS['match_lib_'+str(i+1)+'A'][key],1,False,R0_BV,2.5)['total_valence']
                             except:
                                 temp_bv=1
                     elif "HO" in key and not COUNT_DISTAL_OXYGEN:
@@ -1117,15 +1117,15 @@ def Sim(data,VARS=VARS):
                         if "HB" in key:
                             el="H"
                         if el=="O":
-                            temp_bv=domain_class_1.cal_bond_valence1_new2B_4(super_cell_sorbate,key,el,2.5,VARS['match_lib_'+str(i+1)+'A'][key],50,False,R0_BV)['total_valence']
+                            temp_bv=domain_class_1.cal_bond_valence1_new2B_4(super_cell_sorbate,key,el,2.5,VARS['match_lib_'+str(i+1)+'A'][key],50,False,R0_BV,2.5)['total_valence']
                         else:
-                            temp_bv=domain_class_1.cal_bond_valence1_new2B_4(super_cell_sorbate,key,el,2.5,VARS['match_lib_'+str(i+1)+'A'][key],1,False,R0_BV)['total_valence']
+                            temp_bv=domain_class_1.cal_bond_valence1_new2B_4(super_cell_sorbate,key,el,2.5,VARS['match_lib_'+str(i+1)+'A'][key],1,False,R0_BV,2.5)['total_valence']
                     else:#metals 
                         el=None
                         if 'Pb' in key:el='Pb'
                         elif 'Sb' in key:el='Sb'
                         try:
-                            temp_bv=domain_class_1.cal_bond_valence1_new2B_4(super_cell_sorbate,key,el,2.5,VARS['match_lib_'+str(i+1)+'A'][key],50,False)['total_valence']
+                            temp_bv=domain_class_1.cal_bond_valence1_new2B_4(super_cell_sorbate,key,el,2.5,VARS['match_lib_'+str(i+1)+'A'][key],50,False,2.5)['total_valence']
                         except:
                             if el=='Pb':temp_bv=METAL_BV['Pb'][i][0]
                             elif el=='Sb':temp_bv=METAL_BV['Sb'][i][0]
