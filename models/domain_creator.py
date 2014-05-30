@@ -1031,7 +1031,7 @@ class domain_creator(domain_creator_water,domain_creator_sorbate,domain_creator_
             f.close()
         return bond_valence_container
     
-    def cal_bond_valence1_new2B(self,domain,center_atom_id,center_atom_el,searching_range=2.5,coordinated_atms=[],wt=100,print_file=False):
+    def cal_bond_valence1_new2B(self,domain,center_atom_id,center_atom_el,searching_range=2.5,coordinated_atms=[],wt=100,print_file=False,O_cutoff_limit=2.5):
         #different from new2:domain is a library in the format {(key,el):[x,y,z]}
         bond_valence_container={}
         basis=np.array([5.038,5.434,7.3707])
@@ -1051,7 +1051,7 @@ class domain_creator(domain_creator_water,domain_creator_sorbate,domain_creator_
                 elif ((index[1]=='Fe')&(key[1]=='O'))|((index[1]=='O')&(key[1]=='Fe')):r0=1.759
                 elif ((index[1]=='Sb')&(key[1]=='O'))|((index[1]=='O')&(key[1]=='Sb')):r0=1.973
                 elif ((index[1]=='O')&(key[1]=='O')):
-                    if dist<2.5:
+                    if dist<O_cutoff_limit:
                         r0=20.#arbitrary r0 here, ensure oxygens are more than 2.65A apart
                     else:r0=-10
                 elif ((index[1]=='H')&(key[1]=='H')):
@@ -1101,7 +1101,7 @@ class domain_creator(domain_creator_water,domain_creator_sorbate,domain_creator_
             f.close()
         return bond_valence_container
         
-    def cal_bond_valence1_new2B_4(self,domain,center_atom_id,center_atom_el,searching_range=2.5,coordinated_atms=[],wt=100,print_file=False,r0_container={('Fe','O'):1.759,('H','O'):0.677,('Pb','O'):2.04,('Sb','O'):1.973}):
+    def cal_bond_valence1_new2B_4(self,domain,center_atom_id,center_atom_el,searching_range=2.5,coordinated_atms=[],wt=100,print_file=False,r0_container={('Fe','O'):1.759,('H','O'):0.677,('Pb','O'):2.04,('Sb','O'):1.973},O_cutoff_limit=2.5):
         #different from new2B: add a argument containing info of r0 for possible couples
         bond_valence_container={}
         basis=np.array([5.038,5.434,7.3707])
@@ -1121,7 +1121,7 @@ class domain_creator(domain_creator_water,domain_creator_sorbate,domain_creator_
                 elif (key[1],index[1]) in r0_container.keys():
                     r0=r0_container[(key[1],index[1])]
                 elif ((index[1]=='O')&(key[1]=='O')):
-                    if dist<2.5:
+                    if dist<O_cutoff_limit:
                         r0=20.#arbitrary r0 here, ensure oxygens are more than 2.65A apart
                     else:r0=-10
                 elif ((index[1]=='H')&(key[1]=='H')):
