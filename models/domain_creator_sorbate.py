@@ -710,7 +710,9 @@ class domain_creator_sorbate():
         _add_sorbate(domain=domain,id_sorbate=pb_id,el='Pb',sorbate_v=pyramid_distortion.apex/basis)
         if O_id!=[]:
             _add_sorbate(domain=domain,id_sorbate=O_id[0],el='O',sorbate_v=pyramid_distortion.p2/basis)
-        return [pyramid_distortion.apex/basis,pyramid_distortion.p2/basis]
+            return [pyramid_distortion.apex/basis,pyramid_distortion.p2/basis]
+        else:
+            return [pyramid_distortion.apex/basis]
    
     def adding_sorbate_pyramid_distortion_B2(self,domain,top_angle=1.,phi=0.,edge_offset=[0,0],attach_atm_ids=['id1','id2'],offset=[None,None],anchor_ref=None,anchor_offset=None,pb_id='pb_id',O_id=['id1'],mirror=False,switch=False,angle_offset=0):
         #The added sorbates (including Pb and one Os) will form a edge-distorted trigonal pyramid configuration with the attached ones
@@ -799,12 +801,15 @@ class domain_creator_sorbate():
             _add_sorbate(domain=domain,id_sorbate=O_id[1],el='O',sorbate_v=trigonal_bipyramid.p3/basis)
             return [trigonal_bipyramid.center_point/basis,trigonal_bipyramid.p4/basis,trigonal_bipyramid.p3/basis]
         
-    def adding_sorbate_bidentate_octahedral(self,domain,theta=0,phi=np.pi/2,flag='off_center',attach_atm_ids=[],offset=[None,None],sb_id='sb1',O_id=['HO1','HO2','HO3','HO4']):
+    def adding_sorbate_bidentate_octahedral(self,domain,phi=90,flag='off_center',attach_atm_ids=[],offset=[None,None],sb_id='sb1',O_id=['HO1','HO2','HO3','HO4'],anchor_ref=None,anchor_offset=None):
         #The added sorbates (including Pb and one Os) will form a edge-distorted trigonal pyramid configuration with the attached ones
         p_O1_index=np.where(domain.id==attach_atm_ids[0])
         p_O2_index=np.where(domain.id==attach_atm_ids[1])
         basis=np.array([5.038,5.434,7.3707])
-        
+        anchor_index=None
+        if anchor_ref!=None:
+            anchor_index=np.where(domain.id==anchor_ref)
+
         def _translate_offset_symbols(symbol):
             if symbol=='-x':return np.array([-1.,0.,0.])
             elif symbol=='+x':return np.array([1.,0.,0.])
@@ -816,10 +821,13 @@ class domain_creator_sorbate():
         pt_ct=lambda domain,p_O1_index,symbol:np.array([domain.x[p_O1_index][0]+domain.dx1[p_O1_index][0]+domain.dx2[p_O1_index][0]+domain.dx3[p_O1_index][0],domain.y[p_O1_index][0]+domain.dy1[p_O1_index][0]+domain.dy2[p_O1_index][0]+domain.dy3[p_O1_index][0],domain.z[p_O1_index][0]+domain.dz1[p_O1_index][0]+domain.dz2[p_O1_index][0]+domain.dz3[p_O1_index][0]])+_translate_offset_symbols(symbol)
         p_O1=pt_ct(domain,p_O1_index,offset[0])*basis
         p_O2=pt_ct(domain,p_O2_index,offset[1])*basis
+        anchor=None
+        if anchor_index!=None:
+            anchor=pt_ct(domain,anchor_index,anchor_offset)*basis
         #print "O1",p_O1
         #print "O2",p_O2
         octahedral_case=octahedra.share_edge(edge=np.array([p_O1,p_O2]))
-        octahedral_case.all_in_all(theta,phi,None,flag)
+        octahedral_case.all_in_all(phi/180*np.pi,anchor,flag)
         #print "apex",pyramid_distortion.apex-[0,0.75587,7.3707]
         #print "p2",pyramid_distortion.p2-[0,0.75587,7.3707]
         def _add_sorbate(domain=None,id_sorbate=None,el='Pb',sorbate_v=[]):
@@ -834,14 +842,14 @@ class domain_creator_sorbate():
                 domain.z[sorbate_index]=sorbate_v[2]
                 
         _add_sorbate(domain=domain,id_sorbate=sb_id,el='Sb',sorbate_v=octahedral_case.center_point/basis)
-        try:
+        if O_id!=[]:
             _add_sorbate(domain=domain,id_sorbate=O_id[0],el='O',sorbate_v=octahedral_case.p2/basis)
             _add_sorbate(domain=domain,id_sorbate=O_id[1],el='O',sorbate_v=octahedral_case.p3/basis)
             _add_sorbate(domain=domain,id_sorbate=O_id[2],el='O',sorbate_v=octahedral_case.p4/basis)
             _add_sorbate(domain=domain,id_sorbate=O_id[3],el='O',sorbate_v=octahedral_case.p5/basis)
-        except:
-            pass
-        return [octahedral_case.center_point/basis,octahedral_case.p2/basis,octahedral_case.p3/basis,octahedral_case.p4/basis,octahedral_case.p5/basis]
+            return [octahedral_case.center_point/basis,octahedral_case.p2/basis,octahedral_case.p3/basis,octahedral_case.p4/basis,octahedral_case.p5/basis]
+        else:
+            return [octahedral_case.center_point/basis]
         
     def adding_sorbate_pyramid_monodentate(self,domain,top_angle=1.,phi=0.,r=2.25,mirror=False,attach_atm_ids=['id1'],offset=None,pb_id='pb_id',O_id=['id1','id2']):
         #The added sorbates (including Pb and one Os) will form a regular trigonal pyramid configuration with the attached ones

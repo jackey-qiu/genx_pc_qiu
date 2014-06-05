@@ -88,13 +88,14 @@ class share_face():
         index=dist_list.index(max(dist_list))
         
         if flag=='right_triangle':
-            def _cal_points(center_point,p0,p1,p2,dr):
+            def _cal_points(center_point,p0,p1,p2):
                 #here p0-->p1 is the long lateral
                 z_v=f3(np.zeros(3),p2-center_point)
                 x_v=f3(np.zeros(3),p0-center_point)
                 y_v=np.cross(z_v,x_v)
                 T=f1(x0_v,y0_v,z0_v,x_v,y_v,z_v)
-                r=f2(center_point,p0)+dr
+                r=f2(center_point,p0)
+                #print [r*np.cos(np.pi/2)*np.sin(np.pi/2),r*np.sin(np.pi/2)*np.sin(np.pi/2),0]
                 p3_new=np.array([r*np.cos(np.pi/2)*np.sin(np.pi/2),r*np.sin(np.pi/2)*np.sin(np.pi/2),0])
                 p4_new=np.array([r*np.cos(3*np.pi/2)*np.sin(np.pi/2),r*np.sin(3*np.pi/2)*np.sin(np.pi/2),0])
                 p3_old=np.dot(inv(T),p3_new)+center_point
@@ -102,11 +103,11 @@ class share_face():
                 p5_old=2*center_point-p2
                 return T,r,p3_old,p4_old,p5_old
             if index==0:#p0-->p1 long lateral
-                self.T,self.r,self.p3,self.p4,self.p5=_cal_points(center_point,p0,p1,p2,dr)
+                self.T,self.r,self.p3,self.p4,self.p5=_cal_points(center_point,p0,p1,p2)
             elif index==1:#p1-->p2 long lateral
-                self.T,self.r,self.p3,self.p4,self.p5=_cal_points(center_point,p1,p2,p0,dr)
+                self.T,self.r,self.p3,self.p4,self.p5=_cal_points(center_point,p1,p2,p0)
             elif index==2:#p0-->p2 long lateral
-                self.T,self.r,self.p3,self.p4,self.p5=_cal_points(center_point,p0,p2,p1,dr)
+                self.T,self.r,self.p3,self.p4,self.p5=_cal_points(center_point,p0,p2,p1)
         elif flag=='regular_triangle':
             x_v=f3(np.zeros(3),p2-center_point)
             y_v=f3(np.zeros(3),p0-center_point)
@@ -150,7 +151,7 @@ class share_edge(share_face):
     def __init__(self,edge=np.array([[0.,0.,0.],[5,5,5]])):
         self.edge=edge
         
-    def cal_p2(self,ref_p=None,theta=0.,phi=np.pi/2,flag='off_center',**args):
+    def cal_p2(self,ref_p=None,phi=np.pi/2,flag='off_center',**args):
         p0=self.edge[0,:]
         p1=self.edge[1,:]
         origin=(p0+p1)/2
@@ -159,7 +160,8 @@ class share_edge(share_face):
         c=np.sum(p1**2-p0**2)
         ref_point=0
         if ref_p!=None:
-            ref_point=ref_p
+            ref_point=np.cross(p0-origin,np.cross(p0-origin,ref_p-origin))+origin
+            #print ref_point
         elif diff[2]==0:
             ref_point=origin+[0,0,1]
         else:
@@ -196,23 +198,23 @@ class share_edge(share_face):
             self.face=np.append(self.edge,[p2_old],axis=0)
             self.flag='right_triangle'
         elif flag=='off_center':
-            z1_v=f3(np.zeros(3),ref_point-origin)
-            x1_v=f3(np.zeros(3),p1-origin)
+            x1_v=f3(np.zeros(3),ref_point-origin)
+            z1_v=f3(np.zeros(3),p1-origin)
             y1_v=np.cross(z1_v,x1_v)
             T=f1(x0_v,y0_v,z0_v,x1_v,y1_v,z1_v)
             r=dist/2.
-            #note in this case, phi can be either pi/2 or 3pi/2, theta can be any value in the range of [0,pi]
-            x_center=r*np.cos(phi)*np.sin(theta)
-            y_center=r*np.sin(phi)*np.sin(theta)
-            z_center=r*np.cos(theta)
+            #note in this case, phi can be in the range of [0,2pi]
+            x_center=r*np.cos(phi)*np.sin(np.pi/2)
+            y_center=r*np.sin(phi)*np.sin(np.pi/2)
+            z_center=r*np.cos(np.pi/2)
             center_org=np.dot(inv(T),np.array([x_center,y_center,z_center]))+origin
             p2_old=2*center_org-p0
             self.p2=p2_old
             self.face=np.append(self.edge,[p2_old],axis=0)
             self.flag='right_triangle'
     
-    def all_in_all(self,theta=np.pi/2,phi=np.pi/2,ref_p=None,flag='off_center'):
-        self.cal_p2(ref_p=None,theta=theta,phi=phi,flag=flag)
+    def all_in_all(self,phi=np.pi/2,ref_p=None,flag='off_center'):
+        self.cal_p2(ref_p=ref_p,phi=phi,flag=flag)
         self.share_face_init(self.flag)
         
 #steric_check will check the steric feasibility by changing the theta angle (0-pi) and or phi [0,2pi]
