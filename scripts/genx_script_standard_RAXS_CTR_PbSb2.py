@@ -1032,7 +1032,7 @@ def Sim(data,VARS=VARS):
                         if 'Pb' in key:el='Pb'
                         elif 'Sb' in key:el='Sb'
                         try:
-                            temp_bv=domain_class_1.cal_bond_valence1_new2B_4(super_cell_sorbate,key,el,2.5,VARS['match_lib_'+str(i+1)+'A'][key],50,False,2.5)['total_valence']
+                            temp_bv=domain_class_1.cal_bond_valence1_new2B_4(super_cell_sorbate,key,el,2.5,VARS['match_lib_'+str(i+1)+'A'][key],50,False,R0_BV,2.5)['total_valence']
                         except:
                             if el=='Pb':temp_bv=METAL_BV['Pb'][i][0]
                             elif el=='Sb':temp_bv=METAL_BV['Sb'][i][0]
