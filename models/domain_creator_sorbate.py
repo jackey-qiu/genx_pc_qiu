@@ -495,11 +495,8 @@ class domain_creator_sorbate():
         p_O2=pt_ct(domain,p_O2_index,offset[1])*basis
         p_O3_old=pt_ct(domain,p_O3_index,offset[2])*basis
         p_O3=_cal_coor_o3(p_O1,p_O2,p_O3_old)
-        #print "sensor 1",f2(p_O1,p_O2),f2(p_O1,p_O3),f2(p_O2,p_O3)
-        #print p_O1,p_O2,p_O3
         octahedra_case=octahedra.share_face(np.array([p_O1,p_O2,p_O3]))
         octahedra_case.share_face_init(flag='regular_triangle',dr=dr)
-        #print octahedra_case.center_point
         def _add_sorbate(domain=None,id_sorbate=None,el='Sb',sorbate_v=[]):
             sorbate_index=None
             try:
@@ -510,20 +507,15 @@ class domain_creator_sorbate():
                 domain.x[sorbate_index]=sorbate_v[0]
                 domain.y[sorbate_index]=sorbate_v[1]
                 domain.z[sorbate_index]=sorbate_v[2]
-                if el!='O':sorbate_index_global=sorbate_index
                 
         _add_sorbate(domain=domain,id_sorbate=sorbate_id,el='Sb',sorbate_v=octahedra_case.center_point/basis)
-        
-        #print "sensor2",f2(octahedra_case.center_point,octahedra_case.p3),f2(octahedra_case.center_point,octahedra_case.p4)
-        #print domain.dx1[np.where(domain.id==sorbate_id)[0][0]]
+
         try:
             _add_sorbate(domain=domain,id_sorbate=sorbate_oxygen_ids[0],el='O',sorbate_v=octahedra_case.p3/basis+dxdydz(domain,np.where(domain.id==sorbate_id)[0][0]))
             _add_sorbate(domain=domain,id_sorbate=sorbate_oxygen_ids[1],el='O',sorbate_v=octahedra_case.p4/basis+dxdydz(domain,np.where(domain.id==sorbate_id)[0][0]))
             _add_sorbate(domain=domain,id_sorbate=sorbate_oxygen_ids[2],el='O',sorbate_v=octahedra_case.p5/basis+dxdydz(domain,np.where(domain.id==sorbate_id)[0][0]))
         except:
             pass
-        #print octahedra_case.p3/basis,dxdydz(domain,sorbate_index_global)
-        #print sorbate_index_global
         return [octahedra_case.center_point/basis,octahedra_case.p3/basis,octahedra_case.p4/basis,octahedra_case.p5/basis]
         
     def adding_share_triple_trigonal_bipyramid(self,domain,attach_atm_ids_ref=['id1','id2'],attach_atm_id_third=['id3'],offset=[None,None,None],sorbate_id='Pb_id',sorbate_oxygen_ids=['HO1']):
