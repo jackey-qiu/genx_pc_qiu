@@ -70,11 +70,11 @@ class share_face():
 
         f.close()  
 class share_edge(share_face):
-    def __init__(self,edge=np.array([[0.,0.,0.],[0.5,0.5,0.5]])):
+    def __init__(self,edge=np.array([[0.,0.,0.],[2.5,2.5,2.5]])):
         self.edge=edge
         self.flag=None
         
-    def cal_p2(self,ref_p=None,theta=0.,phi=np.pi/2,**args):
+    def cal_p2(self,ref_p=None,phi=0,**args):
         p0=self.edge[0,:]
         p1=self.edge[1,:]
         origin=(p0+p1)/2
@@ -82,8 +82,11 @@ class share_edge(share_face):
         diff=p1-p0
         c=np.sum(p1**2-p0**2)
         ref_point=0
-        if ref_p!=None:
-            ref_point=ref_p
+        if diff[2]==0:
+            ref_point=origin+[0,0,1]
+        elif ref_p!=None:
+            ref_point=np.cross(p0-p1,np.cross(p0-p1,ref_p-p1))+origin
+            #ref_point=ref_p
         else:
             x,y,z=0.,0.,0.
             #set the reference point as simply as possible,using the same distance assumption, we end up with a plane equation
@@ -103,14 +106,20 @@ class share_edge(share_face):
                 #a b c coresponds to vector origin-->p0
                 ref_point=np.array([1.,0.,-p0[0]/p0[2]])
         x1_v=f3(np.zeros(3),ref_point-origin)
-        y1_v=f3(np.zeros(3),p1-origin)
-        z1_v=np.cross(x1_v,y1_v)
+        z1_v=f3(np.zeros(3),p1-origin)
+        y1_v=np.cross(z1_v,x1_v)
         T=f1(x0_v,y0_v,z0_v,x1_v,y1_v,z1_v)
         #note the r is different from that in the case above
-        #note in this case, phi can be either 0 or pi, theta can be any value in the range of [0,pi]
+        #note in this case, phi can be in the range of [0,2pi], theta is pi/2
         r=dist/2*np.sqrt(3.)
-        x_p2=r*np.cos(phi)*np.sin(theta)
-        y_p2=r*np.sin(phi)*np.sin(theta)
+        #ang_offset is used to ensure the ref point, body center and the two anchors are on the same plane when phi is set to 0
+        ang1=109.5/180*np.pi/2
+        ang2=np.pi/3
+        ang_offset=np.arccos((np.cos(ang1)**2+(2*np.sin(ang1)*np.sin(ang2))**2-1)/(2*np.cos(ang1)*2*np.sin(ang1)*np.sin(ang2)))
+        
+        theta=np.pi/2
+        x_p2=r*np.cos(phi+ang_offset)*np.sin(theta)
+        y_p2=r*np.sin(phi+ang_offset)*np.sin(theta)
         z_p2=r*np.cos(theta)
         p2_new=np.array([x_p2,y_p2,z_p2])
         p2_old=np.dot(inv(T),p2_new)+origin
