@@ -73,7 +73,7 @@ class share_edge(share_face):
     def __init__(self,edge=np.array([[0.,0.,0.],[2.5,2.5,2.5]])):
         self.edge=edge
         self.flag=None
-        
+        self.p0,self.p1=edge[0],edge[1]
     def cal_p2(self,ref_p=None,phi=0,**args):
         p0=self.edge[0,:]
         p1=self.edge[1,:]
