@@ -69,7 +69,6 @@ SEARCH_MODE_FOR_SURFACE_ATOMS=True#If true then cal bond valence of surface atom
 DOMAINS_BV=range(len(pickup_index))#Domains being considered for bond valence constrain, counted from 0
 METAL_BV={'Pb':[[1.,1.2]]*2+[[0,1.8]]*2,'Sb':[[4.8,5.]]*3}#range of acceptable metal bv in each domain
 R0_BV={('Fe','O'):1.759,('H','O'):0.677,('Pb','O'):2.04,('Sb','O'):1.973}#r0 for different couples
-LOCAL_STRUCTURE_MATCH_LIB={'trigonal_pyramid':['Pb'],'octahedral':['Sb'],'tetrahedral':['As']}
 debug_bv=False
 DOMAIN_GP=[]#means you want to group first two and last two domains together, only group half layers or full layers together
 ##want to output the data for plotting?##
@@ -85,12 +84,7 @@ ADD_DISTAL_LIGAND_WILD=True
 PRINT_MODEL_FILES=0
 ##pars for sorbates##
 SORBATE=["Sb"]#any combo of "Pb" and "Sb"
-LOCAL_STRUCTURE='arbitrary_polyhedral'
-for key in LOCAL_STRUCTURE_MATCH_LIB.keys():
-    if SORBATE[0] in LOCAL_STRUCTURE_MATCH_LIB[key]:
-        LOCAL_STRUCTURE=key
-        break
-    else:pass
+
 UPDATE_SORBATE_IN_SIM=True#you may not want to update the sorbate in sim function based on the frame of geometry, then turn this off
 SORBATE_NUMBER_HL=[[2],[2],[2],[2],[2],[2],[2],[0]]
 SORBATE_NUMBER_FL=[[2],[2],[2],[2],[2],[2],[0]]
