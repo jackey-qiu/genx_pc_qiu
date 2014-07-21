@@ -67,7 +67,7 @@ COHERENCE=[{True:range(len(pickup_index))}] #want to add up in coherence? items 
 USE_BV=1
 SEARCH_MODE_FOR_SURFACE_ATOMS=True#If true then cal bond valence of surface atoms based on searching within a spherical region
 DOMAINS_BV=range(len(pickup_index))#Domains being considered for bond valence constrain, counted from 0
-METAL_BV={'Pb':[[1.,1.2]]*2+[[0,1.8]]*2,'Sb':[[4.8,5.]]*3}#range of acceptable metal bv in each domain
+METAL_BV={'Pb':[[1.,1.2]]*2+[[0,1.8]]*2,'Sb':[[4.8,5.]]*3,'As':[[4.8,5.]]*3}#range of acceptable metal bv in each domain
 R0_BV={('As','O'):1.767,('Fe','O'):1.759,('H','O'):0.677,('Pb','O'):2.04,('Sb','O'):1.973}#r0 for different couples
 LOCAL_STRUCTURE_MATCH_LIB={'trigonal_pyramid':['Pb'],'octahedral':['Sb','Fe'],'tetrahedral':['As']}
 debug_bv=False
@@ -84,7 +84,7 @@ ADD_DISTAL_LIGAND_WILD=0
 ##want to print the xyz files to build a 3D structure?##
 PRINT_MODEL_FILES=1
 ##pars for sorbates##
-SORBATE=["Sb"]#element symbol for sorbate
+SORBATE=["As"]#element symbol for sorbate
 LOCAL_STRUCTURE=None
 for key in LOCAL_STRUCTURE_MATCH_LIB.keys():
     if SORBATE[0] in LOCAL_STRUCTURE_MATCH_LIB[key]:
@@ -1148,14 +1148,10 @@ def Sim(data,VARS=VARS):
                         else:
                             temp_bv=domain_class_1.cal_bond_valence1_new2B_4(super_cell_sorbate,key,el,2.5,VARS['match_lib_'+str(i+1)+'A'][key],1,False,R0_BV,2.5)['total_valence']
                     else:#metals 
-                        el=None
-                        if 'Pb' in key:el='Pb'
-                        elif 'Sb' in key:el='Sb'
                         try:
-                            temp_bv=domain_class_1.cal_bond_valence1_new2B_4(super_cell_sorbate,key,el,2.5,VARS['match_lib_'+str(i+1)+'A'][key],50,False,R0_BV,2.5)['total_valence']
+                            temp_bv=domain_class_1.cal_bond_valence1_new2B_4(super_cell_sorbate,key,SORBATE[0],2.5,VARS['match_lib_'+str(i+1)+'A'][key],50,False,R0_BV,2.5)['total_valence']
                         except:
-                            if el=='Pb':temp_bv=METAL_BV['Pb'][i][0]
-                            elif el=='Sb':temp_bv=METAL_BV['Sb'][i][0]
+                            temp_bv=METAL_BV[SORBATE[0]][i][0]
                     
                 if PRINT_BV:print key, temp_bv
                 #consider possible hydrogen bond and hydroxyl bond fro oxygen atoms
@@ -1233,10 +1229,9 @@ def Sim(data,VARS=VARS):
                 elif 'Fe' in key:
                     bv=bv+_widen_validness(3-temp_bv)
                     if debug_bv:bv_container[key]=_widen_validness(3-temp_bv)
-                elif ('Pb' in key) or ('Sb' in key):
+                else:#do metal sorbates
                     metal_bv_range=[]
-                    if 'Pb' in key:metal_bv_range=METAL_BV['Pb'][i]
-                    elif 'Sb' in key:metal_bv_range=METAL_BV['Sb'][i]
+                    metal_bv_range=METAL_BV[SORBATE[0]][i]
                     bv=bv+_widen_validness_range(metal_bv_range[0]-temp_bv,metal_bv_range[1]-temp_bv)
                     if debug_bv:bv_container[key]=_widen_validness_range(metal_bv_range[0]-temp_bv,metal_bv_range[1]-temp_bv)
     if debug_bv:
