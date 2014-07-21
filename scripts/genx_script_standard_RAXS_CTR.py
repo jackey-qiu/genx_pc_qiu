@@ -221,6 +221,14 @@ def set_H(domain_name='domain1',tag=['W_1_2_1','W_1_1_1']):
     eval('rgh_'+domain_name+'.setPhi_H_'+tag[0]+'(180-rgh_'+domain_name+'.getPhi_H_'+tag[1]+'())')
     eval('rgh_'+domain_name+'.setR_H_'+tag[0]+'(rgh_'+domain_name+'.getR_H_'+tag[1]+'())')
     eval('rgh_'+domain_name+'.setTheta_H_'+tag[0]+'(rgh_'+domain_name+'.getTheta_H_'+tag[1]+'())')
+
+#function to group distal oxygens based on adding in wild, N is the number of distal oxygens (to be placed inside sim function)
+def set_distal_wild(domain_name=['domain2','domain1'],tag='BD',N=2):
+    for i in range(N):
+        eval('rgh_'+domain_name[0]+'.setPhi1_'+str(i)+'_'+tag+'(180-rgh_'+domain_name[1]+'.getPhi1_'+str(i)+'_'+tag+'())')
+        eval('rgh_'+domain_name[0]+'.setR1_'+str(i)+'_'+tag+'(rgh_'+domain_name[1]+'.getR1_'+str(i)+'_'+tag+'())')
+        eval('rgh_'+domain_name[0]+'.setTheta1_'+str(i)+'_'+tag+'(rgh_'+domain_name[1]+'.getTheta1_'+str(i)+'_'+tag+'())')   
+
 ##############################################set up atm ids###############################################
 
 for i in range(DOMAIN_NUMBER):   
@@ -1234,6 +1242,7 @@ def Sim(data,VARS=VARS):
                     metal_bv_range=METAL_BV[SORBATE[0]][i]
                     bv=bv+_widen_validness_range(metal_bv_range[0]-temp_bv,metal_bv_range[1]-temp_bv)
                     if debug_bv:bv_container[key]=_widen_validness_range(metal_bv_range[0]-temp_bv,metal_bv_range[1]-temp_bv)
+
     if debug_bv:
         for i in bv_container.keys():
             if bv_container[i]!=0:
