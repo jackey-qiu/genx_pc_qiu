@@ -55,6 +55,7 @@ FL-->8          9           10          11            12(Face-sharing)    13    
 CS(O5O6)        ES(O5O7)    ES(O5O8)    TD(O5O6O7)    TD(O5O7O8)          OS          Clean
 """
 
+running_mode=True#if true then disable all the IO function
 pickup_index=[4]
 sym_site_index=[[0,1]]
 
@@ -67,22 +68,22 @@ COHERENCE=[{True:range(len(pickup_index))}] #want to add up in coherence? items 
 USE_BV=1
 SEARCH_MODE_FOR_SURFACE_ATOMS=True#If true then cal bond valence of surface atoms based on searching within a spherical region
 DOMAINS_BV=range(len(pickup_index))#Domains being considered for bond valence constrain, counted from 0
-METAL_BV={'Pb':[[1.,1.2]]*2+[[0,1.8]]*2,'Sb':[[4.8,5.]]*3,'As':[[4.8,5.]]*3}#range of acceptable metal bv in each domain
+METAL_VALENCE={'Pb':(2.,3.),'Sb':(5.,6.),'As':(5.,4.)}#for each value (valence charge,coordination number)
 R0_BV={('As','O'):1.767,('Fe','O'):1.759,('H','O'):0.677,('Pb','O'):2.04,('Sb','O'):1.973}#r0 for different couples
 LOCAL_STRUCTURE_MATCH_LIB={'trigonal_pyramid':['Pb'],'octahedral':['Sb','Fe'],'tetrahedral':['As']}
-debug_bv=False
+debug_bv=not running_mode
 DOMAIN_GP=[]#means you want to group first two and last two domains together, only group half layers or full layers together
 ##want to output the data for plotting?##
-PLOT=False
+PLOT=not running_mode
 ##want to print out the protonation status?##
 PRINT_PROTONATION=False
 ##want to print bond valence?##
-PRINT_BV=False
+PRINT_BV=not running_mode
 ##count distal oxygen for bv?##
 COUNT_DISTAL_OXYGEN=False#True then consider bond valence also for distal oxygen,otherwise skip the bv contribution from distal oxygen
 ADD_DISTAL_LIGAND_WILD=0
 ##want to print the xyz files to build a 3D structure?##
-PRINT_MODEL_FILES=1
+PRINT_MODEL_FILES=not running_mode
 ##pars for sorbates##
 SORBATE=["As"]#element symbol for sorbate
 LOCAL_STRUCTURE=None
@@ -128,6 +129,15 @@ if FULL_LAYER_LONG:ANCHOR_REFERENCE_OFFSET_FL=[[None,None],[None,None],[None,Non
 else:ANCHOR_REFERENCE_OFFSET_FL=[[None,None],['+x',None],['+x',None],[None,None],[None,None],[None,None],[None,None]]
 ANCHOR_REFERENCE_OFFSET=deep_pick(ANCHOR_REFERENCE_OFFSET_HL+ANCHOR_REFERENCE_OFFSET_FL)
 
+#specify the METAL_BV based on the metal valence charge and the coordinated local structure
+METAL_BV_EACH=METAL_VALENCE[SORBATE[0]][0]/METAL_VALENCE[SORBATE[0]][1]#valence for each bond
+BOND_LENGTH_EACH=R0_BV[(SORBATE[0],'O')]-np.log(METAL_BV_EACH)*0.37#ideal bond length using bond valence equation
+N_BOND=[O_NUMBER[i][0][0]+len(SORBATE_ATTACH_ATOM[i][0]) for i in range(len(O_NUMBER))]#number of bonds
+METAL_BV={SORBATE[0]:[[METAL_BV_EACH*N-0.2,METAL_BV_EACH*N] for N in N_BOND]}#range of acceptable metal bv in each domain
+
+#specify the searching range and penalty factor for surface atoms and sorbates
+SEARCHING_PARS={'surface':[2.5,50],'sorbate':[BOND_LENGTH_EACH+0.5,50]}#The value for each item [searching radius(A),scaling factor]
+
 #if consider hydrogen bonds#
 COVALENT_HYDROGEN_RANDOM=False
 POTENTIAL_COVALENT_HYDROGEN_ACCEPTOR_HL=[['O1_1_0','O1_2_0','O1_3_0','O1_4_0']]*8#Will be considered only when COVALENT_HYDROGEN_RANDOM=True
@@ -164,7 +174,7 @@ DOMAIN=pick([1,1,1,1,1,1,1,1,2,2,2,2,2,2,2])
 DOMAIN_NUMBER=len(DOMAIN)
 
 ##want to make parameter table?##
-TABLE=False
+TABLE=not running_mode
 if TABLE:
     O_N=[]
     binding_mode=[]
@@ -1128,7 +1138,7 @@ def Sim(data,VARS=VARS):
                         if el=="H":
                             temp_bv=domain_class_1.cal_bond_valence1_new2B_4(super_cell_surface,key,el,2.5,VARS['match_lib_'+str(i+1)+'A'][key],1,False,R0_BV,2.5)['total_valence']
                         else:
-                            temp_bv=domain_class_1.cal_bond_valence1_new2B_4(super_cell_surface,key,el,2.5,VARS['match_lib_'+str(i+1)+'A'][key],50,False,R0_BV,2.5)['total_valence']
+                            temp_bv=domain_class_1.cal_bond_valence1_new2B_4(super_cell_surface,key,el,SEARCHING_PARS['surface'][0],VARS['match_lib_'+str(i+1)+'A'][key],SEARCHING_PARS['surface'][1],False,R0_BV,2.5)['total_valence']
                     else:
                         #no searching in this algorithem
                         temp_bv=domain_class_1.cal_bond_valence4B(super_cell_surface,key,VARS['match_lib_'+str(i+1)+'A'][key],2.5)
@@ -1160,7 +1170,7 @@ def Sim(data,VARS=VARS):
                             temp_bv=domain_class_1.cal_bond_valence1_new2B_4(super_cell_sorbate,key,el,2.5,VARS['match_lib_'+str(i+1)+'A'][key],1,False,R0_BV,2.5)['total_valence']
                     else:#metals 
                         try:
-                            temp_bv=domain_class_1.cal_bond_valence1_new2B_4(super_cell_sorbate,key,SORBATE[0],2.5,VARS['match_lib_'+str(i+1)+'A'][key],50,False,R0_BV,2.5)['total_valence']
+                            temp_bv=domain_class_1.cal_bond_valence1_new2B_4(super_cell_sorbate,key,SORBATE[0],SEARCHING_PARS['sorbate'][0],VARS['match_lib_'+str(i+1)+'A'][key],SEARCHING_PARS['sorbate'][1],False,R0_BV,2.5)['total_valence']
                         except:
                             temp_bv=METAL_BV[SORBATE[0]][i][0]
                     
