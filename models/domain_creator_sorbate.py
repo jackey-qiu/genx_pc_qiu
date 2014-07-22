@@ -778,7 +778,7 @@ class domain_creator_sorbate():
         else:
             return [pyramid_distortion.apex/basis]
    
-    def adding_sorbate_pyramid_distortion_B2(self,domain,top_angle=1.,phi=0.,edge_offset=[0,0],attach_atm_ids=['id1','id2'],offset=[None,None],anchor_ref=None,anchor_offset=None,pb_id='pb_id',O_id=['id1'],mirror=False,switch=False,angle_offset=0):
+    def adding_sorbate_pyramid_distortion_B2(self,domain,top_angle=1.,phi=0.,edge_offset=[0,0],attach_atm_ids=['id1','id2'],offset=[None,None],anchor_ref=None,anchor_offset=None,pb_id='pb_id',sorbate_el='Pb',O_id=['id1'],mirror=False,switch=False,angle_offset=0):
         #The added sorbates (including Pb and one Os) will form a edge-distorted trigonal pyramid configuration with the attached ones
         p_O1_index=np.where(domain.id==attach_atm_ids[0])
         p_O2_index=np.where(domain.id==attach_atm_ids[1])
@@ -818,7 +818,7 @@ class domain_creator_sorbate():
                 domain.y[sorbate_index]=sorbate_v[1]
                 domain.z[sorbate_index]=sorbate_v[2]
                 
-        _add_sorbate(domain=domain,id_sorbate=pb_id,el='Pb',sorbate_v=pyramid_distortion.apex/basis)
+        _add_sorbate(domain=domain,id_sorbate=pb_id,el=sorbate_el,sorbate_v=pyramid_distortion.apex/basis)
         if O_id!=[]:
             _add_sorbate(domain=domain,id_sorbate=O_id[0],el='O',sorbate_v=pyramid_distortion.p2/basis)
         return [pyramid_distortion.apex/basis,pyramid_distortion.p2/basis]
