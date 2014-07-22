@@ -126,6 +126,18 @@ class share_edge(share_face):
         self.p2=p2_old
         self.face=np.append(self.edge,[p2_old],axis=0)
         
+    def apply_angle_offset_BD(self,distal_angle_offset=[0,0]):
+    
+        p2,p3,ct,r=self.p2,self.p3,self.center_point,self.r
+        ang1,ang2=distal_angle_offset[0]/180*np.pi,(distal_angle_offset[1]+109.5)/180*np.pi
+        z1_v=f3(np.zeros(3),p2-ct)
+        y1_v=f3(np.zeros(3),np.cross(p3-ct,p2-ct))
+        x1_v=np.cross(z1_v,y1_v)
+        T=f1(x0_v,y0_v,z0_v,x1_v,y1_v,z1_v)
+        p2_new=np.dot(inv(T),np.array([r*np.cos(0)*np.sin(ang1),r*np.sin(0)*np.sin(ang1),r*np.cos(ang1)]))+ct
+        p3_new=np.dot(inv(T),np.array([r*np.cos(0)*np.sin(ang2),r*np.sin(0)*np.sin(ang2),r*np.cos(ang2)]))+ct
+        self.p2,self.p3=p2_new,p3_new
+        
 class share_corner(share_edge):
 #if want to share none, then just set the corner coordinate to the first point arbitratly.
     def __init__(self,corner=np.array([0.,0.,0.])):

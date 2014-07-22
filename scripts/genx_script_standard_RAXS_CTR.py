@@ -437,6 +437,8 @@ for i in range(DOMAIN_NUMBER):
                     [vars()['rgh_domain'+str(int(i+1))].new_var('theta1_'+str(KK+1)+'_BD', 0) for KK in range(2)]
                     [vars()['rgh_domain'+str(int(i+1))].new_var('phi1_'+str(KK+1)+'_BD', 0) for KK in range(2)]
                 else:
+                    vars()['rgh_domain'+str(int(i+1))].new_var('angle_offset_BD', 0.)
+                    vars()['rgh_domain'+str(int(i+1))].new_var('angle_offset2_BD', 0.)
                     vars()['rgh_domain'+str(int(i+1))].new_var('phi_BD', 0.)
             ids=[SORBATE_ATTACH_ATOM[i][j][0]+'_D'+str(int(i+1))+'A',SORBATE_ATTACH_ATOM[i][j][1]+'_D'+str(int(i+1))+'A']
             offset=SORBATE_ATTACH_ATOM_OFFSET[i][j]
@@ -903,7 +905,8 @@ def Sim(data,VARS=VARS):
                             sorbate_coors=VARS['domain_class_'+str(int(i+1))].adding_sorbate_bidentate_tetrahedral(domain=VARS['domain'+str(int(i+1))+'A'],phi=phi,attach_atm_ids=ids,offset=offset,sorbate_id=SORBATE_id,sorbate_el=SORBATE[0],O_id=[],anchor_ref=anchor,anchor_offset=anchor_offset)
                             [sorbate_coors.append(domain_class_1.adding_distal_ligand(domain=VARS['domain'+str(int(i+1))+'A'],id=O_id[ligand_id],ref=sorbate_coors[0],r=getattr(VARS['rgh_domain'+str(int(i+1))],'r1_'+str(ligand_id+1)+'_BD'),theta=getattr(VARS['rgh_domain'+str(int(i+1))],'theta1_'+str(ligand_id+1)+'_BD'),phi=getattr(VARS['rgh_domain'+str(int(i+1))],'phi1_'+str(ligand_id+1)+'_BD'))) for ligand_id in range(len(O_id))]
                         else:
-                            sorbate_coors=VARS['domain_class_'+str(int(i+1))].adding_sorbate_bidentate_tetrahedral(domain=VARS['domain'+str(int(i+1))+'A'],phi=phi,attach_atm_ids=ids,offset=offset,sorbate_id=SORBATE_id,sorbate_el=SORBATE[0],O_id=O_id,anchor_ref=anchor,anchor_offset=anchor_offset)
+                            angle_offsets=[getattr(VARS['rgh_domain'+str(int(i+1))],'angle_offset_BD'),getattr(VARS['rgh_domain'+str(int(i+1))],'angle_offset2_BD')]
+                            sorbate_coors=VARS['domain_class_'+str(int(i+1))].adding_sorbate_bidentate_tetrahedral(domain=VARS['domain'+str(int(i+1))+'A'],phi=phi,distal_angle_offset=angle_offsets,attach_atm_ids=ids,offset=offset,sorbate_id=SORBATE_id,sorbate_el=SORBATE[0],O_id=O_id,anchor_ref=anchor,anchor_offset=anchor_offset)
                     SORBATE_coors_a.append(sorbate_coors[0])
                     [O_coors_a.append(sorbate_coors[k]) for k in range(len(sorbate_coors))[1:]]
                     SORBATE_id_B=VARS['SORBATE_list_domain'+str(int(i+1))+'b'][j]
