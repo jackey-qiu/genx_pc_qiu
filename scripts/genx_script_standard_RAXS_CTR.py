@@ -18,6 +18,10 @@ COUNT_TIME=False
 
 if COUNT_TIME:t_0=datetime.now()
 
+##pick functions
+pick=lambda list:[list[i] for i in pickup_index]
+deep_pick=lambda list:[[list[pickup_index[i]][j] for j in sym_site_index[i]] for i in range(len(pickup_index))]
+
 ##file paths and wt factors##
 batch_path_head='/u1/uaf/cqiu/batchfile/'
 WT_RAXS=5#weighting for RAXS dataset
@@ -55,13 +59,21 @@ FL-->8          9           10          11            12(Face-sharing)    13    
 CS(O5O6)        ES(O5O7)    ES(O5O8)    TD(O5O6O7)    TD(O5O7O8)          OS          Clean
 """
 
-running_mode=True#if true then disable all the IO function
+running_mode=True#if true then disable all the I/O function
 pickup_index=[4]
 sym_site_index=[[0,1]]
-
-pick=lambda list:[list[i] for i in pickup_index]
-deep_pick=lambda list:[[list[pickup_index[i]][j] for j in sym_site_index[i]] for i in range(len(pickup_index))]
-
+#a list of string to be eval inside sim function, eg. ['gp_O1O2_O7O8_D1.setoc(gp_Fe4Fe6_Fe10Fe12_D1.getoc())']
+commands=\
+   [
+    
+    
+   ]
+###############################################################################################
+"""
+Note inside this zone, you don't need too much edition to have this script work.
+Only ensure the setting of O_NUMBER is what you want it to be, then you are good to go!!
+"""
+###############################################################################################
 COHERENCE=[{True:range(len(pickup_index))}] #want to add up in coherence? items inside list corresponding to each domain
 
 ##cal bond valence switch##
@@ -237,7 +249,15 @@ def set_distal_wild(domain_name=['domain2','domain1'],tag='BD',N=2):
     for i in range(N):
         eval('rgh_'+domain_name[0]+'.setPhi1_'+str(i)+'_'+tag+'(180-rgh_'+domain_name[1]+'.getPhi1_'+str(i)+'_'+tag+'())')
         eval('rgh_'+domain_name[0]+'.setR1_'+str(i)+'_'+tag+'(rgh_'+domain_name[1]+'.getR1_'+str(i)+'_'+tag+'())')
-        eval('rgh_'+domain_name[0]+'.setTheta1_'+str(i)+'_'+tag+'(rgh_'+domain_name[1]+'.getTheta1_'+str(i)+'_'+tag+'())')   
+        eval('rgh_'+domain_name[0]+'.setTheta1_'+str(i)+'_'+tag+'(rgh_'+domain_name[1]+'.getTheta1_'+str(i)+'_'+tag+'())')  
+
+#function to run commands in sim funtion, command_list is a list of string representing the commands (mostly set get function)
+def eval_in_sim(command_list=commands):
+    if command_list!=[]:
+        for command in command_list:
+            eval(command)
+    else:
+        pass        
 
 ##############################################set up atm ids###############################################
 
@@ -245,6 +265,7 @@ for i in range(DOMAIN_NUMBER):
     ##user defined variables
     vars()['rgh_domain'+str(int(i+1))]=UserVars()
     vars()['rgh_domain'+str(int(i+1))].new_var('wt', 1.)
+    vars()['rgh_domain'+str(int(i+1))].new_var('wt_domainA', 0.5)
     
     ##sorbate list (HO is oxygen binded to pb and Os is water molecule)
     vars()['SORBATE_list_domain'+str(int(i+1))+'a']=domain_creator.create_sorbate_ids2(el=SORBATE,N=SORBATE_NUMBER[i],tag='_D'+str(int(i+1))+'A')
@@ -796,6 +817,7 @@ VARS=vars()#pass local variables to sim function
 if COUNT_TIME:t_1=datetime.now()
 
 def Sim(data,VARS=VARS):
+    eval_in_sim()
     VARS=VARS
     F =[]
     bv=0
@@ -1263,8 +1285,9 @@ def Sim(data,VARS=VARS):
     #set up multiple domains
     #note for each domain there are two sub domains which symmetrically related to each other, so have equivalent wt
     for i in range(DOMAIN_NUMBER):
-        domain['domain'+str(int(i+1))+'A']={'slab':VARS['domain'+str(int(i+1))+'A'],'wt':0.5*vars()['wt_domain'+str(int(i+1))]/total_wt}
-        domain['domain'+str(int(i+1))+'B']={'slab':VARS['domain'+str(int(i+1))+'B'],'wt':0.5*vars()['wt_domain'+str(int(i+1))]/total_wt}
+        wt_DA=getattr(VARS['rgh_domain'+str(int(i+1))],'wt_domainA')
+        domain['domain'+str(int(i+1))+'A']={'slab':VARS['domain'+str(int(i+1))+'A'],'wt':wt_DA*vars()['wt_domain'+str(int(i+1))]/total_wt}
+        domain['domain'+str(int(i+1))+'B']={'slab':VARS['domain'+str(int(i+1))+'B'],'wt':(1-wt_DA)*vars()['wt_domain'+str(int(i+1))]/total_wt}
       
     if COUNT_TIME:t_2=datetime.now()
     
@@ -1309,11 +1332,11 @@ def Sim(data,VARS=VARS):
     
     #export the model results for plotting if PLOT set to true
     if PLOT:
-        bl_dl={'3_0':{'segment':[[0,1],[1,8]],'info':[[2,1],[6,1]]},'2_0':{'segment':[[0,8]],'info':[[2,2.0]]},'2_1':{'segment':[[0,8]],'info':[[4,0.8609]]},'2_2':{'segment':[[0,8]],'info':[[2,1.7218]]},\
-            '2_-1':{'segment':[[0,3.1391],[3.1391,8]],'info':[[4,3.1391],[2,3.1391]]},'1_1':{'segment':[[0,8]],'info':[[2,1.8609]]},'1_0':{'segment':[[0,3],[3,8]],'info':[[6,3],[2,3]]},'0_2':{'segment':[[0,8]],'info':[[2,1.7218]]},\
-            '0_0':{'segment':[[0,13]],'info':[[2,2]]},'-1_0':{'segment':[[0,3],[3,8]],'info':[[6,-3],[2,-3]]},'0_-2':{'segment':[[0,8]],'info':[[2,-6.2782]]},\
-            '-2_-2':{'segment':[[0,8]],'info':[[2,-6.2782]]},'-2_-1':{'segment':[[0,3.1391],[3.1391,8]],'info':[[4,-3.1391],[2,-3.1391]]},'-2_0':{'segment':[[0,8]],'info':[[2,-6]]},\
-            '-2_1':{'segment':[[0,4.8609],[4.8609,8]],'info':[[4,-4.8609],[2,-6.8609]]},'-1_-1':{'segment':[[0,8]],'info':[[2,-4.1391]]},'-3_0':{'segment':[[0,1],[1,8]],'info':[[2,-1],[6,-1]]}}
+        bl_dl={'3_0':{'segment':[[0,1],[1,9]],'info':[[2,1],[6,1]]},'2_0':{'segment':[[0,9]],'info':[[2,2.0]]},'2_1':{'segment':[[0,9]],'info':[[4,0.8609]]},'2_2':{'segment':[[0,9]],'info':[[2,1.7218]]},\
+            '2_-1':{'segment':[[0,3.1391],[3.1391,9]],'info':[[4,3.1391],[2,3.1391]]},'1_1':{'segment':[[0,9]],'info':[[2,1.8609]]},'1_0':{'segment':[[0,3],[3,9]],'info':[[6,3],[2,3]]},'0_2':{'segment':[[0,9]],'info':[[2,1.7218]]},\
+            '0_0':{'segment':[[0,13]],'info':[[2,2]]},'-1_0':{'segment':[[0,3],[3,9]],'info':[[6,-3],[2,-3]]},'0_-2':{'segment':[[0,9]],'info':[[2,-6.2782]]},\
+            '-2_-2':{'segment':[[0,9]],'info':[[2,-6.2782]]},'-2_-1':{'segment':[[0,3.1391],[3.1391,9]],'info':[[4,-3.1391],[2,-3.1391]]},'-2_0':{'segment':[[0,9]],'info':[[2,-6]]},\
+            '-2_1':{'segment':[[0,4.8609],[4.8609,9]],'info':[[4,-4.8609],[2,-6.8609]]},'-1_-1':{'segment':[[0,9]],'info':[[2,-4.1391]]},'-3_0':{'segment':[[0,1],[1,9]],'info':[[2,-1],[6,-1]]}}
 
         plot_data_container_experiment={}
         plot_data_container_model={}
