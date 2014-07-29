@@ -247,14 +247,26 @@ class Sample:
             
         if self.coherence==True:
             for i in keys_domainA:
-                ftot_A=ftot_A+(fb+self.calc_fs(h, k, l,[self.domain[i]['slab']]))*self.domain[i]['wt']
+                if self.domain[i]['wt']!=0:
+                    ftot_A=ftot_A+(fb+self.calc_fs(h, k, l,[self.domain[i]['slab']]))*self.domain[i]['wt']
+                else:
+                    pass
             for i in keys_domainB:
-                ftot_B=ftot_B+(fb+self.calc_fs(h, k, l,[self.domain[i]['slab']]))*self.domain[i]['wt']
+                if self.domain[i]['wt']!=0:
+                    ftot_B=ftot_B+(fb+self.calc_fs(h, k, l,[self.domain[i]['slab']]))*self.domain[i]['wt']
+                else:
+                    pass
         else:
             for i in keys_domainA:
-                ftot_A=ftot_A+abs(fb+self.calc_fs(h, k, l,[self.domain[i]['slab']]))*self.domain[i]['wt']
+                if self.domain[i]['wt']!=0:
+                    ftot_A=ftot_A+abs(fb+self.calc_fs(h, k, l,[self.domain[i]['slab']]))*self.domain[i]['wt']
+                else:
+                    pass
             for i in keys_domainB:
-                ftot_B=ftot_B+abs(fb+self.calc_fs(h, k, l,[self.domain[i]['slab']]))*self.domain[i]['wt']
+                if self.domain[i]['wt']!=0:
+                    ftot_B=ftot_B+abs(fb+self.calc_fs(h, k, l,[self.domain[i]['slab']]))*self.domain[i]['wt']
+                else:
+                    pass
         ftot=abs(ftot_A)+abs(ftot_B)
         return abs(ftot)*self.inst.inten
         

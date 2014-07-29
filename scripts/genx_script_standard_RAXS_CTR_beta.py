@@ -976,7 +976,7 @@ def Sim(data,VARS=VARS):
                             r1=getattr(VARS['rgh_domain'+str(int(i+1))],'r_BD') 
                             r2=r1+getattr(VARS['rgh_domain'+str(int(i+1))],'offset_BD')
                             l=domain_creator.extract_coor_offset(domain=VARS['domain'+str(int(i+1))+'A'],id=ids,offset=offset,basis=[5.038,5.434,7.3707])
-                            top_angle=np.arccos((r1**2+r2**2-l**2)/2/r1/r2)
+                            top_angle=np.arccos((r1**2+r2**2-l**2)/2/r1/r2)/np.pi*180
                         sorbate_coors=VARS['domain_class_'+str(int(i+1))].adding_sorbate_pyramid_distortion_B2(domain=VARS['domain'+str(int(i+1))+'A'],top_angle=top_angle,phi=phi,edge_offset=[edge_offset,edge_offset2],attach_atm_ids=ids,offset=offset,anchor_ref=anchor,anchor_offset=anchor_offset,pb_id=SORBATE_id,sorbate_el=SORBATE[0],O_id=O_id,mirror=VARS['MIRROR'][i],angle_offset=angle_offset)
                         if ADD_DISTAL_LIGAND_WILD:
                             if (i+j)%2==1:
