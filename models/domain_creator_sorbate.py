@@ -865,7 +865,7 @@ class domain_creator_sorbate():
             _add_sorbate(domain=domain,id_sorbate=O_id[1],el='O',sorbate_v=trigonal_bipyramid.p3/basis)
             return [trigonal_bipyramid.center_point/basis,trigonal_bipyramid.p4/basis,trigonal_bipyramid.p3/basis]
     
-    def adding_sorbate_bidentate_tetrahedral(self,domain,phi=0,distal_angle_offset=[0,0],attach_atm_ids=[],offset=[None,None],sorbate_id='As1',sorbate_el='As',O_id=['HO1','HO2'],anchor_ref=None,anchor_offset=None):
+    def adding_sorbate_bidentate_tetrahedral(self,domain,phi=0,distal_length_offset=[0,0],distal_angle_offset=[0,0],top_angle_offset=0,attach_atm_ids=[],offset=[None,None],sorbate_id='As1',sorbate_el='As',O_id=['HO1','HO2'],anchor_ref=None,anchor_offset=None):
         #The added sorbates (including Pb and one Os) will form tetrahedra configuration with the attached ones
         p_O1_index=np.where(domain.id==attach_atm_ids[0])
         p_O2_index=np.where(domain.id==attach_atm_ids[1])
@@ -894,7 +894,8 @@ class domain_creator_sorbate():
         tetrahedra_case=tetrahedra.share_edge(edge=np.array([p_O1,p_O2]))
         tetrahedra_case.cal_p2(ref_p=anchor,phi=phi)
         tetrahedra_case.share_face_init()
-        tetrahedra_case.apply_angle_offset_BD(distal_angle_offset)
+        tetrahedra_case.apply_angle_offset_BD(distal_angle_offset,distal_length_offset)
+        tetrahedra_case.apply_top_angle_offset_BD(top_angle_offset)
         #print "apex",pyramid_distortion.apex-[0,0.75587,7.3707]
         #print "p2",pyramid_distortion.p2-[0,0.75587,7.3707]
         def _add_sorbate(domain=None,id_sorbate=None,el='Pb',sorbate_v=[]):

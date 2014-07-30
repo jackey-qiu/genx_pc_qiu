@@ -126,17 +126,32 @@ class share_edge(share_face):
         self.p2=p2_old
         self.face=np.append(self.edge,[p2_old],axis=0)
         
-    def apply_angle_offset_BD(self,distal_angle_offset=[0,0]):
+    def apply_angle_offset_BD(self,distal_angle_offset=[0,0],distal_length_offset=[0,0]):
     
         p2,p3,ct,r=self.p2,self.p3,self.center_point,self.r
+        r1,r2=r+distal_length_offset[0],r+distal_length_offset[1]
         ang1,ang2=distal_angle_offset[0]/180*np.pi,(distal_angle_offset[1]+109.5)/180*np.pi
         z1_v=f3(np.zeros(3),p2-ct)
         y1_v=f3(np.zeros(3),np.cross(p3-ct,p2-ct))
         x1_v=np.cross(z1_v,y1_v)
         T=f1(x0_v,y0_v,z0_v,x1_v,y1_v,z1_v)
-        p2_new=np.dot(inv(T),np.array([r*np.cos(0)*np.sin(ang1),r*np.sin(0)*np.sin(ang1),r*np.cos(ang1)]))+ct
-        p3_new=np.dot(inv(T),np.array([r*np.cos(0)*np.sin(ang2),r*np.sin(0)*np.sin(ang2),r*np.cos(ang2)]))+ct
+        p2_new=np.dot(inv(T),np.array([r1*np.cos(0)*np.sin(ang1),r1*np.sin(0)*np.sin(ang1),r1*np.cos(ang1)]))+ct
+        p3_new=np.dot(inv(T),np.array([r2*np.cos(0)*np.sin(ang2),r2*np.sin(0)*np.sin(ang2),r2*np.cos(ang2)]))+ct
         self.p2,self.p3=p2_new,p3_new
+        
+    def apply_top_angle_offset_BD(self,top_angle_offset=0):
+        #the top angle by default is 109.5 dg, by using this function, you can customize the top_angle by setting the angle offset
+        p0,p1,p2,p3,ct,r=self.p0,self.p1,self.p2,self.p3,self.center_point,self.r
+        origin=(p0+p1)/2
+        base=f2(p0,p1)
+        original_top_angle=109.47/180*np.pi
+        new_top_angle=(109.47+top_angle_offset)/180*np.pi
+        height_tri_old=base/2/np.tan(original_top_angle/2)
+        height_tri_new=base/2/np.tan(new_top_angle/2)
+        length_diff=height_tri_new-height_tri_old
+        transfer_vector=(f3(origin,ct)-origin)*length_diff
+        self.center_point,self.p2,self.p3=self.center_point+transfer_vector,self.p2+transfer_vector,self.p3+transfer_vector
+        
         
 class share_corner(share_edge):
 #if want to share none, then just set the corner coordinate to the first point arbitratly.
