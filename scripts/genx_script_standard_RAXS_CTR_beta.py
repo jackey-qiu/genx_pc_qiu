@@ -88,6 +88,7 @@ running_mode=True#if true then disable all the I/O function
 pickup_index=[0]#make sure the half layer indexes are in front of the full layer indexes
 sym_site_index=[[0,1]]
 full_layer_pick=[None]#should be the same size as pick_up_index, either 0 (short full layer) or 1 (long full layer) for the full layer cases, otherwise value is None for half layer cases
+OS_X_REF=[None]#set the x reference for the outer-sphere complex, which can be either 0.25 or 0.75 (remember on rcut surface you should have x1+x2=0.5 or 1.5 and y1-y2=0.5,z1=z2 satisfied)
 water_pars={'use_default':True,'number':[],'ref_point':[[[]]]}#if you want to specify the water number and ref_points quickly from here, simply set 'use_default' to False and set the other pars
 #a list of string to be eval inside sim function, eg. ['gp_O1O2_O7O8_D1.setoc(gp_Fe4Fe6_Fe10Fe12_D1.getoc())']
 commands=\
@@ -1100,7 +1101,7 @@ def Sim(data,VARS=VARS):
                     ct_offset_dx=getattr(VARS['rgh_domain'+str(int(i+1))],'ct_offset_dx_OS')
                     ct_offset_dy=getattr(VARS['rgh_domain'+str(int(i+1))],'ct_offset_dy_OS')
                     ct_offset_dz=getattr(VARS['rgh_domain'+str(int(i+1))],'ct_offset_dz_OS')
-                    ref_x,ref_y=0.75,0
+                    ref_x,ref_y=OS_X_REF[i],0
                     if (j+i)%2==1:
                         ref_y=0.5
                         phi=180-phi#note all angles in degree
