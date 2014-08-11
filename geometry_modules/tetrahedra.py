@@ -45,6 +45,14 @@ class share_face():
         p3_old=np.dot(inv(T),p3_new)+center_point
         self.p3,self.center_point,self.r=p3_old,body_center_old,f2(body_center_old,p0)
         
+    def apply_edge_offset(self,offset=0):
+        p3_old=self.p3
+        ct_point=self.center_point
+        unit_vector=f3(ct_point,p3_old)-ct_point
+        new_length=self.r+offset
+        p3_new=unit_vector*new_length+ct_point
+        self.p3=p3_new
+        
     def cal_point_in_fit(self,r,theta,phi):
         #during fitting,use the same coordinate system, but a different origin
         #note the origin_coor is the new position for the sorbate0, ie new center point
