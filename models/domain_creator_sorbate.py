@@ -421,7 +421,7 @@ class domain_creator_sorbate():
             ptOnCircle_cent_vt=cent_proj_vt/l*r
             ptOnCircle=ptOnCircle_cent_vt+cent_pt
             return ptOnCircle
- 
+
         p_O1=pt_ct(domain,p_O1_index,offset[0])*basis
         p_O2=pt_ct(domain,p_O2_index,offset[1])*basis
         p_O3_old=pt_ct(domain,p_O3_index,offset[2])*basis
