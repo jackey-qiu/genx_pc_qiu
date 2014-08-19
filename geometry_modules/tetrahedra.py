@@ -175,6 +175,80 @@ class share_corner(share_edge):
         self.p1=p1
         self.edge=np.append(self.corner[np.newaxis,:],p1[np.newaxis,:],axis=0)
         
+#build a dimmer of tetrahedra As knowing the two center points (two sorbate postions)
+#bond_length is the As-O length (the default value is the ideal value calculated using bond valence bond length relationship)
+#rotation_angle_ver is the angle in degree for the rotation of dimmer about the axis formed by the two sorbates, and the angle will only affect the distal oxygens
+
+#AB_len is the center distance in the real case
+#AB_max is the maximum distance allowed for two centers (ensure the AB_len<=AB_max, otherwise error will occur)
+#rotation_axis_len is the distance between each two distal oxygens, which can be calculated by knwoing the bond_length and the dihedral angle (109.5 degree)
+
+class make_dimmer():
+    def __init__(self,rotation_angle_ver=0,center_A=np.array([2.,2.,2]),center_B=np.array([3,3,3]),bond_length=1.68):
+        self.rotation_angle_ver=rotation_angle_ver/180.*np.pi
+        self.center_A=center_A
+        self.center_B=center_B
+        self.AB_len=f2(self.center_A,self.center_B)
+        self.AB_max=bond_length*np.cos(109.5/2/180*np.pi)*2
+        self.OM=((self.AB_max/2)**2-(self.AB_len/2)**2)**0.5
+        self.rotation_axis_len=bond_length*np.sin(109.5/2/180*np.pi)*2
+        self.all_in_all()
+#the idea is based on a geometry setup of cone with apex of T, A and B on its base representative of two center points
+#O is the base center point, M is the projection of O on the line segment of A and B
+#N is on the line, which is normal to AB and crossing M and having a rotation_angle_ver degree relative to the base normal 
+#O is the center point of TT_r line segment       
+    def cal_rotation_axis(self):
+        M=(self.center_A+self.center_B)/2.
+        z1_v=f3(np.zeros(3),np.array([0,0,1]))
+        x1_v=f3(np.zeros(3),self.center_B-M)
+        y1_v=np.cross(z1_v,x1_v)
+        T=f1(x0_v,y0_v,z0_v,x1_v,y1_v,z1_v)
+        N=np.dot(inv(T),np.array([1.*np.cos(np.pi/2)*np.sin(self.rotation_angle_ver),1.*np.sin(np.pi/2)*np.sin(self.rotation_angle_ver),1*np.cos(self.rotation_angle_ver)]))+M
+        z1_v=f3(np.zeros(3),N-M)
+        x1_v=f3(np.zeros(3),self.center_B-M)
+        y1_v=np.cross(z1_v,x1_v)
+        T=f1(x0_v,y0_v,z0_v,x1_v,y1_v,z1_v)
+        O=np.dot(inv(T),np.array([self.OM*np.cos(np.pi/2)*np.sin(np.pi/2),self.OM*np.sin(np.pi/2)*np.sin(np.pi/2),self.OM*np.cos(np.pi/2)]))+M
+        self.T=np.dot(inv(T),np.array([0,self.OM,self.rotation_axis_len/2]))+M
+        self.T_r=np.dot(inv(T),np.array([0,self.OM,-self.rotation_axis_len/2]))+M
+        self.ref_p_A=O*2.-self.center_A
+        self.ref_p_B=O*2.-self.center_B
+    
+    def cal_the_other_distals(self):
+        self.tet_caseA=share_edge(edge=np.array([self.T,self.T_r]))
+        self.tet_caseA.cal_p2(ref_p=self.ref_p_A,phi=0)
+        self.tet_caseA.share_face_init()
+        
+        self.tet_caseB=share_edge(edge=np.array([self.T,self.T_r]))
+        self.tet_caseB.cal_p2(ref_p=self.ref_p_B,phi=0)
+        self.tet_caseB.share_face_init()
+        
+    def print_xyz(self,file="D://test.xyz"):
+        f=open(file,"w")
+        f.write('8\n#\n')
+        s = '%-5s   %7.5e   %7.5e   %7.5e\n' % ('As', self.tet_caseA.center_point[0],self.tet_caseA.center_point[1],self.tet_caseA.center_point[2])
+        f.write(s)
+        s = '%-5s   %7.5e   %7.5e   %7.5e\n' % ('O', self.tet_caseA.face[0,:][0],self.tet_caseA.face[0,:][1],self.tet_caseA.face[0,:][2])
+        f.write(s)
+        s = '%-5s   %7.5e   %7.5e   %7.5e\n' % ('O', self.tet_caseA.face[1,:][0],self.tet_caseA.face[1,:][1],self.tet_caseA.face[1,:][2])
+        f.write(s)
+        s = '%-5s   %7.5e   %7.5e   %7.5e\n' % ('O', self.tet_caseA.face[2,:][0],self.tet_caseA.face[2,:][1],self.tet_caseA.face[2,:][2])
+        f.write(s)
+        s = '%-5s   %7.5e   %7.5e   %7.5e\n' % ('O', self.tet_caseA.p3[0],self.tet_caseA.p3[1],self.tet_caseA.p3[2])
+        f.write(s)
+        s = '%-5s   %7.5e   %7.5e   %7.5e\n' % ('As', self.tet_caseB.center_point[0],self.tet_caseB.center_point[1],self.tet_caseB.center_point[2])
+        f.write(s)
+        s = '%-5s   %7.5e   %7.5e   %7.5e\n' % ('O', self.tet_caseB.face[2,:][0],self.tet_caseB.face[2,:][1],self.tet_caseB.face[2,:][2])
+        f.write(s)
+        s = '%-5s   %7.5e   %7.5e   %7.5e\n' % ('O', self.tet_caseB.p3[0],self.tet_caseB.p3[1],self.tet_caseB.p3[2])
+        f.write(s)
+        f.close()
+    
+    def all_in_all(self):
+        self.cal_rotation_axis()
+        self.cal_the_other_distals()
+        self.print_xyz()
+        
 if __name__=='__main__':
     test1=tetrahedra_3.share_edge(edge=np.array([[0.,0.,0.],[5.,5.,5.]]))
     test1.cal_p2(theta=0,phi=np.pi/2)
