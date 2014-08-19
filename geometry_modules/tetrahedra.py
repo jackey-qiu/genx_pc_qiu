@@ -249,6 +249,56 @@ class make_dimmer():
         self.cal_the_other_distals()
         self.print_xyz()
         
+def steric_check_for_dimmer(file_xyz='D://temp_steric.xyz',sorbate=np.array([[0.909,1.615,10.104],[1.184,3.629,9.831]]),cutoff_length=2.6):
+    def _build_super_cell(atoms=np.array([[]]),abc=np.array([5.038,5.434,7.3707])):
+        super_cell=atoms
+        np.append(super_cell,atoms+[abc[0],0,0],axis=0)
+        np.append(super_cell,atoms-[abc[0],0,0],axis=0)
+        np.append(super_cell,atoms+[0,abc[1],0],axis=0)
+        np.append(super_cell,atoms-[0,abc[1],0],axis=0)
+        np.append(super_cell,atoms+[abc[0],abc[1],0],axis=0)
+        np.append(super_cell,atoms+[-abc[0],-abc[1],0],axis=0)
+        np.append(super_cell,atoms+[abc[0],-abc[1],0],axis=0)
+        np.append(super_cell,atoms+[-abc[0],+abc[1],0],axis=0)
+        return super_cell
+        
+    atoms=np.loadtxt(file_xyz)
+    for i in range(len(atoms)):
+        if atoms[i][0]<0:
+            atoms[i][0]=atoms[i][0]+5.038
+        elif atoms[i][0]>5.038:
+            atoms[i][0]=atoms[i][0]-5.038
+        if atoms[i][1]<0:
+            atoms[i][1]=atoms[i][1]+5.434
+        elif atoms[i][1]>5.434:
+            atoms[i][1]=atoms[i][1]-5.434
+    atoms_super_cell=_build_super_cell(atoms)
+    
+    steric_feasibility_container={}
+    for angle in np.arange(0,360,20):
+        hydrogen_bond_distance=[]
+        tmp_case=make_dimmer(rotation_angle_ver=angle,center_A=sorbate[0],center_B=sorbate[1],bond_length=1.8)
+        compared_atoms=[tmp_case.tet_caseA.p0,tmp_case.tet_caseA.p1,tmp_case.tet_caseA.p2,tmp_case.tet_caseA.p3,\
+                        tmp_case.tet_caseB.p2,tmp_case.tet_caseB.p3]
+        for each_atom in compared_atoms:
+            for each_surface_atom in atoms_super_cell:
+                hydrogen_bond_distance.append(f2(each_atom,each_surface_atom))
+        if min(hydrogen_bond_distance)>=cutoff_length:
+            new_distance_list=[]
+            for each_distance in hydrogen_bond_distance:
+                if each_distance<3.0:
+                    new_distance_list.append(each_distance)
+            steric_feasibility_container[angle]=new_distance_list
+            print angle,new_distance_list
+            
+    return steric_feasibility_container
+                
+    
+    
+    
+    
+    
+    
 if __name__=='__main__':
     test1=tetrahedra_3.share_edge(edge=np.array([[0.,0.,0.],[5.,5.,5.]]))
     test1.cal_p2(theta=0,phi=np.pi/2)
