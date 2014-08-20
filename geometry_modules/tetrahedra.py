@@ -244,12 +244,34 @@ class make_dimmer():
         f.write(s)
         f.close()
     
+    def print_xyz_for_genx(self,file="D://test_fractions.xyz"):
+        
+        f=open(file,"w")
+        f.write('8\n#\n')
+        s = '%-5s   %7.5e   %7.5e   %7.5e\n' % ('As', self.tet_caseA.center_point[0]/5.038,self.tet_caseA.center_point[1]/5.434+0.1391,self.tet_caseA.center_point[2]/7.3707+1)
+        f.write(s)
+        s = '%-5s   %7.5e   %7.5e   %7.5e\n' % ('O', self.tet_caseA.face[0,:][0]/5.038,self.tet_caseA.face[0,:][1]/5.434+0.1391,self.tet_caseA.face[0,:][2]/7.3707+1)
+        f.write(s)
+        s = '%-5s   %7.5e   %7.5e   %7.5e\n' % ('O', self.tet_caseA.face[1,:][0]/5.038,self.tet_caseA.face[1,:][1]/5.434+0.1391,self.tet_caseA.face[1,:][2]/7.3707+1)
+        f.write(s)
+        s = '%-5s   %7.5e   %7.5e   %7.5e\n' % ('O', self.tet_caseA.face[2,:][0]/5.038,self.tet_caseA.face[2,:][1]/5.434+0.1391,self.tet_caseA.face[2,:][2]/7.3707+1)
+        f.write(s)
+        s = '%-5s   %7.5e   %7.5e   %7.5e\n' % ('O', self.tet_caseA.p3[0]/5.038,self.tet_caseA.p3[1]/5.434+0.1391,self.tet_caseA.p3[2]/7.3707+1)
+        f.write(s)
+        s = '%-5s   %7.5e   %7.5e   %7.5e\n' % ('As', self.tet_caseB.center_point[0]/5.038,self.tet_caseB.center_point[1]/5.434+0.1391,self.tet_caseB.center_point[2]/7.3707+1)
+        f.write(s)
+        s = '%-5s   %7.5e   %7.5e   %7.5e\n' % ('O', self.tet_caseB.face[2,:][0]/5.038,self.tet_caseB.face[2,:][1]/5.434+0.1391,self.tet_caseB.face[2,:][2]/7.3707+1)
+        f.write(s)
+        s = '%-5s   %7.5e   %7.5e   %7.5e\n' % ('O', self.tet_caseB.p3[0]/5.038,self.tet_caseB.p3[1]/5.434+0.1391,self.tet_caseB.p3[2]/7.3707+1)
+        f.write(s)
+        f.close()
+        
     def all_in_all(self):
         self.cal_rotation_axis()
         self.cal_the_other_distals()
         self.print_xyz()
         
-def steric_check_for_dimmer(file_xyz='D://temp_steric.xyz',sorbate=np.array([[0.909,1.615,10.104],[1.184,3.629,9.831]]),cutoff_length=2.6):
+def steric_check_for_dimmer(file_xyz='D://temp_steric.xyz',sorbate=np.array([[0.909,1.615,10.104],[1.184,3.629,9.831]]),cutoff_length=2.6,angle_range=(0,360,10)):
     def _build_super_cell(atoms=np.array([[]]),abc=np.array([5.038,5.434,7.3707])):
         super_cell=atoms
         np.append(super_cell,atoms+[abc[0],0,0],axis=0)
@@ -275,7 +297,7 @@ def steric_check_for_dimmer(file_xyz='D://temp_steric.xyz',sorbate=np.array([[0.
     atoms_super_cell=_build_super_cell(atoms)
     
     steric_feasibility_container={}
-    for angle in np.arange(0,360,20):
+    for angle in np.arange(angle_range[0],angle_range[1],angle_range[2]):
         hydrogen_bond_distance=[]
         tmp_case=make_dimmer(rotation_angle_ver=angle,center_A=sorbate[0],center_B=sorbate[1],bond_length=1.8)
         compared_atoms=[tmp_case.tet_caseA.p0,tmp_case.tet_caseA.p1,tmp_case.tet_caseA.p2,tmp_case.tet_caseA.p3,\

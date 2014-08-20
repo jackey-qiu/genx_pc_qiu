@@ -719,6 +719,9 @@ for i in range(DOMAIN_NUMBER):
                 vars()['rgh_domain'+str(int(i+1))].new_var('ct_offset_dx_OS', 0.)
                 vars()['rgh_domain'+str(int(i+1))].new_var('ct_offset_dy_OS', 0.)
                 vars()['rgh_domain'+str(int(i+1))].new_var('ct_offset_dz_OS', 0.)
+                vars()['rgh_domain'+str(int(i+1))].new_var('rot_x_OS', 0.)
+                vars()['rgh_domain'+str(int(i+1))].new_var('rot_y_OS', 0.)
+                vars()['rgh_domain'+str(int(i+1))].new_var('rot_z_OS', 0.)
                 
             SORBATE_id=vars()['SORBATE_list_domain'+str(int(i+1))+'a'][j]#pb_id is a str NOT list
             O_id=[HO_id for HO_id in vars()['HO_list_domain'+str(int(i+1))+'a'] if SORBATE_id in HO_id]
@@ -1160,6 +1163,7 @@ def Sim(data,VARS=VARS):
                     ct_offset_dx=getattr(VARS['rgh_domain'+str(int(i+1))],'ct_offset_dx_OS')
                     ct_offset_dy=getattr(VARS['rgh_domain'+str(int(i+1))],'ct_offset_dy_OS')
                     ct_offset_dz=getattr(VARS['rgh_domain'+str(int(i+1))],'ct_offset_dz_OS')
+                    rot_x,rot_y,rot_z=getattr(VARS['rgh_domain'+str(int(i+1))],'rot_x_OS'),getattr(VARS['rgh_domain'+str(int(i+1))],'rot_y_OS'),getattr(VARS['rgh_domain'+str(int(i+1))],'rot_z_OS')
                     ref_x,ref_y=OS_X_REF[i],0
                     if (j+i)%2==1:
                         ref_y=0.5
@@ -1176,7 +1180,7 @@ def Sim(data,VARS=VARS):
                     elif LOCAL_STRUCTURE=='octahedral':
                         sorbate_coors=VARS['domain_class_'+str(int(i+1))].outer_sphere_complex_oct(domain=VARS['domain'+str(int(i+1))+'A'],cent_point=[ref_x+ct_offset_dx,ref_y+ct_offset_dy,2.1+ct_offset_dz],r0=r0,phi=phi,Sb_id=SORBATE_id,sorbate_el=SORBATE[0],O_ids=O_id,distal_oxygen=consider_distal)           
                     elif LOCAL_STRUCTURE=='tetrahedral':
-                        sorbate_coors=VARS['domain_class_'+str(int(i+1))].outer_sphere_tetrahedral(domain=VARS['domain'+str(int(i+1))+'A'],cent_point=[ref_x+ct_offset_dx,ref_y+ct_offset_dy,2.1+ct_offset_dz],r_sorbate_O=r_Pb_O,phi=phi,sorbate_id=SORBATE_id,sorbate_el=SORBATE[0],O_ids=O_id,distal_oxygen=consider_distal)
+                        sorbate_coors=VARS['domain_class_'+str(int(i+1))].outer_sphere_tetrahedral(domain=VARS['domain'+str(int(i+1))+'A'],cent_point=[ref_x+ct_offset_dx,ref_y+ct_offset_dy,2.1+ct_offset_dz],r_sorbate_O=r_Pb_O,phi=phi,sorbate_id=SORBATE_id,sorbate_el=SORBATE[0],O_ids=O_id,distal_oxygen=consider_distal,rotation_x=rot_x,rotation_y=rot_y,rotation_z=rot_z)
 
                     SORBATE_coors_a.append(sorbate_coors[0])
                     [O_coors_a.append(sorbate_coors[k]) for k in range(len(sorbate_coors))[1:]]
