@@ -79,15 +79,19 @@ DOMAIN_GP=[]
 BV_OFFSET_SORBATE=[0.2]*len(pickup_index)
 SEARCH_RANGE_OFFSET_SORBATE=0.5
 
+USE_COORS=[0]*len(pickup_index)
+COORS={0:{'sorbate':[[[0.79020761,0.85623748,2.0421749]],[[0.70979239,1.35623748,2.0421749]]],'oxygen':[[[0.54236324,0.77922075,2.17940449],[1.08318352,0.94727867,2.12058133]],[[0.95763676,1.27922075,2.17940449],[0.41681648,1.44727867,2.12058133]]]},\
+       2:{'sorbate':[[[0.9407567,0.55948538,1.59475972]],[[0.56000891,1.05948635,1.59473611]]],'oxygen':[[[1.10373138,0.52107575,1.73948237]],[[0.39776654,1.02109605,1.73872938]]]}}
+
+water_pars={'use_default':True,'number':[0,2,0],'ref_point':[[[]],[['O1_3_0','O1_4_0']],[[]]]}
+
+O_NUMBER_HL=[[[0,0]],[[0,0]],[[0,0]],[[0,0]],[[0,0]],[[0,0]],[[0,0]],[[0,0]]]
+O_NUMBER_FL=[[[0,0]],[[0,0]],[[0,0]],[[0,0]],[[0,0]],[[0,0]],[[0,0]],[[0,0]]]
+
 commands=\
    [
     
    ]
-USE_COORS=[0]*len(pickup_index)
-COORS={0:{'sorbate':[[[0.79020761,0.85623748,2.0421749]],[[0.70979239,1.35623748,2.0421749]]],'oxygen':[[[0.54236324,0.77922075,2.17940449],[1.08318352,0.94727867,2.12058133]],[[0.95763676,1.27922075,2.17940449],[0.41681648,1.44727867,2.12058133]]]},\
-       2:{'sorbate':[[[0.9407567,0.55948538,1.59475972]],[[0.56000891,1.05948635,1.59473611]]],'oxygen':[[[1.10373138,0.52107575,1.73948237]],[[0.39776654,1.02109605,1.73872938]]]}}
-water_pars={'use_default':True,'number':[0,2,0],'ref_point':[[[]],[['O1_3_0','O1_4_0']],[[]]]}
-
 ##############################################end of main setup zone############################################
 
 ###quick explanation for parameters in the main setup zone#####
@@ -139,6 +143,9 @@ COORS(a lib specifying the coordinates for sorbates)
     keys of COORS are the domain index,ignore domain with no sorbates
     len(COORS[i]['sorbate'])=len(COORS[i]['oxygen']), which is the number of sorbate sets (either one or two)
     make sure the setup matches with the pick_up index and the sym_site_index as well as the number of distal oxygens
+O_NUMBER_HL/FL(a list of list of [a,b],where a and b are integer numbers)
+    one to one corresponding for the number of distal oxygens, which depend on local structure and binding configuration
+    either zero oxygen ligand or enough ligands to complete coordinative shell
 """
 
 FULL_LAYER_PICK_INDEX=make_pick_index(full_layer_pick=full_layer_pick,pick=pickup_index,half_layer_cases=8,full_layer_cases=8)
@@ -176,8 +183,6 @@ SORBATE_NUMBER_HL=[[2],[2],[2],[2],[2],[2],[2],[0]]
 SORBATE_NUMBER_FL=[[2],[2],[2],[2],[2],[2],[2],[0]]
 SORBATE_NUMBER=pick(SORBATE_NUMBER_HL+SORBATE_NUMBER_FL)
 
-O_NUMBER_HL=[[[0,0]],[[0,0]],[[0,0]],[[0,0]],[[0,0]],[[0,0]],[[0,0]],[[0,0]]]#either zero oxygen ligand or enough ligands to complete coordinative shell
-O_NUMBER_FL=[[[0,0]],[[0,0]],[[0,0]],[[0,0]],[[0,0]],[[0,0]],[[0,0]],[[0,0]]]#either zero oxygen ligand or enough ligands to complete coordinative shell
 O_NUMBER=pick(O_NUMBER_HL+O_NUMBER_FL)
 PROTONATION_DISTAL_OXYGEN=[[0,0],[0,0],[0,0],[0,0]]#Protonation of distal oxygens, any number in [0,1,2], where 1 means singly protonated, two means doubly protonated
 
