@@ -160,6 +160,15 @@ class share_edge(share_face):
         transfer_vector=(f3(origin,ct)-origin)*length_diff
         self.center_point,self.p2,self.p3=self.center_point+transfer_vector,self.p2+transfer_vector,self.p3+transfer_vector
         
+    def apply_edge_offset_BD(self,edge_offset=0):
+        #make a asymetric bond length of two anchored bonds by shifting the sorbate alone the direction of p1_ct, same vector transfer will be applied to distal oxygens
+        #note after this operation, the top angle will change as well
+        #edge_offset in unit of Angstrom can be positive or negative 
+        p0,p1,p2,p3,ct=self.p0,self.p1,self.p2,self.p3,self.center_point
+        vec_transfer=(p1-ct)/f2(p1,ct)*edge_offset
+        self.p2,self.p3,self.center_point=p2+vec_transfer,p3+vec_transfer,ct+vec_transfer
+        
+        
         
 class share_corner(share_edge):
 #if want to share none, then just set the corner coordinate to the first point arbitratly.
