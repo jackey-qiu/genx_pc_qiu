@@ -52,29 +52,10 @@ def pick_full_layer(LFL=[],SFL=[],pick_index=[]):
 batch_path_head='/u1/uaf/cqiu/batchfile/'
 WT_RAXS=5#weighting for RAXS dataset
 WT_BV=1#weighting for bond valence constrain (1 recommended)
-BV_TOLERANCE=[-0.08,0.08]#ideal bv value + or - this value is acceptable
+BV_TOLERANCE=[-0.1,0.1]#ideal bv value + or - this value is acceptable
 USE_TOP_ANGLE=False#fit top angle if true otherwise fit the Pb-O bond length (used in bidentate case)
 INCLUDE_HYDROGEN=0
 
-#this is one way to start up quickly, each time you only need to specify the pickup_index and DOMAIN_GP if want to group different domains
-#all the global variables are pre-defined based on a reasonable assumption, but you can customized it by editing the variables below
-#if you want to build a model on single sorbate atom basis (each domain only has one sorbate atom), you will also need to specify the sym_site_index
-#And you also need to manually change values of some global vars
-#ONLY consider this mode if you want to have two symmetry site being binded on two domains
-#eg. pickup_index=[1,1,4] combined with sym_site_index=[[0],[1],[0,1]] means two symmetry sites split into two domains
-#Now you need to group domain1 and domain2 together by setting DOMAIN_GP=[[0,1]], and change some global vars (covalent hydrogen acceptor should include the OH ligand)   
-'''
-To setup model, follow steps as follows:
-1)set pickup_index and sym_site_index, after which the majority setup work has been done
-2)set the METAL_BV depending on how you consider the structure model
-3)edit PROTONATION_DISTAL_OXYGEN according the protonation rule you want to define
-You may need to edit some items, which are not called by deep_pick but by pick
-4)You need to edit the SORBATE_NUMBER and O_NUMBER in the case of single sorbate
-5)you need to also edit DISCONNECT_BV_CONTRIBUTION in the single sorbate case
-The other items should fine to stay unedited.
-6)Edit DOMAIN_GP if you want to group two domains together
-Don't touch the other global parameters unless necessary!!!
-''' 
 ##matching index##
 """
 HL-->0          1           2           3             4              5(Face-sharing)     6           7  
@@ -83,49 +64,94 @@ CS(O1O2)        CS(O2O3)    ES(O1O3)    ES(O1O4)      TD(O1O2O3)     TD(O1O3O4) 
 FL-->8          9           10          11            12             13(Face-sharing)    14          15
 CS(O5O6)        ES(O5O7)    ES(O5O8)    CS(O6O7)      TD(O5O6O7)     TD(O5O7O8)          OS          Clean
 """
+##############################################main setup zone###############################################
+running_mode=True
+USE_BV=True
+COVALENT_HYDROGEN_RANDOM=False
 
-running_mode=True#if true then disable all the I/O function
-pickup_index=[0,7,12]#make sure the half layer indexes are in front of the full layer indexes
+SORBATE=["As"]
+pickup_index=[0,7,12]
 sym_site_index=[[0,1],[0,1],[0,1]]
-full_layer_pick=[None,None,0]#should be the same size as pick_up_index, either 0 (short full layer) or 1 (long full layer) for the full layer cases, otherwise value is None for half layer cases
-OS_X_REF=[None]#set the x reference for the outer-sphere complex, which can be either 0.25 or 0.75 (remember on rcut surface you should have x1+x2=0.5 or 1.5 and y1-y2=0.5,z1=z2 satisfied)
-water_pars={'use_default':True,'number':[0,2,0],'ref_point':[[[]],[['O1_3_0','O1_4_0']],[[]]]}#if you want to specify the water number and ref_points quickly from here, simply set 'use_default' to False and set the other pars
-#a list of string to be eval inside sim function, eg. ['gp_O1O2_O7O8_D1.setoc(gp_Fe4Fe6_Fe10Fe12_D1.getoc())']
+full_layer_pick=[None,None,0]
+OS_X_REF=[None]
+DOMAIN_GP=[]
+
+BV_OFFSET_SORBATE=[0.2]*len(pickup_index)
+SEARCH_RANGE_OFFSET_SORBATE=0.5
+
 commands=\
    [
     
    ]
-#you can add sorbate and distal oxygens by specifying the associated coordinates for some or all domains, values in the list are either 0 or 1
-#eg1 USE_COORS=[0]*len(pickup_index) not use coors for all domains
-#eg2 USE_COORS=[1]*len(pickup_index) use coors for all domains
-#eg3 USE_COORS=[0,1,1] use coors for only domain2 and domain3
 USE_COORS=[0]*len(pickup_index)
-#keys of COORS are the domain index,ignore domain with no sorbates
-#len(COORS[i]['sorbate'])=len(COORS[i]['oxygen']), which is the number of sorbate sets (either one or two)
-#make sure the setup matches with the pick_up index and the sym_site_index as well as the number of distal oxygens
 COORS={0:{'sorbate':[[[0.79020761,0.85623748,2.0421749]],[[0.70979239,1.35623748,2.0421749]]],'oxygen':[[[0.54236324,0.77922075,2.17940449],[1.08318352,0.94727867,2.12058133]],[[0.95763676,1.27922075,2.17940449],[0.41681648,1.44727867,2.12058133]]]},\
        2:{'sorbate':[[[0.9407567,0.55948538,1.59475972]],[[0.56000891,1.05948635,1.59473611]]],'oxygen':[[[1.10373138,0.52107575,1.73948237]],[[0.39776654,1.02109605,1.73872938]]]}}
+water_pars={'use_default':True,'number':[0,2,0],'ref_point':[[[]],[['O1_3_0','O1_4_0']],[[]]]}
 
-###############################################################################################
+##############################################end of main setup zone############################################
+
+###quick explanation for parameters in the main setup zone#####
 """
-Note inside this zone, you don't need too much edition to have this script work.
-Only ensure the setting of O_NUMBER is what you want it to be, then you are good to go!!
+running_mode(bool)
+    if true then disable all the I/O function
+SORBATE(list of single element to be considered for modelling)
+    element symbol for sorbate
+pickup_index(a list of index from the match index table above)
+    representative of different binding configurations for different domains
+    make sure the half layer indexes are in front of the full layer indexes
+full_layer_pick(a list of list of either [0],[1] or [0,1])
+    a way to specify the symmetry site on each domain
+    you may consider either one([0] or [1]) or both([0,1])
+full_layer_pick(a list of value of either None, or 0 or 1)
+    used to specify the full layer type, which could be either long slab (1) or short slab (0)
+    don't forget to set None for the half layer termination domain
+OS_X_REF(a list of None,0.25 or 0.75)
+    set the reference coordinate x value for the outer-sphere configuration, which could be on either HL or FL domain
+    if N/A then set it to None
+    such setting is based on the symmetry operation intrinsic for the hematite rcut surface, which have the following relationship 
+    x1+x2=0.5/1.5, y1-y2=0.5 or -0.5, z1=z2
+DOMAIN_GP(a list of list of domain indexs)
+    use this to group two domains with same surface termination (HL or FL) together
+    the associated atom groups for both surface atoms and sorbates will be created (refer to manual)
+water_pars(a lib to set the interfacial waters quickly)
+    you may use default which has no water or turn the switch off and set the number and anchor points
+USE_BV(bool)
+    a switch to apply bond valence constrain during surface modelling
+COVALENT_HYDROGEN_RANDOM(bool)
+    a switch to not explicitly specify the protonation of surface functional groups
+    different protonation scheme (0,1 or 2 protons) will be tried and compared, the one with best bv result will be used
+BV_OFFSET_SORBATE(a list of number)
+    it is used to define the acceptable range of bond valence sum for sorbates 
+    [bv_eachbond*N_bonds-offset,bv_eachbond*N_bonds] will be the range
+    set a random number for a clean surface (no sorbate), but don't miss that
+SEARCH_RANGE_OFFSET_SORBATE(a number)
+    used to set the searching range for the sorbate, which will be used to calculate the bond valence sum of sorbates
+    the radius of the searching sphere will be the ideal bond length plus this offset
+commands(a list of str to be executed inside sim function)
+    eg. ['gp_O1O2_O7O8_D1.setoc(gp_Fe4Fe6_Fe10Fe12_D1.getoc())']
+    used to expand the funtionality of grouping or setting something important
+USE_COORS(a list of 0 or 1)
+    you may want to add sorbates by specifying the coordinates or having the program calculate the position from the geometry setting you considered
+    eg1 USE_COORS=[0]*len(pickup_index) not use coors for all domains
+    eg2 USE_COORS=[1]*len(pickup_index) use coors for all domains
+    eg3 USE_COORS=[0,1,1] use coors for only domain2 and domain3
+COORS(a lib specifying the coordinates for sorbates)
+    keys of COORS are the domain index,ignore domain with no sorbates
+    len(COORS[i]['sorbate'])=len(COORS[i]['oxygen']), which is the number of sorbate sets (either one or two)
+    make sure the setup matches with the pick_up index and the sym_site_index as well as the number of distal oxygens
 """
-###############################################################################################
+
 FULL_LAYER_PICK_INDEX=make_pick_index(full_layer_pick=full_layer_pick,pick=pickup_index,half_layer_cases=8,full_layer_cases=8)
 N_FL=len([i for i in full_layer_pick if i!=None])
 N_HL=len(pickup_index)-N_FL
 COHERENCE=[{True:range(len(pickup_index))}] #want to add up in coherence? items inside list corresponding to each domain
-
 ##cal bond valence switch##
-USE_BV=1
 SEARCH_MODE_FOR_SURFACE_ATOMS=True#If true then cal bond valence of surface atoms based on searching within a spherical region
 DOMAINS_BV=range(len(pickup_index))#Domains being considered for bond valence constrain, counted from 0
 METAL_VALENCE={'Pb':(2.,3.),'Sb':(5.,6.),'As':(5.,4.)}#for each value (valence charge,coordination number)
 R0_BV={('As','O'):1.767,('Fe','O'):1.759,('H','O'):0.677,('Pb','O'):2.04,('Sb','O'):1.973}#r0 for different couples
 LOCAL_STRUCTURE_MATCH_LIB={'trigonal_pyramid':['Pb'],'octahedral':['Sb','Fe'],'tetrahedral':['As']}
 debug_bv=not running_mode
-DOMAIN_GP=[]#means you want to group first two and last two domains together, only group half layers or full layers together
 ##want to output the data for plotting?##
 PLOT=not running_mode
 ##want to print out the protonation status?##
@@ -138,7 +164,6 @@ ADD_DISTAL_LIGAND_WILD=0
 ##want to print the xyz files to build a 3D structure?##
 PRINT_MODEL_FILES=not running_mode
 ##pars for sorbates##
-SORBATE=["As"]#element symbol for sorbate
 LOCAL_STRUCTURE=None
 for key in LOCAL_STRUCTURE_MATCH_LIB.keys():
     if SORBATE[0] in LOCAL_STRUCTURE_MATCH_LIB[key]:
@@ -154,7 +179,7 @@ SORBATE_NUMBER=pick(SORBATE_NUMBER_HL+SORBATE_NUMBER_FL)
 O_NUMBER_HL=[[[0,0]],[[0,0]],[[0,0]],[[0,0]],[[0,0]],[[0,0]],[[0,0]],[[0,0]]]#either zero oxygen ligand or enough ligands to complete coordinative shell
 O_NUMBER_FL=[[[0,0]],[[0,0]],[[0,0]],[[0,0]],[[0,0]],[[0,0]],[[0,0]],[[0,0]]]#either zero oxygen ligand or enough ligands to complete coordinative shell
 O_NUMBER=pick(O_NUMBER_HL+O_NUMBER_FL)
-PROTONATION_DISTAL_OXYGEN=[[2,2],[0,0],[0,0]]#Protonation of distal oxygens, any number in [0,1,2], where 1 means singly protonated, two means doubly protonated
+PROTONATION_DISTAL_OXYGEN=[[0,0],[0,0],[0,0],[0,0]]#Protonation of distal oxygens, any number in [0,1,2], where 1 means singly protonated, two means doubly protonated
 
 SORBATE_LIST=domain_creator.create_sorbate_el_list(SORBATE,SORBATE_NUMBER)
 
@@ -202,13 +227,12 @@ except:
 METAL_BV_EACH=METAL_VALENCE[SORBATE[0]][0]/METAL_VALENCE[SORBATE[0]][1]#valence for each bond
 BOND_LENGTH_EACH=R0_BV[(SORBATE[0],'O')]-np.log(METAL_BV_EACH)*0.37#ideal bond length using bond valence equation
 N_BOND=[O_NUMBER[i][0][0]+len(SORBATE_ATTACH_ATOM[i][0]) for i in range(len(O_NUMBER))]#number of bonds
-METAL_BV={SORBATE[0]:[[METAL_BV_EACH*N-0.2,METAL_BV_EACH*N] for N in N_BOND]}#range of acceptable metal bv in each domain
+METAL_BV={SORBATE[0]:[[METAL_BV_EACH*N_BOND[i]-BV_OFFSET_SORBATE[i],METAL_BV_EACH*N_BOND[i]] for i in range(len(N_BOND))]}#range of acceptable metal bv in each domain
 
 #specify the searching range and penalty factor for surface atoms and sorbates
-SEARCHING_PARS={'surface':[2.5,50],'sorbate':[BOND_LENGTH_EACH+0.5,50]}#The value for each item [searching radius(A),scaling factor]
+SEARCHING_PARS={'surface':[2.5,50],'sorbate':[BOND_LENGTH_EACH+SEARCH_RANGE_OFFSET_SORBATE,50]}#The value for each item [searching radius(A),scaling factor]
 
 #if consider hydrogen bonds#
-COVALENT_HYDROGEN_RANDOM=False
 POTENTIAL_COVALENT_HYDROGEN_ACCEPTOR_HL=[['O1_1_0','O1_2_0','O1_3_0','O1_4_0']]*8#Will be considered only when COVALENT_HYDROGEN_RANDOM=True
 POTENTIAL_COVALENT_HYDROGEN_ACCEPTOR_FL_L=[['O1_11_t','O1_12_t','O1_1_0','O1_2_0']]*8#Will be considered only when COVALENT_HYDROGEN_RANDOM=True
 POTENTIAL_COVALENT_HYDROGEN_ACCEPTOR_FL_S=[['O1_5_0','O1_6_0','O1_7_0','O1_8_0']]*8#Will be considered only when COVALENT_HYDROGEN_RANDOM=True
