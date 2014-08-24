@@ -68,6 +68,8 @@ CS(O5O6)        ES(O5O7)    ES(O5O8)    CS(O6O7)      TD(O5O6O7)     TD(O5O7O8) 
 running_mode=True
 USE_BV=True
 COVALENT_HYDROGEN_RANDOM=False
+COUNT_DISTAL_OXYGEN=False
+ADD_DISTAL_LIGAND_WILD=False
 
 SORBATE=["As"]
 pickup_index=[0,7,12]
@@ -75,13 +77,15 @@ sym_site_index=[[0,1],[0,1],[0,1]]
 full_layer_pick=[None,None,0]
 OS_X_REF=[None]
 DOMAIN_GP=[]
+DOMAINS_BV=range(len(pickup_index))
+
 
 BV_OFFSET_SORBATE=[0.2]*len(pickup_index)
 SEARCH_RANGE_OFFSET_SORBATE=0.5
 
 USE_COORS=[0]*len(pickup_index)
-COORS={0:{'sorbate':[[[0.79020761,0.85623748,2.0421749]],[[0.70979239,1.35623748,2.0421749]]],'oxygen':[[[0.54236324,0.77922075,2.17940449],[1.08318352,0.94727867,2.12058133]],[[0.95763676,1.27922075,2.17940449],[0.41681648,1.44727867,2.12058133]]]},\
-       2:{'sorbate':[[[0.9407567,0.55948538,1.59475972]],[[0.56000891,1.05948635,1.59473611]]],'oxygen':[[[1.10373138,0.52107575,1.73948237]],[[0.39776654,1.02109605,1.73872938]]]}}
+COORS={0:{'sorbate':[[[0,0,0]],[[1,1,1]]],'oxygen':[[[0,0,0]],[[1,1,1]]]},\
+       2:{'sorbate':[[[0,0,0]],[[1,1,1]]],'oxygen':[[[0,0,0]],[[1,1,1]]]}}
 
 water_pars={'use_default':True,'number':[0,2,0],'ref_point':[[[]],[['O1_3_0','O1_4_0']],[[]]]}
 
@@ -143,9 +147,17 @@ COORS(a lib specifying the coordinates for sorbates)
     keys of COORS are the domain index,ignore domain with no sorbates
     len(COORS[i]['sorbate'])=len(COORS[i]['oxygen']), which is the number of sorbate sets (either one or two)
     make sure the setup matches with the pick_up index and the sym_site_index as well as the number of distal oxygens
+    if you dont consider oxygen in your model, you still need to specify the coordinates for the oxygen(just one oxygen) to avoid error prompt
 O_NUMBER_HL/FL(a list of list of [a,b],where a and b are integer numbers)
     one to one corresponding for the number of distal oxygens, which depend on local structure and binding configuration
     either zero oxygen ligand or enough ligands to complete coordinative shell
+COUNT_DISTAL_OXYGEN(bool)
+    True then consider bond valence also for distal oxygen,otherwise skip the bv contribution from distal oxygen
+ADD_DISTAL_LIGAND_WILD(bool)
+    the distal oxygen could be added by specifying the pars for the spherical coordinate system (r, theta, phi), which is called wild here, or be added 
+    in a specific geometry setting for a local structure (like tetrahedra)
+DOMAINS_BV(a list of integer numbers)
+    Domains being considered for bond valence constrain, counted from 0    
 """
 
 FULL_LAYER_PICK_INDEX=make_pick_index(full_layer_pick=full_layer_pick,pick=pickup_index,half_layer_cases=8,full_layer_cases=8)
@@ -154,7 +166,6 @@ N_HL=len(pickup_index)-N_FL
 COHERENCE=[{True:range(len(pickup_index))}] #want to add up in coherence? items inside list corresponding to each domain
 ##cal bond valence switch##
 SEARCH_MODE_FOR_SURFACE_ATOMS=True#If true then cal bond valence of surface atoms based on searching within a spherical region
-DOMAINS_BV=range(len(pickup_index))#Domains being considered for bond valence constrain, counted from 0
 METAL_VALENCE={'Pb':(2.,3.),'Sb':(5.,6.),'As':(5.,4.)}#for each value (valence charge,coordination number)
 R0_BV={('As','O'):1.767,('Fe','O'):1.759,('H','O'):0.677,('Pb','O'):2.04,('Sb','O'):1.973}#r0 for different couples
 LOCAL_STRUCTURE_MATCH_LIB={'trigonal_pyramid':['Pb'],'octahedral':['Sb','Fe'],'tetrahedral':['As']}
@@ -162,12 +173,9 @@ debug_bv=not running_mode
 ##want to output the data for plotting?##
 PLOT=not running_mode
 ##want to print out the protonation status?##
-PRINT_PROTONATION=False
+PRINT_PROTONATION=not running_mode
 ##want to print bond valence?##
 PRINT_BV=not running_mode
-##count distal oxygen for bv?##
-COUNT_DISTAL_OXYGEN=False#True then consider bond valence also for distal oxygen,otherwise skip the bv contribution from distal oxygen
-ADD_DISTAL_LIGAND_WILD=0
 ##want to print the xyz files to build a 3D structure?##
 PRINT_MODEL_FILES=not running_mode
 ##pars for sorbates##
@@ -184,7 +192,7 @@ SORBATE_NUMBER_FL=[[2],[2],[2],[2],[2],[2],[2],[0]]
 SORBATE_NUMBER=pick(SORBATE_NUMBER_HL+SORBATE_NUMBER_FL)
 
 O_NUMBER=pick(O_NUMBER_HL+O_NUMBER_FL)
-PROTONATION_DISTAL_OXYGEN=[[0,0],[0,0],[0,0],[0,0]]#Protonation of distal oxygens, any number in [0,1,2], where 1 means singly protonated, two means doubly protonated
+PROTONATION_DISTAL_OXYGEN=[[0,0]]*len(pickup_index)#Protonation of distal oxygens, any number in [0,1,2], where 1 means singly protonated, two means doubly protonated
 
 SORBATE_LIST=domain_creator.create_sorbate_el_list(SORBATE,SORBATE_NUMBER)
 
