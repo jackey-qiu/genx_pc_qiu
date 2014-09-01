@@ -925,6 +925,35 @@ class domain_creator_sorbate():
         else:
             return [tetrahedra_case.center_point/basis]
             
+    def revert_coors_to_geometry_setting_tetrahedra_BD(self,domain,anchor=[],anchor_offset=[],sorbate='As1_D1A',ref=None,ref_offset=None):
+        p_O1_index=np.where(domain.id==anchor[0])
+        p_O2_index=np.where(domain.id==anchor[1])
+        sorbate_index=np.where(domain.id==sorbate)
+        ref_index=None
+        try:
+            np.where(domain.id==ref)
+        except:
+            pass
+        basis=np.array([5.038,5.434,7.3707])
+        
+        def _translate_offset_symbols(symbol):
+            if symbol=='-x':return np.array([-1.,0.,0.])
+            elif symbol=='+x':return np.array([1.,0.,0.])
+            elif symbol=='-y':return np.array([0.,-1.,0.])
+            elif symbol=='+y':return np.array([0.,1.,0.])
+            elif symbol==None:return np.array([0.,0.,0.])
+
+        f2=lambda p1,p2:np.sqrt(np.sum((p1-p2)**2))
+        pt_ct=lambda domain,p_O1_index,symbol:np.array([domain.x[p_O1_index][0]+domain.dx1[p_O1_index][0]+domain.dx2[p_O1_index][0]+domain.dx3[p_O1_index][0],domain.y[p_O1_index][0]+domain.dy1[p_O1_index][0]+domain.dy2[p_O1_index][0]+domain.dy3[p_O1_index][0],domain.z[p_O1_index][0]+domain.dz1[p_O1_index][0]+domain.dz2[p_O1_index][0]+domain.dz3[p_O1_index][0]])+_translate_offset_symbols(symbol)
+        p_O1=pt_ct(domain,p_O1_index,anchor_offset[0])*basis
+        p_O2=pt_ct(domain,p_O2_index,anchor_offset[1])*basis
+        sorbate=pt_ct(domain,sorbate_index,None)*basis
+        try:
+            ref=pt_ct(domain,ref_index,ref_offset)*basis
+        except:
+            ref=(p_O1+p_O2)/2.-[0,0,1]
+        
+
     def adding_sorbate_bidentate_octahedral(self,domain,phi=0,flag='off_center',attach_atm_ids=[],offset=[None,None],sb_id='sb1',sorbate_el='Sb',O_id=['HO1','HO2','HO3','HO4'],anchor_ref=None,anchor_offset=None):
         #The added sorbates (including Pb and one Os) will form a edge-distorted trigonal pyramid configuration with the attached ones
         p_O1_index=np.where(domain.id==attach_atm_ids[0])
