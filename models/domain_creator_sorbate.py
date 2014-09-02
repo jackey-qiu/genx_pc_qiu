@@ -925,7 +925,7 @@ class domain_creator_sorbate():
         else:
             return [tetrahedra_case.center_point/basis]
             
-    def revert_coors_to_geometry_setting_tetrahedra_BD(self,domain,anchor=[],anchor_offset=[],sorbate='As1_D1A',ref=None,ref_offset=None):
+    def revert_coors_to_geometry_setting_tetrahedra_BD(self,domain,anchor=[],anchor_offset=[],sorbate='As1_D1A',sorbate_offset=None,ref=None,ref_offset=None):
         p_O1_index=np.where(domain.id==anchor[0])
         p_O2_index=np.where(domain.id==anchor[1])
         sorbate_index=np.where(domain.id==sorbate)
@@ -945,14 +945,32 @@ class domain_creator_sorbate():
 
         f2=lambda p1,p2:np.sqrt(np.sum((p1-p2)**2))
         pt_ct=lambda domain,p_O1_index,symbol:np.array([domain.x[p_O1_index][0]+domain.dx1[p_O1_index][0]+domain.dx2[p_O1_index][0]+domain.dx3[p_O1_index][0],domain.y[p_O1_index][0]+domain.dy1[p_O1_index][0]+domain.dy2[p_O1_index][0]+domain.dy3[p_O1_index][0],domain.z[p_O1_index][0]+domain.dz1[p_O1_index][0]+domain.dz2[p_O1_index][0]+domain.dz3[p_O1_index][0]])+_translate_offset_symbols(symbol)
-        p_O1=pt_ct(domain,p_O1_index,anchor_offset[0])*basis
-        p_O2=pt_ct(domain,p_O2_index,anchor_offset[1])*basis
-        sorbate=pt_ct(domain,sorbate_index,None)*basis
+        p0=pt_ct(domain,p_O1_index,anchor_offset[0])*basis
+        p1=pt_ct(domain,p_O2_index,anchor_offset[1])*basis
+        sorbate=pt_ct(domain,sorbate_index,sorbate_offset)*basis
+        #print f2(p0,p1),f2(p0,sorbate),f2(p1,sorbate)
         try:
             ref=pt_ct(domain,ref_index,ref_offset)*basis
         except:
-            ref=(p_O1+p_O2)/2.-[0,0,1]
+            ref=(p0+p1)/2.-[0,0,1]
+        shoulder_angle=np.arccos(np.dot((p0-p1),(sorbate-p1))/f2(p0,p1)/f2(sorbate,p1))
+        top_angle_before_offset=np.pi-2*shoulder_angle
+        original_edge_length=f2(p0,p1)/2/np.cos(shoulder_angle)
+        edge_offset=f2(sorbate,p1)-original_edge_length
+        print shoulder_angle*180/np.pi
+        #cal rotation angle
+        y_1=p0-ref
+        y_h_1=np.dot(p0-ref,p1-p0)/np.dot(p1-p0,p1-p0)*(p1-p0)
+        y_v_1=y_1-y_h_1
         
+        y_2=p0-sorbate
+        y_h_2=np.dot(p0-sorbate,p1-p0)/np.dot(p1-p0,p1-p0)*(p1-p0)
+        y_v_2=y_2-y_h_2
+        rotation_angle=np.pi-np.arccos(np.dot(y_v_1,y_v_2)/f2(np.array([0,0,0]),y_v_1)/f2(np.array([0,0,0]),y_v_2))
+        print "edge_offset=",edge_offset,'A'
+        print "top_angle_offset=",top_angle_before_offset*180/np.pi-109.5," degree"
+        print "rotation angle=",rotation_angle*180/np.pi
+        return edge_offset,top_angle_before_offset*180/np.pi-109.5,rotation_angle*180/np.pi
 
     def adding_sorbate_bidentate_octahedral(self,domain,phi=0,flag='off_center',attach_atm_ids=[],offset=[None,None],sb_id='sb1',sorbate_el='Sb',O_id=['HO1','HO2','HO3','HO4'],anchor_ref=None,anchor_offset=None):
         #The added sorbates (including Pb and one Os) will form a edge-distorted trigonal pyramid configuration with the attached ones
