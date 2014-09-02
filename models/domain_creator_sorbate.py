@@ -929,6 +929,7 @@ class domain_creator_sorbate():
     #note by default the bond stretch or relax along a vector define by the sorbate and the atom represented by the first item in anchor list
     #so make sure the order of anchor and anchor_offset is right
     #know the returned phi value is always positive although it could be negative value as well
+    #for the corner-sharing case (anchors are of same height), the returned phi is 90 degree off
     def revert_coors_to_geometry_setting_tetrahedra_BD(self,domain,anchor=['O1_5_0_D5A','O1_8_0_D5A'],anchor_offset=[None,'+x'],sorbate='As1_D1A',sorbate_offset=None,ref='Fe1_8_0_D5A',ref_offset='+x'):
         p_O1_index=np.where(domain.id==anchor[0])
         p_O2_index=np.where(domain.id==anchor[1])

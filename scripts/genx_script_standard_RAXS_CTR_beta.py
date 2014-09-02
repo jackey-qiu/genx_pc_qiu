@@ -1136,6 +1136,9 @@ def Sim(data,VARS=VARS):
                         else:
                             distal_length_offset=[getattr(VARS['rgh_domain'+str(int(i+1))],'offset_BD'),getattr(VARS['rgh_domain'+str(int(i+1))],'offset2_BD')]
                             angle_offsets=[getattr(VARS['rgh_domain'+str(int(i+1))],'angle_offset_BD'),getattr(VARS['rgh_domain'+str(int(i+1))],'angle_offset2_BD')]
+                            if (i+j)%2==1:
+                                distal_length_offset=distal_length_offset[::-1]
+                                angle_offsets=-np.array(angle_offsets[::-1])
                             top_angle_offset=getattr(VARS['rgh_domain'+str(int(i+1))],'top_angle_offset_BD')
                             edge_offset=getattr(VARS['rgh_domain'+str(int(i+1))],'anchor_offset_BD')
                             sorbate_coors=VARS['domain_class_'+str(int(i+1))].adding_sorbate_bidentate_tetrahedral(domain=VARS['domain'+str(int(i+1))+'A'],phi=phi,distal_length_offset=distal_length_offset,distal_angle_offset=angle_offsets,top_angle_offset=top_angle_offset,attach_atm_ids=ids,offset=offset,sorbate_id=SORBATE_id,sorbate_el=SORBATE[0],O_id=O_id,anchor_ref=anchor,anchor_offset=anchor_offset,edge_offset=edge_offset)
@@ -1218,6 +1221,7 @@ def Sim(data,VARS=VARS):
                         ref_x=1.5-ref_x
                         phi=180-phi#note all angles in degree
                         ct_offset_dx=-getattr(VARS['rgh_domain'+str(int(i+1))],'ct_offset_dx_OS')
+                        rot_y,rot_z=-rot_y,-rot_z
                     SORBATE_id=VARS['SORBATE_list_domain'+str(int(i+1))+'a'][j]#pb_id is a str NOT list
                     O_id=[HO_id for HO_id in VARS['HO_list_domain'+str(int(i+1))+'a'] if SORBATE_id in HO_id]
                     consider_distal=False
@@ -1522,7 +1526,8 @@ def Sim(data,VARS=VARS):
     #print 'As1_D1A',domain_creator.extract_coor(domain1A,'As1_D1A')
     #print domain_creator.extract_component(domain2A,'Pb1_D2A',['dx1','dy2','dz3'])  
     #domain_creator.layer_spacing_calculator(domain1A,12,True)
-    
+    #domain_class_1.revert_coors_to_geometry_setting_tetrahedra_BD(domain5A,['O1_5_0_D5A','O1_8_0_D5A'],[None,'+x'],'As1_D5A','+y','Fe1_8_0_D5A','+x')
+
     if PRINT_MODEL_FILES:
         for i in range(DOMAIN_NUMBER):
             N_HB_SURFACE=sum(COVALENT_HYDROGEN_NUMBER[i])
