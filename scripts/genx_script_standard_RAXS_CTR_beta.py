@@ -69,7 +69,7 @@ running_mode=True
 USE_BV=True
 COVALENT_HYDROGEN_RANDOM=False
 COUNT_DISTAL_OXYGEN=False
-ADD_DISTAL_LIGAND_WILD=False
+ADD_DISTAL_LIGAND_WILD=[False]*10
 
 SORBATE=["As"]
 pickup_index=[0,7,12]
@@ -155,9 +155,11 @@ O_NUMBER_HL/FL(a list of list of [a,b],where a and b are integer numbers)
     either zero oxygen ligand or enough ligands to complete coordinative shell
 COUNT_DISTAL_OXYGEN(bool)
     True then consider bond valence also for distal oxygen,otherwise skip the bv contribution from distal oxygen
-ADD_DISTAL_LIGAND_WILD(bool)
+ADD_DISTAL_LIGAND_WILD(list of bool)
     the distal oxygen could be added by specifying the pars for the spherical coordinate system (r, theta, phi), which is called wild here, or be added 
     in a specific geometry setting for a local structure (like tetrahedra)
+    you can specify different case for different domains
+    and this par is not applicable to outersphere mode, which should be set to None for that domain
 DOMAINS_BV(a list of integer numbers)
     Domains being considered for bond valence constrain, counted from 0    
 """
@@ -580,7 +582,7 @@ for i in range(DOMAIN_NUMBER):
                 vars()['gp_HO_set'+str(j+1)+'_D'+str(int(i+1))]=vars()['domain_class_'+str(int(i+1))].grouping_discrete_layer3(domain=[vars()['domain'+str(int(i+1))+'A']]*M+[vars()['domain'+str(int(i+1))+'B']]*M,atom_ids=HO_set_ids)
         elif len(SORBATE_ATTACH_ATOM[i][j])==2:#bidentate case
             if j==0 and LOCAL_STRUCTURE=='trigonal_pyramid':
-                if ADD_DISTAL_LIGAND_WILD:
+                if ADD_DISTAL_LIGAND_WILD[i]:
                     vars()['rgh_domain'+str(int(i+1))].new_var('offset_BD', 0.)
                     vars()['rgh_domain'+str(int(i+1))].new_var('offset2_BD', 0.)
                     vars()['rgh_domain'+str(int(i+1))].new_var('angle_offset_BD', 0.)
@@ -598,7 +600,7 @@ for i in range(DOMAIN_NUMBER):
                     vars()['rgh_domain'+str(int(i+1))].new_var('top_angle_BD', 0.)
                     vars()['rgh_domain'+str(int(i+1))].new_var('r_BD', 2.27)
             elif j==0 and LOCAL_STRUCTURE=='octahedral':
-                if ADD_DISTAL_LIGAND_WILD:
+                if ADD_DISTAL_LIGAND_WILD[i]:
                     vars()['rgh_domain'+str(int(i+1))].new_var('phi_BD', 0.)
                     [vars()['rgh_domain'+str(int(i+1))].new_var('r1_'+str(KK+1)+'_BD', 2.27) for KK in range(4)]
                     [vars()['rgh_domain'+str(int(i+1))].new_var('theta1_'+str(KK+1)+'_BD', 0) for KK in range(4)]
@@ -606,7 +608,7 @@ for i in range(DOMAIN_NUMBER):
                 else:
                     vars()['rgh_domain'+str(int(i+1))].new_var('phi_BD', 0.)
             elif j==0 and LOCAL_STRUCTURE=='tetrahedral':
-                if ADD_DISTAL_LIGAND_WILD:
+                if ADD_DISTAL_LIGAND_WILD[i]:
                     vars()['rgh_domain'+str(int(i+1))].new_var('phi_BD', 0.)
                     vars()['rgh_domain'+str(int(i+1))].new_var('anchor_offset_BD', 0.)
                     vars()['rgh_domain'+str(int(i+1))].new_var('top_angle_offset_BD', 0.)
@@ -665,7 +667,7 @@ for i in range(DOMAIN_NUMBER):
             if j==0 and LOCAL_STRUCTURE=='trigonal_pyramid':
                 vars()['rgh_domain'+str(int(i+1))].new_var('top_angle_TD', 70.)
             elif j==0 and LOCAL_STRUCTURE=='octahedral':
-                if ADD_DISTAL_LIGAND_WILD:
+                if ADD_DISTAL_LIGAND_WILD[i]:
                     vars()['rgh_domain'+str(int(i+1))].new_var('dr1_oct_TD', 0.)
                     vars()['rgh_domain'+str(int(i+1))].new_var('dr2_oct_TD', 0.)
                     vars()['rgh_domain'+str(int(i+1))].new_var('dr3_oct_TD', 0.)
@@ -677,7 +679,7 @@ for i in range(DOMAIN_NUMBER):
                     vars()['rgh_domain'+str(int(i+1))].new_var('dr2_oct_TD', 0.)
                     vars()['rgh_domain'+str(int(i+1))].new_var('dr3_oct_TD', 0.)
             elif j==0 and LOCAL_STRUCTURE=='tetrahedral':
-                if ADD_DISTAL_LIGAND_WILD:
+                if ADD_DISTAL_LIGAND_WILD[i]:
                     [vars()['rgh_domain'+str(int(i+1))].new_var('r1_'+str(KK+1)+'_TD', 2.27) for KK in range(1)]
                     [vars()['rgh_domain'+str(int(i+1))].new_var('theta1_'+str(KK+1)+'_TD', 0.) for KK in range(1)]
                     [vars()['rgh_domain'+str(int(i+1))].new_var('phi1_'+str(KK+1)+'_TD', 0.) for KK in range(1)]
@@ -1054,7 +1056,7 @@ def Sim(data,VARS=VARS):
                     sorbate_coors=[]
                     if LOCAL_STRUCTURE=='trigonal_pyramid':
                         sorbate_coors=VARS['domain_class_'+str(int(i+1))].adding_sorbate_pyramid_monodentate(domain=VARS['domain'+str(int(i+1))+'A'],top_angle=top_angle,phi=phi,r=r,attach_atm_ids=ids,offset=offset,pb_id=SORBATE_id,sorbate_el=SORBATE[0],O_id=O_id,mirror=VARS['MIRROR'][i])           
-                        if ADD_DISTAL_LIGAND_WILD:
+                        if ADD_DISTAL_LIGAND_WILD[i]:
                             if (i+j)%2==1:
                                 [O_coors_a.append(domain_class_1.adding_distal_ligand(domain=VARS['domain'+str(int(i+1))+'A'],id=O_id[ligand_id],ref=domain_creator.extract_coor(VARS['domain'+str(int(i+1))+'A'],SORBATE_id),r=getattr(VARS['rgh_domain'+str(int(i+1))],'r1_'+str(ligand_id+1)+'_MD'),theta=getattr(VARS['rgh_domain'+str(int(i+1))],'theta1_'+str(ligand_id+1)+'_MD'),phi=getattr(VARS['rgh_domain'+str(int(i+1))],'phi1_'+str(ligand_id+1)+'_MD'))) for ligand_id in range(len(O_id))]
                             else:
@@ -1063,7 +1065,7 @@ def Sim(data,VARS=VARS):
                             [O_coors_a.append(sorbate_coors[k]) for k in range(len(sorbate_coors))[1:]]
                     elif LOCAL_STRUCTURE=='octahedral':
                         sorbate_coors=VARS['domain_class_'+str(int(i+1))].adding_sorbate_octahedral_monodentate(domain=VARS['domain'+str(int(i+1))+'A'],phi=phi,r=r,attach_atm_id=ids,offset=offset,sb_id=SORBATE_id,sorbate_el=SORBATE[0],O_id=O_id)           
-                        if ADD_DISTAL_LIGAND_WILD:
+                        if ADD_DISTAL_LIGAND_WILD[i]:
                             if (i+j)%2==1:
                                 [O_coors_a.append(domain_class_1.adding_distal_ligand(domain=VARS['domain'+str(int(i+1))+'A'],id=O_id[ligand_id],ref=domain_creator.extract_coor(VARS['domain'+str(int(i+1))+'A'],SORBATE_id),r=getattr(VARS['rgh_domain'+str(int(i+1))],'r1_'+str(ligand_id+1)+'_MD'),theta=getattr(VARS['rgh_domain'+str(int(i+1))],'theta1_'+str(ligand_id+1)+'_MD'),phi=getattr(VARS['rgh_domain'+str(int(i+1))],'phi1_'+str(ligand_id+1)+'_MD'))) for ligand_id in range(len(O_id))]
                             else:
@@ -1072,7 +1074,7 @@ def Sim(data,VARS=VARS):
                             [O_coors_a.append(sorbate_coors[k]) for k in range(len(sorbate_coors))[1:]]
                     elif LOCAL_STRUCTURE=='tetrahedral':
                         sorbate_coors=VARS['domain_class_'+str(int(i+1))].adding_sorbate_tetrahedral_monodentate(domain=VARS['domain'+str(int(i+1))+'A'],phi=phi,r=r,attach_atm_id=ids,offset=offset,sorbate_id=SORBATE_id,O_id=O_id,sorbate_el=SORBATE[0])
-                        if ADD_DISTAL_LIGAND_WILD:
+                        if ADD_DISTAL_LIGAND_WILD[i]:
                             if (i+j)%2==1:
                                 [O_coors_a.append(domain_class_1.adding_distal_ligand(domain=VARS['domain'+str(int(i+1))+'A'],id=O_id[ligand_id],ref=domain_creator.extract_coor(VARS['domain'+str(int(i+1))+'A'],SORBATE_id),r=getattr(VARS['rgh_domain'+str(int(i+1))],'r1_'+str(ligand_id+1)+'_MD'),theta=getattr(VARS['rgh_domain'+str(int(i+1))],'theta1_'+str(ligand_id+1)+'_MD'),phi=getattr(VARS['rgh_domain'+str(int(i+1))],'phi1_'+str(ligand_id+1)+'_MD'))) for ligand_id in range(len(O_id))]
                             else:
@@ -1109,7 +1111,7 @@ def Sim(data,VARS=VARS):
                             l=domain_creator.extract_coor_offset(domain=VARS['domain'+str(int(i+1))+'A'],id=ids,offset=offset,basis=[5.038,5.434,7.3707])
                             top_angle=np.arccos((r1**2+r2**2-l**2)/2/r1/r2)/np.pi*180
                         sorbate_coors=VARS['domain_class_'+str(int(i+1))].adding_sorbate_pyramid_distortion_B2(domain=VARS['domain'+str(int(i+1))+'A'],top_angle=top_angle,phi=phi,edge_offset=[edge_offset,edge_offset2],attach_atm_ids=ids,offset=offset,anchor_ref=anchor,anchor_offset=anchor_offset,pb_id=SORBATE_id,sorbate_el=SORBATE[0],O_id=O_id,mirror=VARS['MIRROR'][i],angle_offset=angle_offset)
-                        if ADD_DISTAL_LIGAND_WILD:
+                        if ADD_DISTAL_LIGAND_WILD[i]:
                             if (i+j)%2==1:
                                 [O_coors_a.append(domain_class_1.adding_distal_ligand(domain=VARS['domain'+str(int(i+1))+'A'],id=O_id[ligand_id],ref=domain_creator.extract_coor(VARS['domain'+str(int(i+1))+'A'],SORBATE_id),r=getattr(VARS['rgh_domain'+str(int(i+1))],'r1_'+str(ligand_id+1)+'_BD'),theta=getattr(VARS['rgh_domain'+str(int(i+1))],'theta1_'+str(ligand_id+1)+'_BD'),phi=getattr(VARS['rgh_domain'+str(int(i+1))],'phi1_'+str(ligand_id+1)+'_BD'))) for ligand_id in range(len(O_id))]
                             else:
@@ -1118,9 +1120,12 @@ def Sim(data,VARS=VARS):
                             [O_coors_a.append(sorbate_coors[k]) for k in range(len(sorbate_coors))[1:]]
                     elif LOCAL_STRUCTURE=='octahedral':
                         phi=getattr(VARS['rgh_domain'+str(int(i+1))],'phi_BD')
-                        if ADD_DISTAL_LIGAND_WILD:
+                        if ADD_DISTAL_LIGAND_WILD[i]:
                             sorbate_coors=VARS['domain_class_'+str(int(i+1))].adding_sorbate_bidentate_octahedral(domain=VARS['domain'+str(int(i+1))+'A'],phi=phi,attach_atm_ids=ids,offset=offset,sb_id=SORBATE_id,sorbate_el=SORBATE[0],O_id=[],anchor_ref=anchor,anchor_offset=anchor_offset)
-                            [sorbate_coors.append(domain_class_1.adding_distal_ligand(domain=VARS['domain'+str(int(i+1))+'A'],id=O_id[ligand_id],ref=sorbate_coors[0],r=getattr(VARS['rgh_domain'+str(int(i+1))],'r1_'+str(ligand_id+1)+'_BD'),theta=getattr(VARS['rgh_domain'+str(int(i+1))],'theta1_'+str(ligand_id+1)+'_BD'),phi=getattr(VARS['rgh_domain'+str(int(i+1))],'phi1_'+str(ligand_id+1)+'_BD'))) for ligand_id in range(len(O_id))]
+                            if (i+j)%2==1:
+                                [sorbate_coors.append(domain_class_1.adding_distal_ligand(domain=VARS['domain'+str(int(i+1))+'A'],id=O_id[ligand_id],ref=domain_creator.extract_coor(VARS['domain'+str(int(i+1))+'A'],SORBATE_id),r=getattr(VARS['rgh_domain'+str(int(i+1))],'r1_'+str(ligand_id+1)+'_BD'),theta=getattr(VARS['rgh_domain'+str(int(i+1))],'theta1_'+str(ligand_id+1)+'_BD'),phi=getattr(VARS['rgh_domain'+str(int(i+1))],'phi1_'+str(ligand_id+1)+'_BD'))) for ligand_id in range(len(O_id))]
+                            else:
+                                [sorbate_coors.append(domain_class_1.adding_distal_ligand(domain=VARS['domain'+str(int(i+1))+'A'],id=O_id[ligand_id],ref=domain_creator.extract_coor(VARS['domain'+str(int(i+1))+'A'],SORBATE_id),r=getattr(VARS['rgh_domain'+str(int(i+1))],'r1_'+str(ligand_id+1)+'_BD'),theta=getattr(VARS['rgh_domain'+str(int(i+1))],'theta1_'+str(ligand_id+1)+'_BD'),phi=180-getattr(VARS['rgh_domain'+str(int(i+1))],'phi1_'+str(ligand_id+1)+'_BD'))) for ligand_id in range(len(O_id))]
                         else:
                             sorbate_coors=VARS['domain_class_'+str(int(i+1))].adding_sorbate_bidentate_octahedral(domain=VARS['domain'+str(int(i+1))+'A'],phi=phi,attach_atm_ids=ids,offset=offset,sb_id=SORBATE_id,sorbate_el=SORBATE[0],O_id=O_id,anchor_ref=anchor,anchor_offset=anchor_offset)
                     elif LOCAL_STRUCTURE=='tetrahedral':
@@ -1129,9 +1134,12 @@ def Sim(data,VARS=VARS):
                             ids=ids[::-1]
                             offset=offset[::-1]
                             phi=-phi
-                        if ADD_DISTAL_LIGAND_WILD:
+                        if ADD_DISTAL_LIGAND_WILD[i]:
                             sorbate_coors=VARS['domain_class_'+str(int(i+1))].adding_sorbate_bidentate_tetrahedral(domain=VARS['domain'+str(int(i+1))+'A'],phi=phi,attach_atm_ids=ids,offset=offset,sorbate_id=SORBATE_id,sorbate_el=SORBATE[0],O_id=[],anchor_ref=anchor,anchor_offset=anchor_offset)
-                            [sorbate_coors.append(domain_class_1.adding_distal_ligand(domain=VARS['domain'+str(int(i+1))+'A'],id=O_id[ligand_id],ref=sorbate_coors[0],r=getattr(VARS['rgh_domain'+str(int(i+1))],'r1_'+str(ligand_id+1)+'_BD'),theta=getattr(VARS['rgh_domain'+str(int(i+1))],'theta1_'+str(ligand_id+1)+'_BD'),phi=getattr(VARS['rgh_domain'+str(int(i+1))],'phi1_'+str(ligand_id+1)+'_BD'))) for ligand_id in range(len(O_id))]
+                            if (i+j)%2==1:
+                                [sorbate_coors.append(domain_class_1.adding_distal_ligand(domain=VARS['domain'+str(int(i+1))+'A'],id=O_id[ligand_id],ref=domain_creator.extract_coor(VARS['domain'+str(int(i+1))+'A'],SORBATE_id),r=getattr(VARS['rgh_domain'+str(int(i+1))],'r1_'+str(ligand_id+1)+'_BD'),theta=getattr(VARS['rgh_domain'+str(int(i+1))],'theta1_'+str(ligand_id+1)+'_BD'),phi=getattr(VARS['rgh_domain'+str(int(i+1))],'phi1_'+str(ligand_id+1)+'_BD'))) for ligand_id in range(len(O_id))]
+                            else:
+                                [sorbate_coors.append(domain_class_1.adding_distal_ligand(domain=VARS['domain'+str(int(i+1))+'A'],id=O_id[ligand_id],ref=domain_creator.extract_coor(VARS['domain'+str(int(i+1))+'A'],SORBATE_id),r=getattr(VARS['rgh_domain'+str(int(i+1))],'r1_'+str(ligand_id+1)+'_BD'),theta=getattr(VARS['rgh_domain'+str(int(i+1))],'theta1_'+str(ligand_id+1)+'_BD'),phi=180-getattr(VARS['rgh_domain'+str(int(i+1))],'phi1_'+str(ligand_id+1)+'_BD'))) for ligand_id in range(len(O_id))]
                         else:
                             distal_length_offset=[getattr(VARS['rgh_domain'+str(int(i+1))],'offset_BD'),getattr(VARS['rgh_domain'+str(int(i+1))],'offset2_BD')]
                             angle_offsets=[getattr(VARS['rgh_domain'+str(int(i+1))],'angle_offset_BD'),getattr(VARS['rgh_domain'+str(int(i+1))],'angle_offset2_BD')]
@@ -1171,7 +1179,7 @@ def Sim(data,VARS=VARS):
                         sorbate_coors=VARS['domain_class_'+str(int(i+1))].adding_share_triple_octahedra(domain=VARS['domain'+str(int(i+1))+'A'],attach_atm_ids_ref=ids[0:2],attach_atm_id_third=[ids[-1]],offset=offset,sorbate_id=SORBATE_id,sorbate_el=SORBATE[0],sorbate_oxygen_ids=O_id,dr=dr)                      
                         SORBATE_coors_a.append(sorbate_coors[0])
                         #sorbate_offset=domain_creator.extract_coor(VARS['domain'+str(int(i+1))+'A'],SORBATE_id)-domain_creator.extract_coor2(VARS['domain'+str(int(i+1))+'A'],SORBATE_id)
-                        if ADD_DISTAL_LIGAND_WILD:
+                        if ADD_DISTAL_LIGAND_WILD[i]:
                             if (i+j)%2==1:
                                 [O_coors_a.append(domain_class_1.adding_distal_ligand(domain=VARS['domain'+str(int(i+1))+'A'],id=O_id[ligand_id],ref=domain_creator.extract_coor(VARS['domain'+str(int(i+1))+'A'],SORBATE_id),r=getattr(VARS['rgh_domain'+str(int(i+1))],'r1_'+str(ligand_id+1)+'_TD'),theta=getattr(VARS['rgh_domain'+str(int(i+1))],'theta1_'+str(ligand_id+1)+'_TD'),phi=getattr(VARS['rgh_domain'+str(int(i+1))],'phi1_'+str(ligand_id+1)+'_TD'))) for ligand_id in range(len(O_id))]
                             else:
@@ -1193,7 +1201,7 @@ def Sim(data,VARS=VARS):
                         sorbate_coors=VARS['domain_class_'+str(int(i+1))].adding_sorbate_tridentate_tetrahedral(domain=VARS['domain'+str(int(i+1))+'A'],attach_atm_ids_ref=ids[0:2],attach_atm_id_third=[ids[-1]],offset=offset,sorbate_id=SORBATE_id,sorbate_el=SORBATE[0],sorbate_oxygen_ids=O_id,edge_offset=edge_offset)
                         SORBATE_coors_a.append(sorbate_coors[0])
                         #sorbate_offset=domain_creator.extract_coor(VARS['domain'+str(int(i+1))+'A'],SORBATE_id)-domain_creator.extract_coor2(VARS['domain'+str(int(i+1))+'A'],SORBATE_id)
-                        if ADD_DISTAL_LIGAND_WILD:
+                        if ADD_DISTAL_LIGAND_WILD[i]:
                             if (i+j)%2==1:
                                 [O_coors_a.append(domain_class_1.adding_distal_ligand(domain=VARS['domain'+str(int(i+1))+'A'],id=O_id[ligand_id],ref=domain_creator.extract_coor(VARS['domain'+str(int(i+1))+'A'],SORBATE_id),r=getattr(VARS['rgh_domain'+str(int(i+1))],'r1_'+str(ligand_id+1)+'_TD'),theta=getattr(VARS['rgh_domain'+str(int(i+1))],'theta1_'+str(ligand_id+1)+'_TD'),phi=getattr(VARS['rgh_domain'+str(int(i+1))],'phi1_'+str(ligand_id+1)+'_TD'))) for ligand_id in range(len(O_id))]
                             else:
