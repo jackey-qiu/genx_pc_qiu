@@ -81,9 +81,8 @@ OS_Z_REF=[None]
 DOMAIN_GP=[]
 DOMAINS_BV=range(len(pickup_index))
 
-
 BV_OFFSET_SORBATE=[0.2]*len(pickup_index)
-SEARCH_RANGE_OFFSET_SORBATE=0.5
+SEARCH_RANGE_OFFSET=0.2
 
 USE_COORS=[0]*len(pickup_index)
 COORS={0:{'sorbate':[[[0,0,0]],[[1,1,1]]],'oxygen':[[[0,0,0]],[[1,1,1]]]},\
@@ -171,6 +170,7 @@ COHERENCE=[{True:range(len(pickup_index))}] #want to add up in coherence? items 
 SEARCH_MODE_FOR_SURFACE_ATOMS=True#If true then cal bond valence of surface atoms based on searching within a spherical region
 METAL_VALENCE={'Pb':(2.,3.),'Sb':(5.,6.),'As':(5.,4.)}#for each value (valence charge,coordination number)
 R0_BV={('As','O'):1.767,('Fe','O'):1.759,('H','O'):0.677,('Pb','O'):2.04,('Sb','O'):1.973}#r0 for different couples
+IDEAL_BOND_LENGTH={('As','O'):1.68,('Fe','O'):2.02,('Pb','O'):2.19,('Sb','O'):2.04}#ideal bond length for each case
 LOCAL_STRUCTURE_MATCH_LIB={'trigonal_pyramid':['Pb'],'octahedral':['Sb','Fe'],'tetrahedral':['As']}
 debug_bv=not running_mode
 ##want to output the data for plotting?##
@@ -246,7 +246,7 @@ N_BOND=[O_NUMBER[i][0][0]+len(SORBATE_ATTACH_ATOM[i][0]) for i in range(len(O_NU
 METAL_BV={SORBATE[0]:[[METAL_BV_EACH*N_BOND[i]-BV_OFFSET_SORBATE[i],METAL_BV_EACH*N_BOND[i]] for i in range(len(N_BOND))]}#range of acceptable metal bv in each domain
 
 #specify the searching range and penalty factor for surface atoms and sorbates
-SEARCHING_PARS={'surface':[2.5,50],'sorbate':[BOND_LENGTH_EACH+SEARCH_RANGE_OFFSET_SORBATE,50]}#The value for each item [searching radius(A),scaling factor]
+SEARCHING_PARS={'surface':[2.5,50],'sorbate':[BOND_LENGTH_EACH+SEARCH_RANGE_OFFSET,50]}#The value for each item [searching radius(A),scaling factor]
 
 #if consider hydrogen bonds#
 POTENTIAL_COVALENT_HYDROGEN_ACCEPTOR_HL=[['O1_1_0','O1_2_0','O1_3_0','O1_4_0']]*8#Will be considered only when COVALENT_HYDROGEN_RANDOM=True
@@ -1020,8 +1020,7 @@ def Sim(data,VARS=VARS):
     SCALES=[getattr(rgh,scale) for scale in scales]
     total_wt=0
     domain={}
-    
-   
+       
     for i in range(DOMAIN_NUMBER):
         #extract the fitting par values in the associated attribute and then do the scaling(initiation+processing, actually update the fitting parameter values)
         #VARS['domain_class_'+str(int(i+1))].init_sim_batch(batch_path_head+VARS['sim_batch_file_domain'+str(int(i+1))])
@@ -1363,7 +1362,7 @@ def Sim(data,VARS=VARS):
                         if el=="H":
                             temp_bv=domain_class_1.cal_bond_valence1_new2B_4(super_cell_surface,key,el,2.5,VARS['match_lib_'+str(i+1)+'A'][key],1,False,R0_BV,2.5)['total_valence']
                         else:
-                            temp_bv=domain_class_1.cal_bond_valence1_new2B_4(super_cell_surface,key,el,SEARCHING_PARS['surface'][0],VARS['match_lib_'+str(i+1)+'A'][key],SEARCHING_PARS['surface'][1],False,R0_BV,2.5)['total_valence']
+                            temp_bv=domain_class_1.cal_bond_valence1_new2B_5(super_cell_surface,key,el,SEARCH_RANGE_OFFSET,IDEAL_BOND_LENGTH,VARS['match_lib_'+str(i+1)+'A'][key],50,False,R0_BV,2.5)['total_valence']
                     else:
                         #no searching in this algorithem
                         temp_bv=domain_class_1.cal_bond_valence4B(super_cell_surface,key,VARS['match_lib_'+str(i+1)+'A'][key],2.5)
@@ -1375,7 +1374,7 @@ def Sim(data,VARS=VARS):
                             el="H"
                         if el=="O":
                             try:
-                                temp_bv=domain_class_1.cal_bond_valence1_new2B_4(super_cell_sorbate,key,el,2.5,VARS['match_lib_'+str(i+1)+'A'][key],50,False,R0_BV,2.5)['total_valence']
+                                temp_bv=domain_class_1.cal_bond_valence1_new2B_5(super_cell_sorbate,key,el,SEARCH_RANGE_OFFSET,IDEAL_BOND_LENGTH,VARS['match_lib_'+str(i+1)+'A'][key],50,False,R0_BV,2.5)['total_valence']
                             except:
                                 temp_bv=2
                         else:
@@ -1390,12 +1389,12 @@ def Sim(data,VARS=VARS):
                         if "HB" in key:
                             el="H"
                         if el=="O":
-                            temp_bv=domain_class_1.cal_bond_valence1_new2B_4(super_cell_sorbate,key,el,2.5,VARS['match_lib_'+str(i+1)+'A'][key],50,False,R0_BV,2.5)['total_valence']
+                            temp_bv=domain_class_1.cal_bond_valence1_new2B_5(super_cell_sorbate,key,el,SEARCH_RANGE_OFFSET,IDEAL_BOND_LENGTH,VARS['match_lib_'+str(i+1)+'A'][key],50,False,R0_BV,2.5)['total_valence']
                         else:
                             temp_bv=domain_class_1.cal_bond_valence1_new2B_4(super_cell_sorbate,key,el,2.5,VARS['match_lib_'+str(i+1)+'A'][key],1,False,R0_BV,2.5)['total_valence']
                     else:#metals 
                         try:
-                            temp_bv=domain_class_1.cal_bond_valence1_new2B_4(super_cell_sorbate,key,SORBATE[0],SEARCHING_PARS['sorbate'][0],VARS['match_lib_'+str(i+1)+'A'][key],SEARCHING_PARS['sorbate'][1],False,R0_BV,2.5)['total_valence']
+                            temp_bv=domain_class_1.cal_bond_valence1_new2B_5(super_cell_sorbate,key,SORBATE[0],SEARCH_RANGE_OFFSET,IDEAL_BOND_LENGTH,VARS['match_lib_'+str(i+1)+'A'][key],SEARCHING_PARS['sorbate'][1],False,R0_BV,2.5)['total_valence']
                         except:
                             temp_bv=METAL_BV[SORBATE[0]][i][0]
                     
