@@ -8,7 +8,7 @@ import models.domain_creator as domain_creator
 sys.path.append("D:\\Google Drive\\useful codes")
 sys.path.append("C:\\Users\\jackey\\Google Drive\\useful codes")
 try:
-    import make_parameter_table_GenX_beta as make_grid
+    import make_parameter_table_GenX_beta2 as make_grid
 except:pass
 from copy import deepcopy
 
@@ -119,12 +119,12 @@ commands(a list of str to be executed inside sim function)
     used to expand the funtionality of grouping or setting something important
 USE_COORS(a list of 0 or 1)
     you may want to add sorbates by specifying the coordinates or having the program calculate the position from the geometry setting you considered
-    eg1 USE_COORS=[0]*len(pickup_index) not use coors for all domains
-    eg2 USE_COORS=[1]*len(pickup_index) use coors for all domains
-    eg3 USE_COORS=[0,1,1] use coors for only domain2 and domain3
+    eg1 USE_COORS=[[0]]*len(pickup_index) not use coors for all domains
+    eg2 USE_COORS=[[1]]*len(pickup_index) use coors for all domains
+    eg3 USE_COORS=[[0],[1],[1]] use coors for only domain2 and domain3
 COORS(a lib specifying the coordinates for sorbates)
-    keys of COORS are the domain index,ignore domain with no sorbates
-    len(COORS[i]['sorbate'])=len(COORS[i]['oxygen']), which is the number of sorbate sets (either one or two)
+    keys of COORS are the domain index and site index, ignore domain with no sorbates
+    len(COORS[(i,j)]['sorbate'])=len(COORS[(i,j)]['oxygen'])=2, which is the number of sorbate sets (2 in this specific substrate)
     make sure the setup matches with the pick_up index and the sym_site_index as well as the number of distal oxygens
     if you dont consider oxygen in your model, you still need to specify the coordinates for the oxygen(just one oxygen) to avoid error prompt
 O_NUMBER_HL/FL(a list of list of [a,b],where a and b are integer numbers)
@@ -356,22 +356,25 @@ if TABLE:
     O_N=[]
     binding_mode=[]
     for i in O_NUMBER:
-        temp=0
-        for j in i:
-            temp+=sum(j)
-        O_N.append([temp])
+        temp=[]
+        for j in range(0,len(i[0]),2):
+            temp.append(i[0][j])
+        O_N.append(temp)
     for i in range(DOMAIN_NUMBER):
-        if SORBATE_LIST[i]==[]:
-            binding_mode.append(None)
-        else:
-            if len(SORBATE_ATTACH_ATOM[i][0])==1:
-                binding_mode.append('MD')
-            elif len(SORBATE_ATTACH_ATOM[i][0])==2:
-                binding_mode.append('BD')
-            elif len(SORBATE_ATTACH_ATOM[i][0])==3:
-                binding_mode.append('TD')   
+        temp_binding_mode=[]
+        for j in range(0,len(SORBATE_ATTACH_ATOM[i]),2):
+            if SORBATE_LIST[i][j]==[]:
+                temp_binding_mode.append(None)
             else:
-                binding_mode.append('OS')
+                if len(SORBATE_ATTACH_ATOM[i][j])==1:
+                    temp_binding_mode.append('MD')
+                elif len(SORBATE_ATTACH_ATOM[i][j])==2:
+                    temp_binding_mode.append('BD')
+                elif len(SORBATE_ATTACH_ATOM[i][j])==3:
+                    temp_binding_mode.append('TD')   
+                else:
+                    temp_binding_mode.append('OS')
+        binding_mode.append(temp_binding_mode)
     make_grid.make_structure(map(sum,SORBATE_NUMBER),O_N,WATER_NUMBER,DOMAIN,Metal=SORBATE[0],binding_mode=binding_mode,long_slab=full_layer_pick)
 
 #function to group outer-sphere pars from different domains (to be placed inside sim function)
