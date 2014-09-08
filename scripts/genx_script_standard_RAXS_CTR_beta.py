@@ -363,8 +363,8 @@ if TABLE:
     for i in range(DOMAIN_NUMBER):
         temp_binding_mode=[]
         for j in range(0,len(SORBATE_ATTACH_ATOM[i]),2):
-            if SORBATE_LIST[i][j]==[]:
-                temp_binding_mode.append(None)
+            if SORBATE_ATTACH_ATOM[i][j]==[]:
+                temp_binding_mode.append('OS')
             else:
                 if len(SORBATE_ATTACH_ATOM[i][j])==1:
                     temp_binding_mode.append('MD')
@@ -372,10 +372,8 @@ if TABLE:
                     temp_binding_mode.append('BD')
                 elif len(SORBATE_ATTACH_ATOM[i][j])==3:
                     temp_binding_mode.append('TD')   
-                else:
-                    temp_binding_mode.append('OS')
         binding_mode.append(temp_binding_mode)
-    make_grid.make_structure(map(sum,SORBATE_NUMBER),O_N,WATER_NUMBER,DOMAIN,Metal=SORBATE[0],binding_mode=binding_mode,long_slab=full_layer_pick)
+    make_grid.make_structure(map(sum,SORBATE_NUMBER),O_N,WATER_NUMBER,DOMAIN,Metal=SORBATE[0],binding_mode=binding_mode,long_slab=full_layer_pick,local_structure=LOCAL_STRUCTURE,add_distal_wild=ADD_DISTAL_LIGAND_WILD)
 
 #function to group outer-sphere pars from different domains (to be placed inside sim function)
 def set_OS(domain_names=['domain5','domain4']):
