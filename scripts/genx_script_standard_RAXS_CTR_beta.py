@@ -951,10 +951,10 @@ for i in range(DOMAIN_NUMBER):
     for N in range(0,sum(SORBATE_NUMBER[i]),2):
         vars()['gp_'+SORBATE[0]+'_set'+str(N+1)+'_D'+str(i+1)]=domain_class_1.grouping_discrete_layer3(domain=[vars()['domain'+str(int(i+1))+'A'],vars()['domain'+str(int(i+1))+'B']]*2,atom_ids=[SORBATE[0]+str(N+1)+'_D'+str(i+1)+'A',SORBATE[0]+str(N+1)+'_D'+str(i+1)+'B',SORBATE[0]+str(N+2)+'_D'+str(i+1)+'A',SORBATE[0]+str(N+2)+'_D'+str(i+1)+'B'],sym_array=[[1.,0.,0.,0.,1.,0.,0.,0.,1.],[-1.,0.,0.,0.,1.,0.,0.,0.,1.],[-1.,0.,0.,0.,1.,0.,0.,0.,1.],[1.,0.,0.,0.,1.,0.,0.,0.,1.]])
         if vars()['HO_list_domain'+str(i+1)+'a']!=[]:
-            HO_A1=[each for each in vars()['HO_list_domain'+str(i+1)+'a'] if (SORBATE[0]+str(N+1)) in each]
-            HO_B1=[each for each in vars()['HO_list_domain'+str(i+1)+'b'] if (SORBATE[0]+str(N+1)) in each]
-            HO_A2=[each for each in vars()['HO_list_domain'+str(i+1)+'a'] if (SORBATE[0]+str(N+2)) in each]
-            HO_B2=[each for each in vars()['HO_list_domain'+str(i+1)+'b'] if (SORBATE[0]+str(N+2)) in each]
+            HO_A1=[each for each in vars()['HO_list_domain'+str(i+1)+'a'] if ('_'+SORBATE[0]+str(N+1)+'_') in each]
+            HO_B1=[each for each in vars()['HO_list_domain'+str(i+1)+'b'] if ('_'+SORBATE[0]+str(N+1)+'_') in each]
+            HO_A2=[each for each in vars()['HO_list_domain'+str(i+1)+'a'] if ('_'+SORBATE[0]+str(N+2)+'_') in each]
+            HO_B2=[each for each in vars()['HO_list_domain'+str(i+1)+'b'] if ('_'+SORBATE[0]+str(N+2)+'_') in each]
             for NN in range(len(HO_A1)):
                 vars()['gp_HO'+str(NN+1)+'_set'+str(N+1)+'_D'+str(i+1)]=domain_class_1.grouping_discrete_layer3(domain=[vars()['domain'+str(i+1)+'A'],vars()['domain'+str(i+1)+'B'],vars()['domain'+str(i+1)+'A'],vars()['domain'+str(i+1)+'B']],\
                       atom_ids=[HO_A1[NN],HO_B1[NN],HO_A2[NN],HO_B2[NN]],sym_array=[[1,0,0,0,1,0,0,0,1],[-1,0,0,0,1,0,0,0,1],[-1,0,0,0,1,0,0,0,1],[1,0,0,0,1,0,0,0,1]])
