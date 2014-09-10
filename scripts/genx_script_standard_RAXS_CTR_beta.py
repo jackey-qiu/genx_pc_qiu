@@ -54,8 +54,8 @@ BV_OFFSET_SORBATE=[[0.2]*8]*len(pickup_index)
 SEARCH_RANGE_OFFSET=0.2
 
 USE_COORS=[[0,0,0,0]*5]*len(pickup_index)
-COORS={(0,0):{'sorbate':[[[0,0,0]],[[1,1,1]]],'oxygen':[[[0,0,0]],[[1,1,1]]]},\
-       (2,0):{'sorbate':[[[0,0,0]],[[1,1,1]]],'oxygen':[[[0,0,0]],[[1,1,1]]]}}
+COORS={(0,0):{'sorbate':[[[0,0,0]]],'oxygen':[[[0,0,0],[0,0,0]]]},\
+       (2,0):{'sorbate':[[[0,0,0]]],'oxygen':[[[0,0,0],[0,0,0]]]}}
 
 water_pars={'use_default':True,'number':[0,2,0],'ref_point':[[[]],[['O1_3_0','O1_4_0']],[[]]]}
 
@@ -124,7 +124,7 @@ USE_COORS(a list of 0 or 1)
     eg3 USE_COORS=[[0],[1],[1]] use coors for only domain2 and domain3
 COORS(a lib specifying the coordinates for sorbates)
     keys of COORS are the domain index and site index, ignore domain with no sorbates
-    len(COORS[(i,j)]['sorbate'])=len(COORS[(i,j)]['oxygen'])=2, which is the number of sorbate sets (2 in this specific substrate)
+    len(COORS[(i,j)]['sorbate'])=1 while len(COORS[(i,j)]['oxygen'])>=1, which is the number of distal oxygens
     make sure the setup matches with the pick_up index and the sym_site_index as well as the number of distal oxygens
     if you dont consider oxygen in your model, you still need to specify the coordinates for the oxygen(just one oxygen) to avoid error prompt
 O_NUMBER_HL/FL(a list of list of [a,b],where a and b are integer numbers)
@@ -590,7 +590,7 @@ for i in range(DOMAIN_NUMBER):
             O_id=[HO_id for HO_id in vars()['HO_list_domain'+str(int(i+1))+'a'] if SORBATE_id in HO_id]
             sorbate_coors=[]
             if USE_COORS[i][j]:
-                sorbate_coors=COORS[(i,j)]['sorbate'][j%2]+COORS[i]['oxygen'][j%2]
+                sorbate_coors=COORS[(i,j)]['sorbate'][0]+COORS[i]['oxygen'][0]
             else:
                 if LOCAL_STRUCTURE=='trigonal_pyramid':
                     sorbate_coors=vars()['domain_class_'+str(int(i+1))].adding_sorbate_pyramid_monodentate(domain=vars()['domain'+str(int(i+1))+'A'],top_angle=70,phi=0,r=2,attach_atm_ids=ids,offset=offset,pb_id=SORBATE_id,O_id=O_id,mirror=MIRROR[i],sorbate_el=SORBATE[0])           
@@ -674,7 +674,7 @@ for i in range(DOMAIN_NUMBER):
             O_id=[HO_id for HO_id in vars()['HO_list_domain'+str(int(i+1))+'a'] if SORBATE_id in HO_id]
             sorbate_coors=[]
             if USE_COORS[i][j]:
-                sorbate_coors=COORS[(i,j)]['sorbate'][j%2]+COORS[(i,j)]['oxygen'][j%2]
+                sorbate_coors=COORS[(i,j)]['sorbate'][0]+COORS[(i,j)]['oxygen'][0]
             else:
                 if LOCAL_STRUCTURE=='trigonal_pyramid':
                     sorbate_coors=vars()['domain_class_'+str(int(i+1))].adding_sorbate_pyramid_distortion_B(domain=vars()['domain'+str(int(i+1))+'A'],top_angle=70,phi=0,edge_offset=[0,0],attach_atm_ids=ids,offset=offset,anchor_ref=anchor,anchor_offset=anchor_offset,pb_id=SORBATE_id,sorbate_el=SORBATE[0],O_id=O_id,mirror=MIRROR[i])
@@ -735,7 +735,7 @@ for i in range(DOMAIN_NUMBER):
             if LOCAL_STRUCTURE=='octahedral':
                 O_id=[HO_id for HO_id in vars()['HO_list_domain'+str(int(i+1))+'a'] if SORBATE_id in HO_id]
                 if USE_COORS[i][j]:
-                    sorbate_coors=COORS[(i,j)]['sorbate'][j%2]+COORS[(i,j)]['oxygen'][j%2]
+                    sorbate_coors=COORS[(i,j)]['sorbate'][0]+COORS[(i,j)]['oxygen'][0]
                 else:
                     sorbate_coors=vars()['domain_class_'+str(int(i+1))].adding_share_triple_octahedra(domain=vars()['domain'+str(int(i+1))+'A'],attach_atm_ids_ref=ids[0:2],attach_atm_id_third=[ids[-1]],offset=offset,sorbate_id=SORBATE_id,sorbate_el=SORBATE[0],sorbate_oxygen_ids=O_id)
                 SORBATE_coors_a.append(sorbate_coors[0])
@@ -752,7 +752,7 @@ for i in range(DOMAIN_NUMBER):
                 domain_creator.add_atom(domain=vars()['domain'+str(int(i+1))+'B'],ref_coor=np.array(SORBATE_coors_a+O_coors_a)*[-1,1,1]-[-1.,0.06955,0.5],ids=sorbate_ids,els=sorbate_els)
             elif LOCAL_STRUCTURE=='trigonal_pyramid':
                 if USE_COORS[i][j]:
-                    sorbate_coors=COORS[(i,j)]['sorbate'][j%2]+COORS[(i,j)]['oxygen'][j%2]
+                    sorbate_coors=COORS[(i,j)]['sorbate'][0]+COORS[(i,j)]['oxygen'][0]
                 else:
                     sorbate_coors=vars()['domain_class_'+str(int(i+1))].adding_pb_share_triple4(domain=vars()['domain'+str(int(i+1))+'A'],top_angle=70,attach_atm_ids_ref=ids[0:2],attach_atm_id_third=[ids[-1]],offset=offset,pb_id=SORBATE_id,sorbate_el=SORBATE[0])
                 SORBATE_coors_a.append(sorbate_coors)
@@ -768,7 +768,7 @@ for i in range(DOMAIN_NUMBER):
             elif LOCAL_STRUCTURE=='tetrahedral':
                 O_id=[HO_id for HO_id in vars()['HO_list_domain'+str(int(i+1))+'a'] if SORBATE_id in HO_id]
                 if USE_COORS[i][j]:
-                    sorbate_coors=COORS[(i,j)]['sorbate'][j%2]+COORS[(i,j)]['oxygen'][j%2]
+                    sorbate_coors=COORS[(i,j)]['sorbate'][0]+COORS[(i,j)]['oxygen'][0]
                 else:
                     sorbate_coors=vars()['domain_class_'+str(int(i+1))].adding_sorbate_tridentate_tetrahedral(domain=vars()['domain'+str(int(i+1))+'A'],attach_atm_ids_ref=ids[0:2],attach_atm_id_third=[ids[-1]],offset=offset,sorbate_id=SORBATE_id,sorbate_el=SORBATE[0],sorbate_oxygen_ids=O_id)
                 SORBATE_coors_a.append(sorbate_coors[0])
@@ -813,7 +813,7 @@ for i in range(DOMAIN_NUMBER):
                 consider_distal=True
             sorbate_coors=[]
             if USE_COORS[i][j]:
-                sorbate_coors=COORS[(i,j)]['sorbate'][j%2]+COORS[(i,j)]['oxygen'][j%2]
+                sorbate_coors=COORS[(i,j)]['sorbate'][0]+COORS[(i,j)]['oxygen'][0]
             else:
                 if LOCAL_STRUCTURE=='trigonal_pyramid':
                     sorbate_coors=vars()['domain_class_'+str(int(i+1))].outer_sphere_complex_2(domain=vars()['domain'+str(int(i+1))+'A'],cent_point=[0.75,0.+j*0.5,2.1],r_Pb_O=2.28,O_Pb_O_ang=70,phi=j*np.pi-0,pb_id=SORBATE_id,sorbate_el=SORBATE[0],O_ids=O_id,distal_oxygen=consider_distal)           
@@ -1191,7 +1191,7 @@ def Sim(data,VARS=VARS):
                         sorbate_ids=[SORBATE_id_B]+O_id_B
                         sorbate_els=[SORBATE_LIST[i][j]]+['O']*(len(O_id_B))
                         domain_creator.add_atom(domain=VARS['domain'+str(int(i+1))+'B'],ref_coor=np.array(SORBATE_coors_a+O_coors_a)*[-1,1,1]-[-1.,0.06955,0.5],ids=sorbate_ids,els=sorbate_els)    
-                else:#outer-sphere case
+                elif not USE_COORS[i][j]:#outer-sphere case
                     phi=getattr(VARS['rgh_domain'+str(int(i+1))],'phi_OS_'+str(j/2*2))
                     r_Pb_O=getattr(VARS['rgh_domain'+str(int(i+1))],'r0_OS_'+str(j/2*2))
                     O_Pb_O_ang=getattr(VARS['rgh_domain'+str(int(i+1))],'top_angle_OS_'+str(j/2*2))
