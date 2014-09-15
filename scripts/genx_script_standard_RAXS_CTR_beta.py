@@ -1075,7 +1075,7 @@ def Sim(data,VARS=VARS):
                     ids=[VARS['SORBATE_ATTACH_ATOM'][i][j][0]+'_D'+str(int(i+1))+'A',VARS['SORBATE_ATTACH_ATOM'][i][j][1]+'_D'+str(int(i+1))+'A']
                     offset=VARS['SORBATE_ATTACH_ATOM_OFFSET'][i][j]
                     if LOCAL_STRUCTURE=='trigonal_pyramid':
-                        if sym_site_index[i][j]==0:edge_offset=getattr(VARS['rgh_domain'+str(int(i+1))],'offset_BD_'+str(j/2*2))
+                        if (i+j)%2==1:edge_offset=getattr(VARS['rgh_domain'+str(int(i+1))],'offset_BD_'+str(j/2*2))
                         else:edge_offset=-getattr(VARS['rgh_domain'+str(int(i+1))],'offset_BD_'+str(j/2*2))
                         edge_offset2=getattr(VARS['rgh_domain'+str(int(i+1))],'offset2_BD_'+str(j/2*2))
                         angle_offset=getattr(VARS['rgh_domain'+str(int(i+1))],'angle_offset_BD_'+str(j/2*2))
