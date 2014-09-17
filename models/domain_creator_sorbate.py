@@ -1302,6 +1302,7 @@ class domain_creator_sorbate():
         r0=r_sorbate_O*np.sin(O_Pb_O_ang/2*np.pi/180)/np.cos(np.pi/6)
         r1=r_sorbate_O*(np.square(np.cos(O_Pb_O_ang/2*np.pi/180))-np.square(np.sin(O_Pb_O_ang/2*np.pi/180))*np.square(np.tan(np.pi/6)))**0.5
         phi=phi/180*np.pi
+        cent_point=cent_point-np.array([0,0,r1/c])
         p1_x,p1_y,p1_z=r0*np.cos(phi)*np.sin(np.pi/2.)/a+cent_point[0],r0*np.sin(phi)*np.sin(np.pi/2.)/b+cent_point[1],r0*np.cos(np.pi/2.)/c+cent_point[2]
         p2_x,p2_y,p2_z=r0*np.cos(phi+2*np.pi/3)*np.sin(np.pi/2.)/a+cent_point[0],r0*np.sin(phi+2*np.pi/3)*np.sin(np.pi/2.)/b+cent_point[1],r0*np.cos(np.pi/2.)/c+cent_point[2]
         p3_x,p3_y,p3_z=r0*np.cos(phi+4*np.pi/3)*np.sin(np.pi/2.)/a+cent_point[0],r0*np.sin(phi+4*np.pi/3)*np.sin(np.pi/2.)/b+cent_point[1],r0*np.cos(np.pi/2.)/c+cent_point[2]
@@ -1329,14 +1330,14 @@ class domain_creator_sorbate():
                 domain.x[sorbate_index]=sorbate_v[0]
                 domain.y[sorbate_index]=sorbate_v[1]
                 domain.z[sorbate_index]=sorbate_v[2]
-        _add_sorbate(domain=domain,id_sorbate=sorbate_id,el=sorbate_el,sorbate_v=[apex_x,apex_y,apex_z-r1/c])
+        _add_sorbate(domain=domain,id_sorbate=sorbate_id,el=sorbate_el,sorbate_v=[apex_x,apex_y,apex_z])
         if distal_oxygen:
-            _add_sorbate(domain=domain,id_sorbate=O_ids[0],el='O',sorbate_v=p1_new-[0,0,r1/c])
-            _add_sorbate(domain=domain,id_sorbate=O_ids[1],el='O',sorbate_v=p2_new-[0,0,r1/c])
-            _add_sorbate(domain=domain,id_sorbate=O_ids[2],el='O',sorbate_v=p3_new-[0,0,r1/c])
-            _add_sorbate(domain=domain,id_sorbate=O_ids[3],el='O',sorbate_v=p4_new-[0,0,r1/c])
+            _add_sorbate(domain=domain,id_sorbate=O_ids[0],el='O',sorbate_v=p1_new)
+            _add_sorbate(domain=domain,id_sorbate=O_ids[1],el='O',sorbate_v=p2_new)
+            _add_sorbate(domain=domain,id_sorbate=O_ids[2],el='O',sorbate_v=p3_new)
+            _add_sorbate(domain=domain,id_sorbate=O_ids[3],el='O',sorbate_v=p4_new)
 
-        return np.array([apex_x,apex_y,apex_z-r1/c]),p1_new,p2_new,p3_new,p4_new
+        return np.array([apex_x,apex_y,apex_z]),p1_new,p2_new,p3_new,p4_new
         
     def outer_sphere_complex_oct(self,domain,cent_point=[0.5,0.5,1.],r0=1.,phi=0.,Sb_id='Sb1',sorbate_el='Sb',O_ids=['Os1','Os2','Os3','Os4','Os5','Os6'],distal_oxygen=False):
         #add a regular trigonal pyramid motiff above the surface representing the outer sphere complexation
