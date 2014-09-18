@@ -40,6 +40,7 @@ USE_BV=True
 COVALENT_HYDROGEN_RANDOM=False
 COUNT_DISTAL_OXYGEN=False
 ADD_DISTAL_LIGAND_WILD=[[False]*6]*10
+BOND_VALENCE_WAIVER=[]
 
 SORBATE=["As"]
 pickup_index=[[0,6,6],[7],[10,14]]
@@ -138,7 +139,10 @@ ADD_DISTAL_LIGAND_WILD(list of bool)
     you can specify different case for different domains
     and this par is not applicable to outersphere mode, which should be set to None for that domain
 DOMAINS_BV(a list of integer numbers)
-    Domains being considered for bond valence constrain, counted from 0    
+    Domains being considered for bond valence constrain, counted from 0  
+BOND_VALENCE_WAIVER(a list of oxygen atom ids [either surface atoms or distals] with domain tag)
+    When each two of thoes atoms in the list are being considered for bond valence, the valence effect will be ignored no matter how close they are
+    Be careful to select atoms as bond valence waiver
 """   
 ##make a pick index list specifying the type of full layer (0 for short and 1 for long slab)
 ##this function will return a list of indexes list to be passed to pick_full_layer
@@ -1362,7 +1366,7 @@ def Sim(data,VARS=VARS):
                         if el=="H":
                             temp_bv=domain_class_1.cal_bond_valence1_new2B_4(super_cell_surface,key,el,2.5,VARS['match_lib_'+str(i+1)+'A'][key],1,False,R0_BV,2.5)['total_valence']
                         else:
-                            temp_bv=domain_class_1.cal_bond_valence1_new2B_5(super_cell_surface,key,el,SEARCH_RANGE_OFFSET,IDEAL_BOND_LENGTH,VARS['match_lib_'+str(i+1)+'A'][key],50,False,R0_BV,2.5)['total_valence']
+                            temp_bv=domain_class_1.cal_bond_valence1_new2B_6(super_cell_surface,key,el,SEARCH_RANGE_OFFSET,IDEAL_BOND_LENGTH,VARS['match_lib_'+str(i+1)+'A'][key],50,False,R0_BV,2.5,BOND_VALENCE_WAIVER)['total_valence']
                     else:
                         #no searching in this algorithem
                         temp_bv=domain_class_1.cal_bond_valence4B(super_cell_surface,key,VARS['match_lib_'+str(i+1)+'A'][key],2.5)
@@ -1374,7 +1378,7 @@ def Sim(data,VARS=VARS):
                             el="H"
                         if el=="O":
                             try:
-                                temp_bv=domain_class_1.cal_bond_valence1_new2B_5(super_cell_sorbate,key,el,SEARCH_RANGE_OFFSET,IDEAL_BOND_LENGTH,VARS['match_lib_'+str(i+1)+'A'][key],50,False,R0_BV,2.5)['total_valence']
+                                temp_bv=domain_class_1.cal_bond_valence1_new2B_6(super_cell_sorbate,key,el,SEARCH_RANGE_OFFSET,IDEAL_BOND_LENGTH,VARS['match_lib_'+str(i+1)+'A'][key],50,False,R0_BV,2.5,BOND_VALENCE_WAIVER)['total_valence']
                             except:
                                 temp_bv=2
                         else:
@@ -1389,12 +1393,12 @@ def Sim(data,VARS=VARS):
                         if "HB" in key:
                             el="H"
                         if el=="O":
-                            temp_bv=domain_class_1.cal_bond_valence1_new2B_5(super_cell_sorbate,key,el,SEARCH_RANGE_OFFSET,IDEAL_BOND_LENGTH,VARS['match_lib_'+str(i+1)+'A'][key],50,False,R0_BV,2.5)['total_valence']
+                            temp_bv=domain_class_1.cal_bond_valence1_new2B_6(super_cell_sorbate,key,el,SEARCH_RANGE_OFFSET,IDEAL_BOND_LENGTH,VARS['match_lib_'+str(i+1)+'A'][key],50,False,R0_BV,2.5,BOND_VALENCE_WAIVER)['total_valence']
                         else:
                             temp_bv=domain_class_1.cal_bond_valence1_new2B_4(super_cell_sorbate,key,el,2.5,VARS['match_lib_'+str(i+1)+'A'][key],1,False,R0_BV,2.5)['total_valence']
                     else:#metals 
                         try:
-                            temp_bv=domain_class_1.cal_bond_valence1_new2B_5(super_cell_sorbate,key,SORBATE[0],SEARCH_RANGE_OFFSET,IDEAL_BOND_LENGTH,VARS['match_lib_'+str(i+1)+'A'][key],SEARCHING_PARS['sorbate'][1],False,R0_BV,2.5)['total_valence']
+                            temp_bv=domain_class_1.cal_bond_valence1_new2B_6(super_cell_sorbate,key,SORBATE[0],SEARCH_RANGE_OFFSET,IDEAL_BOND_LENGTH,VARS['match_lib_'+str(i+1)+'A'][key],SEARCHING_PARS['sorbate'][1],False,R0_BV,2.5,BOND_VALENCE_WAIVER)['total_valence']
                         except:
                             temp_bv=METAL_BV[i][int(key.rsplit('_')[0][-1])-1][0]
                     
