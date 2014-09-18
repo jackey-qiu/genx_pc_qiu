@@ -934,11 +934,9 @@ class domain_creator_sorbate():
         p_O1_index=np.where(domain.id==anchor[0])
         p_O2_index=np.where(domain.id==anchor[1])
         sorbate_index=np.where(domain.id==sorbate)
-        ref_index=None
-        try:
-            ref_index=np.where(domain.id==ref)
-        except:
-            pass
+        ref_index=np.where(domain.id==ref)
+        if ref_index==():
+            ref_index=None
         basis=np.array([5.038,5.434,7.3707])
         
         def _translate_offset_symbols(symbol):
@@ -957,7 +955,7 @@ class domain_creator_sorbate():
             ref=pt_ct(domain,ref_index,ref_offset)*basis
         except:
             ref=(p0+p1)/2.-[0,0,1]
-        ref=pt_ct(domain,ref_index,ref_offset)*basis
+        #ref=pt_ct(domain,ref_index,ref_offset)*basis
         shoulder_angle=np.arccos(np.dot((p0-p1),(sorbate-p1))/f2(p0,p1)/f2(sorbate,p1))
         top_angle_before_offset=np.pi-2*shoulder_angle
         original_edge_length=f2(p0,p1)/2/np.cos(shoulder_angle)
