@@ -19,11 +19,9 @@ COUNT_TIME=False
 if COUNT_TIME:t_0=datetime.now()
     
 ##file paths and wt factors##
-batch_path_head='/u1/uaf/cqiu/batchfile/'
-WT_RAXS=5#weighting for RAXS dataset
 WT_BV=1#weighting for bond valence constrain (1 recommended)
-BV_TOLERANCE=[-0.1,0.1]#ideal bv value + or - this value is acceptable, negative side is over-saturation and positive site is under-saturated
-USE_TOP_ANGLE=False#fit top angle if true otherwise fit the Pb-O bond length (used in bidentate case)
+BV_TOLERANCE=[-0.2,0.2]#ideal bv value + or - this value is acceptable, negative side is over-saturation and positive site is under-saturated
+USE_TOP_ANGLE=True#fit top angle if true otherwise fit the Pb-O bond length (used in bidentate case)
 INCLUDE_HYDROGEN=0
 
 ##matching index##
@@ -125,7 +123,7 @@ USE_COORS(a list of 0 or 1)
     eg3 USE_COORS=[[0],[1],[1]] use coors for only domain2 and domain3
 COORS(a lib specifying the coordinates for sorbates)
     keys of COORS are the domain index and site index, ignore domain with no sorbates
-    len(COORS[(i,j)]['sorbate'])=1 while len(COORS[(i,j)]['oxygen'])>=1, which is the number of distal oxygens
+    len(COORS[(i,j)]['sorbate'][0])=1 while len(COORS[(i,j)]['oxygen'][0])>=1, which is the number of distal oxygens
     make sure the setup matches with the pick_up index and the sym_site_index as well as the number of distal oxygens
     if you dont consider oxygen in your model, you still need to specify the coordinates for the oxygen(just one oxygen) to avoid error prompt
 O_NUMBER_HL/FL(a list of list of [a,b],where a and b are integer numbers)
@@ -511,7 +509,7 @@ ref_S_domain2 =  model.Slab(c = 1.0,T_factor='B')
 ref_L_domain2 =  model.Slab(c = 1.0,T_factor='B')
 rgh=UserVars()
 rgh.new_var('beta', 0.0)
-scales=['scale_CTR','scale_RAXS','scale_CTR_specular']
+scales=['scale_CTR']
 for scale in scales:
     rgh.new_var(scale,1.)
     
@@ -521,11 +519,8 @@ for scale in scales:
 #it is a super surface structure by stacking the surface slab on bulk slab, the repeat vector was counted 
 
 #only two possible path(one for runing in pacman, the other in local laptop)
-try:
-    domain_creator.add_atom_in_slab(bulk,batch_path_head+'bulk.str')
-except:
-    batch_path_head='\\'.join(__main__.__file__.rsplit('\\')[:-1])+'\\batchfile\\'
-    domain_creator.add_atom_in_slab(bulk,batch_path_head+'bulk.str')
+batch_path_head='\\'.join(__main__.__file__.rsplit('\\')[:-1])+'\\batchfile\\'
+domain_creator.add_atom_in_slab(bulk,batch_path_head+'bulk.str')
 domain_creator.add_atom_in_slab(ref_domain1,batch_path_head+'half_layer2.str')
 domain_creator.add_atom_in_slab(ref_L_domain2,batch_path_head+'full_layer2.str')
 domain_creator.add_atom_in_slab(ref_S_domain2,batch_path_head+'full_layer3.str')
@@ -982,12 +977,9 @@ if USE_BV:
                     vars()['match_lib_'+str(int(i+1))+'A'][key]=vars()['HB_MATCH_'+str(i+1)][key]
                 else:
                     vars()['match_lib_'+str(int(i+1))+'A'][key]=vars()['match_lib_'+str(int(i+1))+'A'][key]+vars()['HB_MATCH_'+str(i+1)][key]
-#####################################specify f1f2 here###################################
-res_el='Pb'
-f1f2_file='raxs_Pb_formatted.f1f2'
-#f1f2=np.loadtxt(batch_path_head+f1f2_file)
-VARS=vars()#pass local variables to sim function
+
 ###################################fitting function part##########################################
+VARS=vars()#pass local variables to sim function
 if COUNT_TIME:t_1=datetime.now()
 
 def Sim(data,VARS=VARS):
@@ -1506,20 +1498,11 @@ def Sim(data,VARS=VARS):
         y = data_set.extra_data['Y']
         LB = data_set.extra_data['LB']
         dL = data_set.extra_data['dL']
-        if x[0]>100:#a sign for RAXS dataset(first column is Energy which is in the order of 1000 ev)
-            sample = model2.Sample(inst, bulk, domain, unitcell,coherence=COHERENCE,surface_parms={'delta1':0.,'delta2':0.1391})
-            rough = (1-beta)/((1-beta)**2 + 4*beta*np.sin(np.pi*(y-LB)/dL)**2)**0.5#roughness model, double check LB and dL values are correctly set up in data file
-            f = SCALES[1]*rough*sample.calc_f(h, k, y,f1f2,res_el)
-            F.append(abs(f))
-            fom_scaler.append(WT_RAXS)
-        else:#First column is l for CTR dataset, l is a relative small number (less than 10 usually)
-            sample = model.Sample(inst, bulk, domain, unitcell,coherence=COHERENCE,surface_parms={'delta1':0.,'delta2':0.1391})
-            rough = (1-beta)/((1-beta)**2 + 4*beta*np.sin(np.pi*(x-LB)/dL)**2)**0.5#roughness model, double check LB and dL values are correctly set up in data file
-            f = SCALES[0]*rough*sample.calc_f4(h, k, x)
-            if h[0]==0 and k[0]==0:#extra scale factor for specular rod
-                f=SCALES[2]*f
-            F.append(abs(f))
-            fom_scaler.append(1)
+        sample = model.Sample(inst, bulk, domain, unitcell,coherence=COHERENCE,surface_parms={'delta1':0.,'delta2':0.1391})
+        rough = (1-beta)/((1-beta)**2 + 4*beta*np.sin(np.pi*(x-LB)/dL)**2)**0.5#roughness model, double check LB and dL values are correctly set up in data file
+        f = SCALES[0]*rough*sample.calc_f4(h, k, x)
+        F.append(abs(f))
+        fom_scaler.append(1)
     
     #domain_class_1.find_neighbors2(domain_class_1.build_super_cell(domain2A,['Fe1_2_0_D2A','Fe1_3_0_D2A','Pb2_D2A','HO1_Pb2_D2A']),'HO1_Pb1_D2A',3)
     #print 'As1_D1A',domain_creator.extract_coor(domain1A,'As1_D1A')
