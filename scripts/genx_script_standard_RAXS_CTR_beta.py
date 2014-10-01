@@ -525,7 +525,11 @@ for scale in scales:
 
 #only two possible path(one for runing in pacman, the other in local laptop)
 batch_path_head='\\'.join(__main__.__file__.rsplit('\\')[:-1])+'\\batchfile\\'
-domain_creator.add_atom_in_slab(bulk,batch_path_head+'bulk.str')
+try:
+    domain_creator.add_atom_in_slab(bulk,batch_path_head+'bulk.str')
+except:
+    batch_path_head='/u1/uaf/cqiu/batchfile/'
+    domain_creator.add_atom_in_slab(bulk,batch_path_head+'bulk.str')
 domain_creator.add_atom_in_slab(ref_domain1,batch_path_head+'half_layer2.str')
 domain_creator.add_atom_in_slab(ref_L_domain2,batch_path_head+'full_layer2.str')
 domain_creator.add_atom_in_slab(ref_S_domain2,batch_path_head+'full_layer3.str')
