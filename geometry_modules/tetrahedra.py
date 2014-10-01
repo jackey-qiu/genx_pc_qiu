@@ -53,6 +53,17 @@ class share_face():
         p3_new=unit_vector*new_length+ct_point
         self.p3=p3_new
         
+    def apply_top_angle_offset(self,offset=0):
+        #move original body center along vector defined by old_bodycenter and the distal oxygen for some distance dedined by offset in A
+        #the distal oxygen will be moved accordingly
+        p3_old=self.p3
+        ct_point=self.center_point
+        unit_vector=f3(ct_point,p3_old)-ct_point
+        new_length=self.r+offset
+        p3_new=unit_vector*new_length+ct_point
+        self.p3=p3_new
+        self.center_point=self.center_point+unit_vector*offset
+        
     def cal_point_in_fit(self,r,theta,phi):
         #during fitting,use the same coordinate system, but a different origin
         #note the origin_coor is the new position for the sorbate0, ie new center point

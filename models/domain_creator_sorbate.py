@@ -524,7 +524,7 @@ class domain_creator_sorbate():
         else:
             return [octahedra_case.center_point/basis]
          
-    def adding_sorbate_tridentate_tetrahedral(self,domain,attach_atm_ids_ref=['id1','id2'],attach_atm_id_third=['id3'],offset=[None,None,None],sorbate_id='Sb_id',sorbate_el='Sb',sorbate_oxygen_ids=['HO1'],edge_offset=0):
+    def adding_sorbate_tridentate_tetrahedral(self,domain,attach_atm_ids_ref=['id1','id2'],attach_atm_id_third=['id3'],offset=[None,None,None],sorbate_id='Sb_id',sorbate_el='Sb',sorbate_oxygen_ids=['HO1'],edge_offset=0,top_angle_offset=0):
         #here only consider the configuration of regular octahedra
         #and here consider the tridentate complexation configuration 
         #two steps:
@@ -576,6 +576,7 @@ class domain_creator_sorbate():
         tetrahedral_case=tetrahedra.share_face(np.array([p_O1,p_O2,p_O3]))
         tetrahedral_case.share_face_init()
         tetrahedral_case.apply_edge_offset(edge_offset)
+        tetrahedral_case.apply_top_angle_offset(top_angle_offset)
         
         def _add_sorbate(domain=None,id_sorbate=None,el='Sb',sorbate_v=[]):
             sorbate_index=None
