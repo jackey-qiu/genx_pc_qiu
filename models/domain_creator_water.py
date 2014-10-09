@@ -111,7 +111,7 @@ class domain_creator_water():
             super_cell.add_atom(id=str(id)+'_-x-y',element=ref_domain.el[index], x=_extract_coor(ref_domain,id)[0]-1.0, y=_extract_coor(ref_domain,id)[1]-1., z=_extract_coor(ref_domain,id)[2], u = ref_domain.u[index], oc = ref_domain.oc[index], m = ref_domain.m[index])
         
         return super_cell
-    
+        
     def create_equivalent_domains(self):
         new_domain_A=self.ref_domain.copy()
         new_domain_B=self.ref_domain.copy()
@@ -240,6 +240,31 @@ class domain_creator_water():
             domain.x[O_index1],domain.y[O_index1],domain.z[O_index1]=point1[0],point1[1],point1[2]
             domain.x[O_index2],domain.y[O_index2],domain.z[O_index2]=point2[0],point2[1],point2[2]
         return np.append([point1],[point2],axis=0)
+        
+    def cal_geometry_pars_from_coors(self,domain,ref_ids,sorbate_ids):
+        def _shift_in_unit_cell(coors):
+            [x,y,z]=coors
+            while x>5.038 or x<0:
+                if x<0:
+                    x=x+5.038
+                elif x>5.038:
+                    x=x-5.038
+            while y>5.434 or y<0:
+                if y<0:
+                    y=y+5.434
+                elif y>5.434:
+                    y=y-5.434
+            return np.array([x,y,z])
+            
+        basis=np.array([5.038,5.434,7.3707])
+        ref_coors=[domain_creator.extract_coor(domain,ref_id)*basis for ref_id in ref_ids]
+        sorbate_coors=[domain_creator.extract_coor(domain,sorbate_id)*basis for sorbate_id in sorbate_ids]
+        v_shift=sorbate_coors[0][2]-ref_coors[0][2]
+        r=f2(sorbate_coors[0],sorbate_coors[1])/2.
+        vec_ref=np.array([1,0,0])
+        vec_sorbate=sorbate_coors[1]-sorbate_coors[0]
+        alpha=np.arccos(np.dot(vec_ref,vec_sorbate)/f2(vec_ref,np.array([0,0,0]))/f2(vec_sorbate,np.array([0,0,0])))/np.pi*180.
+        return v_shift,alpha
         
     def add_single_oxygen(self,domain,ref_id,O_id,v_shift):
     #v_shift and r are in unit of angstrom
