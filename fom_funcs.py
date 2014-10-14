@@ -274,6 +274,13 @@ def chi2bars(simulations, data):
     return [(dataset.y - sim)**2/dataset.error**2 for (dataset, sim) in zip(data,simulations)]
 chi2bars.__div_dof__ = True
 
+def chi2bars_w_trainor(simulations, data):
+    ''' Weighted chi squared
+    '''
+    N = np.sum([len(dataset.y)*dataset.use for dataset in data])
+    return [(dataset.y - sim)**2/(dataset.y*0.2)**2 for (dataset, sim) in zip(data,simulations)]
+chi2bars_w_trainor.__div_dof__ = True
+
 #fom's are weighted with dip zones having higher wt number and bragg peak zone having lower wt number
 def chi2bars_weighted(simulations, data):
     ''' Weighted chi squared
