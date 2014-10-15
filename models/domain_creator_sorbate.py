@@ -811,8 +811,8 @@ class domain_creator_sorbate():
             anchor=pt_ct(domain,anchor_index,anchor_offset)*basis
         #print "O1",p_O1
         #print "O2",p_O2
-        pyramid_distortion=trigonal_pyramid_distortion_B2.trigonal_pyramid_distortion(p0=p_O1,p1=p_O2,ref=anchor,top_angle=top_angle/180*np.pi,len_offset=edge_offset)
-        pyramid_distortion.all_in_all(switch=switch,phi=phi/180*np.pi,mirror=mirror,angle_offset=angle_offset/180*np.pi)
+        pyramid_distortion=trigonal_pyramid_distortion_B2.trigonal_pyramid_distortion(p0=p_O1,p1=p_O2,ref=anchor,top_angle=top_angle/180.*np.pi,len_offset=edge_offset)
+        pyramid_distortion.all_in_all(switch=switch,phi=phi/180*np.pi,mirror=mirror,angle_offset=angle_offset/180.*np.pi)
         #print "apex",pyramid_distortion.apex-[0,0.75587,7.3707]
         #print "p2",pyramid_distortion.p2-[0,0.75587,7.3707]
         def _add_sorbate(domain=None,id_sorbate=None,el='Pb',sorbate_v=[]):
