@@ -636,7 +636,7 @@ for i in range(DOMAIN_NUMBER):
                     vars()['rgh_domain'+str(int(i+1))].new_var('offset2_BD_'+str(j), 0.)
                     vars()['rgh_domain'+str(int(i+1))].new_var('angle_offset_BD_'+str(j), 0.)
                     vars()['rgh_domain'+str(int(i+1))].new_var('phi_BD_'+str(j), 0.)
-                    vars()['rgh_domain'+str(int(i+1))].new_var('top_angle_BD_'+str(j), 0.)
+                    vars()['rgh_domain'+str(int(i+1))].new_var('top_angle_BD_'+str(j), 70.)
                     vars()['rgh_domain'+str(int(i+1))].new_var('r_BD_'+str(j), 2.27)
                     [vars()['rgh_domain'+str(int(i+1))].new_var('r1_'+str(KK+1)+'_BD_'+str(j), 2.27) for KK in range(1)]
                     [vars()['rgh_domain'+str(int(i+1))].new_var('theta1_'+str(KK+1)+'_BD_'+str(j), 0) for KK in range(1)]
@@ -646,7 +646,7 @@ for i in range(DOMAIN_NUMBER):
                     vars()['rgh_domain'+str(int(i+1))].new_var('offset2_BD_'+str(j), 0.)
                     vars()['rgh_domain'+str(int(i+1))].new_var('angle_offset_BD_'+str(j), 0.)
                     vars()['rgh_domain'+str(int(i+1))].new_var('phi_BD_'+str(j), 0.)
-                    vars()['rgh_domain'+str(int(i+1))].new_var('top_angle_BD_'+str(j), 0.)
+                    vars()['rgh_domain'+str(int(i+1))].new_var('top_angle_BD_'+str(j), 70.)
                     vars()['rgh_domain'+str(int(i+1))].new_var('r_BD_'+str(j), 2.27)
             elif j%2==0 and LOCAL_STRUCTURE=='octahedral':
                 if ADD_DISTAL_LIGAND_WILD[i][j]:

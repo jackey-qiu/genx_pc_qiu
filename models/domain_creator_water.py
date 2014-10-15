@@ -257,14 +257,15 @@ class domain_creator_water():
             return np.array([x,y,z])
             
         basis=np.array([5.038,5.434,7.3707])
-        ref_coors=[domain_creator.extract_coor(domain,ref_id)*basis for ref_id in ref_ids]
-        sorbate_coors=[domain_creator.extract_coor(domain,sorbate_id)*basis for sorbate_id in sorbate_ids]
+        ref_coors=[_shift_in_unit_cell(domain_creator.extract_coor(domain,ref_id)*basis) for ref_id in ref_ids]
+        sorbate_coors=[_shift_in_unit_cell(domain_creator.extract_coor(domain,sorbate_id)*basis) for sorbate_id in sorbate_ids]
+        y_shift=(sorbate_coors[0]+sorbate_coors[1]-ref_coors[0]-ref_coors[1])[1]/2./5.434
         v_shift=sorbate_coors[0][2]-ref_coors[0][2]
         r=f2(sorbate_coors[0],sorbate_coors[1])/2.
         vec_ref=np.array([1,0,0])
         vec_sorbate=sorbate_coors[1]-sorbate_coors[0]
         alpha=np.arccos(np.dot(vec_ref,vec_sorbate)/f2(vec_ref,np.array([0,0,0]))/f2(vec_sorbate,np.array([0,0,0])))/np.pi*180.
-        return v_shift,alpha
+        return v_shift,alpha,y_shift
         
     def add_single_oxygen(self,domain,ref_id,O_id,v_shift):
     #v_shift and r are in unit of angstrom
