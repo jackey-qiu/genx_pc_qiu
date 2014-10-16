@@ -50,6 +50,17 @@ f2=lambda p1,p2:np.sqrt(np.sum((p1-p2)**2))
 #direction of the basis is pointing from p1 to p2
 f3=lambda p1,p2:(1./f2(p1,p2))*(p2-p1)+p1
 
+
+def translate_domain_type(GROUPING_SCHEMES=[[0,1]],full_layer_pick=[None,None,0]):
+    domain_type=[]
+    def _translate_type(label):
+        if label==None:return "HL"
+        elif label==0:return "FL_S"
+        elif label==1:return "FL_L"
+    for each in GROUPING_SCHEMES:
+        domain_type.append([_translate_type(full_layer_pick[each[0]]),_translate_type(full_layer_pick[each[1]])])
+    return domain_type
+    
 #Generate commands to group surface atom layers from different domains
 #each item inside the domain_index_pair is a two item integer numbers specifying the domain index (counting from 1)
 #domain_type_pair has one to one corresponding to the domain_index_pair, only possible items include
