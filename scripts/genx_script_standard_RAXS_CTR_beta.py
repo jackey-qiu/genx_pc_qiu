@@ -48,6 +48,7 @@ OS_X_REF=[[None,None,0,0.5,0,0.5],[None],[None,None,0,0.5]]
 OS_Y_REF=[[None,None,0,0.5,0,0.5],[None],[None,None,0,0.5]]
 OS_Z_REF=[[None,None,2.1,2.1,2.5,2.5],[None],[None,None,2.0,2.0]]
 DOMAINS_BV=range(len(pickup_index))
+TABLE_DOMAINS=[1]*len(pickup_index)
 
 BV_OFFSET_SORBATE=[[0.2]*8]*len(pickup_index)
 SEARCH_RANGE_OFFSET=0.2
@@ -64,7 +65,9 @@ O_NUMBER_FL=[[[0,0]],[[0,0]],[[0,0]],[[0,0]],[[0,0]],[[0,0]],[[4,4]],[[0,0]]]
 SORBATE_NUMBER_HL=[[2],[2],[2],[2],[2],[2],[2],[0]]
 SORBATE_NUMBER_FL=[[2],[2],[2],[2],[2],[2],[2],[0]]
 
-commands=\
+GROUPING_SCHEMES=[[0,1]]
+GROUPING_DEPTH=[6]
+commands=domain_creator.generate_commands_for_surface_atom_grouping(np.array(GROUPING_SCHEMES)+1,domain_creator.translate_domain_type(GROUPING_SCHEMES,full_layer_pick),GROUPING_DEPTH)+\
    [
     
    ]
@@ -106,6 +109,9 @@ water_pars(a lib to set the interfacial waters quickly)
     you may use default which has no water or turn the switch off and set the number and anchor points
 USE_BV(bool)
     a switch to apply bond valence constrain during surface modelling
+TABLE_DOMAINS(list of 0 or 1, the length should be higher than the total domain number)
+    specify whether or not generate the associated pars for each domain
+    [0,1,1] means only generate the pars for last two domains
 COVALENT_HYDROGEN_RANDOM(bool)
     a switch to not explicitly specify the protonation of surface functional groups
     different protonation scheme (0,1 or 2 protons) will be tried and compared, the one with best bv result will be used
@@ -148,6 +154,17 @@ DOMAINS_BV(a list of integer numbers)
 BOND_VALENCE_WAIVER(a list of oxygen atom ids [either surface atoms or distals] with domain tag)
     When each two of thoes atoms in the list are being considered for bond valence, the valence effect will be ignored no matter how close they are
     Be careful to select atoms as bond valence waiver
+GROUPING_SCHEMES(a list of lists with two items, with each item being the domain index starting from 0)
+    Define how you want to group the surface atoms together from two different domains with same termination type
+    A function will generate all the associated commands to do the grouping
+    [[0,1]] means group surface atoms from the first (0) and second domain(1)
+    If you dont want to do any grouping, set this to be []
+GROUPING_DEPTH(a list of integers less than 10)
+    Define how deep you want to group your atoms. You can define a maximum grouping depth to 10
+    You should count the atom layers upward from the 10th atom layer
+    [6,10] means you want to group the 5th atom layer to 10th atom layer for domain 1 and group all top ten atom layers together for domain2
+    Don't forget that you have a Iron layer which is explicitly included in HL but the occ set to 0 to account for the missing Fe sites
+    So you should count that atom layer too when considering the grouping depth
 """   
 ##make a pick index list specifying the type of full layer (0 for short and 1 for long slab)
 ##this function will return a list of indexes list to be passed to pick_full_layer
@@ -380,7 +397,7 @@ if TABLE:
                 elif len(SORBATE_ATTACH_ATOM[i][j])==3:
                     temp_binding_mode.append('TD')   
         binding_mode.append(temp_binding_mode)
-    make_grid.make_structure(map(sum,SORBATE_NUMBER),O_N,WATER_NUMBER,DOMAIN,Metal=SORBATE[0],binding_mode=binding_mode,long_slab=full_layer_pick,local_structure=LOCAL_STRUCTURE,add_distal_wild=ADD_DISTAL_LIGAND_WILD)
+    make_grid.make_structure(map(sum,SORBATE_NUMBER),O_N,WATER_NUMBER,DOMAIN,Metal=SORBATE[0],binding_mode=binding_mode,long_slab=full_layer_pick,local_structure=LOCAL_STRUCTURE,add_distal_wild=ADD_DISTAL_LIGAND_WILD,use_domains=TABLE_DOMAINS)
 
 #function to group outer-sphere pars from different domains (to be placed inside sim function)
 def set_OS(domain_names=['domain5','domain4']):
