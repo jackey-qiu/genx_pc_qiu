@@ -5,7 +5,10 @@ from datetime import datetime
 import numpy as np
 import sys,pickle,__main__
 import models.domain_creator as domain_creator
-import make_parameter_table_GenX_beta2 as make_grid
+try:
+    import make_parameter_table_GenX_beta2 as make_grid
+except:
+    pass
 from copy import deepcopy
 
 #************************************program begins from here **********************************************
