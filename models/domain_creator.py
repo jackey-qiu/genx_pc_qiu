@@ -1606,7 +1606,7 @@ class domain_creator(domain_creator_water,domain_creator_sorbate,domain_creator_
                     break
         return bond_valence
             
-    def cal_hydrogen_bond_valence2B(self,domain,center_atom_id,searching_range=3.0,acceptable_min=2.5):
+    def cal_hydrogen_bond_valence2B(self,domain,center_atom_id,searching_range=3.0,acceptable_min=2.5,waiver_atoms=[]):
         #different from valence2:domain is a library in form of {(id,el):coords1}
         bond_valence=0
         basis=np.array([5.038,5.434,7.3707])
@@ -1614,13 +1614,16 @@ class domain_creator(domain_creator_water,domain_creator_sorbate,domain_creator_
         f2=lambda p1,p2:np.sqrt(np.sum((p1-p2)**2))
         center_atm_key=(center_atom_id,'O')
         for i in domain.keys():
-            dist=f2(domain[center_atm_key]*basis,domain[i]*basis)
-            if (dist<=searching_range)&(dist!=0.):
-                if dist>=acceptable_min:
-                    pass
-                else:
-                    bond_valence=10
-                    break
+            if sum([each in i[0] for each in waiver_atoms])==1 and sum([eachcase in center_atom_id for eachcase in waiver_atoms])==1:
+                pass
+            else:
+                dist=f2(domain[center_atm_key]*basis,domain[i]*basis)
+                if (dist<=searching_range)&(dist!=0.):
+                    if dist>=acceptable_min:
+                        pass
+                    else:
+                        bond_valence=10
+                        break
         return bond_valence
         
     def cal_bond_valence2(self,domain,center_atm,match_list):

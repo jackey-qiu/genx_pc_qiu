@@ -1380,7 +1380,7 @@ def Sim(data,VARS=VARS):
                 if WATER_NUMBER[i]!=0:
                     water_ids=VARS['Os_list_domain'+str(int(i+1))+'a']
                     for id in water_ids:
-                        tmp_bv=domain_class_1.cal_hydrogen_bond_valence2B(super_cell_water,id,3.,2.5)
+                        tmp_bv=domain_class_1.cal_hydrogen_bond_valence2B(super_cell_water,id,3.,2.5,BOND_VALENCE_WAIVER)
                         bv=bv+tmp_bv
                         if debug_bv:bv_container[id]=tmp_bv
             #cal bv for surface atoms and sorbates
