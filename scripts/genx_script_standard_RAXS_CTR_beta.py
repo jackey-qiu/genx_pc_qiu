@@ -66,10 +66,12 @@ SORBATE_NUMBER_FL=[[2],[2],[2],[2],[2],[2],[2],[0]]
 
 GROUPING_SCHEMES=[[0,1]]
 GROUPING_DEPTH=[6]
-commands=domain_creator.generate_commands_for_surface_atom_grouping(np.array(GROUPING_SCHEMES)+1,domain_creator.translate_domain_type(GROUPING_SCHEMES,full_layer_pick),GROUPING_DEPTH)+\
+commands_surface=domain_creator.generate_commands_for_surface_atom_grouping(np.array(GROUPING_SCHEMES)+1,domain_creator.translate_domain_type(GROUPING_SCHEMES,full_layer_pick),GROUPING_DEPTH)
+commands_other=\
    [
     
    ]
+commands=commands_other+commands_surface
 ##############################################end of main setup zone############################################
 
 ###quick explanation for parameters in the main setup zone#####
