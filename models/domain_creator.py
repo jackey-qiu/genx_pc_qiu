@@ -80,31 +80,31 @@ def generate_commands_for_surface_atom_grouping(domain_index_pair=[[1,2],[3,4]],
                 command_list.append('gp_'+HL[j]+'_D'+str(domain_index_pair[i][0])+'.setdx('+'gp_'+HL[j]+'_D'+str(domain_index_pair[i][1])+'.getdx())')
                 command_list.append('gp_'+HL[j]+'_D'+str(domain_index_pair[i][0])+'.setdy('+'gp_'+HL[j]+'_D'+str(domain_index_pair[i][1])+'.getdy())')
                 command_list.append('gp_'+HL[j]+'_D'+str(domain_index_pair[i][0])+'.setdz('+'gp_'+HL[j]+'_D'+str(domain_index_pair[i][1])+'.getdz())')
-                #command_list.append('gp_'+HL[j]+'_D'+str(domain_index_pair[i][0])+'.setoc('+'gp_'+HL[j]+'_D'+str(domain_index_pair[i][1])+'.getoc())')
+                command_list.append('gp_'+HL[j]+'_D'+str(domain_index_pair[i][0])+'.setoc('+'gp_'+HL[j]+'_D'+str(domain_index_pair[i][1])+'.getoc())')
         elif domain_type_pair[i]==['FL_S','FL_S']:
             for j in range(10-grouping_depth[i],10):
                 command_list.append('gp_'+FL_S[j]+'_D'+str(domain_index_pair[i][0])+'.setdx('+'gp_'+FL_S[j]+'_D'+str(domain_index_pair[i][1])+'.getdx())')
                 command_list.append('gp_'+FL_S[j]+'_D'+str(domain_index_pair[i][0])+'.setdy('+'gp_'+FL_S[j]+'_D'+str(domain_index_pair[i][1])+'.getdy())')
                 command_list.append('gp_'+FL_S[j]+'_D'+str(domain_index_pair[i][0])+'.setdz('+'gp_'+FL_S[j]+'_D'+str(domain_index_pair[i][1])+'.getdz())')
-                #command_list.append('gp_'+FL_S[j]+'_D'+str(domain_index_pair[i][0])+'.setoc('+'gp_'+FL_S[j]+'_D'+str(domain_index_pair[i][1])+'.getoc())')
+                command_list.append('gp_'+FL_S[j]+'_D'+str(domain_index_pair[i][0])+'.setoc('+'gp_'+FL_S[j]+'_D'+str(domain_index_pair[i][1])+'.getoc())')
         elif domain_type_pair[i]==['FL_L','FL_L']:
             for j in range(10-grouping_depth[i],10):
                 command_list.append('gp_'+FL_L[j]+'_D'+str(domain_index_pair[i][0])+'.setdx('+'gp_'+FL_L[j]+'_D'+str(domain_index_pair[i][1])+'.getdx())')
                 command_list.append('gp_'+FL_L[j]+'_D'+str(domain_index_pair[i][0])+'.setdy('+'gp_'+FL_L[j]+'_D'+str(domain_index_pair[i][1])+'.getdy())')
                 command_list.append('gp_'+FL_L[j]+'_D'+str(domain_index_pair[i][0])+'.setdz('+'gp_'+FL_L[j]+'_D'+str(domain_index_pair[i][1])+'.getdz())')
-                #command_list.append('gp_'+FL_L[j]+'_D'+str(domain_index_pair[i][0])+'.setoc('+'gp_'+FL_L[j]+'_D'+str(domain_index_pair[i][1])+'.getoc())')
+                command_list.append('gp_'+FL_L[j]+'_D'+str(domain_index_pair[i][0])+'.setoc('+'gp_'+FL_L[j]+'_D'+str(domain_index_pair[i][1])+'.getoc())')
         elif domain_type_pair[i]==['FL_S','FL_L']:
             for j in range(10-grouping_depth[i],10):
                 command_list.append('gp_'+FL_S[j]+'_D'+str(domain_index_pair[i][0])+'.setdx('+'-gp_'+FL_L[j]+'_D'+str(domain_index_pair[i][1])+'.getdx())')
                 command_list.append('gp_'+FL_S[j]+'_D'+str(domain_index_pair[i][0])+'.setdy('+'gp_'+FL_L[j]+'_D'+str(domain_index_pair[i][1])+'.getdy())')
                 command_list.append('gp_'+FL_S[j]+'_D'+str(domain_index_pair[i][0])+'.setdz('+'gp_'+FL_L[j]+'_D'+str(domain_index_pair[i][1])+'.getdz())')
-                #command_list.append('gp_'+FL_S[j]+'_D'+str(domain_index_pair[i][0])+'.setoc('+'gp_'+FL_L[j]+'_D'+str(domain_index_pair[i][1])+'.getoc())')
+                command_list.append('gp_'+FL_S[j]+'_D'+str(domain_index_pair[i][0])+'.setoc('+'gp_'+FL_L[j]+'_D'+str(domain_index_pair[i][1])+'.getoc())')
         elif domain_type_pair[i]==['FL_L','FL_S']:
             for j in range(10-grouping_depth[i],10):
                 command_list.append('gp_'+FL_L[j]+'_D'+str(domain_index_pair[i][0])+'.setdx('+'-gp_'+FL_S[j]+'_D'+str(domain_index_pair[i][1])+'.getdx())')
                 command_list.append('gp_'+FL_L[j]+'_D'+str(domain_index_pair[i][0])+'.setdy('+'gp_'+FL_S[j]+'_D'+str(domain_index_pair[i][1])+'.getdy())')
                 command_list.append('gp_'+FL_L[j]+'_D'+str(domain_index_pair[i][0])+'.setdz('+'gp_'+FL_S[j]+'_D'+str(domain_index_pair[i][1])+'.getdz())')
-                #command_list.append('gp_'+FL_L[j]+'_D'+str(domain_index_pair[i][0])+'.setoc('+'gp_'+FL_S[j]+'_D'+str(domain_index_pair[i][1])+'.getoc())')
+                command_list.append('gp_'+FL_L[j]+'_D'+str(domain_index_pair[i][0])+'.setoc('+'gp_'+FL_S[j]+'_D'+str(domain_index_pair[i][1])+'.getoc())')
     return command_list
                 
 #extract xyz for atom with id in domain

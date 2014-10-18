@@ -410,13 +410,27 @@ def set_OS(domain_names=['domain5','domain4']):
     eval('rgh_'+domain_names[0]+'.setPhi_OS(rgh_'+domain_names[1]+'.getPhi_OS())')
 
 #function to group bidentate pars from different domains (to be placed inside sim function)
-def set_BD(domain_names=['domain2','domain1']):
-    eval('rgh_'+domain_names[0]+'.setOffset_BD(-rgh_'+domain_names[1]+'.getOffset_BD())') 
-    eval('rgh_'+domain_names[0]+'.setOffset2_BD(rgh_'+domain_names[1]+'.getOffset2_BD())') 
-    eval('rgh_'+domain_names[0]+'.setAngle_offset_BD(rgh_'+domain_names[1]+'.getAngle_offset_BD())')
-    eval('rgh_'+domain_names[0]+'.setR_BD(rgh_'+domain_names[1]+'.getR_BD())') 
-    eval('rgh_'+domain_names[0]+'.setPhi_BD(rgh_'+domain_names[1]+'.getPhi_BD())')
-    
+def set_BD(domain_names=[2,1],sorbate_sets=1,sorbate='Pb'):
+    for i in range(sorbate_sets):
+        eval('rgh_domain'+str(domain_names[0]+1)+'.setOffset_BD_'+str(i*2)+'(rgh_domain'+str(domain_names[1]+1)+'.getOffset_BD_'+str(i*2)+'())') 
+        eval('rgh_domain'+str(domain_names[0]+1)+'.setOffset2_BD_'+str(i*2)+'(rgh_domain'+str(domain_names[1]+1)+'.getOffset2_BD_'+str(i*2)+'())') 
+        eval('rgh_domain'+str(domain_names[0]+1)+'.setAngle_offset_BD_'+str(i*2)+'(rgh_domain'+str(domain_names[1]+1)+'.getAngle_offset_BD_'+str(i*2)+'())')
+        eval('rgh_domain'+str(domain_names[0]+1)+'.setR_BD_'+str(i*2)+'(rgh_domain'+str(domain_names[1]+1)+'.getR_BD_'+str(i*2)+'())') 
+        eval('rgh_domain'+str(domain_names[0]+1)+'.setPhi_BD_'+str(i*2)+'(rgh_domain'+str(domain_names[1]+1)+'.getPhi_BD_'+str(i*2)+'())')
+        eval('rgh_domain'+str(domain_names[0]+1)+'.setTop_angle_BD_'+str(i*2)+'(rgh_domain'+str(domain_names[1]+1)+'.getTop_angle_BD_'+str(i*2)+'())')
+        eval('gp_'+sorbate+'_set'+str(i+1)+'_D'+str(domain_names[0]+1)+'.setoc'+'(gp_'+sorbate+'_set'+str(i+1)+'_D'+str(domain_names[1]+1)+'.getoc())')
+        eval('gp_'+sorbate+'_set'+str(i+1)+'_D'+str(domain_names[0]+1)+'.setu'+'(gp_'+sorbate+'_set'+str(i+1)+'_D'+str(domain_names[1]+1)+'.getu())')
+
+#function to group water pairs togeter from different domains
+#domain_names is list of index of domains counting from 0 and number sets is the number of water pair counting from 1
+def set_water_pair(domain_names=[3,2],number_sets=2):
+    for i in range(number_sets):
+        eval('gp_waters_set'+str(i+1)+'_D'+str(domain_names[0]+1)+'.setoc(gp_waters_set'+str(i+1)+'_D'+str(domain_names[1]+1)+'.getoc())')
+        eval('gp_waters_set'+str(i+1)+'_D'+str(domain_names[0]+1)+'.setu(gp_waters_set'+str(i+1)+'_D'+str(domain_names[1]+1)+'.getu())')
+        eval('gp_waters_set'+str(i+1)+'_D'+str(domain_names[0]+1)+'.setdy(gp_waters_set'+str(i+1)+'_D'+str(domain_names[1]+1)+'.getdy())')
+        eval('rgh_domain'+str(domain_names[0]+1)+'.setV_shift_W_'+str(i+1)+'(rgh_domain'+str(domain_names[1]+1)+'.getV_shift_W_'+str(i+1)+'())')
+        eval('rgh_domain'+str(domain_names[0]+1)+'.setAlpha_W_'+str(i+1)+'(180-rgh_domain'+str(domain_names[1]+1)+'.getAlpha_W_'+str(i+1)+'())')
+
 #function to group tridentate pars specifically for distal oxygens from different domains (to be placed inside sim function)
 def set_TD(domain_names=['domain2','domain1']):
     eval('rgh_'+domain_names[0]+'.setTheta1_1_TD(rgh_'+domain_names[1]+'.getTheta1_1_TD())')
