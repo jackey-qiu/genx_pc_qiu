@@ -410,7 +410,7 @@ def set_OS(domain_names=['domain5','domain4']):
     eval('rgh_'+domain_names[0]+'.setPhi_OS(rgh_'+domain_names[1]+'.getPhi_OS())')
 
 #function to group bidentate pars from different domains (to be placed inside sim function)
-def set_BD(domain_names=[2,1],sorbate_sets=1,sorbate='Pb'):
+def set_BD(domain_names=[2,1],sorbate_sets=1,distal_oxygen_number=1,sorbate='Pb'):
     for i in range(sorbate_sets):
         eval('rgh_domain'+str(domain_names[0]+1)+'.setOffset_BD_'+str(i*2)+'(rgh_domain'+str(domain_names[1]+1)+'.getOffset_BD_'+str(i*2)+'())') 
         eval('rgh_domain'+str(domain_names[0]+1)+'.setOffset2_BD_'+str(i*2)+'(rgh_domain'+str(domain_names[1]+1)+'.getOffset2_BD_'+str(i*2)+'())') 
@@ -420,6 +420,9 @@ def set_BD(domain_names=[2,1],sorbate_sets=1,sorbate='Pb'):
         eval('rgh_domain'+str(domain_names[0]+1)+'.setTop_angle_BD_'+str(i*2)+'(rgh_domain'+str(domain_names[1]+1)+'.getTop_angle_BD_'+str(i*2)+'())')
         eval('gp_'+sorbate+'_set'+str(i+1)+'_D'+str(domain_names[0]+1)+'.setoc'+'(gp_'+sorbate+'_set'+str(i+1)+'_D'+str(domain_names[1]+1)+'.getoc())')
         eval('gp_'+sorbate+'_set'+str(i+1)+'_D'+str(domain_names[0]+1)+'.setu'+'(gp_'+sorbate+'_set'+str(i+1)+'_D'+str(domain_names[1]+1)+'.getu())')
+        for j in range(distal_oxygen_number):
+            eval('gp_HO'+str(j+1)+'_set'+str(i+1)+'_D'+str(domain_names[0]+1)+'.setoc'+'(gp_HO'+str(j+1)+'_set'+str(i+1)+'_D'+str(domain_names[1]+1)+'.getoc())')
+            eval('gp_HO'+str(j+1)+'_set'+str(i+1)+'_D'+str(domain_names[0]+1)+'.setu'+'(gp_HO'+str(j+1)+'_set'+str(i+1)+'_D'+str(domain_names[1]+1)+'.getu())')
 
 #function to group water pairs togeter from different domains
 #domain_names is list of index of domains counting from 0 and number sets is the number of water pair counting from 1
