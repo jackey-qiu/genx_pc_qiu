@@ -50,9 +50,9 @@ def make_structure(sorbate_N,O_N,water_N,Domains,Metal,binding_mode=['BD']*3,lon
     structure={}
     for i in range(len(Domains)):
         if use_domains[i]==1:
-            oc_N=6
+            oc_N=10
             #if sorbate_N[i]==0:oc_N=6
-            temp_surface={'dxdy':[0,[0.,-0.05,0.05],'True'],'dz':[20,[0,-0.05,0.05],'True'],'oc':[oc_N,[1,0.6,1],'True'],'u':[0,[0.4,0.32,0.8],'True']}
+            temp_surface={'dxdy':[0,[0.,-0.04,0.04],'True'],'dz':[20,[0,-0.03,0.03],'True'],'oc':[oc_N,[1,0.6,1],'True'],'u':[0,[0.4,0.32,0.8],'True']}
             domain_type='half_layer'
             full_layer_type='long'
             if Domains[i]==2:
@@ -128,10 +128,10 @@ def table_maker(table_file_path='D:\\table.tab',structure_info=structure,long_sl
             index=2*i
             if i<temp_surface['dz'][0]/2./2.:
                 s="%s\t%5.4f\t%s\t%5.4f\t%5.4f\t%s\n"%('gp_'+atom_list[0][index].rsplit('_')[0]+atom_list[0][index+1].rsplit('_')[0]+'_'+atom_list[1][index].rsplit('_')[0]+atom_list[1][index+1].rsplit('_')[0]+'_D'+domain_tag+'.setdx',\
-                                                      temp_surface['dz'][1][0],temp_surface['dz'][2],temp_surface['dz'][1][1],temp_surface['dz'][1][2],'-')
+                                                      temp_surface['dxdy'][1][0],temp_surface['dxdy'][2],temp_surface['dxdy'][1][1],temp_surface['dxdy'][1][2],'-')
                 f.write(s)
                 s="%s\t%5.4f\t%s\t%5.4f\t%5.4f\t%s\n"%('gp_'+atom_list[0][index].rsplit('_')[0]+atom_list[0][index+1].rsplit('_')[0]+'_'+atom_list[1][index].rsplit('_')[0]+atom_list[1][index+1].rsplit('_')[0]+'_D'+domain_tag+'.setdy',\
-                                                      temp_surface['dz'][1][0],temp_surface['dz'][2],temp_surface['dz'][1][1],temp_surface['dz'][1][2],'-')
+                                                      temp_surface['dxdy'][1][0],temp_surface['dxdy'][2],temp_surface['dxdy'][1][1],temp_surface['dxdy'][1][2],'-')
                 f.write(s)
             s="%s\t%5.4f\t%s\t%5.4f\t%5.4f\t%s\n"%('gp_'+atom_list[0][index].rsplit('_')[0]+atom_list[0][index+1].rsplit('_')[0]+'_'+atom_list[1][index].rsplit('_')[0]+atom_list[1][index+1].rsplit('_')[0]+'_D'+domain_tag+'.setdz',\
                                                   temp_surface['dz'][1][0],temp_surface['dz'][2],temp_surface['dz'][1][1],temp_surface['dz'][1][2],'-')
