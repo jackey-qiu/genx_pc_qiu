@@ -5,11 +5,10 @@ from datetime import datetime
 import numpy as np
 import sys,pickle,__main__
 import models.domain_creator as domain_creator
-sys.path.append("D:\\Google Drive\\useful codes")
-sys.path.append("C:\\Users\\jackey\\Google Drive\\useful codes")
 try:
-    import make_parameter_table_GenX_beta as make_grid
-except:pass
+    import make_parameter_table_GenX_beta2 as make_grid
+except:
+    pass
 from copy import deepcopy
 
 #************************************program begins from here **********************************************
@@ -17,43 +16,11 @@ from copy import deepcopy
 COUNT_TIME=False
 
 if COUNT_TIME:t_0=datetime.now()
-
-##pick functions
-pick=lambda list:[list[i] for i in pickup_index]
-deep_pick=lambda list:[[list[pickup_index[i]][j] for j in sym_site_index[i]] for i in range(len(pickup_index))]
-
-##make a pick index list specifying the type of full layer (0 for short and 1 for long slab)
-##this function will return a list of indexes list to be passed to pick_full_layer
-def make_pick_index(full_layer_pick,pick,half_layer_cases=8,full_layer_cases=8):
-    pick_index_all=[]
-    for i in range(len(full_layer_pick)):
-        pick_index=[1]*full_layer_cases
-        if full_layer_pick[i]!=None:
-            pick_index[pick[i]-half_layer_cases]=full_layer_pick[i]
-            pick_index_all.append(pick_index)
-        else:
-            pass
-    return pick_index_all
-    
-##pick the full layer cases according to the type of full layers(pick_index is a list of list created from make_pick_index)
-def pick_full_layer(LFL=[],SFL=[],pick_index=[]):
-    FL_all=[]
-    for pick in pick_index:
-        FL=[]
-        for i in range(len(pick)):
-            if pick[i]==0:
-                FL.append(SFL[i])
-            elif pick[i]==1:
-                FL.append(LFL[i])
-        FL_all.append(FL)
-    return FL_all
     
 ##file paths and wt factors##
-batch_path_head='/u1/uaf/cqiu/batchfile/'
-WT_RAXS=5#weighting for RAXS dataset
 WT_BV=1#weighting for bond valence constrain (1 recommended)
-BV_TOLERANCE=[-0.1,0.1]#ideal bv value + or - this value is acceptable, negative side is over-saturation and positive site is under-saturated
-USE_TOP_ANGLE=False#fit top angle if true otherwise fit the Pb-O bond length (used in bidentate case)
+BV_TOLERANCE=[-0.2,0.2]#ideal bv value + or - this value is acceptable, negative side is over-saturation and positive site is under-saturated
+USE_TOP_ANGLE=True#fit top angle if true otherwise fit the Pb-O bond length (used in bidentate case)
 INCLUDE_HYDROGEN=0
 
 ##matching index##
@@ -65,38 +32,46 @@ FL-->8          9           10          11            12             13(Face-sha
 CS(O5O6)        ES(O5O7)    ES(O5O8)    CS(O6O7)      TD(O5O6O7)     TD(O5O7O8)          OS          Clean
 """
 ##############################################main setup zone###############################################
-running_mode=True
+running_mode=1
 USE_BV=True
 COVALENT_HYDROGEN_RANDOM=False
 COUNT_DISTAL_OXYGEN=False
-ADD_DISTAL_LIGAND_WILD=[False]*10
+ADD_DISTAL_LIGAND_WILD=[[False]*6]*10
+BOND_VALENCE_WAIVER=[]
 
 SORBATE=["As"]
-pickup_index=[0,7,12]
-sym_site_index=[[0,1],[0,1],[0,1]]
+pickup_index=[[0,6,6],[7],[10,14]]
+sym_site_index=[[[0,1]]* len(each) for each in pickup_index]
 full_layer_pick=[None,None,0]
-OS_X_REF=[None]
-OS_Y_REF=[None]
-OS_Z_REF=[None]
-DOMAIN_GP=[]
+OS_X_REF=[[None,None,0,0.5,0,0.5],[None],[None,None,0,0.5]]
+OS_Y_REF=[[None,None,0,0.5,0,0.5],[None],[None,None,0,0.5]]
+OS_Z_REF=[[None,None,2.1,2.1,2.5,2.5],[None],[None,None,2.0,2.0]]
 DOMAINS_BV=range(len(pickup_index))
+TABLE_DOMAINS=[1]*len(pickup_index)
 
-BV_OFFSET_SORBATE=[0.2]*len(pickup_index)
+BV_OFFSET_SORBATE=[[0.2]*8]*len(pickup_index)
 SEARCH_RANGE_OFFSET=0.2
 
-USE_COORS=[0]*len(pickup_index)
-COORS={0:{'sorbate':[[[0,0,0]],[[1,1,1]]],'oxygen':[[[0,0,0]],[[1,1,1]]]},\
-       2:{'sorbate':[[[0,0,0]],[[1,1,1]]],'oxygen':[[[0,0,0]],[[1,1,1]]]}}
+USE_COORS=[[0,0,0,0]*5]*len(pickup_index)
+COORS={(0,0):{'sorbate':[[[0,0,0]]],'oxygen':[[[0,0,0],[0,0,0]]]},\
+       (2,0):{'sorbate':[[[0,0,0]]],'oxygen':[[[0,0,0],[0,0,0]]]}}
 
 water_pars={'use_default':True,'number':[0,2,0],'ref_point':[[[]],[['O1_3_0','O1_4_0']],[[]]]}
 
-O_NUMBER_HL=[[[0,0]],[[0,0]],[[0,0]],[[0,0]],[[0,0]],[[0,0]],[[0,0]],[[0,0]]]
-O_NUMBER_FL=[[[0,0]],[[0,0]],[[0,0]],[[0,0]],[[0,0]],[[0,0]],[[0,0]],[[0,0]]]
+O_NUMBER_HL=[[[2,2]],[[0,0]],[[0,0]],[[0,0]],[[0,0]],[[0,0]],[[4,4]],[[0,0]]]
+O_NUMBER_FL=[[[0,0]],[[0,0]],[[0,0]],[[0,0]],[[0,0]],[[0,0]],[[4,4]],[[0,0]]]
 
-commands=\
+SORBATE_NUMBER_HL=[[2],[2],[2],[2],[2],[2],[2],[0]]
+SORBATE_NUMBER_FL=[[2],[2],[2],[2],[2],[2],[2],[0]]
+
+GROUPING_SCHEMES=[[0,1]]
+GROUPING_DEPTH=[6]
+commands_surface=domain_creator.generate_commands_for_surface_atom_grouping(np.array(GROUPING_SCHEMES)+1,domain_creator.translate_domain_type(GROUPING_SCHEMES,full_layer_pick),GROUPING_DEPTH)
+commands_other=\
    [
     
    ]
+commands=commands_other+commands_surface
 ##############################################end of main setup zone############################################
 
 ###quick explanation for parameters in the main setup zone#####
@@ -105,28 +80,39 @@ running_mode(bool)
     if true then disable all the I/O function
 SORBATE(list of single element to be considered for modelling)
     element symbol for sorbate
-pickup_index(a list of index from the match index table above)
+pickup_index(a list of index list with items from the match index table above)
     representative of different binding configurations for different domains
     make sure the half layer indexes are in front of the full layer indexes
-full_layer_pick(a list of list of either [0],[1] or [0,1])
+    In this new version, you can have multiple sites being assigned simultaneously on the same domain
+    For example,in the case of [[0,6,6],[4],[10,14]] there are three sites assinged to domain1, i.e. bidentate site and the other two outer-sphere site
+sym_site_index(a list of list of [0,1])
     a way to specify the symmetry site on each domain
-    you may consider either one([0] or [1]) or both([0,1])
+    you may consider only site pairs in this version ([0,1])
+    The shape is the same as pickup_index, except that the inner-most items are [0,1] instead of match index number
+    It will be set up automatically
 full_layer_pick(a list of value of either None, or 0 or 1)
     used to specify the full layer type, which could be either long slab (1) or short slab (0)
     don't forget to set None for the half layer termination domain
+    Again Nones if any must be in front of numbers (Half layer domains in front of full layer domains)
 OS_X(Y,Z)_REF(a list of None,or any number)
     set the reference coordinate xyz value for the outer-sphere configuration, which could be on either HL or FL domain
     these values are fractional coordinates of sorbates
     if N/A then set it to None
     such setting is based on the symmetry operation intrinsic for the hematite rcut surface, which have the following relationship 
     x1+x2=0.5/1.5, y1-y2=0.5 or -0.5, z1=z2
+    The shape is like [[],[]], each item corresponds to different domains
+    The number of items within each domain is twice (considering symmetry site pair) the number of sorbate for that domain
 DOMAIN_GP(a list of list of domain indexs)
     use this to group two domains with same surface termination (HL or FL) together
     the associated atom groups for both surface atoms and sorbates will be created (refer to manual)
+    This feature is not necessary and so not supported anymore in this version.
 water_pars(a lib to set the interfacial waters quickly)
     you may use default which has no water or turn the switch off and set the number and anchor points
 USE_BV(bool)
     a switch to apply bond valence constrain during surface modelling
+TABLE_DOMAINS(list of 0 or 1, the length should be higher than the total domain number)
+    specify whether or not generate the associated pars for each domain
+    [0,1,1] means only generate the pars for last two domains
 COVALENT_HYDROGEN_RANDOM(bool)
     a switch to not explicitly specify the protonation of surface functional groups
     different protonation scheme (0,1 or 2 protons) will be tried and compared, the one with best bv result will be used
@@ -142,17 +128,21 @@ commands(a list of str to be executed inside sim function)
     used to expand the funtionality of grouping or setting something important
 USE_COORS(a list of 0 or 1)
     you may want to add sorbates by specifying the coordinates or having the program calculate the position from the geometry setting you considered
-    eg1 USE_COORS=[0]*len(pickup_index) not use coors for all domains
-    eg2 USE_COORS=[1]*len(pickup_index) use coors for all domains
-    eg3 USE_COORS=[0,1,1] use coors for only domain2 and domain3
+    eg1 USE_COORS=[[0]]*len(pickup_index) not use coors for all domains
+    eg2 USE_COORS=[[1]]*len(pickup_index) use coors for all domains
+    eg3 USE_COORS=[[0],[1],[1]] use coors for only domain2 and domain3
 COORS(a lib specifying the coordinates for sorbates)
-    keys of COORS are the domain index,ignore domain with no sorbates
-    len(COORS[i]['sorbate'])=len(COORS[i]['oxygen']), which is the number of sorbate sets (either one or two)
+    keys of COORS are the domain index and site index, ignore domain with no sorbates
+    len(COORS[(i,j)]['sorbate'][0])=1 while len(COORS[(i,j)]['oxygen'][0])>=1, which is the number of distal oxygens
     make sure the setup matches with the pick_up index and the sym_site_index as well as the number of distal oxygens
     if you dont consider oxygen in your model, you still need to specify the coordinates for the oxygen(just one oxygen) to avoid error prompt
 O_NUMBER_HL/FL(a list of list of [a,b],where a and b are integer numbers)
     one to one corresponding for the number of distal oxygens, which depend on local structure and binding configuration
     either zero oxygen ligand or enough ligands to complete coordinative shell
+SORBATE_NUMBER_HL/FL(a list of list of [a], a can be either 1 or 2 or 0 for clean surface)
+    If considering two symmetry sites, then a=2
+    If considering one site (distribute the two on two different domains), then a=1
+    If considering clean surface, then a=0
 COUNT_DISTAL_OXYGEN(bool)
     True then consider bond valence also for distal oxygen,otherwise skip the bv contribution from distal oxygen
 ADD_DISTAL_LIGAND_WILD(list of bool)
@@ -161,8 +151,73 @@ ADD_DISTAL_LIGAND_WILD(list of bool)
     you can specify different case for different domains
     and this par is not applicable to outersphere mode, which should be set to None for that domain
 DOMAINS_BV(a list of integer numbers)
-    Domains being considered for bond valence constrain, counted from 0    
-"""
+    Domains being considered for bond valence constrain, counted from 0  
+BOND_VALENCE_WAIVER(a list of oxygen atom ids [either surface atoms or distals] with domain tag)
+    When each two of thoes atoms in the list are being considered for bond valence, the valence effect will be ignored no matter how close they are
+    Be careful to select atoms as bond valence waiver
+GROUPING_SCHEMES(a list of lists with two items, with each item being the domain index starting from 0)
+    Define how you want to group the surface atoms together from two different domains with same termination type
+    A function will generate all the associated commands to do the grouping
+    [[0,1]] means group surface atoms from the first (0) and second domain(1)
+    If you dont want to do any grouping, set this to be []
+GROUPING_DEPTH(a list of integers less than 10)
+    Define how deep you want to group your atoms. You can define a maximum grouping depth to 10
+    You should count the atom layers upward from the 10th atom layer
+    [6,10] means you want to group the 5th atom layer to 10th atom layer for domain 1 and group all top ten atom layers together for domain2
+    Don't forget that you have a Iron layer which is explicitly included in HL but the occ set to 0 to account for the missing Fe sites
+    So you should count that atom layer too when considering the grouping depth
+"""   
+##make a pick index list specifying the type of full layer (0 for short and 1 for long slab)
+##this function will return a list of indexes list to be passed to pick_full_layer
+def make_pick_index(full_layer_pick,pick,half_layer_cases=8,full_layer_cases=8):
+    pick_index_all=[]
+    for i in range(len(full_layer_pick)):
+        pick_index=[1]*full_layer_cases
+        if full_layer_pick[i]!=None:
+            pick_index[pick[i][0]-half_layer_cases]=full_layer_pick[i]
+            pick_index_all.append(pick_index)
+        else:
+            pass
+    return pick_index_all
+##pick the full layer cases according to the type of full layers(pick_index is a list of list created from make_pick_index)
+def pick_full_layer(LFL=[],SFL=[],pick_index=[]):
+    FL_all=[]
+    for pick in pick_index:
+        FL=[]
+        for i in range(len(pick)):
+            if pick[i]==0:
+                FL.append(SFL[i])
+            elif pick[i]==1:
+                FL.append(LFL[i])
+        FL_all.append(FL)
+    return FL_all
+##pick functions
+def pick(pick_list,pick_index=pickup_index):
+    picked_box=[]
+    for each in pick_index:
+        picked_box.append(pick_list[each[0]])
+    return picked_box
+    
+def pick_act(pick_list,pick_index=pickup_index):
+    picked_box=[]
+    for each in pick_index:
+        temp_box=0
+        if type(pick_list[0][0])==type([]):
+            temp_box=[]
+        for i in range(len(each)):
+            temp_box=temp_box+pick_list[each[i]][0]
+        picked_box.append([temp_box])
+    return picked_box
+    
+def deep_pick(pick_list,sym_site_index=sym_site_index,pick_index=pickup_index):
+    picked_box=[]
+    for i in range(len(pick_index)):
+        temp_box_j=[]
+        for j in range(len(pick_index[i])):
+            for k in sym_site_index[i][j]:
+                temp_box_j.append(pick_list[pick_index[i][j]][k])
+        picked_box.append(temp_box_j)
+    return picked_box
 
 FULL_LAYER_PICK_INDEX=make_pick_index(full_layer_pick=full_layer_pick,pick=pickup_index,half_layer_cases=8,full_layer_cases=8)
 N_FL=len([i for i in full_layer_pick if i!=None])
@@ -192,13 +247,11 @@ for key in LOCAL_STRUCTURE_MATCH_LIB.keys():
     else:pass
         
 UPDATE_SORBATE_IN_SIM=True#you may not want to update the sorbate in sim function based on the frame of geometry, then turn this off
-SORBATE_NUMBER_HL=[[2],[2],[2],[2],[2],[2],[2],[0]]
-SORBATE_NUMBER_FL=[[2],[2],[2],[2],[2],[2],[2],[0]]
-SORBATE_NUMBER=pick(SORBATE_NUMBER_HL+SORBATE_NUMBER_FL)
 
-O_NUMBER=pick(O_NUMBER_HL+O_NUMBER_FL)
+SORBATE_NUMBER=pick_act(SORBATE_NUMBER_HL+SORBATE_NUMBER_FL)
+O_NUMBER=pick_act(O_NUMBER_HL+O_NUMBER_FL)
+
 PROTONATION_DISTAL_OXYGEN=[[0,0]]*len(pickup_index)#Protonation of distal oxygens, any number in [0,1,2], where 1 means singly protonated, two means doubly protonated
-
 SORBATE_LIST=domain_creator.create_sorbate_el_list(SORBATE,SORBATE_NUMBER)
 
 SORBATE_ATTACH_ATOM_HL=[[['O1_1_0','O1_2_0'],['O1_1_0','O1_2_0']],[['O1_1_0','O1_4_0'],['O1_3_0','O1_2_0']],[['O1_1_0','O1_3_0'],['O1_4_0','O1_2_0']],[['O1_1_0','O1_4_0'],['O1_3_0','O1_2_0']],[['O1_1_0','O1_2_0','O1_3_0'],['O1_1_0','O1_2_0','O1_4_0']],[['O1_1_0','O1_3_0','O1_4_0'],['O1_2_0','O1_3_0','O1_4_0']],[[],[]],[[],[]]]
@@ -210,7 +263,7 @@ try:
     SORBATE_ATTACH_ATOM=SORBATE_ATTACH_ATOM_SEPERATED[0][0:N_HL]+[SORBATE_ATTACH_ATOM_SEPERATED[i][N_HL+i] for i in range(N_FL)]
 except:#if we have only half layer termination
     SORBATE_ATTACH_ATOM=deep_pick(SORBATE_ATTACH_ATOM_HL)
-    
+
 SORBATE_ATTACH_ATOM_OFFSET_HL=[[[None,None],[None,'+y']],[['-y','+x'],[None,None]],[[None,None],['+x',None]],[[None,'+y'],['+x',None]],[[None,None,None],['-y',None,'+x']],[[None,None,'+y'],['-x',None,None]],[[],[]],[[],[]]]
 SORBATE_ATTACH_ATOM_OFFSET_FL_L=[[[None,None],[None,'+y']],[[None,'-x'],[None,None]],[[None,'-x'],['-y',None]],[[None,None],['-x',None]],[[None,None,'-x'],[None,'+y',None]],[['+x',None,None],[None,None,'-y']],[[],[]],[[],[]]]
 SORBATE_ATTACH_ATOM_OFFSET_FL_S=[[[None,None],[None,'+y']],[[None,'+x'],[None,None]],[[None,'+x'],['-y',None]],[[None,None],[None,'+x']],[[None,None,'+x'],['+y',None,None]],[['-x',None,None],[None,'-y',None]],[[],[]],[[],[]]]
@@ -220,7 +273,7 @@ try:
     SORBATE_ATTACH_ATOM_OFFSET=SORBATE_ATTACH_ATOM_OFFSET_SEPERATED[0][0:N_HL]+[SORBATE_ATTACH_ATOM_OFFSET_SEPERATED[i][N_HL+i] for i in range(N_FL)]
 except:
     SORBATE_ATTACH_ATOM_OFFSET=deep_pick(SORBATE_ATTACH_ATOM_OFFSET_HL)
-    
+
 ANCHOR_REFERENCE_HL=[[None,None],['O1_8_0','O1_7_0'],['Fe1_4_0','Fe1_6_0'],['Fe1_4_0','Fe1_6_0'],[None,None],[None,None],[None,None],[None,None]]#ref point for anchors
 ANCHOR_REFERENCE_FL_L=[[None,None],['Fe1_2_0','Fe1_3_0'],['Fe1_2_0','Fe1_3_0'],['Fe1_2_0','Fe1_3_0'],[None,None],[None,None],[None,None],[None,None]]#ref point for anchors
 ANCHOR_REFERENCE_FL_S=[[None,None],['Fe1_8_0','Fe1_9_0'],['Fe1_8_0','Fe1_9_0'],['Fe1_8_0','Fe1_9_0'],[None,None],[None,None],[None,None],[None,None]]#ref point for anchors
@@ -230,7 +283,7 @@ try:
     ANCHOR_REFERENCE=ANCHOR_REFERENCE_SEPERATED[0][0:N_HL]+[ANCHOR_REFERENCE_SEPERATED[i][N_HL+i] for i in range(N_FL)]
 except:
     ANCHOR_REFERENCE=deep_pick(ANCHOR_REFERENCE_HL)
-    
+
 ANCHOR_REFERENCE_OFFSET_HL=[[None,None],[None,None],[None,'+x'],[None,'+x'],[None,None],[None,None],[None,None],[None,None]]
 ANCHOR_REFERENCE_OFFSET_FL_L=[[None,None],[None,None],[None,None],[None,None],[None,None],[None,None],[None,None],[None,None]]
 ANCHOR_REFERENCE_OFFSET_FL_S=[[None,None],['+x',None],['+x',None],['+x',None],[None,None],[None,None],[None,None],[None,None]]
@@ -244,25 +297,35 @@ except:
 #specify the METAL_BV based on the metal valence charge and the coordinated local structure
 METAL_BV_EACH=METAL_VALENCE[SORBATE[0]][0]/METAL_VALENCE[SORBATE[0]][1]#valence for each bond
 BOND_LENGTH_EACH=R0_BV[(SORBATE[0],'O')]-np.log(METAL_BV_EACH)*0.37#ideal bond length using bond valence equation
-N_BOND=[O_NUMBER[i][0][0]+len(SORBATE_ATTACH_ATOM[i][0]) for i in range(len(O_NUMBER))]#number of bonds
-METAL_BV={SORBATE[0]:[[METAL_BV_EACH*N_BOND[i]-BV_OFFSET_SORBATE[i],METAL_BV_EACH*N_BOND[i]] for i in range(len(N_BOND))]}#range of acceptable metal bv in each domain
+N_BOND=[]
+METAL_BV=[]
+for i in range(len(O_NUMBER)):
+    temp_box=[]
+    for j in range(len(O_NUMBER[i][0])):
+        temp_box.append(O_NUMBER[i][0][j]+len(SORBATE_ATTACH_ATOM[i][j]))
+    N_BOND.append(temp_box)
 
+for i in range(len(N_BOND)):
+    temp_box=[]
+    for j in range(len(N_BOND[i])):
+        temp_box.append([METAL_BV_EACH*N_BOND[i][j]-BV_OFFSET_SORBATE[i][j],METAL_BV_EACH*N_BOND[i][j]])
+    METAL_BV.append(temp_box)
 #specify the searching range and penalty factor for surface atoms and sorbates
 SEARCHING_PARS={'surface':[2.5,50],'sorbate':[BOND_LENGTH_EACH+SEARCH_RANGE_OFFSET,50]}#The value for each item [searching radius(A),scaling factor]
 
 #if consider hydrogen bonds#
 #Arbitrary number of distal oxygens(6 here) will be helpful and handy if you want to consider the distal oxygen for bond valence constrain in a random mode, sine you wont need extra edition for that.
 #It wont hurt even if the distal oxygen in the list doesn't actually exist for your model. Same for the potential hydrogen acceptor below
-POTENTIAL_COVALENT_HYDROGEN_ACCEPTOR_HL=[['O1_1_0','O1_2_0','O1_3_0','O1_4_0']+['HO'+str(i+1)+'_'+SORBATE[0]+str(j+1) for i in range(6) for j in range(2)]]*8#Will be considered only when COVALENT_HYDROGEN_RANDOM=True
-POTENTIAL_COVALENT_HYDROGEN_ACCEPTOR_FL_L=[['O1_11_t','O1_12_t','O1_1_0','O1_2_0']+['HO'+str(i+1)+'_'+SORBATE[0]+str(j+1) for i in range(6) for j in range(2)]]*8#Will be considered only when COVALENT_HYDROGEN_RANDOM=True
-POTENTIAL_COVALENT_HYDROGEN_ACCEPTOR_FL_S=[['O1_5_0','O1_6_0','O1_7_0','O1_8_0']+['HO'+str(i+1)+'_'+SORBATE[0]+str(j+1) for i in range(6) for j in range(2)]]*8#Will be considered only when COVALENT_HYDROGEN_RANDOM=True
+POTENTIAL_COVALENT_HYDROGEN_ACCEPTOR_HL=[['O1_1_0','O1_2_0','O1_3_0','O1_4_0']+['HO'+str(i+1)+'_'+SORBATE[0]+str(j+1) for i in range(6) for j in range(6)]]*8#Will be considered only when COVALENT_HYDROGEN_RANDOM=True
+POTENTIAL_COVALENT_HYDROGEN_ACCEPTOR_FL_L=[['O1_11_t','O1_12_t','O1_1_0','O1_2_0']+['HO'+str(i+1)+'_'+SORBATE[0]+str(j+1) for i in range(6) for j in range(6)]]*8#Will be considered only when COVALENT_HYDROGEN_RANDOM=True
+POTENTIAL_COVALENT_HYDROGEN_ACCEPTOR_FL_S=[['O1_5_0','O1_6_0','O1_7_0','O1_8_0']+['HO'+str(i+1)+'_'+SORBATE[0]+str(j+1) for i in range(6) for j in range(6)]]*8#Will be considered only when COVALENT_HYDROGEN_RANDOM=True
 POTENTIAL_COVALENT_HYDROGEN_ACCEPTOR_FL=pick_full_layer(LFL=POTENTIAL_COVALENT_HYDROGEN_ACCEPTOR_FL_L,SFL=POTENTIAL_COVALENT_HYDROGEN_ACCEPTOR_FL_S,pick_index=FULL_LAYER_PICK_INDEX)
 try:
     POTENTIAL_COVALENT_HYDROGEN_ACCEPTOR_SEPERATED=[pick(POTENTIAL_COVALENT_HYDROGEN_ACCEPTOR_HL+each_FL) for each_FL in POTENTIAL_COVALENT_HYDROGEN_ACCEPTOR_FL]
     POTENTIAL_COVALENT_HYDROGEN_ACCEPTOR=POTENTIAL_COVALENT_HYDROGEN_ACCEPTOR_SEPERATED[0][0:N_HL]+[POTENTIAL_COVALENT_HYDROGEN_ACCEPTOR_SEPERATED[i][N_HL+i] for i in range(N_FL)]
 except:
     POTENTIAL_COVALENT_HYDROGEN_ACCEPTOR=pick(POTENTIAL_COVALENT_HYDROGEN_ACCEPTOR_HL)
-    
+
 COVALENT_HYDROGEN_ACCEPTOR_HL=[['O1_1_0','O1_2_0','O1_3_0','O1_4_0']]*8#will be considered only when COVALENT_HYDROGEN_RANDOM=False
 COVALENT_HYDROGEN_ACCEPTOR_FL_L=[['O1_11_t','O1_12_t','O1_1_0','O1_2_0']]*8#will be considered only when COVALENT_HYDROGEN_RANDOM=False
 COVALENT_HYDROGEN_ACCEPTOR_FL_S=[['O1_5_0','O1_6_0','O1_7_0','O1_8_0']]*8#will be considered only when COVALENT_HYDROGEN_RANDOM=False
@@ -272,14 +335,14 @@ try:
     COVALENT_HYDROGEN_ACCEPTOR=COVALENT_HYDROGEN_ACCEPTOR_SEPERATED[0][0:N_HL]+[COVALENT_HYDROGEN_ACCEPTOR_SEPERATED[i][N_HL+i] for i in range(N_FL)]
 except:
     COVALENT_HYDROGEN_ACCEPTOR=pick(COVALENT_HYDROGEN_ACCEPTOR_HL)
-    
+
 COVALENT_HYDROGEN_NUMBER_HL=[[1,1,1,1],[2,1,0,1],[2,1,1,0],[2,1,0,1],[1,1,1,0],[2,1,0,0],[2,2,1,1],[2,2,1,1]]
 COVALENT_HYDROGEN_NUMBER_FL=[[1,1,1,1],[2,1,1,0],[2,1,0,1],[2,1,1,0],[1,1,0,1],[2,1,0,0],[2,2,1,1],[2,2,1,1]]
 COVALENT_HYDROGEN_NUMBER=pick(COVALENT_HYDROGEN_NUMBER_HL+COVALENT_HYDROGEN_NUMBER_FL)
 
-POTENTIAL_HYDROGEN_ACCEPTOR_HL=[['O1_1_0','O1_2_0','O1_3_0','O1_4_0','O1_5_0','O1_6_0']+['HO'+str(i+1)+'_'+SORBATE[0]+str(j+1) for i in range(6) for j in range(2)]]*8#they can accept one hydrogen bond or not
-POTENTIAL_HYDROGEN_ACCEPTOR_FL_L=[['O1_11_t','O1_12_t','O1_1_0','O1_2_0']+['HO'+str(i+1)+'_'+SORBATE[0]+str(j+1) for i in range(6) for j in range(2)]]*8#they can accept one hydrogen bond or not
-POTENTIAL_HYDROGEN_ACCEPTOR_FL_S=[['O1_5_0','O1_6_0','O1_7_0','O1_8_0']+['HO'+str(i+1)+'_'+SORBATE[0]+str(j+1) for i in range(6) for j in range(2)]]*8#they can accept one hydrogen bond or not
+POTENTIAL_HYDROGEN_ACCEPTOR_HL=[['O1_1_0','O1_2_0','O1_3_0','O1_4_0','O1_5_0','O1_6_0']+['HO'+str(i+1)+'_'+SORBATE[0]+str(j+1) for i in range(6) for j in range(6)]]*8#they can accept one hydrogen bond or not
+POTENTIAL_HYDROGEN_ACCEPTOR_FL_L=[['O1_11_t','O1_12_t','O1_1_0','O1_2_0']+['HO'+str(i+1)+'_'+SORBATE[0]+str(j+1) for i in range(6) for j in range(6)]]*8#they can accept one hydrogen bond or not
+POTENTIAL_HYDROGEN_ACCEPTOR_FL_S=[['O1_5_0','O1_6_0','O1_7_0','O1_8_0']+['HO'+str(i+1)+'_'+SORBATE[0]+str(j+1) for i in range(6) for j in range(6)]]*8#they can accept one hydrogen bond or not
 POTENTIAL_HYDROGEN_ACCEPTOR_FL=pick_full_layer(LFL=POTENTIAL_HYDROGEN_ACCEPTOR_FL_L,SFL=POTENTIAL_HYDROGEN_ACCEPTOR_FL_S,pick_index=FULL_LAYER_PICK_INDEX)
 try:
     POTENTIAL_HYDROGEN_ACCEPTOR_SEPERATED=[pick(POTENTIAL_HYDROGEN_ACCEPTOR_HL+each_FL) for each_FL in POTENTIAL_HYDROGEN_ACCEPTOR_FL]
@@ -318,23 +381,24 @@ if TABLE:
     O_N=[]
     binding_mode=[]
     for i in O_NUMBER:
-        temp=0
-        for j in i:
-            temp+=sum(j)
-        O_N.append([temp])
+        temp=[]
+        for j in range(0,len(i[0]),2):
+            temp.append(i[0][j])
+        O_N.append(temp)
     for i in range(DOMAIN_NUMBER):
-        if SORBATE_LIST[i]==[]:
-            binding_mode.append(None)
-        else:
-            if len(SORBATE_ATTACH_ATOM[i][0])==1:
-                binding_mode.append('MD')
-            elif len(SORBATE_ATTACH_ATOM[i][0])==2:
-                binding_mode.append('BD')
-            elif len(SORBATE_ATTACH_ATOM[i][0])==3:
-                binding_mode.append('TD')   
+        temp_binding_mode=[]
+        for j in range(0,len(SORBATE_ATTACH_ATOM[i]),2):
+            if SORBATE_ATTACH_ATOM[i][j]==[]:
+                temp_binding_mode.append('OS')
             else:
-                binding_mode.append('OS')
-    make_grid.make_structure(map(sum,SORBATE_NUMBER),O_N,WATER_NUMBER,DOMAIN,Metal=SORBATE[0],binding_mode=binding_mode,long_slab=full_layer_pick)
+                if len(SORBATE_ATTACH_ATOM[i][j])==1:
+                    temp_binding_mode.append('MD')
+                elif len(SORBATE_ATTACH_ATOM[i][j])==2:
+                    temp_binding_mode.append('BD')
+                elif len(SORBATE_ATTACH_ATOM[i][j])==3:
+                    temp_binding_mode.append('TD')   
+        binding_mode.append(temp_binding_mode)
+    make_grid.make_structure(map(sum,SORBATE_NUMBER),O_N,WATER_NUMBER,DOMAIN,Metal=SORBATE[0],binding_mode=binding_mode,long_slab=full_layer_pick,local_structure=LOCAL_STRUCTURE,add_distal_wild=ADD_DISTAL_LIGAND_WILD,use_domains=TABLE_DOMAINS)
 
 #function to group outer-sphere pars from different domains (to be placed inside sim function)
 def set_OS(domain_names=['domain5','domain4']):
@@ -346,13 +410,30 @@ def set_OS(domain_names=['domain5','domain4']):
     eval('rgh_'+domain_names[0]+'.setPhi_OS(rgh_'+domain_names[1]+'.getPhi_OS())')
 
 #function to group bidentate pars from different domains (to be placed inside sim function)
-def set_BD(domain_names=['domain2','domain1']):
-    eval('rgh_'+domain_names[0]+'.setOffset_BD(-rgh_'+domain_names[1]+'.getOffset_BD())') 
-    eval('rgh_'+domain_names[0]+'.setOffset2_BD(rgh_'+domain_names[1]+'.getOffset2_BD())') 
-    eval('rgh_'+domain_names[0]+'.setAngle_offset_BD(rgh_'+domain_names[1]+'.getAngle_offset_BD())')
-    eval('rgh_'+domain_names[0]+'.setR_BD(rgh_'+domain_names[1]+'.getR_BD())') 
-    eval('rgh_'+domain_names[0]+'.setPhi_BD(rgh_'+domain_names[1]+'.getPhi_BD())')
-    
+def set_BD(domain_names=[2,1],sorbate_sets=1,distal_oxygen_number=1,sorbate='Pb'):
+    for i in range(sorbate_sets):
+        eval('rgh_domain'+str(domain_names[0]+1)+'.setOffset_BD_'+str(i*2)+'(rgh_domain'+str(domain_names[1]+1)+'.getOffset_BD_'+str(i*2)+'())') 
+        eval('rgh_domain'+str(domain_names[0]+1)+'.setOffset2_BD_'+str(i*2)+'(rgh_domain'+str(domain_names[1]+1)+'.getOffset2_BD_'+str(i*2)+'())') 
+        eval('rgh_domain'+str(domain_names[0]+1)+'.setAngle_offset_BD_'+str(i*2)+'(rgh_domain'+str(domain_names[1]+1)+'.getAngle_offset_BD_'+str(i*2)+'())')
+        eval('rgh_domain'+str(domain_names[0]+1)+'.setR_BD_'+str(i*2)+'(rgh_domain'+str(domain_names[1]+1)+'.getR_BD_'+str(i*2)+'())') 
+        eval('rgh_domain'+str(domain_names[0]+1)+'.setPhi_BD_'+str(i*2)+'(rgh_domain'+str(domain_names[1]+1)+'.getPhi_BD_'+str(i*2)+'())')
+        eval('rgh_domain'+str(domain_names[0]+1)+'.setTop_angle_BD_'+str(i*2)+'(rgh_domain'+str(domain_names[1]+1)+'.getTop_angle_BD_'+str(i*2)+'())')
+        eval('gp_'+sorbate+'_set'+str(i+1)+'_D'+str(domain_names[0]+1)+'.setoc'+'(gp_'+sorbate+'_set'+str(i+1)+'_D'+str(domain_names[1]+1)+'.getoc())')
+        eval('gp_'+sorbate+'_set'+str(i+1)+'_D'+str(domain_names[0]+1)+'.setu'+'(gp_'+sorbate+'_set'+str(i+1)+'_D'+str(domain_names[1]+1)+'.getu())')
+        for j in range(distal_oxygen_number):
+            eval('gp_HO'+str(j+1)+'_set'+str(i+1)+'_D'+str(domain_names[0]+1)+'.setoc'+'(gp_HO'+str(j+1)+'_set'+str(i+1)+'_D'+str(domain_names[1]+1)+'.getoc())')
+            eval('gp_HO'+str(j+1)+'_set'+str(i+1)+'_D'+str(domain_names[0]+1)+'.setu'+'(gp_HO'+str(j+1)+'_set'+str(i+1)+'_D'+str(domain_names[1]+1)+'.getu())')
+
+#function to group water pairs togeter from different domains
+#domain_names is list of index of domains counting from 0 and number sets is the number of water pair counting from 1
+def set_water_pair(domain_names=[3,2],number_sets=2):
+    for i in range(number_sets):
+        eval('gp_waters_set'+str(i+1)+'_D'+str(domain_names[0]+1)+'.setoc(gp_waters_set'+str(i+1)+'_D'+str(domain_names[1]+1)+'.getoc())')
+        eval('gp_waters_set'+str(i+1)+'_D'+str(domain_names[0]+1)+'.setu(gp_waters_set'+str(i+1)+'_D'+str(domain_names[1]+1)+'.getu())')
+        eval('gp_waters_set'+str(i+1)+'_D'+str(domain_names[0]+1)+'.setdy(gp_waters_set'+str(i+1)+'_D'+str(domain_names[1]+1)+'.getdy())')
+        eval('rgh_domain'+str(domain_names[0]+1)+'.setV_shift_W_'+str(i+1)+'(rgh_domain'+str(domain_names[1]+1)+'.getV_shift_W_'+str(i+1)+'())')
+        eval('rgh_domain'+str(domain_names[0]+1)+'.setAlpha_W_'+str(i+1)+'(180-rgh_domain'+str(domain_names[1]+1)+'.getAlpha_W_'+str(i+1)+'())')
+
 #function to group tridentate pars specifically for distal oxygens from different domains (to be placed inside sim function)
 def set_TD(domain_names=['domain2','domain1']):
     eval('rgh_'+domain_names[0]+'.setTheta1_1_TD(rgh_'+domain_names[1]+'.getTheta1_1_TD())')
@@ -468,7 +549,7 @@ ref_S_domain2 =  model.Slab(c = 1.0,T_factor='B')
 ref_L_domain2 =  model.Slab(c = 1.0,T_factor='B')
 rgh=UserVars()
 rgh.new_var('beta', 0.0)
-scales=['scale_CTR','scale_RAXS','scale_CTR_specular']
+scales=['scale_CTR']
 for scale in scales:
     rgh.new_var(scale,1.)
     
@@ -478,10 +559,11 @@ for scale in scales:
 #it is a super surface structure by stacking the surface slab on bulk slab, the repeat vector was counted 
 
 #only two possible path(one for runing in pacman, the other in local laptop)
+batch_path_head='\\'.join(__main__.__file__.rsplit('\\')[:-1])+'\\batchfile\\'
 try:
     domain_creator.add_atom_in_slab(bulk,batch_path_head+'bulk.str')
 except:
-    batch_path_head='\\'.join(__main__.__file__.rsplit('\\')[:-1])+'\\batchfile\\'
+    batch_path_head='/u1/uaf/cqiu/batchfile/'
     domain_creator.add_atom_in_slab(bulk,batch_path_head+'bulk.str')
 domain_creator.add_atom_in_slab(ref_domain1,batch_path_head+'half_layer2.str')
 domain_creator.add_atom_in_slab(ref_L_domain2,batch_path_head+'full_layer2.str')
@@ -525,33 +607,33 @@ for i in range(DOMAIN_NUMBER):
         SORBATE_coors_a=[]
         O_coors_a=[]
         if len(SORBATE_ATTACH_ATOM[i][j])==1:#monodentate case
-            if j==0:
-                vars()['rgh_domain'+str(int(i+1))].new_var('top_angle_MD', 71.)
-                vars()['rgh_domain'+str(int(i+1))].new_var('phi_MD', 0.)
-                vars()['rgh_domain'+str(int(i+1))].new_var('r_MD', 2.)
-            if j==0 and LOCAL_STRUCTURE=='trigonal_pyramid':
-                if ADD_DISTAL_LIGAND_WILD:
-                    [vars()['rgh_domain'+str(int(i+1))].new_var('r1_'+str(KK+1)+'_MD', 2.27) for KK in range(2)]
-                    [vars()['rgh_domain'+str(int(i+1))].new_var('theta1_'+str(KK+1)+'_MD', 0) for KK in range(2)]
-                    [vars()['rgh_domain'+str(int(i+1))].new_var('phi1_'+str(KK+1)+'_MD', 0) for KK in range(2)]
-            if j==0 and LOCAL_STRUCTURE=='tetrahedral':
-                if ADD_DISTAL_LIGAND_WILD:
-                    [vars()['rgh_domain'+str(int(i+1))].new_var('r1_'+str(KK+1)+'_MD', 2.27) for KK in range(3)]
-                    [vars()['rgh_domain'+str(int(i+1))].new_var('theta1_'+str(KK+1)+'_MD', 0) for KK in range(3)]
-                    [vars()['rgh_domain'+str(int(i+1))].new_var('phi1_'+str(KK+1)+'_MD', 0) for KK in range(3)]
-            if j==0 and LOCAL_STRUCTURE=='octahedral':
-                if ADD_DISTAL_LIGAND_WILD:
-                    [vars()['rgh_domain'+str(int(i+1))].new_var('r1_'+str(KK+1)+'_MD', 2.27) for KK in range(5)]
-                    [vars()['rgh_domain'+str(int(i+1))].new_var('theta1_'+str(KK+1)+'_MD', 0) for KK in range(5)]
-                    [vars()['rgh_domain'+str(int(i+1))].new_var('phi1_'+str(KK+1)+'_MD', 0) for KK in range(5)]
+            if j%2==0:
+                vars()['rgh_domain'+str(int(i+1))].new_var('top_angle_MD_'+str(j), 71.)
+                vars()['rgh_domain'+str(int(i+1))].new_var('phi_MD_'+str(j), 0.)
+                vars()['rgh_domain'+str(int(i+1))].new_var('r_MD_'+str(j), 2.)
+            if j%2==0 and LOCAL_STRUCTURE=='trigonal_pyramid':
+                if ADD_DISTAL_LIGAND_WILD[i][j]:
+                    [vars()['rgh_domain'+str(int(i+1))].new_var('r1_'+str(KK+1)+'_MD_'+str(j), 2.27) for KK in range(2)]
+                    [vars()['rgh_domain'+str(int(i+1))].new_var('theta1_'+str(KK+1)+'_MD_'+str(j), 0) for KK in range(2)]
+                    [vars()['rgh_domain'+str(int(i+1))].new_var('phi1_'+str(KK+1)+'_MD_'+str(j), 0) for KK in range(2)]
+            if j%2==0 and LOCAL_STRUCTURE=='tetrahedral':
+                if ADD_DISTAL_LIGAND_WILD[i][j]:
+                    [vars()['rgh_domain'+str(int(i+1))].new_var('r1_'+str(KK+1)+'_MD_'+str(j), 2.27) for KK in range(3)]
+                    [vars()['rgh_domain'+str(int(i+1))].new_var('theta1_'+str(KK+1)+'_MD_'+str(j), 0) for KK in range(3)]
+                    [vars()['rgh_domain'+str(int(i+1))].new_var('phi1_'+str(KK+1)+'_MD_'+str(j), 0) for KK in range(3)]
+            if j%2==0 and LOCAL_STRUCTURE=='octahedral':
+                if ADD_DISTAL_LIGAND_WILD[i][j]:
+                    [vars()['rgh_domain'+str(int(i+1))].new_var('r1_'+str(KK+1)+'_MD_'+str(j), 2.27) for KK in range(5)]
+                    [vars()['rgh_domain'+str(int(i+1))].new_var('theta1_'+str(KK+1)+'_MD_'+str(j), 0) for KK in range(5)]
+                    [vars()['rgh_domain'+str(int(i+1))].new_var('phi1_'+str(KK+1)+'_MD_'+str(j), 0) for KK in range(5)]
                     
             ids=SORBATE_ATTACH_ATOM[i][j][0]+'_D'+str(int(i+1))+'A'
             offset=SORBATE_ATTACH_ATOM_OFFSET[i][j][0]
             SORBATE_id=vars()['SORBATE_list_domain'+str(int(i+1))+'a'][j]#pb_id is a str NOT list
             O_id=[HO_id for HO_id in vars()['HO_list_domain'+str(int(i+1))+'a'] if SORBATE_id in HO_id]
             sorbate_coors=[]
-            if USE_COORS[i]:
-                sorbate_coors=COORS[i]['sorbate'][j]+COORS[i]['oxygen'][j]
+            if USE_COORS[i][j]:
+                sorbate_coors=COORS[(i,j)]['sorbate'][0]+COORS[i]['oxygen'][0]
             else:
                 if LOCAL_STRUCTURE=='trigonal_pyramid':
                     sorbate_coors=vars()['domain_class_'+str(int(i+1))].adding_sorbate_pyramid_monodentate(domain=vars()['domain'+str(int(i+1))+'A'],top_angle=70,phi=0,r=2,attach_atm_ids=ids,offset=offset,pb_id=SORBATE_id,O_id=O_id,mirror=MIRROR[i],sorbate_el=SORBATE[0])           
@@ -567,7 +649,7 @@ for i in range(DOMAIN_NUMBER):
             #now put on sorbate on the symmetrically related domain
             sorbate_ids=[SORBATE_id_B]+O_id_B            
             sorbate_els=[SORBATE_LIST[i][j]]+['O']*(len(O_id_B))
-            if USE_COORS[i]:
+            if USE_COORS[i][j]:
                 SORBATE_id_A=vars()['SORBATE_list_domain'+str(int(i+1))+'a'][j]
                 O_id_A=[HO_id for HO_id in vars()['HO_list_domain'+str(int(i+1))+'a'] if SORBATE_id_A in HO_id]
                 sorbate_ids_A=[SORBATE_id_A]+O_id_A
@@ -583,48 +665,48 @@ for i in range(DOMAIN_NUMBER):
             if M!=0:
                 vars()['gp_HO_set'+str(j+1)+'_D'+str(int(i+1))]=vars()['domain_class_'+str(int(i+1))].grouping_discrete_layer3(domain=[vars()['domain'+str(int(i+1))+'A']]*M+[vars()['domain'+str(int(i+1))+'B']]*M,atom_ids=HO_set_ids)
         elif len(SORBATE_ATTACH_ATOM[i][j])==2:#bidentate case
-            if j==0 and LOCAL_STRUCTURE=='trigonal_pyramid':
-                if ADD_DISTAL_LIGAND_WILD[i]:
-                    vars()['rgh_domain'+str(int(i+1))].new_var('offset_BD', 0.)
-                    vars()['rgh_domain'+str(int(i+1))].new_var('offset2_BD', 0.)
-                    vars()['rgh_domain'+str(int(i+1))].new_var('angle_offset_BD', 0.)
-                    vars()['rgh_domain'+str(int(i+1))].new_var('phi_BD', 0.)
-                    vars()['rgh_domain'+str(int(i+1))].new_var('top_angle_BD', 0.)
-                    vars()['rgh_domain'+str(int(i+1))].new_var('r_BD', 2.27)
-                    [vars()['rgh_domain'+str(int(i+1))].new_var('r1_'+str(KK+1)+'_BD', 2.27) for KK in range(1)]
-                    [vars()['rgh_domain'+str(int(i+1))].new_var('theta1_'+str(KK+1)+'_BD', 0) for KK in range(1)]
-                    [vars()['rgh_domain'+str(int(i+1))].new_var('phi1_'+str(KK+1)+'_BD', 0) for KK in range(1)]
+            if j%2==0 and LOCAL_STRUCTURE=='trigonal_pyramid':
+                if ADD_DISTAL_LIGAND_WILD[i][j]:
+                    vars()['rgh_domain'+str(int(i+1))].new_var('offset_BD_'+str(j), 0.)
+                    vars()['rgh_domain'+str(int(i+1))].new_var('offset2_BD_'+str(j), 0.)
+                    vars()['rgh_domain'+str(int(i+1))].new_var('angle_offset_BD_'+str(j), 0.)
+                    vars()['rgh_domain'+str(int(i+1))].new_var('phi_BD_'+str(j), 0.)
+                    vars()['rgh_domain'+str(int(i+1))].new_var('top_angle_BD_'+str(j), 70.)
+                    vars()['rgh_domain'+str(int(i+1))].new_var('r_BD_'+str(j), 2.27)
+                    [vars()['rgh_domain'+str(int(i+1))].new_var('r1_'+str(KK+1)+'_BD_'+str(j), 2.27) for KK in range(1)]
+                    [vars()['rgh_domain'+str(int(i+1))].new_var('theta1_'+str(KK+1)+'_BD_'+str(j), 0) for KK in range(1)]
+                    [vars()['rgh_domain'+str(int(i+1))].new_var('phi1_'+str(KK+1)+'_BD_'+str(j), 0) for KK in range(1)]
                 else:
-                    vars()['rgh_domain'+str(int(i+1))].new_var('offset_BD', 0.)
-                    vars()['rgh_domain'+str(int(i+1))].new_var('offset2_BD', 0.)
-                    vars()['rgh_domain'+str(int(i+1))].new_var('angle_offset_BD', 0.)
-                    vars()['rgh_domain'+str(int(i+1))].new_var('phi_BD', 0.)
-                    vars()['rgh_domain'+str(int(i+1))].new_var('top_angle_BD', 0.)
-                    vars()['rgh_domain'+str(int(i+1))].new_var('r_BD', 2.27)
-            elif j==0 and LOCAL_STRUCTURE=='octahedral':
-                if ADD_DISTAL_LIGAND_WILD[i]:
-                    vars()['rgh_domain'+str(int(i+1))].new_var('phi_BD', 0.)
-                    [vars()['rgh_domain'+str(int(i+1))].new_var('r1_'+str(KK+1)+'_BD', 2.27) for KK in range(4)]
-                    [vars()['rgh_domain'+str(int(i+1))].new_var('theta1_'+str(KK+1)+'_BD', 0) for KK in range(4)]
-                    [vars()['rgh_domain'+str(int(i+1))].new_var('phi1_'+str(KK+1)+'_BD', 0) for KK in range(4)]
+                    vars()['rgh_domain'+str(int(i+1))].new_var('offset_BD_'+str(j), 0.)
+                    vars()['rgh_domain'+str(int(i+1))].new_var('offset2_BD_'+str(j), 0.)
+                    vars()['rgh_domain'+str(int(i+1))].new_var('angle_offset_BD_'+str(j), 0.)
+                    vars()['rgh_domain'+str(int(i+1))].new_var('phi_BD_'+str(j), 0.)
+                    vars()['rgh_domain'+str(int(i+1))].new_var('top_angle_BD_'+str(j), 70.)
+                    vars()['rgh_domain'+str(int(i+1))].new_var('r_BD_'+str(j), 2.27)
+            elif j%2==0 and LOCAL_STRUCTURE=='octahedral':
+                if ADD_DISTAL_LIGAND_WILD[i][j]:
+                    vars()['rgh_domain'+str(int(i+1))].new_var('phi_BD_'+str(j), 0.)
+                    [vars()['rgh_domain'+str(int(i+1))].new_var('r1_'+str(KK+1)+'_BD_'+str(j), 2.27) for KK in range(4)]
+                    [vars()['rgh_domain'+str(int(i+1))].new_var('theta1_'+str(KK+1)+'_BD_'+str(j), 0) for KK in range(4)]
+                    [vars()['rgh_domain'+str(int(i+1))].new_var('phi1_'+str(KK+1)+'_BD_'+str(j), 0) for KK in range(4)]
                 else:
-                    vars()['rgh_domain'+str(int(i+1))].new_var('phi_BD', 0.)
-            elif j==0 and LOCAL_STRUCTURE=='tetrahedral':
-                if ADD_DISTAL_LIGAND_WILD[i]:
-                    vars()['rgh_domain'+str(int(i+1))].new_var('phi_BD', 0.)
-                    vars()['rgh_domain'+str(int(i+1))].new_var('anchor_offset_BD', 0.)
-                    vars()['rgh_domain'+str(int(i+1))].new_var('top_angle_offset_BD', 0.)
-                    [vars()['rgh_domain'+str(int(i+1))].new_var('r1_'+str(KK+1)+'_BD', 2.27) for KK in range(2)]
-                    [vars()['rgh_domain'+str(int(i+1))].new_var('theta1_'+str(KK+1)+'_BD', 0) for KK in range(2)]
-                    [vars()['rgh_domain'+str(int(i+1))].new_var('phi1_'+str(KK+1)+'_BD', 0) for KK in range(2)]
+                    vars()['rgh_domain'+str(int(i+1))].new_var('phi_BD_'+str(j), 0.)
+            elif j%2==0 and LOCAL_STRUCTURE=='tetrahedral':
+                if ADD_DISTAL_LIGAND_WILD[i][j]:
+                    vars()['rgh_domain'+str(int(i+1))].new_var('phi_BD_'+str(j), 0.)
+                    vars()['rgh_domain'+str(int(i+1))].new_var('anchor_offset_BD_'+str(j), 0.)
+                    vars()['rgh_domain'+str(int(i+1))].new_var('top_angle_offset_BD_'+str(j), 0.)
+                    [vars()['rgh_domain'+str(int(i+1))].new_var('r1_'+str(KK+1)+'_BD_'+str(j), 2.27) for KK in range(2)]
+                    [vars()['rgh_domain'+str(int(i+1))].new_var('theta1_'+str(KK+1)+'_BD_'+str(j), 0) for KK in range(2)]
+                    [vars()['rgh_domain'+str(int(i+1))].new_var('phi1_'+str(KK+1)+'_BD_'+str(j), 0) for KK in range(2)]
                 else:
-                    vars()['rgh_domain'+str(int(i+1))].new_var('anchor_offset_BD', 0.)
-                    vars()['rgh_domain'+str(int(i+1))].new_var('offset_BD', 0.)
-                    vars()['rgh_domain'+str(int(i+1))].new_var('offset2_BD', 0.)
-                    vars()['rgh_domain'+str(int(i+1))].new_var('top_angle_offset_BD', 0.)
-                    vars()['rgh_domain'+str(int(i+1))].new_var('angle_offset_BD', 0.)
-                    vars()['rgh_domain'+str(int(i+1))].new_var('angle_offset2_BD', 0.)
-                    vars()['rgh_domain'+str(int(i+1))].new_var('phi_BD', 0.)
+                    vars()['rgh_domain'+str(int(i+1))].new_var('anchor_offset_BD_'+str(j), 0.)
+                    vars()['rgh_domain'+str(int(i+1))].new_var('offset_BD_'+str(j), 0.)
+                    vars()['rgh_domain'+str(int(i+1))].new_var('offset2_BD_'+str(j), 0.)
+                    vars()['rgh_domain'+str(int(i+1))].new_var('top_angle_offset_BD_'+str(j), 0.)
+                    vars()['rgh_domain'+str(int(i+1))].new_var('angle_offset_BD_'+str(j), 0.)
+                    vars()['rgh_domain'+str(int(i+1))].new_var('angle_offset2_BD_'+str(j), 0.)
+                    vars()['rgh_domain'+str(int(i+1))].new_var('phi_BD_'+str(j), 0.)
             ids=[SORBATE_ATTACH_ATOM[i][j][0]+'_D'+str(int(i+1))+'A',SORBATE_ATTACH_ATOM[i][j][1]+'_D'+str(int(i+1))+'A']
             offset=SORBATE_ATTACH_ATOM_OFFSET[i][j]
             anchor,anchor_offset=None,None
@@ -634,8 +716,8 @@ for i in range(DOMAIN_NUMBER):
             SORBATE_id=vars()['SORBATE_list_domain'+str(int(i+1))+'a'][j]
             O_id=[HO_id for HO_id in vars()['HO_list_domain'+str(int(i+1))+'a'] if SORBATE_id in HO_id]
             sorbate_coors=[]
-            if USE_COORS[i]:
-                sorbate_coors=COORS[i]['sorbate'][j]+COORS[i]['oxygen'][j]
+            if USE_COORS[i][j]:
+                sorbate_coors=COORS[(i,j)]['sorbate'][0]+COORS[(i,j)]['oxygen'][0]
             else:
                 if LOCAL_STRUCTURE=='trigonal_pyramid':
                     sorbate_coors=vars()['domain_class_'+str(int(i+1))].adding_sorbate_pyramid_distortion_B(domain=vars()['domain'+str(int(i+1))+'A'],top_angle=70,phi=0,edge_offset=[0,0],attach_atm_ids=ids,offset=offset,anchor_ref=anchor,anchor_offset=anchor_offset,pb_id=SORBATE_id,sorbate_el=SORBATE[0],O_id=O_id,mirror=MIRROR[i])
@@ -650,7 +732,7 @@ for i in range(DOMAIN_NUMBER):
             #now put on sorbate on the symmetrically related domain
             sorbate_ids=[SORBATE_id_B]+O_id_B
             sorbate_els=[SORBATE_LIST[i][j]]+['O']*(len(O_id_B))
-            if USE_COORS[i]:
+            if USE_COORS[i][j]:
                 SORBATE_id_A=vars()['SORBATE_list_domain'+str(int(i+1))+'a'][j]
                 O_id_A=[HO_id for HO_id in vars()['HO_list_domain'+str(int(i+1))+'a'] if SORBATE_id_A in HO_id]
                 sorbate_ids_A=[SORBATE_id_A]+O_id_A
@@ -666,27 +748,29 @@ for i in range(DOMAIN_NUMBER):
             if M!=0:
                 vars()['gp_HO_set'+str(j+1)+'_D'+str(int(i+1))]=vars()['domain_class_'+str(int(i+1))].grouping_discrete_layer3(domain=[vars()['domain'+str(int(i+1))+'A']]*M+[vars()['domain'+str(int(i+1))+'B']]*M,atom_ids=HO_set_ids)
         elif len(SORBATE_ATTACH_ATOM[i][j])==3:#tridentate case (no oxygen sorbate here considering it is a trigonal pyramid structure)
-            if j==0 and LOCAL_STRUCTURE=='trigonal_pyramid':
-                vars()['rgh_domain'+str(int(i+1))].new_var('top_angle_TD', 70.)
-            elif j==0 and LOCAL_STRUCTURE=='octahedral':
-                if ADD_DISTAL_LIGAND_WILD[i]:
-                    vars()['rgh_domain'+str(int(i+1))].new_var('dr1_oct_TD', 0.)
-                    vars()['rgh_domain'+str(int(i+1))].new_var('dr2_oct_TD', 0.)
-                    vars()['rgh_domain'+str(int(i+1))].new_var('dr3_oct_TD', 0.)
-                    [vars()['rgh_domain'+str(int(i+1))].new_var('r1_'+str(KK+1)+'_TD', 2.27) for KK in range(3)]
-                    [vars()['rgh_domain'+str(int(i+1))].new_var('theta1_'+str(KK+1)+'_TD', 0.) for KK in range(3)]
-                    [vars()['rgh_domain'+str(int(i+1))].new_var('phi1_'+str(KK+1)+'_TD', 0.) for KK in range(3)]
+            if j%2==0 and LOCAL_STRUCTURE=='trigonal_pyramid':
+                vars()['rgh_domain'+str(int(i+1))].new_var('top_angle_TD_'+str(j), 70.)
+            elif j%2==0 and LOCAL_STRUCTURE=='octahedral':
+                if ADD_DISTAL_LIGAND_WILD[i][j]:
+                    vars()['rgh_domain'+str(int(i+1))].new_var('dr1_oct_TD_'+str(j), 0.)
+                    vars()['rgh_domain'+str(int(i+1))].new_var('dr2_oct_TD_'+str(j), 0.)
+                    vars()['rgh_domain'+str(int(i+1))].new_var('dr3_oct_TD_'+str(j), 0.)
+                    [vars()['rgh_domain'+str(int(i+1))].new_var('r1_'+str(KK+1)+'_TD_'+str(j), 2.27) for KK in range(3)]
+                    [vars()['rgh_domain'+str(int(i+1))].new_var('theta1_'+str(KK+1)+'_TD_'+str(j), 0.) for KK in range(3)]
+                    [vars()['rgh_domain'+str(int(i+1))].new_var('phi1_'+str(KK+1)+'_TD_'+str(j), 0.) for KK in range(3)]
                 else:
-                    vars()['rgh_domain'+str(int(i+1))].new_var('dr1_oct_TD', 0.)
-                    vars()['rgh_domain'+str(int(i+1))].new_var('dr2_oct_TD', 0.)
-                    vars()['rgh_domain'+str(int(i+1))].new_var('dr3_oct_TD', 0.)
-            elif j==0 and LOCAL_STRUCTURE=='tetrahedral':
-                if ADD_DISTAL_LIGAND_WILD[i]:
-                    [vars()['rgh_domain'+str(int(i+1))].new_var('r1_'+str(KK+1)+'_TD', 2.27) for KK in range(1)]
-                    [vars()['rgh_domain'+str(int(i+1))].new_var('theta1_'+str(KK+1)+'_TD', 0.) for KK in range(1)]
-                    [vars()['rgh_domain'+str(int(i+1))].new_var('phi1_'+str(KK+1)+'_TD', 0.) for KK in range(1)]
+                    vars()['rgh_domain'+str(int(i+1))].new_var('dr1_oct_TD_'+str(j), 0.)
+                    vars()['rgh_domain'+str(int(i+1))].new_var('dr2_oct_TD_'+str(j), 0.)
+                    vars()['rgh_domain'+str(int(i+1))].new_var('dr3_oct_TD_'+str(j), 0.)
+            elif j%2==0 and LOCAL_STRUCTURE=='tetrahedral':
+                if ADD_DISTAL_LIGAND_WILD[i][j]:
+                    [vars()['rgh_domain'+str(int(i+1))].new_var('r1_'+str(KK+1)+'_TD_'+str(j), 2.27) for KK in range(1)]
+                    [vars()['rgh_domain'+str(int(i+1))].new_var('theta1_'+str(KK+1)+'_TD_'+str(j), 0.) for KK in range(1)]
+                    [vars()['rgh_domain'+str(int(i+1))].new_var('phi1_'+str(KK+1)+'_TD_'+str(j), 0.) for KK in range(1)]
+                    vars()['rgh_domain'+str(int(i+1))].new_var('dr_tetrahedral_TD_'+str(j), 0.)
                 else:
-                    vars()['rgh_domain'+str(int(i+1))].new_var('dr_tetrahedral_TD', 0.)
+                    vars()['rgh_domain'+str(int(i+1))].new_var('dr_tetrahedral_TD_'+str(j), 0.)
+                    vars()['rgh_domain'+str(int(i+1))].new_var('dr_bc_tetrahedral_TD_'+str(j), 0.)
 
             ids=[SORBATE_ATTACH_ATOM[i][j][0]+'_D'+str(int(i+1))+'A',SORBATE_ATTACH_ATOM[i][j][1]+'_D'+str(int(i+1))+'A',SORBATE_ATTACH_ATOM[i][j][2]+'_D'+str(int(i+1))+'A']
             offset=SORBATE_ATTACH_ATOM_OFFSET[i][j]
@@ -694,8 +778,8 @@ for i in range(DOMAIN_NUMBER):
             O_index,O_id,sorbate_coors,O_id_B,HO_set_ids,SORBATE_id_B,sorbate_ids,SORBATE_coors_a=[],[],[],[],[],[],[],[]
             if LOCAL_STRUCTURE=='octahedral':
                 O_id=[HO_id for HO_id in vars()['HO_list_domain'+str(int(i+1))+'a'] if SORBATE_id in HO_id]
-                if USE_COORS[i]:
-                    sorbate_coors=COORS[i]['sorbate'][j]+COORS[i]['oxygen'][j]
+                if USE_COORS[i][j]:
+                    sorbate_coors=COORS[(i,j)]['sorbate'][0]+COORS[(i,j)]['oxygen'][0]
                 else:
                     sorbate_coors=vars()['domain_class_'+str(int(i+1))].adding_share_triple_octahedra(domain=vars()['domain'+str(int(i+1))+'A'],attach_atm_ids_ref=ids[0:2],attach_atm_id_third=[ids[-1]],offset=offset,sorbate_id=SORBATE_id,sorbate_el=SORBATE[0],sorbate_oxygen_ids=O_id)
                 SORBATE_coors_a.append(sorbate_coors[0])
@@ -711,8 +795,8 @@ for i in range(DOMAIN_NUMBER):
                     domain_creator.add_atom(domain=vars()['domain'+str(int(i+1))+'A'],ref_coor=np.array(SORBATE_coors_a+O_coors_a),ids=sorbate_ids_A,els=sorbate_els)
                 domain_creator.add_atom(domain=vars()['domain'+str(int(i+1))+'B'],ref_coor=np.array(SORBATE_coors_a+O_coors_a)*[-1,1,1]-[-1.,0.06955,0.5],ids=sorbate_ids,els=sorbate_els)
             elif LOCAL_STRUCTURE=='trigonal_pyramid':
-                if USE_COORS[i]:
-                    sorbate_coors=COORS[i]['sorbate'][j]+COORS[i]['oxygen'][j][0]
+                if USE_COORS[i][j]:
+                    sorbate_coors=COORS[(i,j)]['sorbate'][0]+COORS[(i,j)]['oxygen'][0]
                 else:
                     sorbate_coors=vars()['domain_class_'+str(int(i+1))].adding_pb_share_triple4(domain=vars()['domain'+str(int(i+1))+'A'],top_angle=70,attach_atm_ids_ref=ids[0:2],attach_atm_id_third=[ids[-1]],offset=offset,pb_id=SORBATE_id,sorbate_el=SORBATE[0])
                 SORBATE_coors_a.append(sorbate_coors)
@@ -727,8 +811,8 @@ for i in range(DOMAIN_NUMBER):
                 domain_creator.add_atom(domain=vars()['domain'+str(int(i+1))+'B'],ref_coor=np.array(SORBATE_coors_a)*[-1,1,1]-[-1.,0.06955,0.5],ids=sorbate_ids,els=sorbate_els)
             elif LOCAL_STRUCTURE=='tetrahedral':
                 O_id=[HO_id for HO_id in vars()['HO_list_domain'+str(int(i+1))+'a'] if SORBATE_id in HO_id]
-                if USE_COORS[i]:
-                    sorbate_coors=COORS[i]['sorbate'][j]+COORS[i]['oxygen'][j]
+                if USE_COORS[i][j]:
+                    sorbate_coors=COORS[(i,j)]['sorbate'][0]+COORS[(i,j)]['oxygen'][0]
                 else:
                     sorbate_coors=vars()['domain_class_'+str(int(i+1))].adding_sorbate_tridentate_tetrahedral(domain=vars()['domain'+str(int(i+1))+'A'],attach_atm_ids_ref=ids[0:2],attach_atm_id_third=[ids[-1]],offset=offset,sorbate_id=SORBATE_id,sorbate_el=SORBATE[0],sorbate_oxygen_ids=O_id)
                 SORBATE_coors_a.append(sorbate_coors[0])
@@ -737,7 +821,7 @@ for i in range(DOMAIN_NUMBER):
                 O_id_B=[HO_id for HO_id in vars()['HO_list_domain'+str(int(i+1))+'b'] if SORBATE_id_B in HO_id]
                 sorbate_ids=[SORBATE_id_B]+O_id_B
                 sorbate_els=[SORBATE_LIST[i][j]]+['O']*(len(O_id_B))
-                if USE_COORS[i]:
+                if USE_COORS[i][j]:
                     SORBATE_id_A=vars()['SORBATE_list_domain'+str(int(i+1))+'a'][j]
                     O_id_A=[HO_id for HO_id in vars()['HO_list_domain'+str(int(i+1))+'a'] if SORBATE_id_A in HO_id]
                     sorbate_ids_A=[SORBATE_id_A]+O_id_A
@@ -754,21 +838,17 @@ for i in range(DOMAIN_NUMBER):
             vars()['gp_sorbates_set'+str(j+1)+'_D'+str(int(i+1))]=vars()['domain_class_'+str(int(i+1))].grouping_discrete_layer3(domain=[vars()['domain'+str(int(i+1))+'A']]*N+[vars()['domain'+str(int(i+1))+'B']]*N,atom_ids=sorbate_set_ids)
             if M!=0:
                 vars()['gp_HO_set'+str(j+1)+'_D'+str(int(i+1))]=vars()['domain_class_'+str(int(i+1))].grouping_discrete_layer3(domain=[vars()['domain'+str(int(i+1))+'A']]*M+[vars()['domain'+str(int(i+1))+'B']]*M,atom_ids=HO_set_ids)
-            #elif SORBATE_LIST[i][j]=='Pb':
-            #    sorbate_set_ids=[SORBATE_id]+[SORBATE_id_B]
-            #    N=len(sorbate_set_ids)/2
-            #    vars()['gp_sorbates_set'+str(j+1)+'_D'+str(int(i+1))]=vars()['domain_class_'+str(int(i+1))].grouping_discrete_layer3(domain=[vars()['domain'+str(int(i+1))+'A']]*N+[vars()['domain'+str(int(i+1))+'B']]*N,atom_ids=sorbate_set_ids)
         else:#add an outer-sphere case here
-            if j==0:
-                vars()['rgh_domain'+str(int(i+1))].new_var('phi_OS', 0.)
-                vars()['rgh_domain'+str(int(i+1))].new_var('r0_OS', 2.26)
-                vars()['rgh_domain'+str(int(i+1))].new_var('top_angle_OS', 70.)
-                vars()['rgh_domain'+str(int(i+1))].new_var('ct_offset_dx_OS', 0.)
-                vars()['rgh_domain'+str(int(i+1))].new_var('ct_offset_dy_OS', 0.)
-                vars()['rgh_domain'+str(int(i+1))].new_var('ct_offset_dz_OS', 0.)
-                vars()['rgh_domain'+str(int(i+1))].new_var('rot_x_OS', 0.)
-                vars()['rgh_domain'+str(int(i+1))].new_var('rot_y_OS', 0.)
-                vars()['rgh_domain'+str(int(i+1))].new_var('rot_z_OS', 0.)
+            if j%2==0:
+                vars()['rgh_domain'+str(int(i+1))].new_var('phi_OS_'+str(j), 0.)
+                vars()['rgh_domain'+str(int(i+1))].new_var('r0_OS_'+str(j), 2.26)
+                vars()['rgh_domain'+str(int(i+1))].new_var('top_angle_OS_'+str(j), 70.)
+                vars()['rgh_domain'+str(int(i+1))].new_var('ct_offset_dx_OS_'+str(j), 0.)
+                vars()['rgh_domain'+str(int(i+1))].new_var('ct_offset_dy_OS_'+str(j), 0.)
+                vars()['rgh_domain'+str(int(i+1))].new_var('ct_offset_dz_OS_'+str(j), 0.)
+                vars()['rgh_domain'+str(int(i+1))].new_var('rot_x_OS_'+str(j), 0.)
+                vars()['rgh_domain'+str(int(i+1))].new_var('rot_y_OS_'+str(j), 0.)
+                vars()['rgh_domain'+str(int(i+1))].new_var('rot_z_OS_'+str(j), 0.)
                 
             SORBATE_id=vars()['SORBATE_list_domain'+str(int(i+1))+'a'][j]#pb_id is a str NOT list
             O_id=[HO_id for HO_id in vars()['HO_list_domain'+str(int(i+1))+'a'] if SORBATE_id in HO_id]
@@ -776,8 +856,8 @@ for i in range(DOMAIN_NUMBER):
             if O_id!=[]:
                 consider_distal=True
             sorbate_coors=[]
-            if USE_COORS[i]:
-                sorbate_coors=COORS[i]['sorbate'][j]+COORS[i]['oxygen'][j]
+            if USE_COORS[i][j]:
+                sorbate_coors=COORS[(i,j)]['sorbate'][0]+COORS[(i,j)]['oxygen'][0]
             else:
                 if LOCAL_STRUCTURE=='trigonal_pyramid':
                     sorbate_coors=vars()['domain_class_'+str(int(i+1))].outer_sphere_complex_2(domain=vars()['domain'+str(int(i+1))+'A'],cent_point=[0.75,0.+j*0.5,2.1],r_Pb_O=2.28,O_Pb_O_ang=70,phi=j*np.pi-0,pb_id=SORBATE_id,sorbate_el=SORBATE[0],O_ids=O_id,distal_oxygen=consider_distal)           
@@ -793,7 +873,7 @@ for i in range(DOMAIN_NUMBER):
             #now put on sorbate on the symmetrically related domain
             sorbate_ids=[SORBATE_id_B]+O_id_B
             sorbate_els=[SORBATE_LIST[i][j]]+['O']*(len(O_id_B))
-            if USE_COORS[i]:
+            if USE_COORS[i][j]:
                 SORBATE_id_A=vars()['SORBATE_list_domain'+str(int(i+1))+'a'][j]
                 O_id_A=[HO_id for HO_id in vars()['HO_list_domain'+str(int(i+1))+'a'] if SORBATE_id_A in HO_id]
                 sorbate_ids_A=[SORBATE_id_A]+O_id_A
@@ -912,80 +992,26 @@ for i in range(DOMAIN_NUMBER):
                                                                    atom_ids=[vars()['ids_domain'+str(int(i+1))+'A'][j],vars()['ids_domain'+str(int(i+1))+'B'][j]],sym_array=[[1.,0.,0.,0.,1.,0.,0.,0.,1.],[-1.,0.,0.,0.,1.,0.,0.,0.,1.]]))
     for j in range(len(vars()['discrete_gp_names_domain'+str(int(i+1))])):vars()[vars()['discrete_gp_names_domain'+str(int(i+1))][j]]=vars()['atm_gp_discrete_list_domain'+str(int(i+1))][j]
     
-    if sum(SORBATE_NUMBER[i])==2:#if Pb couple being considered on the surface
-       vars()['gp_'+SORBATE[0]+'_D'+str(i+1)]=domain_class_1.grouping_discrete_layer3(domain=[vars()['domain'+str(int(i+1))+'A'],vars()['domain'+str(int(i+1))+'B']]*2,atom_ids=[SORBATE[0]+'1_D'+str(i+1)+'A',SORBATE[0]+'1_D'+str(i+1)+'B',SORBATE[0]+'2_D'+str(i+1)+'A',SORBATE[0]+'2_D'+str(i+1)+'B'],sym_array=[[1.,0.,0.,0.,1.,0.,0.,0.,1.],[-1.,0.,0.,0.,1.,0.,0.,0.,1.],[-1.,0.,0.,0.,1.,0.,0.,0.,1.],[1.,0.,0.,0.,1.,0.,0.,0.,1.]])
-    elif sum(SORBATE_NUMBER[i])==1:#if single Pb is considered binding on the surface
-       vars()['gp_'+SORBATE[0]+'_D'+str(i+1)]=domain_class_1.grouping_discrete_layer3(domain=[vars()['domain'+str(int(i+1))+'A'],vars()['domain'+str(int(i+1))+'B']],atom_ids=[SORBATE[0]+'1_D'+str(i+1)+'A',SORBATE[0]+'1_D'+str(i+1)+'B'],sym_array=[[1.,0.,0.,0.,1.,0.,0.,0.,1.],[-1.,0.,0.,0.,1.,0.,0.,0.,1.]])
-    elif sum(SORBATE_NUMBER[i])==3:#consider the outersphere complex also
-       vars()['gp_'+SORBATE[0]+'_D'+str(i+1)]=domain_class_1.grouping_discrete_layer3(domain=[vars()['domain'+str(int(i+1))+'A'],vars()['domain'+str(int(i+1))+'B']]*2,atom_ids=[SORBATE[0]+'1_D'+str(i+1)+'A',SORBATE[0]+'1_D'+str(i+1)+'B',SORBATE[0]+'2_D'+str(i+1)+'A',SORBATE[0]+'2_D'+str(i+1)+'B'],sym_array=[[1.,0.,0.,0.,1.,0.,0.,0.,1.],[-1.,0.,0.,0.,1.,0.,0.,0.,1.],[-1.,0.,0.,0.,1.,0.,0.,0.,1.],[1.,0.,0.,0.,1.,0.,0.,0.,1.]])
-       vars()['gp_'+SORBATE[0]+'_OS_D'+str(i+1)]=domain_class_1.grouping_discrete_layer3(domain=[vars()['domain'+str(int(i+1))+'A'],vars()['domain'+str(int(i+1))+'B']],atom_ids=[SORBATE[0]+'3_D'+str(i+1)+'A',SORBATE[0]+'3_D'+str(i+1)+'B'],sym_array=[[1.,0.,0.,0.,1.,0.,0.,0.,1.],[-1.,0.,0.,0.,1.,0.,0.,0.,1.]])
-    #comment this if statement out if you consider outer-sphere complexation
-    if vars()['HO_list_domain'+str(i+1)+'a']!=[]:
-        N_HO_group=len(vars()['HO_list_domain'+str(i+1)+'a'])/sum(SORBATE_NUMBER[i])
-        for N in range(N_HO_group):
-            atom_ids=[]
-            for N_SORBATE in range(sum(SORBATE_NUMBER[i])):
-                atom_ids.append('HO'+str(N+1)+'_'+SORBATE[0]+str(N_SORBATE+1)+'_D'+str(i+1)+'A')
-                atom_ids.append('HO'+str(N+1)+'_'+SORBATE[0]+str(N_SORBATE+1)+'_D'+str(i+1)+'B')
-            try:#if you have two sorbates within one unit cell
-                vars()['gp_HO'+str(N+1)+'_D'+str(i+1)]=domain_class_1.grouping_discrete_layer3(domain=[vars()['domain'+str(i+1)+'A'],vars()['domain'+str(i+1)+'B'],vars()['domain'+str(i+1)+'A'],vars()['domain'+str(i+1)+'B']],\
-                                                                       atom_ids=atom_ids,sym_array=[[1,0,0,0,1,0,0,0,1],[-1,0,0,0,1,0,0,0,1],[-1,0,0,0,1,0,0,0,1],[1,0,0,0,1,0,0,0,1]])
-            except:#if you have only one sorbate within one unit cell
-                vars()['gp_HO'+str(N+1)+'_D'+str(i+1)]=domain_class_1.grouping_discrete_layer3(domain=[vars()['domain'+str(i+1)+'A'],vars()['domain'+str(i+1)+'B']],\
-                                                                       atom_ids=atom_ids,sym_array=[[1,0,0,0,1,0,0,0,1],[-1,0,0,0,1,0,0,0,1]])
-
-for group in DOMAIN_GP:
-    a,b=group[0]+1,group[1]+1
-       
-    vars()['discrete_gp_list_domain_'+str(a)+'_'+str(b)]=[]#surface atoms
-    vars()['discrete_gp_list_sorbate_domain_'+str(a)+'_'+str(b)]=[]#metal(loid) sorbates
-    vars()['discrete_gp_list_HO_domain_'+str(a)+'_'+str(b)]=[]#hydroxide ligands
-    vars()['discrete_gp_list_Os_domain_'+str(a)+'_'+str(b)]=[]#interfacial waters
-    def _match(value):
-        if value==0:return 1
-        else:return -1
-    for j in range(len(vars()['atm_list_'+str(a)+'A'])):
-        if j%2==0:
-            vars()['discrete_gp_list_domain_'+str(a)+'_'+str(b)].append(domain_class_1.grouping_discrete_layer3(domain=[vars()['domain'+str(a)+'A'],vars()['domain'+str(a)+'B'],vars()['domain'+str(a)+'A'],vars()['domain'+str(a)+'B'],vars()['domain'+str(b)+'A'],vars()['domain'+str(b)+'B'],vars()['domain'+str(b)+'A'],vars()['domain'+str(b)+'B']],\
-                                                                   atom_ids=[vars()['atm_list_'+str(a)+'A'][j],vars()['atm_list_'+str(a)+'B'][j],vars()['atm_list_'+str(a)+'A'][j+_match(j%2)],vars()['atm_list_'+str(a)+'B'][j+_match(j%2)],vars()['atm_list_'+str(b)+'A'][j],vars()['atm_list_'+str(b)+'B'][j],vars()['atm_list_'+str(b)+'A'][j+_match(j%2)],vars()['atm_list_'+str(b)+'B'][j+_match(j%2)]],sym_array=[[1,0,0,0,1,0,0,0,1],[-1,0,0,0,1,0,0,0,1],[-1,0,0,0,1,0,0,0,1],[1,0,0,0,1,0,0,0,1]]*2))
-    if vars()['SORBATE_list_domain'+str(a)+'a']!=[] and vars()['SORBATE_list_domain'+str(b)+'b']!=[]:
-        for j in range(len(vars()['SORBATE_list_domain'+str(a)+'a'])):
-            vars()['discrete_gp_list_sorbate_domain_'+str(a)+'_'+str(b)].append(domain_class_1.grouping_discrete_layer3(domain=[vars()['domain'+str(a)+'A'],vars()['domain'+str(a)+'B'],vars()['domain'+str(b)+'A'],vars()['domain'+str(b)+'B']],\
-                                                                       atom_ids=[vars()['SORBATE_list_domain'+str(a)+'a'][j],vars()['SORBATE_list_domain'+str(a)+'b'][j],vars()['SORBATE_list_domain'+str(b)+'a'][j],vars()['SORBATE_list_domain'+str(b)+'b'][j]],sym_array=[[1,0,0,0,1,0,0,0,1],[-1,0,0,0,1,0,0,0,1],[-1,0,0,0,1,0,0,0,1],[1,0,0,0,1,0,0,0,1]]))
-    if vars()['HO_list_domain'+str(a)+'a']!=[] and vars()['HO_list_domain'+str(b)+'b']!=[]:
-        for j in range(len(vars()['HO_list_domain'+str(a)+'a'])):
-            vars()['discrete_gp_list_HO_domain_'+str(a)+'_'+str(b)].append(domain_class_1.grouping_discrete_layer3(domain=[vars()['domain'+str(a)+'A'],vars()['domain'+str(a)+'B'],vars()['domain'+str(b)+'A'],vars()['domain'+str(b)+'B']],\
-                                                                       atom_ids=[vars()['HO_list_domain'+str(a)+'a'][j],vars()['HO_list_domain'+str(a)+'b'][j],vars()['HO_list_domain'+str(b)+'a'][j],vars()['HO_list_domain'+str(b)+'b'][j]],sym_array=[[1,0,0,0,1,0,0,0,1],[-1,0,0,0,1,0,0,0,1],[-1,0,0,0,1,0,0,0,1],[1,0,0,0,1,0,0,0,1]]))
-    if vars()['Os_list_domain'+str(a)+'a']!=[] and vars()['Os_list_domain'+str(b)+'b']!=[]:
-        for j in range(len(vars()['Os_list_domain'+str(a)+'a'])):
-            vars()['discrete_gp_list_Os_domain_'+str(a)+'_'+str(b)].append(domain_class_1.grouping_discrete_layer3(domain=[vars()['domain'+str(a)+'A'],vars()['domain'+str(a)+'B'],vars()['domain'+str(b)+'A'],vars()['domain'+str(b)+'B']],\
-                                                                       atom_ids=[vars()['Os_list_domain'+str(a)+'a'][j],vars()['Os_list_domain'+str(a)+'b'][j],vars()['Os_list_domain'+str(b)+'a'][j],vars()['Os_list_domain'+str(b)+'b'][j]],sym_array=[[1,0,0,0,1,0,0,0,1],[-1,0,0,0,1,0,0,0,1],[-1,0,0,0,1,0,0,0,1],[1,0,0,0,1,0,0,0,1]]))
-
-    #assign names to each super atm group 
-    def _reorder(original_list):
-        new_list=[]
-        N=len(original_list)
-        index_list_1=[ii*2+1 for ii in range(N/2)]
-        index_list_2=[ii*2 for ii in range(N/2)]
-        for i in range(N/2):
-            new_list.append(original_list[index_list_1[i]])
-            new_list.append(original_list[index_list_2[i]])
-        return new_list
-    #if you want to use original order, just dont _reorder inside the zip    
-    vars()['discrete_gp_names_domain_'+str(a)+'_'+str(b)]=map(lambda x:'gp_'+x[0].rsplit('_')[0][:-1]+x[0].rsplit('_')[1]+x[1].rsplit('_')[0][:-1]+x[1].rsplit('_')[1]+'_'+x[2].rsplit('_')[0][:-1]+x[2].rsplit('_')[1]+x[3].rsplit('_')[0][:-1]+x[3].rsplit('_')[1]+'_D'+str(a)+'_D'+str(b),zip(vars()['atm_list_'+str(a)+'A'],_reorder(vars()['atm_list_'+str(a)+'A']),vars()['atm_list_'+str(a)+'B'],_reorder(vars()['atm_list_'+str(a)+'B'])))[::2]
-    if vars()['SORBATE_list_domain'+str(a)+'a']!=[]:vars()['discrete_gp_names_sorbate_domain_'+str(a)+'_'+str(b)]=map(lambda x:'gp_'+x.rsplit('_')[0]+'_D'+str(a)+'_D'+str(b),vars()['SORBATE_list_domain'+str(a)+'a'])
-    if vars()['HO_list_domain'+str(a)+'a']!=[]:vars()['discrete_gp_names_HO_domain_'+str(a)+'_'+str(b)]=map(lambda x:'gp_'+x.rsplit('_')[0]+'_D'+str(a)+'_D'+str(b),vars()['HO_list_domain'+str(a)+'a'])
-    if vars()['Os_list_domain'+str(a)+'a']!=[]:vars()['discrete_gp_names_Os_domain_'+str(a)+'_'+str(b)]=map(lambda x:'gp_'+x.rsplit('_')[0]+'_D'+str(a)+'_D'+str(b),vars()['Os_list_domain'+str(a)+'a'])
-
-    for j in range(len(vars()['discrete_gp_list_domain_'+str(a)+'_'+str(b)])):vars()[vars()['discrete_gp_names_domain_'+str(a)+'_'+str(b)][j]]=vars()['discrete_gp_list_domain_'+str(a)+'_'+str(b)][j]
-    if vars()['SORBATE_list_domain'+str(a)+'a']!=[]:
-        for j in range(len(vars()['discrete_gp_list_sorbate_domain_'+str(a)+'_'+str(b)])):vars()[vars()['discrete_gp_names_sorbate_domain_'+str(a)+'_'+str(b)][j]]=vars()['discrete_gp_list_sorbate_domain_'+str(a)+'_'+str(b)][j]
-    if vars()['HO_list_domain'+str(a)+'a']!=[]:
-        for j in range(len(vars()['discrete_gp_list_HO_domain_'+str(a)+'_'+str(b)])):vars()[vars()['discrete_gp_names_HO_domain_'+str(a)+'_'+str(b)][j]]=vars()['discrete_gp_list_HO_domain_'+str(a)+'_'+str(b)][j]
-    if vars()['Os_list_domain'+str(a)+'a']!=[]:
-        for j in range(len(vars()['discrete_gp_list_Os_domain_'+str(a)+'_'+str(b)])):vars()[vars()['discrete_gp_names_Os_domain_'+str(a)+'_'+str(b)][j]]=vars()['discrete_gp_list_Os_domain_'+str(a)+'_'+str(b)][j]
-
-
+    try:#group sorbates in pairs
+        for N in range(0,sum(SORBATE_NUMBER[i]),2):
+            vars()['gp_'+SORBATE[0]+'_set'+str(N+1)+'_D'+str(i+1)]=domain_class_1.grouping_discrete_layer3(domain=[vars()['domain'+str(int(i+1))+'A'],vars()['domain'+str(int(i+1))+'B']]*2,atom_ids=[SORBATE[0]+str(N+1)+'_D'+str(i+1)+'A',SORBATE[0]+str(N+1)+'_D'+str(i+1)+'B',SORBATE[0]+str(N+2)+'_D'+str(i+1)+'A',SORBATE[0]+str(N+2)+'_D'+str(i+1)+'B'],sym_array=[[1.,0.,0.,0.,1.,0.,0.,0.,1.],[-1.,0.,0.,0.,1.,0.,0.,0.,1.],[-1.,0.,0.,0.,1.,0.,0.,0.,1.],[1.,0.,0.,0.,1.,0.,0.,0.,1.]])
+            if vars()['HO_list_domain'+str(i+1)+'a']!=[]:
+                HO_A1=[each for each in vars()['HO_list_domain'+str(i+1)+'a'] if ('_'+SORBATE[0]+str(N+1)+'_') in each]
+                HO_B1=[each for each in vars()['HO_list_domain'+str(i+1)+'b'] if ('_'+SORBATE[0]+str(N+1)+'_') in each]
+                HO_A2=[each for each in vars()['HO_list_domain'+str(i+1)+'a'] if ('_'+SORBATE[0]+str(N+2)+'_') in each]
+                HO_B2=[each for each in vars()['HO_list_domain'+str(i+1)+'b'] if ('_'+SORBATE[0]+str(N+2)+'_') in each]
+                for NN in range(len(HO_A1)):
+                    vars()['gp_HO'+str(NN+1)+'_set'+str(N+1)+'_D'+str(i+1)]=domain_class_1.grouping_discrete_layer3(domain=[vars()['domain'+str(i+1)+'A'],vars()['domain'+str(i+1)+'B'],vars()['domain'+str(i+1)+'A'],vars()['domain'+str(i+1)+'B']],\
+                          atom_ids=[HO_A1[NN],HO_B1[NN],HO_A2[NN],HO_B2[NN]],sym_array=[[1,0,0,0,1,0,0,0,1],[-1,0,0,0,1,0,0,0,1],[-1,0,0,0,1,0,0,0,1],[1,0,0,0,1,0,0,0,1]])
+    except:#consider single site for each domain otherwise
+        for N in range(0,sum(SORBATE_NUMBER[i]),1):
+            vars()['gp_'+SORBATE[0]+'_set'+str(N+1)+'_D'+str(i+1)]=domain_class_1.grouping_discrete_layer3(domain=[vars()['domain'+str(int(i+1))+'A'],vars()['domain'+str(int(i+1))+'B']],atom_ids=[SORBATE[0]+str(N+1)+'_D'+str(i+1)+'A',SORBATE[0]+str(N+1)+'_D'+str(i+1)+'B'],sym_array=[[1.,0.,0.,0.,1.,0.,0.,0.,1.],[-1.,0.,0.,0.,1.,0.,0.,0.,1.]])
+            if vars()['HO_list_domain'+str(i+1)+'a']!=[]:
+                HO_A1=[each for each in vars()['HO_list_domain'+str(i+1)+'a'] if ('_'+SORBATE[0]+str(N+1)+'_') in each]
+                HO_B1=[each for each in vars()['HO_list_domain'+str(i+1)+'b'] if ('_'+SORBATE[0]+str(N+1)+'_') in each]
+                for NN in range(len(HO_A1)):
+                    vars()['gp_HO'+str(NN+1)+'_set'+str(N+1)+'_D'+str(i+1)]=domain_class_1.grouping_discrete_layer3(domain=[vars()['domain'+str(i+1)+'A'],vars()['domain'+str(i+1)+'B']],\
+                          atom_ids=[HO_A1[NN],HO_B1[NN]],sym_array=[[1,0,0,0,1,0,0,0,1],[-1,0,0,0,1,0,0,0,1]])
 #####################################do bond valence matching###################################
 if USE_BV:
     for i in range(DOMAIN_NUMBER):
@@ -1005,12 +1031,9 @@ if USE_BV:
                     vars()['match_lib_'+str(int(i+1))+'A'][key]=vars()['HB_MATCH_'+str(i+1)][key]
                 else:
                     vars()['match_lib_'+str(int(i+1))+'A'][key]=vars()['match_lib_'+str(int(i+1))+'A'][key]+vars()['HB_MATCH_'+str(i+1)][key]
-#####################################specify f1f2 here###################################
-res_el='Pb'
-f1f2_file='raxs_Pb_formatted.f1f2'
-#f1f2=np.loadtxt(batch_path_head+f1f2_file)
-VARS=vars()#pass local variables to sim function
+
 ###################################fitting function part##########################################
+VARS=vars()#pass local variables to sim function
 if COUNT_TIME:t_1=datetime.now()
 
 def Sim(data,VARS=VARS):
@@ -1041,15 +1064,16 @@ def Sim(data,VARS=VARS):
                     domain_creator.add_atom(domain=VARS['domain'+str(int(i+1))+'B'],ref_coor=[np.array(coor)*[-1,1,1]-[-1.,0.06955,0.5]],ids=['HB'+str(j_H+1)+'_'+COVALENT_HYDROGEN_ACCEPTOR[i][i_H]+'_D'+str(i+1)+'B'],els=['H'])
 
         #update sorbates
-        if UPDATE_SORBATE_IN_SIM and not USE_COORS[i]:
+        if UPDATE_SORBATE_IN_SIM:
                                             
             for j in range(sum(VARS['SORBATE_NUMBER'][i])):
                 SORBATE_coors_a=[]
                 O_coors_a=[]
-                if len(VARS['SORBATE_ATTACH_ATOM'][i][j])==1:#monodentate case
-                    top_angle=getattr(VARS['rgh_domain'+str(int(i+1))],'top_angle_MD')
-                    phi=getattr(VARS['rgh_domain'+str(int(i+1))],'phi_MD')
-                    r=getattr(VARS['rgh_domain'+str(int(i+1))],'r_MD')
+                
+                if len(VARS['SORBATE_ATTACH_ATOM'][i][j])==1 and not USE_COORS[i][j]:#monodentate case
+                    top_angle=getattr(VARS['rgh_domain'+str(int(i+1))],'top_angle_MD_'+str(j/2*2))
+                    phi=getattr(VARS['rgh_domain'+str(int(i+1))],'phi_MD_'+str(j/2*2))
+                    r=getattr(VARS['rgh_domain'+str(int(i+1))],'r_MD_'+str(j/2*2))
                     ids=VARS['SORBATE_ATTACH_ATOM'][i][j][0]+'_D'+str(int(i+1))+'A'
                     offset=VARS['SORBATE_ATTACH_ATOM_OFFSET'][i][j][0]
                     SORBATE_id=VARS['SORBATE_list_domain'+str(int(i+1))+'a'][j]#pb_id is a str NOT list
@@ -1058,7 +1082,7 @@ def Sim(data,VARS=VARS):
                     sorbate_coors=[]
                     if LOCAL_STRUCTURE=='trigonal_pyramid':
                         sorbate_coors=VARS['domain_class_'+str(int(i+1))].adding_sorbate_pyramid_monodentate(domain=VARS['domain'+str(int(i+1))+'A'],top_angle=top_angle,phi=phi,r=r,attach_atm_ids=ids,offset=offset,pb_id=SORBATE_id,sorbate_el=SORBATE[0],O_id=O_id,mirror=VARS['MIRROR'][i])           
-                        if ADD_DISTAL_LIGAND_WILD[i]:
+                        if ADD_DISTAL_LIGAND_WILD[i][j]:
                             if (i+j)%2==1:
                                 [O_coors_a.append(domain_class_1.adding_distal_ligand(domain=VARS['domain'+str(int(i+1))+'A'],id=O_id[ligand_id],ref=domain_creator.extract_coor(VARS['domain'+str(int(i+1))+'A'],SORBATE_id),r=getattr(VARS['rgh_domain'+str(int(i+1))],'r1_'+str(ligand_id+1)+'_MD'),theta=getattr(VARS['rgh_domain'+str(int(i+1))],'theta1_'+str(ligand_id+1)+'_MD'),phi=getattr(VARS['rgh_domain'+str(int(i+1))],'phi1_'+str(ligand_id+1)+'_MD'))) for ligand_id in range(len(O_id))]
                             else:
@@ -1067,7 +1091,7 @@ def Sim(data,VARS=VARS):
                             [O_coors_a.append(sorbate_coors[k]) for k in range(len(sorbate_coors))[1:]]
                     elif LOCAL_STRUCTURE=='octahedral':
                         sorbate_coors=VARS['domain_class_'+str(int(i+1))].adding_sorbate_octahedral_monodentate(domain=VARS['domain'+str(int(i+1))+'A'],phi=phi,r=r,attach_atm_id=ids,offset=offset,sb_id=SORBATE_id,sorbate_el=SORBATE[0],O_id=O_id)           
-                        if ADD_DISTAL_LIGAND_WILD[i]:
+                        if ADD_DISTAL_LIGAND_WILD[i][j]:
                             if (i+j)%2==1:
                                 [O_coors_a.append(domain_class_1.adding_distal_ligand(domain=VARS['domain'+str(int(i+1))+'A'],id=O_id[ligand_id],ref=domain_creator.extract_coor(VARS['domain'+str(int(i+1))+'A'],SORBATE_id),r=getattr(VARS['rgh_domain'+str(int(i+1))],'r1_'+str(ligand_id+1)+'_MD'),theta=getattr(VARS['rgh_domain'+str(int(i+1))],'theta1_'+str(ligand_id+1)+'_MD'),phi=getattr(VARS['rgh_domain'+str(int(i+1))],'phi1_'+str(ligand_id+1)+'_MD'))) for ligand_id in range(len(O_id))]
                             else:
@@ -1076,7 +1100,7 @@ def Sim(data,VARS=VARS):
                             [O_coors_a.append(sorbate_coors[k]) for k in range(len(sorbate_coors))[1:]]
                     elif LOCAL_STRUCTURE=='tetrahedral':
                         sorbate_coors=VARS['domain_class_'+str(int(i+1))].adding_sorbate_tetrahedral_monodentate(domain=VARS['domain'+str(int(i+1))+'A'],phi=phi,r=r,attach_atm_id=ids,offset=offset,sorbate_id=SORBATE_id,O_id=O_id,sorbate_el=SORBATE[0])
-                        if ADD_DISTAL_LIGAND_WILD[i]:
+                        if ADD_DISTAL_LIGAND_WILD[i][j]:
                             if (i+j)%2==1:
                                 [O_coors_a.append(domain_class_1.adding_distal_ligand(domain=VARS['domain'+str(int(i+1))+'A'],id=O_id[ligand_id],ref=domain_creator.extract_coor(VARS['domain'+str(int(i+1))+'A'],SORBATE_id),r=getattr(VARS['rgh_domain'+str(int(i+1))],'r1_'+str(ligand_id+1)+'_MD'),theta=getattr(VARS['rgh_domain'+str(int(i+1))],'theta1_'+str(ligand_id+1)+'_MD'),phi=getattr(VARS['rgh_domain'+str(int(i+1))],'phi1_'+str(ligand_id+1)+'_MD'))) for ligand_id in range(len(O_id))]
                             else:
@@ -1090,7 +1114,7 @@ def Sim(data,VARS=VARS):
                     sorbate_ids=[SORBATE_id_B]+O_id_B
                     sorbate_els=[SORBATE_LIST[i][j]]+['O']*(len(O_id_B))
                     domain_creator.add_atom(domain=VARS['domain'+str(int(i+1))+'B'],ref_coor=np.array(SORBATE_coors_a+O_coors_a)*[-1,1,1]-[-1.,0.06955,0.5],ids=sorbate_ids,els=sorbate_els)
-                elif len(VARS['SORBATE_ATTACH_ATOM'][i][j])==2:#bidentate case
+                elif len(VARS['SORBATE_ATTACH_ATOM'][i][j])==2 and not USE_COORS[i][j]:#bidentate case
                     anchor,anchor_offset=None,None
                     if ANCHOR_REFERENCE[i][j]!=None:
                         anchor=ANCHOR_REFERENCE[i][j]+'_D'+str(int(i+1))+'A'
@@ -1101,53 +1125,53 @@ def Sim(data,VARS=VARS):
                     ids=[VARS['SORBATE_ATTACH_ATOM'][i][j][0]+'_D'+str(int(i+1))+'A',VARS['SORBATE_ATTACH_ATOM'][i][j][1]+'_D'+str(int(i+1))+'A']
                     offset=VARS['SORBATE_ATTACH_ATOM_OFFSET'][i][j]
                     if LOCAL_STRUCTURE=='trigonal_pyramid':
-                        if sym_site_index[i][j]==0:edge_offset=getattr(VARS['rgh_domain'+str(int(i+1))],'offset_BD')
-                        else:edge_offset=-getattr(VARS['rgh_domain'+str(int(i+1))],'offset_BD')
-                        edge_offset2=getattr(VARS['rgh_domain'+str(int(i+1))],'offset2_BD')
-                        angle_offset=getattr(VARS['rgh_domain'+str(int(i+1))],'angle_offset_BD')
-                        top_angle=getattr(VARS['rgh_domain'+str(int(i+1))],'top_angle_BD')                                       
-                        phi=getattr(VARS['rgh_domain'+str(int(i+1))],'phi_BD')
+                        if (i+j)%2==1:edge_offset=getattr(VARS['rgh_domain'+str(int(i+1))],'offset_BD_'+str(j/2*2))
+                        else:edge_offset=-getattr(VARS['rgh_domain'+str(int(i+1))],'offset_BD_'+str(j/2*2))
+                        edge_offset2=getattr(VARS['rgh_domain'+str(int(i+1))],'offset2_BD_'+str(j/2*2))
+                        angle_offset=getattr(VARS['rgh_domain'+str(int(i+1))],'angle_offset_BD_'+str(j/2*2))
+                        top_angle=getattr(VARS['rgh_domain'+str(int(i+1))],'top_angle_BD_'+str(j/2*2))                                       
+                        phi=getattr(VARS['rgh_domain'+str(int(i+1))],'phi_BD_'+str(j/2*2))
                         if not USE_TOP_ANGLE:
-                            r1=getattr(VARS['rgh_domain'+str(int(i+1))],'r_BD') 
-                            r2=r1+getattr(VARS['rgh_domain'+str(int(i+1))],'offset_BD')
+                            r1=getattr(VARS['rgh_domain'+str(int(i+1))],'r_BD_'+str(j/2*2)) 
+                            r2=r1+getattr(VARS['rgh_domain'+str(int(i+1))],'offset_BD_'+str(j/2*2))
                             l=domain_creator.extract_coor_offset(domain=VARS['domain'+str(int(i+1))+'A'],id=ids,offset=offset,basis=[5.038,5.434,7.3707])
                             top_angle=np.arccos((r1**2+r2**2-l**2)/2/r1/r2)/np.pi*180
                         sorbate_coors=VARS['domain_class_'+str(int(i+1))].adding_sorbate_pyramid_distortion_B2(domain=VARS['domain'+str(int(i+1))+'A'],top_angle=top_angle,phi=phi,edge_offset=[edge_offset,edge_offset2],attach_atm_ids=ids,offset=offset,anchor_ref=anchor,anchor_offset=anchor_offset,pb_id=SORBATE_id,sorbate_el=SORBATE[0],O_id=O_id,mirror=VARS['MIRROR'][i],angle_offset=angle_offset)
-                        if ADD_DISTAL_LIGAND_WILD[i]:
+                        if ADD_DISTAL_LIGAND_WILD[i][j]:
                             if (i+j)%2==1:
-                                [O_coors_a.append(domain_class_1.adding_distal_ligand(domain=VARS['domain'+str(int(i+1))+'A'],id=O_id[ligand_id],ref=domain_creator.extract_coor(VARS['domain'+str(int(i+1))+'A'],SORBATE_id),r=getattr(VARS['rgh_domain'+str(int(i+1))],'r1_'+str(ligand_id+1)+'_BD'),theta=getattr(VARS['rgh_domain'+str(int(i+1))],'theta1_'+str(ligand_id+1)+'_BD'),phi=getattr(VARS['rgh_domain'+str(int(i+1))],'phi1_'+str(ligand_id+1)+'_BD'))) for ligand_id in range(len(O_id))]
+                                [O_coors_a.append(domain_class_1.adding_distal_ligand(domain=VARS['domain'+str(int(i+1))+'A'],id=O_id[ligand_id],ref=domain_creator.extract_coor(VARS['domain'+str(int(i+1))+'A'],SORBATE_id),r=getattr(VARS['rgh_domain'+str(int(i+1))],'r1_'+str(ligand_id+1)+'_BD_'+str(j/2*2)),theta=getattr(VARS['rgh_domain'+str(int(i+1))],'theta1_'+str(ligand_id+1)+'_BD_'+str(j/2*2)),phi=getattr(VARS['rgh_domain'+str(int(i+1))],'phi1_'+str(ligand_id+1)+'_BD_'+str(j/2*2)))) for ligand_id in range(len(O_id))]
                             else:
-                                [O_coors_a.append(domain_class_1.adding_distal_ligand(domain=VARS['domain'+str(int(i+1))+'A'],id=O_id[ligand_id],ref=domain_creator.extract_coor(VARS['domain'+str(int(i+1))+'A'],SORBATE_id),r=getattr(VARS['rgh_domain'+str(int(i+1))],'r1_'+str(ligand_id+1)+'_BD'),theta=getattr(VARS['rgh_domain'+str(int(i+1))],'theta1_'+str(ligand_id+1)+'_BD'),phi=180-getattr(VARS['rgh_domain'+str(int(i+1))],'phi1_'+str(ligand_id+1)+'_BD'))) for ligand_id in range(len(O_id))]
+                                [O_coors_a.append(domain_class_1.adding_distal_ligand(domain=VARS['domain'+str(int(i+1))+'A'],id=O_id[ligand_id],ref=domain_creator.extract_coor(VARS['domain'+str(int(i+1))+'A'],SORBATE_id),r=getattr(VARS['rgh_domain'+str(int(i+1))],'r1_'+str(ligand_id+1)+'_BD_'+str(j/2*2)),theta=getattr(VARS['rgh_domain'+str(int(i+1))],'theta1_'+str(ligand_id+1)+'_BD_'+str(j/2*2)),phi=180-getattr(VARS['rgh_domain'+str(int(i+1))],'phi1_'+str(ligand_id+1)+'_BD_'+str(j/2*2)))) for ligand_id in range(len(O_id))]
                         else:
                             [O_coors_a.append(sorbate_coors[k]) for k in range(len(sorbate_coors))[1:]]
                     elif LOCAL_STRUCTURE=='octahedral':
-                        phi=getattr(VARS['rgh_domain'+str(int(i+1))],'phi_BD')
-                        if ADD_DISTAL_LIGAND_WILD[i]:
+                        phi=getattr(VARS['rgh_domain'+str(int(i+1))],'phi_BD_'+str(j/2*2))
+                        if ADD_DISTAL_LIGAND_WILD[i][j]:
                             sorbate_coors=VARS['domain_class_'+str(int(i+1))].adding_sorbate_bidentate_octahedral(domain=VARS['domain'+str(int(i+1))+'A'],phi=phi,attach_atm_ids=ids,offset=offset,sb_id=SORBATE_id,sorbate_el=SORBATE[0],O_id=[],anchor_ref=anchor,anchor_offset=anchor_offset)
                             if (i+j)%2==1:
-                                [sorbate_coors.append(domain_class_1.adding_distal_ligand(domain=VARS['domain'+str(int(i+1))+'A'],id=O_id[ligand_id],ref=domain_creator.extract_coor(VARS['domain'+str(int(i+1))+'A'],SORBATE_id),r=getattr(VARS['rgh_domain'+str(int(i+1))],'r1_'+str(ligand_id+1)+'_BD'),theta=getattr(VARS['rgh_domain'+str(int(i+1))],'theta1_'+str(ligand_id+1)+'_BD'),phi=getattr(VARS['rgh_domain'+str(int(i+1))],'phi1_'+str(ligand_id+1)+'_BD'))) for ligand_id in range(len(O_id))]
+                                [sorbate_coors.append(domain_class_1.adding_distal_ligand(domain=VARS['domain'+str(int(i+1))+'A'],id=O_id[ligand_id],ref=domain_creator.extract_coor(VARS['domain'+str(int(i+1))+'A'],SORBATE_id),r=getattr(VARS['rgh_domain'+str(int(i+1))],'r1_'+str(ligand_id+1)+'_BD_'+str(j/2*2)),theta=getattr(VARS['rgh_domain'+str(int(i+1))],'theta1_'+str(ligand_id+1)+'_BD_'+str(j/2*2)),phi=getattr(VARS['rgh_domain'+str(int(i+1))],'phi1_'+str(ligand_id+1)+'_BD_'+str(j/2*2)))) for ligand_id in range(len(O_id))]
                             else:
-                                [sorbate_coors.append(domain_class_1.adding_distal_ligand(domain=VARS['domain'+str(int(i+1))+'A'],id=O_id[ligand_id],ref=domain_creator.extract_coor(VARS['domain'+str(int(i+1))+'A'],SORBATE_id),r=getattr(VARS['rgh_domain'+str(int(i+1))],'r1_'+str(ligand_id+1)+'_BD'),theta=getattr(VARS['rgh_domain'+str(int(i+1))],'theta1_'+str(ligand_id+1)+'_BD'),phi=180-getattr(VARS['rgh_domain'+str(int(i+1))],'phi1_'+str(ligand_id+1)+'_BD'))) for ligand_id in range(len(O_id))]
+                                [sorbate_coors.append(domain_class_1.adding_distal_ligand(domain=VARS['domain'+str(int(i+1))+'A'],id=O_id[ligand_id],ref=domain_creator.extract_coor(VARS['domain'+str(int(i+1))+'A'],SORBATE_id),r=getattr(VARS['rgh_domain'+str(int(i+1))],'r1_'+str(ligand_id+1)+'_BD_'+str(j/2*2)),theta=getattr(VARS['rgh_domain'+str(int(i+1))],'theta1_'+str(ligand_id+1)+'_BD_'+str(j/2*2)),phi=180-getattr(VARS['rgh_domain'+str(int(i+1))],'phi1_'+str(ligand_id+1)+'_BD_'+str(j/2*2)))) for ligand_id in range(len(O_id))]
                         else:
                             sorbate_coors=VARS['domain_class_'+str(int(i+1))].adding_sorbate_bidentate_octahedral(domain=VARS['domain'+str(int(i+1))+'A'],phi=phi,attach_atm_ids=ids,offset=offset,sb_id=SORBATE_id,sorbate_el=SORBATE[0],O_id=O_id,anchor_ref=anchor,anchor_offset=anchor_offset)
                     elif LOCAL_STRUCTURE=='tetrahedral':
-                        phi=getattr(VARS['rgh_domain'+str(int(i+1))],'phi_BD')
+                        phi=getattr(VARS['rgh_domain'+str(int(i+1))],'phi_BD_'+str(j/2*2))
                         if (i+j)%2==1:
                             ids=ids[::-1]
                             offset=offset[::-1]
                             phi=-phi
-                        top_angle_offset=getattr(VARS['rgh_domain'+str(int(i+1))],'top_angle_offset_BD')
-                        edge_offset=getattr(VARS['rgh_domain'+str(int(i+1))],'anchor_offset_BD')
+                        top_angle_offset=getattr(VARS['rgh_domain'+str(int(i+1))],'top_angle_offset_BD_'+str(j/2*2))
+                        edge_offset=getattr(VARS['rgh_domain'+str(int(i+1))],'anchor_offset_BD_'+str(j/2*2))
                         
-                        if ADD_DISTAL_LIGAND_WILD[i]:
+                        if ADD_DISTAL_LIGAND_WILD[i][j]:
                             sorbate_coors=VARS['domain_class_'+str(int(i+1))].adding_sorbate_bidentate_tetrahedral(domain=VARS['domain'+str(int(i+1))+'A'],phi=phi,distal_length_offset=[0,0],distal_angle_offset=[0,0],top_angle_offset=top_angle_offset,attach_atm_ids=ids,offset=offset,sorbate_id=SORBATE_id,sorbate_el=SORBATE[0],O_id=[],anchor_ref=anchor,anchor_offset=anchor_offset,edge_offset=edge_offset)
                             if (i+j)%2==1:
-                                [sorbate_coors.append(domain_class_1.adding_distal_ligand(domain=VARS['domain'+str(int(i+1))+'A'],id=O_id[ligand_id],ref=domain_creator.extract_coor(VARS['domain'+str(int(i+1))+'A'],SORBATE_id),r=getattr(VARS['rgh_domain'+str(int(i+1))],'r1_'+str(ligand_id+1)+'_BD'),theta=getattr(VARS['rgh_domain'+str(int(i+1))],'theta1_'+str(ligand_id+1)+'_BD'),phi=getattr(VARS['rgh_domain'+str(int(i+1))],'phi1_'+str(ligand_id+1)+'_BD'))) for ligand_id in range(len(O_id))]
+                                [sorbate_coors.append(domain_class_1.adding_distal_ligand(domain=VARS['domain'+str(int(i+1))+'A'],id=O_id[ligand_id],ref=domain_creator.extract_coor(VARS['domain'+str(int(i+1))+'A'],SORBATE_id),r=getattr(VARS['rgh_domain'+str(int(i+1))],'r1_'+str(ligand_id+1)+'_BD_'+str(j/2*2)),theta=getattr(VARS['rgh_domain'+str(int(i+1))],'theta1_'+str(ligand_id+1)+'_BD_'+str(j/2*2)),phi=getattr(VARS['rgh_domain'+str(int(i+1))],'phi1_'+str(ligand_id+1)+'_BD_'+str(j/2*2)))) for ligand_id in range(len(O_id))]
                             else:
-                                [sorbate_coors.append(domain_class_1.adding_distal_ligand(domain=VARS['domain'+str(int(i+1))+'A'],id=O_id[ligand_id],ref=domain_creator.extract_coor(VARS['domain'+str(int(i+1))+'A'],SORBATE_id),r=getattr(VARS['rgh_domain'+str(int(i+1))],'r1_'+str(ligand_id+1)+'_BD'),theta=getattr(VARS['rgh_domain'+str(int(i+1))],'theta1_'+str(ligand_id+1)+'_BD'),phi=180-getattr(VARS['rgh_domain'+str(int(i+1))],'phi1_'+str(ligand_id+1)+'_BD'))) for ligand_id in range(len(O_id))]
+                                [sorbate_coors.append(domain_class_1.adding_distal_ligand(domain=VARS['domain'+str(int(i+1))+'A'],id=O_id[ligand_id],ref=domain_creator.extract_coor(VARS['domain'+str(int(i+1))+'A'],SORBATE_id),r=getattr(VARS['rgh_domain'+str(int(i+1))],'r1_'+str(ligand_id+1)+'_BD_'+str(j/2*2)),theta=getattr(VARS['rgh_domain'+str(int(i+1))],'theta1_'+str(ligand_id+1)+'_BD_'+str(j/2*2)),phi=180-getattr(VARS['rgh_domain'+str(int(i+1))],'phi1_'+str(ligand_id+1)+'_BD_'+str(j/2*2)))) for ligand_id in range(len(O_id))]
                         else:
-                            angle_offsets=[getattr(VARS['rgh_domain'+str(int(i+1))],'angle_offset_BD'),getattr(VARS['rgh_domain'+str(int(i+1))],'angle_offset2_BD')]
-                            distal_length_offset=[getattr(VARS['rgh_domain'+str(int(i+1))],'offset_BD'),getattr(VARS['rgh_domain'+str(int(i+1))],'offset2_BD')]
+                            angle_offsets=[getattr(VARS['rgh_domain'+str(int(i+1))],'angle_offset_BD_'+str(j/2*2)),getattr(VARS['rgh_domain'+str(int(i+1))],'angle_offset2_BD_'+str(j/2*2))]
+                            distal_length_offset=[getattr(VARS['rgh_domain'+str(int(i+1))],'offset_BD_'+str(j/2*2)),getattr(VARS['rgh_domain'+str(int(i+1))],'offset2_BD_'+str(j/2*2))]
                             if (i+j)%2==1:
                                 distal_length_offset=distal_length_offset[::-1]
                                 angle_offsets=-np.array(angle_offsets[::-1])
@@ -1160,9 +1184,9 @@ def Sim(data,VARS=VARS):
                     sorbate_ids=[SORBATE_id_B]+O_id_B
                     sorbate_els=[SORBATE_LIST[i][j]]+['O']*(len(O_id_B))
                     domain_creator.add_atom(domain=VARS['domain'+str(int(i+1))+'B'],ref_coor=np.array(SORBATE_coors_a+O_coors_a)*[-1,1,1]-[-1.,0.06955,0.5],ids=sorbate_ids,els=sorbate_els)
-                elif len(VARS['SORBATE_ATTACH_ATOM'][i][j])==3:#tridentate case (no oxygen sorbate here considering it is a trigonal pyramid structure)
+                elif len(VARS['SORBATE_ATTACH_ATOM'][i][j])==3 and not USE_COORS[i][j]:#tridentate case (no oxygen sorbate here considering it is a trigonal pyramid structure)
                     if LOCAL_STRUCTURE=='trigonal_pyramid':
-                        top_angle=getattr(VARS['rgh_domain'+str(int(i+1))],'top_angle_TD')
+                        top_angle=getattr(VARS['rgh_domain'+str(int(i+1))],'top_angle_TD_'+str(j/2*2))
                         ids=[VARS['SORBATE_ATTACH_ATOM'][i][j][0]+'_D'+str(int(i+1))+'A',VARS['SORBATE_ATTACH_ATOM'][i][j][1]+'_D'+str(int(i+1))+'A',VARS['SORBATE_ATTACH_ATOM'][i][j][2]+'_D'+str(int(i+1))+'A']
                         offset=VARS['SORBATE_ATTACH_ATOM_OFFSET'][i][j]
                         SORBATE_id=VARS['SORBATE_list_domain'+str(int(i+1))+'a'][j]
@@ -1176,17 +1200,17 @@ def Sim(data,VARS=VARS):
                     elif LOCAL_STRUCTURE=='octahedral':
                         ids=[VARS['SORBATE_ATTACH_ATOM'][i][j][0]+'_D'+str(int(i+1))+'A',VARS['SORBATE_ATTACH_ATOM'][i][j][1]+'_D'+str(int(i+1))+'A',VARS['SORBATE_ATTACH_ATOM'][i][j][2]+'_D'+str(int(i+1))+'A']
                         offset=VARS['SORBATE_ATTACH_ATOM_OFFSET'][i][j]
-                        dr=[getattr(VARS['rgh_domain'+str(int(i+1))],'dr1_oct_TD'),getattr(VARS['rgh_domain'+str(int(i+1))],'dr2_oct_TD'),getattr(VARS['rgh_domain'+str(int(i+1))],'dr3_oct_TD')]
+                        dr=[getattr(VARS['rgh_domain'+str(int(i+1))],'dr1_oct_TD_'+str(j/2*2)),getattr(VARS['rgh_domain'+str(int(i+1))],'dr2_oct_TD_'+str(j/2*2)),getattr(VARS['rgh_domain'+str(int(i+1))],'dr3_oct_TD_'+str(j/2*2))]
                         SORBATE_id=VARS['SORBATE_list_domain'+str(int(i+1))+'a'][j]
                         O_id=[HO_id for HO_id in VARS['HO_list_domain'+str(int(i+1))+'a'] if SORBATE_id in HO_id]
                         sorbate_coors=VARS['domain_class_'+str(int(i+1))].adding_share_triple_octahedra(domain=VARS['domain'+str(int(i+1))+'A'],attach_atm_ids_ref=ids[0:2],attach_atm_id_third=[ids[-1]],offset=offset,sorbate_id=SORBATE_id,sorbate_el=SORBATE[0],sorbate_oxygen_ids=O_id,dr=dr)                      
                         SORBATE_coors_a.append(sorbate_coors[0])
                         #sorbate_offset=domain_creator.extract_coor(VARS['domain'+str(int(i+1))+'A'],SORBATE_id)-domain_creator.extract_coor2(VARS['domain'+str(int(i+1))+'A'],SORBATE_id)
-                        if ADD_DISTAL_LIGAND_WILD[i]:
+                        if ADD_DISTAL_LIGAND_WILD[i][j]:
                             if (i+j)%2==1:
-                                [O_coors_a.append(domain_class_1.adding_distal_ligand(domain=VARS['domain'+str(int(i+1))+'A'],id=O_id[ligand_id],ref=domain_creator.extract_coor(VARS['domain'+str(int(i+1))+'A'],SORBATE_id),r=getattr(VARS['rgh_domain'+str(int(i+1))],'r1_'+str(ligand_id+1)+'_TD'),theta=getattr(VARS['rgh_domain'+str(int(i+1))],'theta1_'+str(ligand_id+1)+'_TD'),phi=getattr(VARS['rgh_domain'+str(int(i+1))],'phi1_'+str(ligand_id+1)+'_TD'))) for ligand_id in range(len(O_id))]
+                                [O_coors_a.append(domain_class_1.adding_distal_ligand(domain=VARS['domain'+str(int(i+1))+'A'],id=O_id[ligand_id],ref=domain_creator.extract_coor(VARS['domain'+str(int(i+1))+'A'],SORBATE_id),r=getattr(VARS['rgh_domain'+str(int(i+1))],'r1_'+str(ligand_id+1)+'_TD_'+str(j/2*2)),theta=getattr(VARS['rgh_domain'+str(int(i+1))],'theta1_'+str(ligand_id+1)+'_TD_'+str(j/2*2)),phi=getattr(VARS['rgh_domain'+str(int(i+1))],'phi1_'+str(ligand_id+1)+'_TD_'+str(j/2*2)))) for ligand_id in range(len(O_id))]
                             else:
-                                [O_coors_a.append(domain_class_1.adding_distal_ligand(domain=VARS['domain'+str(int(i+1))+'A'],id=O_id[ligand_id],ref=domain_creator.extract_coor(VARS['domain'+str(int(i+1))+'A'],SORBATE_id),r=getattr(VARS['rgh_domain'+str(int(i+1))],'r1_'+str(ligand_id+1)+'_TD'),theta=getattr(VARS['rgh_domain'+str(int(i+1))],'theta1_'+str(ligand_id+1)+'_TD'),phi=180-getattr(VARS['rgh_domain'+str(int(i+1))],'phi1_'+str(ligand_id+1)+'_TD'))) for ligand_id in range(len(O_id))]
+                                [O_coors_a.append(domain_class_1.adding_distal_ligand(domain=VARS['domain'+str(int(i+1))+'A'],id=O_id[ligand_id],ref=domain_creator.extract_coor(VARS['domain'+str(int(i+1))+'A'],SORBATE_id),r=getattr(VARS['rgh_domain'+str(int(i+1))],'r1_'+str(ligand_id+1)+'_TD_'+str(j/2*2)),theta=getattr(VARS['rgh_domain'+str(int(i+1))],'theta1_'+str(ligand_id+1)+'_TD_'+str(j/2*2)),phi=180-getattr(VARS['rgh_domain'+str(int(i+1))],'phi1_'+str(ligand_id+1)+'_TD_'+str(j/2*2)))) for ligand_id in range(len(O_id))]
                         else:
                             [O_coors_a.append(sorbate_coors[k]) for k in range(len(sorbate_coors))[1:]]
                         SORBATE_id_B=VARS['SORBATE_list_domain'+str(int(i+1))+'b'][j]
@@ -1199,16 +1223,17 @@ def Sim(data,VARS=VARS):
                         ids=[VARS['SORBATE_ATTACH_ATOM'][i][j][0]+'_D'+str(int(i+1))+'A',VARS['SORBATE_ATTACH_ATOM'][i][j][1]+'_D'+str(int(i+1))+'A',VARS['SORBATE_ATTACH_ATOM'][i][j][2]+'_D'+str(int(i+1))+'A']
                         offset=VARS['SORBATE_ATTACH_ATOM_OFFSET'][i][j]
                         SORBATE_id=VARS['SORBATE_list_domain'+str(int(i+1))+'a'][j]
-                        edge_offset=getattr(VARS['rgh_domain'+str(int(i+1))],'dr_tetrahedral_TD')
+                        edge_offset=getattr(VARS['rgh_domain'+str(int(i+1))],'dr_tetrahedral_TD_'+str(j/2*2))
+                        angle_offset=getattr(VARS['rgh_domain'+str(int(i+1))],'dr_bc_tetrahedral_TD_'+str(j/2*2))
                         O_id=[HO_id for HO_id in VARS['HO_list_domain'+str(int(i+1))+'a'] if SORBATE_id in HO_id]
-                        sorbate_coors=VARS['domain_class_'+str(int(i+1))].adding_sorbate_tridentate_tetrahedral(domain=VARS['domain'+str(int(i+1))+'A'],attach_atm_ids_ref=ids[0:2],attach_atm_id_third=[ids[-1]],offset=offset,sorbate_id=SORBATE_id,sorbate_el=SORBATE[0],sorbate_oxygen_ids=O_id,edge_offset=edge_offset)
+                        sorbate_coors=VARS['domain_class_'+str(int(i+1))].adding_sorbate_tridentate_tetrahedral(domain=VARS['domain'+str(int(i+1))+'A'],attach_atm_ids_ref=ids[0:2],attach_atm_id_third=[ids[-1]],offset=offset,sorbate_id=SORBATE_id,sorbate_el=SORBATE[0],sorbate_oxygen_ids=O_id,edge_offset=edge_offset,top_angle_offset=angle_offset)
                         SORBATE_coors_a.append(sorbate_coors[0])
                         #sorbate_offset=domain_creator.extract_coor(VARS['domain'+str(int(i+1))+'A'],SORBATE_id)-domain_creator.extract_coor2(VARS['domain'+str(int(i+1))+'A'],SORBATE_id)
-                        if ADD_DISTAL_LIGAND_WILD[i]:
+                        if ADD_DISTAL_LIGAND_WILD[i][j]:
                             if (i+j)%2==1:
-                                [O_coors_a.append(domain_class_1.adding_distal_ligand(domain=VARS['domain'+str(int(i+1))+'A'],id=O_id[ligand_id],ref=domain_creator.extract_coor(VARS['domain'+str(int(i+1))+'A'],SORBATE_id),r=getattr(VARS['rgh_domain'+str(int(i+1))],'r1_'+str(ligand_id+1)+'_TD'),theta=getattr(VARS['rgh_domain'+str(int(i+1))],'theta1_'+str(ligand_id+1)+'_TD'),phi=getattr(VARS['rgh_domain'+str(int(i+1))],'phi1_'+str(ligand_id+1)+'_TD'))) for ligand_id in range(len(O_id))]
+                                [O_coors_a.append(domain_class_1.adding_distal_ligand(domain=VARS['domain'+str(int(i+1))+'A'],id=O_id[ligand_id],ref=domain_creator.extract_coor(VARS['domain'+str(int(i+1))+'A'],SORBATE_id),r=getattr(VARS['rgh_domain'+str(int(i+1))],'r1_'+str(ligand_id+1)+'_TD_'+str(j/2*2)),theta=getattr(VARS['rgh_domain'+str(int(i+1))],'theta1_'+str(ligand_id+1)+'_TD_'+str(j/2*2)),phi=getattr(VARS['rgh_domain'+str(int(i+1))],'phi1_'+str(ligand_id+1)+'_TD_'+str(j/2*2)))) for ligand_id in range(len(O_id))]
                             else:
-                                [O_coors_a.append(domain_class_1.adding_distal_ligand(domain=VARS['domain'+str(int(i+1))+'A'],id=O_id[ligand_id],ref=domain_creator.extract_coor(VARS['domain'+str(int(i+1))+'A'],SORBATE_id),r=getattr(VARS['rgh_domain'+str(int(i+1))],'r1_'+str(ligand_id+1)+'_TD'),theta=getattr(VARS['rgh_domain'+str(int(i+1))],'theta1_'+str(ligand_id+1)+'_TD'),phi=180-getattr(VARS['rgh_domain'+str(int(i+1))],'phi1_'+str(ligand_id+1)+'_TD'))) for ligand_id in range(len(O_id))]
+                                [O_coors_a.append(domain_class_1.adding_distal_ligand(domain=VARS['domain'+str(int(i+1))+'A'],id=O_id[ligand_id],ref=domain_creator.extract_coor(VARS['domain'+str(int(i+1))+'A'],SORBATE_id),r=getattr(VARS['rgh_domain'+str(int(i+1))],'r1_'+str(ligand_id+1)+'_TD_'+str(j/2*2)),theta=getattr(VARS['rgh_domain'+str(int(i+1))],'theta1_'+str(ligand_id+1)+'_TD_'+str(j/2*2)),phi=180-getattr(VARS['rgh_domain'+str(int(i+1))],'phi1_'+str(ligand_id+1)+'_TD_'+str(j/2*2)))) for ligand_id in range(len(O_id))]
                         else:
                             [O_coors_a.append(sorbate_coors[k]) for k in range(len(sorbate_coors))[1:]]
                         SORBATE_id_B=VARS['SORBATE_list_domain'+str(int(i+1))+'b'][j]
@@ -1217,20 +1242,18 @@ def Sim(data,VARS=VARS):
                         sorbate_ids=[SORBATE_id_B]+O_id_B
                         sorbate_els=[SORBATE_LIST[i][j]]+['O']*(len(O_id_B))
                         domain_creator.add_atom(domain=VARS['domain'+str(int(i+1))+'B'],ref_coor=np.array(SORBATE_coors_a+O_coors_a)*[-1,1,1]-[-1.,0.06955,0.5],ids=sorbate_ids,els=sorbate_els)    
-                else:#outer-sphere case
-                    phi=getattr(VARS['rgh_domain'+str(int(i+1))],'phi_OS')
-                    r_Pb_O=getattr(VARS['rgh_domain'+str(int(i+1))],'r0_OS')
-                    O_Pb_O_ang=getattr(VARS['rgh_domain'+str(int(i+1))],'top_angle_OS')
-                    ct_offset_dx=getattr(VARS['rgh_domain'+str(int(i+1))],'ct_offset_dx_OS')
-                    ct_offset_dy=getattr(VARS['rgh_domain'+str(int(i+1))],'ct_offset_dy_OS')
-                    ct_offset_dz=getattr(VARS['rgh_domain'+str(int(i+1))],'ct_offset_dz_OS')
-                    rot_x,rot_y,rot_z=getattr(VARS['rgh_domain'+str(int(i+1))],'rot_x_OS'),getattr(VARS['rgh_domain'+str(int(i+1))],'rot_y_OS'),getattr(VARS['rgh_domain'+str(int(i+1))],'rot_z_OS')
-                    ref_x,ref_y,ref_z=OS_X_REF[i],OS_Y_REF[i],OS_Z_REF[i]
+                elif not USE_COORS[i][j]:#outer-sphere case
+                    phi=getattr(VARS['rgh_domain'+str(int(i+1))],'phi_OS_'+str(j/2*2))
+                    r_Pb_O=getattr(VARS['rgh_domain'+str(int(i+1))],'r0_OS_'+str(j/2*2))
+                    O_Pb_O_ang=getattr(VARS['rgh_domain'+str(int(i+1))],'top_angle_OS_'+str(j/2*2))
+                    ct_offset_dx=getattr(VARS['rgh_domain'+str(int(i+1))],'ct_offset_dx_OS_'+str(j/2*2))
+                    ct_offset_dy=getattr(VARS['rgh_domain'+str(int(i+1))],'ct_offset_dy_OS_'+str(j/2*2))
+                    ct_offset_dz=getattr(VARS['rgh_domain'+str(int(i+1))],'ct_offset_dz_OS_'+str(j/2*2))
+                    rot_x,rot_y,rot_z=getattr(VARS['rgh_domain'+str(int(i+1))],'rot_x_OS_'+str(j/2*2)),getattr(VARS['rgh_domain'+str(int(i+1))],'rot_y_OS_'+str(j/2*2)),getattr(VARS['rgh_domain'+str(int(i+1))],'rot_z_OS_'+str(j/2*2))
+                    ref_x,ref_y,ref_z=OS_X_REF[i][j],OS_Y_REF[i][j],OS_Z_REF[i][j]
                     if (j+i)%2==1:
-                        ref_y=0.5+ref_y
-                        ref_x=1.5-ref_x
                         phi=180-phi#note all angles in degree
-                        ct_offset_dx=-getattr(VARS['rgh_domain'+str(int(i+1))],'ct_offset_dx_OS')
+                        ct_offset_dx=-getattr(VARS['rgh_domain'+str(int(i+1))],'ct_offset_dx_OS_'+str(j/2*2))
                         rot_y,rot_z=-rot_y,-rot_z
                     SORBATE_id=VARS['SORBATE_list_domain'+str(int(i+1))+'a'][j]#pb_id is a str NOT list
                     O_id=[HO_id for HO_id in VARS['HO_list_domain'+str(int(i+1))+'a'] if SORBATE_id in HO_id]
@@ -1329,10 +1352,23 @@ def Sim(data,VARS=VARS):
             if INCLUDE_HYDROGEN:
                 N_HB_SURFACE=sum(COVALENT_HYDROGEN_NUMBER[i])#number of hydrogen for surface oxygens
                 N_HB_DISTAL=sum(PROTONATION_DISTAL_OXYGEN[i])#number of hydrogen for distal oxygens
-            total_sorbate_number=sum(SORBATE_NUMBER[i])+sum([np.sum(N_list) for N_list in O_NUMBER[i]])
+            O_N_for_this_domain=O_NUMBER[i][0]
+            total_sorbate_number=sum(SORBATE_NUMBER[i])+sum(O_N_for_this_domain)
             #the idea is that we want to have only one set of sorbate and hydrogen within each domain (ie don't count symmetry counterpart twice)
+            def _cal_segment2(O_N_list=[],water_N=0):
+                cum_list=[-water_N]
+                segment2_boundary=[]
+                segment2=[]
+                for O_N in O_N_list[::-1]:
+                    cum_list.append(cum_list[-1]-(O_N+1))
+                for i in range(0,len(cum_list)-1,2):
+                    segment2_boundary.append([cum_list[i],cum_list[i+1]])
+                for each in segment2_boundary:
+                    segment2=segment2+range(each[1],each[0])
+                return segment2
+
             segment1=range(-WATER_NUMBER[i],0)
-            segment2=range(-(WATER_NUMBER[i]+total_sorbate_number/NN),-(WATER_NUMBER[i]))
+            segment2=_cal_segment2(O_N_for_this_domain,WATER_NUMBER[i])
             segment3=range(-(WATER_NUMBER[i]+total_sorbate_number),-(WATER_NUMBER[i]+total_sorbate_number))
 
             if INCLUDE_HYDROGEN:
@@ -1361,7 +1397,7 @@ def Sim(data,VARS=VARS):
                 if WATER_NUMBER[i]!=0:
                     water_ids=VARS['Os_list_domain'+str(int(i+1))+'a']
                     for id in water_ids:
-                        tmp_bv=domain_class_1.cal_hydrogen_bond_valence2B(super_cell_water,id,3.,2.5)
+                        tmp_bv=domain_class_1.cal_hydrogen_bond_valence2B(super_cell_water,id,3.,2.5,BOND_VALENCE_WAIVER)
                         bv=bv+tmp_bv
                         if debug_bv:bv_container[id]=tmp_bv
             #cal bv for surface atoms and sorbates
@@ -1377,7 +1413,7 @@ def Sim(data,VARS=VARS):
                         if el=="H":
                             temp_bv=domain_class_1.cal_bond_valence1_new2B_4(super_cell_surface,key,el,2.5,VARS['match_lib_'+str(i+1)+'A'][key],1,False,R0_BV,2.5)['total_valence']
                         else:
-                            temp_bv=domain_class_1.cal_bond_valence1_new2B_5(super_cell_surface,key,el,SEARCH_RANGE_OFFSET,IDEAL_BOND_LENGTH,VARS['match_lib_'+str(i+1)+'A'][key],50,False,R0_BV,2.5)['total_valence']
+                            temp_bv=domain_class_1.cal_bond_valence1_new2B_6(super_cell_surface,key,el,SEARCH_RANGE_OFFSET,IDEAL_BOND_LENGTH,VARS['match_lib_'+str(i+1)+'A'][key],50,False,R0_BV,2.5,BOND_VALENCE_WAIVER)['total_valence']
                     else:
                         #no searching in this algorithem
                         temp_bv=domain_class_1.cal_bond_valence4B(super_cell_surface,key,VARS['match_lib_'+str(i+1)+'A'][key],2.5)
@@ -1389,7 +1425,7 @@ def Sim(data,VARS=VARS):
                             el="H"
                         if el=="O":
                             try:
-                                temp_bv=domain_class_1.cal_bond_valence1_new2B_5(super_cell_sorbate,key,el,SEARCH_RANGE_OFFSET,IDEAL_BOND_LENGTH,VARS['match_lib_'+str(i+1)+'A'][key],50,False,R0_BV,2.5)['total_valence']
+                                temp_bv=domain_class_1.cal_bond_valence1_new2B_6(super_cell_sorbate,key,el,SEARCH_RANGE_OFFSET,IDEAL_BOND_LENGTH,VARS['match_lib_'+str(i+1)+'A'][key],50,False,R0_BV,2.5,BOND_VALENCE_WAIVER)['total_valence']
                             except:
                                 temp_bv=2
                         else:
@@ -1404,14 +1440,14 @@ def Sim(data,VARS=VARS):
                         if "HB" in key:
                             el="H"
                         if el=="O":
-                            temp_bv=domain_class_1.cal_bond_valence1_new2B_5(super_cell_sorbate,key,el,SEARCH_RANGE_OFFSET,IDEAL_BOND_LENGTH,VARS['match_lib_'+str(i+1)+'A'][key],50,False,R0_BV,2.5)['total_valence']
+                            temp_bv=domain_class_1.cal_bond_valence1_new2B_6(super_cell_sorbate,key,el,SEARCH_RANGE_OFFSET,IDEAL_BOND_LENGTH,VARS['match_lib_'+str(i+1)+'A'][key],50,False,R0_BV,2.5,BOND_VALENCE_WAIVER)['total_valence']
                         else:
                             temp_bv=domain_class_1.cal_bond_valence1_new2B_4(super_cell_sorbate,key,el,2.5,VARS['match_lib_'+str(i+1)+'A'][key],1,False,R0_BV,2.5)['total_valence']
                     else:#metals 
                         try:
-                            temp_bv=domain_class_1.cal_bond_valence1_new2B_5(super_cell_sorbate,key,SORBATE[0],SEARCH_RANGE_OFFSET,IDEAL_BOND_LENGTH,VARS['match_lib_'+str(i+1)+'A'][key],SEARCHING_PARS['sorbate'][1],False,R0_BV,2.5)['total_valence']
+                            temp_bv=domain_class_1.cal_bond_valence1_new2B_6(super_cell_sorbate,key,SORBATE[0],SEARCH_RANGE_OFFSET,IDEAL_BOND_LENGTH,VARS['match_lib_'+str(i+1)+'A'][key],SEARCHING_PARS['sorbate'][1],False,R0_BV,2.5,BOND_VALENCE_WAIVER)['total_valence']
                         except:
-                            temp_bv=METAL_BV[SORBATE[0]][i][0]
+                            temp_bv=METAL_BV[i][int(key.rsplit('_')[0][-1])-1][0]
                     
                 if PRINT_BV:print key, temp_bv
                 #consider possible hydrogen bond and hydroxyl bond fro oxygen atoms
@@ -1491,7 +1527,7 @@ def Sim(data,VARS=VARS):
                     if debug_bv:bv_container[key]=_widen_validness(3-temp_bv)
                 else:#do metal sorbates
                     metal_bv_range=[]
-                    metal_bv_range=METAL_BV[SORBATE[0]][i]
+                    metal_bv_range=METAL_BV[i][int(key.rsplit('_')[0][-1])-1]
                     bv=bv+_widen_validness_range(metal_bv_range[0]-temp_bv,metal_bv_range[1]-temp_bv)
                     if debug_bv:bv_container[key]=_widen_validness_range(metal_bv_range[0]-temp_bv,metal_bv_range[1]-temp_bv)
 
@@ -1517,20 +1553,11 @@ def Sim(data,VARS=VARS):
         y = data_set.extra_data['Y']
         LB = data_set.extra_data['LB']
         dL = data_set.extra_data['dL']
-        if x[0]>100:#a sign for RAXS dataset(first column is Energy which is in the order of 1000 ev)
-            sample = model2.Sample(inst, bulk, domain, unitcell,coherence=COHERENCE,surface_parms={'delta1':0.,'delta2':0.1391})
-            rough = (1-beta)/((1-beta)**2 + 4*beta*np.sin(np.pi*(y-LB)/dL)**2)**0.5#roughness model, double check LB and dL values are correctly set up in data file
-            f = SCALES[1]*rough*sample.calc_f(h, k, y,f1f2,res_el)
-            F.append(abs(f))
-            fom_scaler.append(WT_RAXS)
-        else:#First column is l for CTR dataset, l is a relative small number (less than 10 usually)
-            sample = model.Sample(inst, bulk, domain, unitcell,coherence=COHERENCE,surface_parms={'delta1':0.,'delta2':0.1391})
-            rough = (1-beta)/((1-beta)**2 + 4*beta*np.sin(np.pi*(x-LB)/dL)**2)**0.5#roughness model, double check LB and dL values are correctly set up in data file
-            f = SCALES[0]*rough*sample.calc_f4(h, k, x)
-            if h[0]==0 and k[0]==0:#extra scale factor for specular rod
-                f=SCALES[2]*f
-            F.append(abs(f))
-            fom_scaler.append(1)
+        sample = model.Sample(inst, bulk, domain, unitcell,coherence=COHERENCE,surface_parms={'delta1':0.,'delta2':0.1391})
+        rough = (1-beta)/((1-beta)**2 + 4*beta*np.sin(np.pi*(x-LB)/dL)**2)**0.5#roughness model, double check LB and dL values are correctly set up in data file
+        f = SCALES[0]*rough*sample.calc_f4(h, k, x)
+        F.append(abs(f))
+        fom_scaler.append(1)
     
     #domain_class_1.find_neighbors2(domain_class_1.build_super_cell(domain2A,['Fe1_2_0_D2A','Fe1_3_0_D2A','Pb2_D2A','HO1_Pb2_D2A']),'HO1_Pb1_D2A',3)
     #print 'As1_D1A',domain_creator.extract_coor(domain1A,'As1_D1A')
