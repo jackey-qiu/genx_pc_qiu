@@ -6,7 +6,7 @@ import numpy as np
 import sys,pickle,__main__
 import models.domain_creator as domain_creator
 try:
-    import make_parameter_table_GenX_beta2 as make_grid
+    import make_parameter_table_GenX_beta3 as make_grid
 except:
     pass
 from copy import deepcopy
@@ -42,9 +42,10 @@ BOND_VALENCE_WAIVER=[]
 SORBATE=["As"]
 pickup_index=[[0,6,6],[7],[10,14]]
 sym_site_index=[[[0,1]]* len(each) for each in pickup_index]
-full_layer_pick=[0]
-half_layer_pick=[2,3]
-layer_pick=half_layer_pick+full_layer_pick
+half_layer=[3,3]#2 for short slab and 3 for long slab
+full_layer=[1]#0 for short slab and 1 for long slab
+half_layer_pick=half_layer+[None]*len(full_layer)
+full_layer_pick=[None]*len(half_layer)+full_layer
 OS_X_REF=[[None,None,0,0.5,0,0.5],[None],[None,None,0,0.5]]
 OS_Y_REF=[[None,None,0,0.5,0,0.5],[None],[None,None,0,0.5]]
 OS_Z_REF=[[None,None,2.1,2.1,2.5,2.5],[None],[None,None,2.0,2.0]]
@@ -68,7 +69,7 @@ SORBATE_NUMBER_FL=[[2],[2],[2],[2],[2],[2],[2],[0]]
 
 GROUPING_SCHEMES=[[0,1]]
 GROUPING_DEPTH=[6]
-commands_surface=domain_creator.generate_commands_for_surface_atom_grouping(np.array(GROUPING_SCHEMES)+1,domain_creator.translate_domain_type(GROUPING_SCHEMES,full_layer_pick),GROUPING_DEPTH)
+commands_surface=domain_creator.generate_commands_for_surface_atom_grouping(np.array(GROUPING_SCHEMES)+1,domain_creator.translate_domain_type(GROUPING_SCHEMES,half_layer+full_layer),GROUPING_DEPTH)
 commands_other=\
    [
     
@@ -92,10 +93,17 @@ sym_site_index(a list of list of [0,1])
     you may consider only site pairs in this version ([0,1])
     The shape is the same as pickup_index, except that the inner-most items are [0,1] instead of match index number
     It will be set up automatically
+full_layer(a list of either 0 or 1 with 0 for short and 1 for long slab)
+    used to specify the step for full layer termination, the items in this list must have a one to one corresponding to the items appearing in the pick_up_index for FL
+half_layer(a list of either 2 or 3 with 2 for short and 3 for long slab)
+    Analogous to full_layer but used for half layer termination case
 full_layer_pick(a list of value of either None, or 0 or 1)
     used to specify the full layer type, which could be either long slab (1) or short slab (0)
     don't forget to set None for the half layer termination domain
     Again Nones if any must be in front of numbers (Half layer domains in front of full layer domains)
+    concerns about None has been automatically setup in this new version
+half_layer_pick(a list of value of either None, or 2 or 3)
+    Analogous to full_layer_pick but used for half layer termination
 OS_X(Y,Z)_REF(a list of None,or any number)
     set the reference coordinate xyz value for the outer-sphere configuration, which could be on either HL or FL domain
     these values are fractional coordinates of sorbates
@@ -185,7 +193,7 @@ def make_pick_index(full_layer_pick,pick,half_layer_cases=8,full_layer_cases=8):
 def make_pick_index_half_layer(half_layer_pick,pick,half_layer_cases=8):
     pick_index_all=[]
     for i in range(len(half_layer_pick)):
-        pick_index=[1]*half_layer_cases
+        pick_index=[2]*half_layer_cases
         if half_layer_pick[i]!=None:
             pick_index[pick[i][0]]=half_layer_pick[i]
             pick_index_all.append(pick_index)
@@ -286,12 +294,9 @@ SORBATE_ATTACH_ATOM_FL_L=[[['O1_11_t','O1_12_t'],['O1_11_t','O1_12_t']],[['O1_11
 SORBATE_ATTACH_ATOM_FL_S=[[['O1_5_0','O1_6_0'],['O1_5_0','O1_6_0']],[['O1_5_0','O1_7_0'],['O1_8_0','O1_6_0']],[['O1_5_0','O1_8_0'],['O1_7_0','O1_6_0']],[['O1_7_0','O1_5_0'],['O1_6_0','O1_8_0']],[['O1_6_0','O1_5_0','O1_8_0'],['O1_6_0','O1_5_0','O1_7_0']],[['O1_5_0','O1_7_0','O1_8_0'],['O1_6_0','O1_7_0','O1_8_0']],[[],[]],[[],[]]]
 SORBATE_ATTACH_ATOM_FL=pick_full_layer(LFL=SORBATE_ATTACH_ATOM_FL_L,SFL=SORBATE_ATTACH_ATOM_FL_S,pick_index=FULL_LAYER_PICK_INDEX)
 SORBATE_ATTACH_ATOM_HL=pick_half_layer(LHL=SORBATE_ATTACH_ATOM_HL_L,SHL=SORBATE_ATTACH_ATOM_HL_S,pick_index=HALF_LAYER_PICK_INDEX)
-try:
-    SORBATE_ATTACH_ATOM_SEPERATED=[deep_pick(SORBATE_ATTACH_ATOM_HL_L+each_FL) for each_FL in SORBATE_ATTACH_ATOM_FL]
-    SORBATE_ATTACH_ATOM_SEPERATED_HL=[deep_pick(each_HL+SORBATE_ATTACH_ATOM_FL_L) for each_HL in SORBATE_ATTACH_ATOM_HL]
-    SORBATE_ATTACH_ATOM=[SORBATE_ATTACH_ATOM_SEPERATED_HL[i][i] for i in range(N_HL)]+[SORBATE_ATTACH_ATOM_SEPERATED[i][N_HL+i] for i in range(N_FL)]
-except:#if we have only half layer termination
-    SORBATE_ATTACH_ATOM=deep_pick(SORBATE_ATTACH_ATOM_HL)
+SORBATE_ATTACH_ATOM_SEPERATED=[deep_pick(SORBATE_ATTACH_ATOM_HL_L+each_FL) for each_FL in SORBATE_ATTACH_ATOM_FL]
+SORBATE_ATTACH_ATOM_SEPERATED_HL=[deep_pick(each_HL+SORBATE_ATTACH_ATOM_FL_L) for each_HL in SORBATE_ATTACH_ATOM_HL]
+SORBATE_ATTACH_ATOM=[SORBATE_ATTACH_ATOM_SEPERATED_HL[i][i] for i in range(N_HL)]+[SORBATE_ATTACH_ATOM_SEPERATED[i][N_HL+i] for i in range(N_FL)]
 
 SORBATE_ATTACH_ATOM_OFFSET_HL_L=[[[None,None],[None,'+y']],[['-y','+x'],[None,None]],[[None,None],['+x',None]],[[None,'+y'],['+x',None]],[[None,None,None],['-y',None,'+x']],[[None,None,'+y'],['-x',None,None]],[[],[]],[[],[]]]
 SORBATE_ATTACH_ATOM_OFFSET_HL_S=[[[None,None],[None,'+y']],[['-y','-x'],[None,None]],[[None,None],['-x',None]],[[None,'+y'],[None,'+x']],[[None,None,None],[None,'-y','-x']],[[None,None,'+y'],['+x',None,None]],[[],[]],[[],[]]]
@@ -299,39 +304,29 @@ SORBATE_ATTACH_ATOM_OFFSET_FL_L=[[[None,None],[None,'+y']],[[None,'-x'],[None,No
 SORBATE_ATTACH_ATOM_OFFSET_FL_S=[[[None,None],[None,'+y']],[[None,'+x'],[None,None]],[[None,'+x'],['-y',None]],[[None,None],[None,'+x']],[[None,None,'+x'],['+y',None,None]],[['-x',None,None],[None,'-y',None]],[[],[]],[[],[]]]
 SORBATE_ATTACH_ATOM_OFFSET_FL=pick_full_layer(LFL=SORBATE_ATTACH_ATOM_OFFSET_FL_L,SFL=SORBATE_ATTACH_ATOM_OFFSET_FL_S,pick_index=FULL_LAYER_PICK_INDEX)
 SORBATE_ATTACH_ATOM_OFFSET_HL=pick_half_layer(LHL=SORBATE_ATTACH_ATOM_OFFSET_HL_L,SHL=SORBATE_ATTACH_ATOM_OFFSET_HL_S,pick_index=HALF_LAYER_PICK_INDEX)
+SORBATE_ATTACH_ATOM_OFFSET_SEPERATED=[deep_pick(SORBATE_ATTACH_ATOM_OFFSET_HL_L+each_FL) for each_FL in SORBATE_ATTACH_ATOM_OFFSET_FL]
+SORBATE_ATTACH_ATOM_OFFSET_SEPERATED_HL=[deep_pick(each_HL+SORBATE_ATTACH_ATOM_OFFSET_FL_L) for each_HL in SORBATE_ATTACH_ATOM_OFFSET_HL]
+SORBATE_ATTACH_ATOM_OFFSET=[SORBATE_ATTACH_ATOM_OFFSET_SEPERATED_HL[i][i] for i in range(N_HL)]+[SORBATE_ATTACH_ATOM_OFFSET_SEPERATED[i][N_HL+i] for i in range(N_FL)]
 
-try:
-    SORBATE_ATTACH_ATOM_OFFSET_SEPERATED=[deep_pick(SORBATE_ATTACH_ATOM_OFFSET_HL_L+each_FL) for each_FL in SORBATE_ATTACH_ATOM_OFFSET_FL]
-    SORBATE_ATTACH_ATOM_OFFSET_SEPERATED_HL=[deep_pick(each_HL+SORBATE_ATTACH_ATOM_OFFSET_FL_L) for each_HL in SORBATE_ATTACH_ATOM_OFFSET_HL]
-    SORBATE_ATTACH_ATOM_OFFSET=[SORBATE_ATTACH_ATOM_OFFSET_SEPERATED_HL[i][i] for i in range(N_HL)]+[SORBATE_ATTACH_ATOM_OFFSET_SEPERATED[i][N_HL+i] for i in range(N_FL)]
-except:
-    SORBATE_ATTACH_ATOM_OFFSET=deep_pick(SORBATE_ATTACH_ATOM_OFFSET_HL)
-
-ANCHOR_REFERENCE_HL_L=[[None,None],['O1_8_0','O1_7_0'],['Fe1_4_0','Fe1_6_0'],['Fe1_4_0','Fe1_6_0'],[None,None],[None,None],[None,None],[None,None]]#ref point for anchors
+ANCHOR_REFERENCE_HL_L=[[None,None],['Fe1_4_0','Fe1_6_0'],['Fe1_4_0','Fe1_6_0'],['Fe1_4_0','Fe1_6_0'],[None,None],[None,None],[None,None],[None,None]]#ref point for anchors
 ANCHOR_REFERENCE_HL_S=[[None,None],['Fe1_10_0','Fe1_12_0'],['Fe1_10_0','Fe1_12_0'],['Fe1_10_0','Fe1_12_0'],[None,None],[None,None],[None,None],[None,None]]
 ANCHOR_REFERENCE_FL_L=[[None,None],['Fe1_2_0','Fe1_3_0'],['Fe1_2_0','Fe1_3_0'],['Fe1_2_0','Fe1_3_0'],[None,None],[None,None],[None,None],[None,None]]#ref point for anchors
 ANCHOR_REFERENCE_FL_S=[[None,None],['Fe1_8_0','Fe1_9_0'],['Fe1_8_0','Fe1_9_0'],['Fe1_8_0','Fe1_9_0'],[None,None],[None,None],[None,None],[None,None]]#ref point for anchors
 ANCHOR_REFERENCE_FL=pick_full_layer(LFL=ANCHOR_REFERENCE_FL_L,SFL=ANCHOR_REFERENCE_FL_S,pick_index=FULL_LAYER_PICK_INDEX)
 ANCHOR_REFERENCE_HL=pick_half_layer(LHL=ANCHOR_REFERENCE_HL_L,SHL=ANCHOR_REFERENCE_HL_S,pick_index=HALF_LAYER_PICK_INDEX)
-try:
-    ANCHOR_REFERENCE_SEPERATED=[deep_pick(ANCHOR_REFERENCE_HL_L+each_FL) for each_FL in ANCHOR_REFERENCE_FL]
-    ANCHOR_REFERENCE_SEPERATED_HL=[deep_pick(each_HL+ANCHOR_REFERENCE_FL_L) for each_HL in ANCHOR_REFERENCE_HL]
-    ANCHOR_REFERENCE=[ANCHOR_REFERENCE_SEPERATED_HL[i][i] for i in range(N_HL)]+[ANCHOR_REFERENCE_SEPERATED[i][N_HL+i] for i in range(N_FL)]
-except:
-    ANCHOR_REFERENCE=deep_pick(ANCHOR_REFERENCE_HL)
+ANCHOR_REFERENCE_SEPERATED=[deep_pick(ANCHOR_REFERENCE_HL_L+each_FL) for each_FL in ANCHOR_REFERENCE_FL]
+ANCHOR_REFERENCE_SEPERATED_HL=[deep_pick(each_HL+ANCHOR_REFERENCE_FL_L) for each_HL in ANCHOR_REFERENCE_HL]
+ANCHOR_REFERENCE=[ANCHOR_REFERENCE_SEPERATED_HL[i][i] for i in range(N_HL)]+[ANCHOR_REFERENCE_SEPERATED[i][N_HL+i] for i in range(N_FL)]
 
-ANCHOR_REFERENCE_OFFSET_HL_L=[[None,None],[None,None],[None,'+x'],[None,'+x'],[None,None],[None,None],[None,None],[None,None]]
+ANCHOR_REFERENCE_OFFSET_HL_L=[[None,None],['-y','+x'],[None,'+x'],[None,'+x'],[None,None],[None,None],[None,None],[None,None]]
 ANCHOR_REFERENCE_OFFSET_HL_S=[[None,None],['-y',None],[None,None],[None,'+x'],[None,None],[None,None],[None,None],[None,None]]
 ANCHOR_REFERENCE_OFFSET_FL_L=[[None,None],[None,None],[None,None],[None,None],[None,None],[None,None],[None,None],[None,None]]
 ANCHOR_REFERENCE_OFFSET_FL_S=[[None,None],['+x',None],['+x',None],['+x',None],[None,None],[None,None],[None,None],[None,None]]
 ANCHOR_REFERENCE_OFFSET_FL=pick_full_layer(LFL=ANCHOR_REFERENCE_OFFSET_FL_L,SFL=ANCHOR_REFERENCE_OFFSET_FL_S,pick_index=FULL_LAYER_PICK_INDEX)
 ANCHOR_REFERENCE_OFFSET_HL=pick_half_layer(LHL=ANCHOR_REFERENCE_OFFSET_HL_L,SHL=ANCHOR_REFERENCE_OFFSET_HL_S,pick_index=HALF_LAYER_PICK_INDEX)
-try:
-    ANCHOR_REFERENCE_OFFSET_SEPERATED=[deep_pick(ANCHOR_REFERENCE_OFFSET_HL_L+each_FL) for each_FL in ANCHOR_REFERENCE_OFFSET_FL]
-    ANCHOR_REFERENCE_OFFSET_SEPERATED_HL=[deep_pick(each_HL+ANCHOR_REFERENCE_OFFSET_FL_L) for each_HL in ANCHOR_REFERENCE_OFFSET_HL]
-    ANCHOR_REFERENCE_OFFSET=[ANCHOR_REFERENCE_OFFSET_SEPERATED[i][i] for i in range(N_HL)]+[ANCHOR_REFERENCE_OFFSET_SEPERATED[i][N_HL+i] for i in range(N_FL)]
-except:
-    ANCHOR_REFERENCE_OFFSET=deep_pick(ANCHOR_REFERENCE_OFFSET_HL)
+ANCHOR_REFERENCE_OFFSET_SEPERATED=[deep_pick(ANCHOR_REFERENCE_OFFSET_HL_L+each_FL) for each_FL in ANCHOR_REFERENCE_OFFSET_FL]
+ANCHOR_REFERENCE_OFFSET_SEPERATED_HL=[deep_pick(each_HL+ANCHOR_REFERENCE_OFFSET_FL_L) for each_HL in ANCHOR_REFERENCE_OFFSET_HL]
+ANCHOR_REFERENCE_OFFSET=[ANCHOR_REFERENCE_OFFSET_SEPERATED_HL[i][i] for i in range(N_HL)]+[ANCHOR_REFERENCE_OFFSET_SEPERATED[i][N_HL+i] for i in range(N_FL)]
     
 #specify the METAL_BV based on the metal valence charge and the coordinated local structure
 METAL_BV_EACH=METAL_VALENCE[SORBATE[0]][0]/METAL_VALENCE[SORBATE[0]][1]#valence for each bond
@@ -356,17 +351,14 @@ SEARCHING_PARS={'surface':[2.5,50],'sorbate':[BOND_LENGTH_EACH+SEARCH_RANGE_OFFS
 #Arbitrary number of distal oxygens(6 here) will be helpful and handy if you want to consider the distal oxygen for bond valence constrain in a random mode, sine you wont need extra edition for that.
 #It wont hurt even if the distal oxygen in the list doesn't actually exist for your model. Same for the potential hydrogen acceptor below
 POTENTIAL_COVALENT_HYDROGEN_ACCEPTOR_HL_L=[['O1_1_0','O1_2_0','O1_3_0','O1_4_0']+['HO'+str(i+1)+'_'+SORBATE[0]+str(j+1) for i in range(6) for j in range(6)]]*8#Will be considered only when COVALENT_HYDROGEN_RANDOM=True
-POTENTIAL_COVALENT_HYDROGEN_ACCEPTOR_HL_H=[['O1_7_0','O1_8_0','O1_9_0','O1_10_0']+['HO'+str(i+1)+'_'+SORBATE[0]+str(j+1) for i in range(6) for j in range(6)]]*8
+POTENTIAL_COVALENT_HYDROGEN_ACCEPTOR_HL_S=[['O1_7_0','O1_8_0','O1_9_0','O1_10_0']+['HO'+str(i+1)+'_'+SORBATE[0]+str(j+1) for i in range(6) for j in range(6)]]*8
 POTENTIAL_COVALENT_HYDROGEN_ACCEPTOR_FL_L=[['O1_11_t','O1_12_t','O1_1_0','O1_2_0']+['HO'+str(i+1)+'_'+SORBATE[0]+str(j+1) for i in range(6) for j in range(6)]]*8#Will be considered only when COVALENT_HYDROGEN_RANDOM=True
 POTENTIAL_COVALENT_HYDROGEN_ACCEPTOR_FL_S=[['O1_5_0','O1_6_0','O1_7_0','O1_8_0']+['HO'+str(i+1)+'_'+SORBATE[0]+str(j+1) for i in range(6) for j in range(6)]]*8#Will be considered only when COVALENT_HYDROGEN_RANDOM=True
 POTENTIAL_COVALENT_HYDROGEN_ACCEPTOR_FL=pick_full_layer(LFL=POTENTIAL_COVALENT_HYDROGEN_ACCEPTOR_FL_L,SFL=POTENTIAL_COVALENT_HYDROGEN_ACCEPTOR_FL_S,pick_index=FULL_LAYER_PICK_INDEX)
 POTENTIAL_COVALENT_HYDROGEN_ACCEPTOR_HL=pick_half_layer(LHL=POTENTIAL_COVALENT_HYDROGEN_ACCEPTOR_HL_L,SHL=POTENTIAL_COVALENT_HYDROGEN_ACCEPTOR_HL_S,pick_index=HALF_LAYER_PICK_INDEX)
-try:
-    POTENTIAL_COVALENT_HYDROGEN_ACCEPTOR_SEPERATED=[pick(POTENTIAL_COVALENT_HYDROGEN_ACCEPTOR_HL_L+each_FL) for each_FL in POTENTIAL_COVALENT_HYDROGEN_ACCEPTOR_FL]
-    POTENTIAL_COVALENT_HYDROGEN_ACCEPTOR_SEPERATED_HL=[pick(each_HL+POTENTIAL_COVALENT_HYDROGEN_ACCEPTOR_FL_L) for each_HL in POTENTIAL_COVALENT_HYDROGEN_ACCEPTOR_HL]   
-    POTENTIAL_COVALENT_HYDROGEN_ACCEPTOR=[POTENTIAL_COVALENT_HYDROGEN_ACCEPTOR_SEPERATED_HL[i][i] for i in range(N_HL)]+[POTENTIAL_COVALENT_HYDROGEN_ACCEPTOR_SEPERATED[i][N_HL+i] for i in range(N_FL)]
-except:
-    POTENTIAL_COVALENT_HYDROGEN_ACCEPTOR=pick(POTENTIAL_COVALENT_HYDROGEN_ACCEPTOR_HL)
+POTENTIAL_COVALENT_HYDROGEN_ACCEPTOR_SEPERATED=[pick(POTENTIAL_COVALENT_HYDROGEN_ACCEPTOR_HL_L+each_FL) for each_FL in POTENTIAL_COVALENT_HYDROGEN_ACCEPTOR_FL]
+POTENTIAL_COVALENT_HYDROGEN_ACCEPTOR_SEPERATED_HL=[pick(each_HL+POTENTIAL_COVALENT_HYDROGEN_ACCEPTOR_FL_L) for each_HL in POTENTIAL_COVALENT_HYDROGEN_ACCEPTOR_HL]   
+POTENTIAL_COVALENT_HYDROGEN_ACCEPTOR=[POTENTIAL_COVALENT_HYDROGEN_ACCEPTOR_SEPERATED_HL[i][i] for i in range(N_HL)]+[POTENTIAL_COVALENT_HYDROGEN_ACCEPTOR_SEPERATED[i][N_HL+i] for i in range(N_FL)]
 
 COVALENT_HYDROGEN_ACCEPTOR_HL_L=[['O1_1_0','O1_2_0','O1_3_0','O1_4_0']]*8#will be considered only when COVALENT_HYDROGEN_RANDOM=False
 COVALENT_HYDROGEN_ACCEPTOR_HL_S=[['O1_7_0','O1_8_0','O1_9_0','O1_10_0']]*8
@@ -374,12 +366,9 @@ COVALENT_HYDROGEN_ACCEPTOR_FL_L=[['O1_11_t','O1_12_t','O1_1_0','O1_2_0']]*8#will
 COVALENT_HYDROGEN_ACCEPTOR_FL_S=[['O1_5_0','O1_6_0','O1_7_0','O1_8_0']]*8#will be considered only when COVALENT_HYDROGEN_RANDOM=False
 COVALENT_HYDROGEN_ACCEPTOR_FL=pick_full_layer(LFL=COVALENT_HYDROGEN_ACCEPTOR_FL_L,SFL=COVALENT_HYDROGEN_ACCEPTOR_FL_S,pick_index=FULL_LAYER_PICK_INDEX)
 COVALENT_HYDROGEN_ACCEPTOR_HL=pick_half_layer(LHL=COVALENT_HYDROGEN_ACCEPTOR_HL_L,SHL=COVALENT_HYDROGEN_ACCEPTOR_HL_S,pick_index=HALF_LAYER_PICK_INDEX)
-try:
-    COVALENT_HYDROGEN_ACCEPTOR_SEPERATED=[pick(COVALENT_HYDROGEN_ACCEPTOR_HL_L+each_FL) for each_FL in COVALENT_HYDROGEN_ACCEPTOR_FL]
-    COVALENT_HYDROGEN_ACCEPTOR_SEPERATED_HL=[pick(each_HL+COVALENT_HYDROGEN_ACCEPTOR_FL_L) for each_HL in COVALENT_HYDROGEN_ACCEPTOR_HL]
-    COVALENT_HYDROGEN_ACCEPTOR=[COVALENT_HYDROGEN_ACCEPTOR_SEPERATED_HL[i][i] for i in range(N_HL)]+[COVALENT_HYDROGEN_ACCEPTOR_SEPERATED[i][N_HL+i] for i in range(N_FL)]
-except:
-    COVALENT_HYDROGEN_ACCEPTOR=pick(COVALENT_HYDROGEN_ACCEPTOR_HL)
+COVALENT_HYDROGEN_ACCEPTOR_SEPERATED=[pick(COVALENT_HYDROGEN_ACCEPTOR_HL_L+each_FL) for each_FL in COVALENT_HYDROGEN_ACCEPTOR_FL]
+COVALENT_HYDROGEN_ACCEPTOR_SEPERATED_HL=[pick(each_HL+COVALENT_HYDROGEN_ACCEPTOR_FL_L) for each_HL in COVALENT_HYDROGEN_ACCEPTOR_HL]
+COVALENT_HYDROGEN_ACCEPTOR=[COVALENT_HYDROGEN_ACCEPTOR_SEPERATED_HL[i][i] for i in range(N_HL)]+[COVALENT_HYDROGEN_ACCEPTOR_SEPERATED[i][N_HL+i] for i in range(N_FL)]
 
 COVALENT_HYDROGEN_NUMBER_HL=[[1,1,1,1],[2,1,0,1],[2,1,1,0],[2,1,0,1],[1,1,1,0],[2,1,0,0],[2,2,1,1],[2,2,1,1]]
 COVALENT_HYDROGEN_NUMBER_FL=[[1,1,1,1],[2,1,1,0],[2,1,0,1],[2,1,1,0],[1,1,0,1],[2,1,0,0],[2,2,1,1],[2,2,1,1]]
@@ -391,12 +380,9 @@ POTENTIAL_HYDROGEN_ACCEPTOR_FL_L=[['O1_11_t','O1_12_t','O1_1_0','O1_2_0']+['HO'+
 POTENTIAL_HYDROGEN_ACCEPTOR_FL_S=[['O1_5_0','O1_6_0','O1_7_0','O1_8_0']+['HO'+str(i+1)+'_'+SORBATE[0]+str(j+1) for i in range(6) for j in range(6)]]*8#they can accept one hydrogen bond or not
 POTENTIAL_HYDROGEN_ACCEPTOR_FL=pick_full_layer(LFL=POTENTIAL_HYDROGEN_ACCEPTOR_FL_L,SFL=POTENTIAL_HYDROGEN_ACCEPTOR_FL_S,pick_index=FULL_LAYER_PICK_INDEX)
 POTENTIAL_HYDROGEN_ACCEPTOR_HL=pick_half_layer(LHL=POTENTIAL_HYDROGEN_ACCEPTOR_HL_L,SHL=POTENTIAL_HYDROGEN_ACCEPTOR_HL_S,pick_index=HALF_LAYER_PICK_INDEX)
-try:
-    POTENTIAL_HYDROGEN_ACCEPTOR_SEPERATED=[pick(POTENTIAL_HYDROGEN_ACCEPTOR_HL_L+each_FL) for each_FL in POTENTIAL_HYDROGEN_ACCEPTOR_FL]
-    POTENTIAL_HYDROGEN_ACCEPTOR_SEPERATED_HL=[pick(each_HL+POTENTIAL_HYDROGEN_ACCEPTOR_FL_L) for each_HL in POTENTIAL_HYDROGEN_ACCEPTOR_HL]
-    POTENTIAL_HYDROGEN_ACCEPTOR=[POTENTIAL_HYDROGEN_ACCEPTOR_SEPERATED_HL[i][i] for i in range(N_HL)]+[POTENTIAL_HYDROGEN_ACCEPTOR_SEPERATED[i][N_HL+i] for i in range(N_FL)]
-except:
-    POTENTIAL_HYDROGEN_ACCEPTOR=pick(POTENTIAL_HYDROGEN_ACCEPTOR_HL)
+POTENTIAL_HYDROGEN_ACCEPTOR_SEPERATED=[pick(POTENTIAL_HYDROGEN_ACCEPTOR_HL_L+each_FL) for each_FL in POTENTIAL_HYDROGEN_ACCEPTOR_FL]
+POTENTIAL_HYDROGEN_ACCEPTOR_SEPERATED_HL=[pick(each_HL+POTENTIAL_HYDROGEN_ACCEPTOR_FL_L) for each_HL in POTENTIAL_HYDROGEN_ACCEPTOR_HL]
+POTENTIAL_HYDROGEN_ACCEPTOR=[POTENTIAL_HYDROGEN_ACCEPTOR_SEPERATED_HL[i][i] for i in range(N_HL)]+[POTENTIAL_HYDROGEN_ACCEPTOR_SEPERATED[i][N_HL+i] for i in range(N_FL)]
     
 MIRROR=pick([False,False,True,None,None,False,False,True,None,None,None,None,None,None,None,None])
 
@@ -414,13 +400,10 @@ else:
     REF_POINTS_FL_L=[[['O1_11_t','O1_12_t']]]*8#each item inside is a list of one or couple items, and each water set has its own ref point
     REF_POINTS_FL_S=[[['O1_5_0','O1_6_0']]]*8#each item inside is a list of one or couple items, and each water set has its own ref point
     REF_POINTS_FL=pick_full_layer(LFL=REF_POINTS_FL_L,SFL=REF_POINTS_FL_S,pick_index=FULL_LAYER_PICK_INDEX)
-    REF_POINTS_HL=pick_full_layer(LHL=REF_POINTS_HL_L,SHL=REF_POINTS_HL_S,pick_index=HALF_LAYER_PICK_INDEX)
-    try:
-        REF_POINTS_SEPERATED=[pick(REF_POINTS_HL_L+each_FL) for each_FL in REF_POINTS_FL]
-        REF_POINTS_SEPERATED_HL=[pick(each_HL+REF_POINTS_FL_L) for each_HL in REF_POINTS_HL]
-        REF_POINTS=[REF_POINTS_SEPERATED[i][i] for i in range(N_HL)]+[REF_POINTS_SEPERATED[i][N_HL+i] for i in range(N_FL)]#each item inside is a list of one or couple items, and each water set has its own ref point
-    except:
-        REF_POINTS=pick(REF_POINTS_HL)
+    REF_POINTS_HL=pick_half_layer(LHL=REF_POINTS_HL_L,SHL=REF_POINTS_HL_S,pick_index=HALF_LAYER_PICK_INDEX)
+    REF_POINTS_SEPERATED=[pick(REF_POINTS_HL_L+each_FL) for each_FL in REF_POINTS_FL]
+    REF_POINTS_SEPERATED_HL=[pick(each_HL+REF_POINTS_FL_L) for each_HL in REF_POINTS_HL]
+    REF_POINTS=[REF_POINTS_SEPERATED_HL[i][i] for i in range(N_HL)]+[REF_POINTS_SEPERATED[i][N_HL+i] for i in range(N_FL)]#each item inside is a list of one or couple items, and each water set has its own ref point
         
 ##chemically different domain type##
 DOMAIN=pick([1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2])
@@ -449,7 +432,7 @@ if TABLE:
                 elif len(SORBATE_ATTACH_ATOM[i][j])==3:
                     temp_binding_mode.append('TD')   
         binding_mode.append(temp_binding_mode)
-    make_grid.make_structure(map(sum,SORBATE_NUMBER),O_N,WATER_NUMBER,DOMAIN,Metal=SORBATE[0],binding_mode=binding_mode,long_slab=full_layer_pick,local_structure=LOCAL_STRUCTURE,add_distal_wild=ADD_DISTAL_LIGAND_WILD,use_domains=TABLE_DOMAINS)
+    make_grid.make_structure(map(sum,SORBATE_NUMBER),O_N,WATER_NUMBER,DOMAIN,Metal=SORBATE[0],binding_mode=binding_mode,long_slab=full_layer_pick,long_slab_HL=half_layer_pick,local_structure=LOCAL_STRUCTURE,add_distal_wild=ADD_DISTAL_LIGAND_WILD,use_domains=TABLE_DOMAINS)
 
 #function to group outer-sphere pars from different domains (to be placed inside sim function)
 def set_OS(domain_names=['domain5','domain4']):
@@ -1044,7 +1027,10 @@ for i in range(DOMAIN_NUMBER):
     #note the grouping here is on a layer basis, ie atoms of same layer are groupped together (4 atms grouped together in sequence grouping)
     #you may group in symmetry, then atoms of same layer are not independent. Know here the symmetry (equal opposite) is impressively defined in the function
     if DOMAIN[i]==1:
-        vars()['atm_gp_list_domain'+str(int(i+1))]=vars()['domain_class_'+str(int(i+1))].grouping_sequence_layer_new2(domain=[[vars()['domain'+str(int(i+1))+'A'],vars()['domain'+str(int(i+1))+'B']]], first_atom_id=[['O1_1_0_D'+str(int(i+1))+'A','O1_7_0_D'+str(int(i+1))+'B']],layers_N=10)
+        if half_layer_pick[i]==3:
+            vars()['atm_gp_list_domain'+str(int(i+1))]=vars()['domain_class_'+str(int(i+1))].grouping_sequence_layer_new2(domain=[[vars()['domain'+str(int(i+1))+'A'],vars()['domain'+str(int(i+1))+'B']]], first_atom_id=[['O1_1_0_D'+str(int(i+1))+'A','O1_7_0_D'+str(int(i+1))+'B']],layers_N=10)
+        elif half_layer_pick[i]==2:
+            vars()['atm_gp_list_domain'+str(int(i+1))]=vars()['domain_class_'+str(int(i+1))].grouping_sequence_layer_new2(domain=[[vars()['domain'+str(int(i+1))+'A'],vars()['domain'+str(int(i+1))+'B']]], first_atom_id=[['O1_7_0_D'+str(int(i+1))+'A','O1_1_1_D'+str(int(i+1))+'B']],layers_N=10)
     elif DOMAIN[i]==2:
         if full_layer_pick[i]==1:
             vars()['atm_gp_list_domain'+str(int(i+1))]=vars()['domain_class_'+str(int(i+1))].grouping_sequence_layer_new2(domain=[[vars()['domain'+str(int(i+1))+'A'],vars()['domain'+str(int(i+1))+'B']]], first_atom_id=[['O1_11_t_D'+str(int(i+1))+'A','O1_5_0_D'+str(int(i+1))+'B']],layers_N=10)
@@ -1088,7 +1074,10 @@ if USE_BV:
         if SORBATE_NUMBER[i]!=0:
             lib_sorbate=domain_creator.create_sorbate_match_lib4_test(metal=SORBATE_LIST[i],HO_list=vars()['HO_list_domain'+str(int(i+1))+'a'],anchors=SORBATE_ATTACH_ATOM[i],anchor_offsets=SORBATE_ATTACH_ATOM_OFFSET[i],domain_tag=i+1)
         if DOMAIN[i]==1:
-            vars()['match_lib_'+str(int(i+1))+'A']=domain_creator.create_match_lib_before_fitting(domain_class=vars()['domain_class_'+str(int(i+1))],domain=vars()['domain_class_'+str(int(i+1))].build_super_cell(ref_domain=vars()['domain_class_'+str(int(i+1))].create_equivalent_domains_2()[0],rem_atom_ids=['Fe1_2_0_D'+str(int(i+1))+'A','Fe1_3_0_D'+str(int(i+1))+'A']),atm_list=vars()['atm_list_'+str(int(i+1))+'A'],search_range=2.3)
+            if half_layer_pick[i]==3:
+                vars()['match_lib_'+str(int(i+1))+'A']=domain_creator.create_match_lib_before_fitting(domain_class=vars()['domain_class_'+str(int(i+1))],domain=vars()['domain_class_'+str(int(i+1))].build_super_cell(ref_domain=vars()['domain_class_'+str(int(i+1))].create_equivalent_domains_2()[0],rem_atom_ids=['Fe1_2_0_D'+str(int(i+1))+'A','Fe1_3_0_D'+str(int(i+1))+'A']),atm_list=vars()['atm_list_'+str(int(i+1))+'A'],search_range=2.3)
+            elif half_layer_pick[i]==2:
+                vars()['match_lib_'+str(int(i+1))+'A']=domain_creator.create_match_lib_before_fitting(domain_class=vars()['domain_class_'+str(int(i+1))],domain=vars()['domain_class_'+str(int(i+1))].build_super_cell(ref_domain=vars()['domain_class_'+str(int(i+1))].create_equivalent_domains_2()[0],rem_atom_ids=['Fe1_8_0_D'+str(int(i+1))+'A','Fe1_9_0_D'+str(int(i+1))+'A']),atm_list=vars()['atm_list_'+str(int(i+1))+'A'],search_range=2.3)
             vars()['match_lib_'+str(int(i+1))+'A']=domain_creator.merge_two_libs(vars()['match_lib_'+str(int(i+1))+'A'],lib_sorbate)
         elif DOMAIN[i]==2:
             vars()['match_lib_'+str(int(i+1))+'A']=domain_creator.create_match_lib_before_fitting(domain_class=vars()['domain_class_'+str(int(i+1))],domain=vars()['domain_class_'+str(int(i+1))].build_super_cell(ref_domain=vars()['domain_class_'+str(int(i+1))].create_equivalent_domains_2()[0],rem_atom_ids=None),atm_list=vars()['atm_list_'+str(int(i+1))+'A'],search_range=2.3)
@@ -1643,7 +1632,7 @@ def Sim(data,VARS=VARS):
             TOTAL_NUMBER=total_sorbate_number+water_number/3
             if INCLUDE_HYDROGEN:
                 TOTAL_NUMBER=N_HB_SURFACE+N_HB_DISTAL+total_sorbate_number+water_number
-            domain_creator.print_data(N_sorbate=TOTAL_NUMBER,domain=VARS['domain'+str(i+1)+'A'],z_shift=1,half_layer=DOMAIN[i]-2,full_layer_long=full_layer_pick[i],save_file='D://'+'Model_domain'+str(i+1)+'.xyz')    
+            domain_creator.print_data2(N_sorbate=TOTAL_NUMBER,domain=VARS['domain'+str(i+1)+'A'],z_shift=1,half_layer=DOMAIN[i]-2,half_layer_long=half_layer_pick[i],full_layer_long=full_layer_pick[i],save_file='D://'+'Model_domain'+str(i+1)+'.xyz')    
     
     #export the model results for plotting if PLOT set to true
     if PLOT:

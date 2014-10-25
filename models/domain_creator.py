@@ -55,6 +55,8 @@ def translate_domain_type(GROUPING_SCHEMES=[[0,1]],full_layer_pick=[None,None,0]
     domain_type=[]
     def _translate_type(label):
         if label==None:return "HL"
+        elif label==2:return "HL_S"
+        elif label==3:return "HL_L"
         elif label==0:return "FL_S"
         elif label==1:return "FL_L"
     for each in GROUPING_SCHEMES:
@@ -72,6 +74,8 @@ def translate_domain_type(GROUPING_SCHEMES=[[0,1]],full_layer_pick=[None,None,0]
 def generate_commands_for_surface_atom_grouping(domain_index_pair=[[1,2],[3,4]],domain_type_pair=[['HL','HL'],['FL_S','FL_L']],grouping_depth=[10,10]):
     command_list=[]
     HL=['O1O2_O7O8','Fe2Fe3_Fe8Fe9','O3O4_O9O10','Fe4Fe6_Fe10Fe12','O5O6_O11O12','O7O8_O1O2','Fe8Fe9_Fe2Fe3','O9O10_O3O4','Fe10Fe12_Fe4Fe6','O11O12_O5O6']
+    HL_L=['O1O2_O7O8','Fe2Fe3_Fe8Fe9','O3O4_O9O10','Fe4Fe6_Fe10Fe12','O5O6_O11O12','O7O8_O1O2','Fe8Fe9_Fe2Fe3','O9O10_O3O4','Fe10Fe12_Fe4Fe6','O11O12_O5O6']
+    HL_S=['O7O8_O1O2','Fe8Fe9_Fe2Fe3','O9O10_O3O4','Fe10Fe12_Fe4Fe6','O11O12_O5O6','O1O2_O7O8','Fe2Fe3_Fe8Fe9','O3O4_O9O10','Fe4Fe6_Fe10Fe12','O5O6_O11O12']
     FL_S=['O5O6_O11O12','O7O8_O1O2','Fe8Fe9_Fe2Fe3','O9O10_O3O4','Fe10Fe12_Fe4Fe6','O11O12_O5O6','O1O2_O7O8','Fe2Fe3_Fe8Fe9','O3O4_O9O10','Fe4Fe6_Fe10Fe12']
     FL_L=['O11O12_O5O6','O1O2_O7O8','Fe2Fe3_Fe8Fe9','O3O4_O9O10','Fe4Fe6_Fe10Fe12','O5O6_O11O12','O7O8_O1O2','Fe8Fe9_Fe2Fe3','O9O10_O3O4','Fe10Fe12_Fe4Fe6']
     for i in range(len(domain_index_pair)):
@@ -105,6 +109,32 @@ def generate_commands_for_surface_atom_grouping(domain_index_pair=[[1,2],[3,4]],
                 command_list.append('gp_'+FL_L[j]+'_D'+str(domain_index_pair[i][0])+'.setdy('+'gp_'+FL_S[j]+'_D'+str(domain_index_pair[i][1])+'.getdy())')
                 command_list.append('gp_'+FL_L[j]+'_D'+str(domain_index_pair[i][0])+'.setdz('+'gp_'+FL_S[j]+'_D'+str(domain_index_pair[i][1])+'.getdz())')
                 command_list.append('gp_'+FL_L[j]+'_D'+str(domain_index_pair[i][0])+'.setoc('+'gp_'+FL_S[j]+'_D'+str(domain_index_pair[i][1])+'.getoc())')
+        
+        elif domain_type_pair[i]==['HL_S','HL_S']:
+            for j in range(10-grouping_depth[i],10):
+                command_list.append('gp_'+HL_S[j]+'_D'+str(domain_index_pair[i][0])+'.setdx('+'gp_'+HL_S[j]+'_D'+str(domain_index_pair[i][1])+'.getdx())')
+                command_list.append('gp_'+HL_S[j]+'_D'+str(domain_index_pair[i][0])+'.setdy('+'gp_'+HL_S[j]+'_D'+str(domain_index_pair[i][1])+'.getdy())')
+                command_list.append('gp_'+HL_S[j]+'_D'+str(domain_index_pair[i][0])+'.setdz('+'gp_'+HL_S[j]+'_D'+str(domain_index_pair[i][1])+'.getdz())')
+                command_list.append('gp_'+HL_S[j]+'_D'+str(domain_index_pair[i][0])+'.setoc('+'gp_'+HL_S[j]+'_D'+str(domain_index_pair[i][1])+'.getoc())')
+        elif domain_type_pair[i]==['HL_L','HL_L']:
+            for j in range(10-grouping_depth[i],10):
+                command_list.append('gp_'+HL_L[j]+'_D'+str(domain_index_pair[i][0])+'.setdx('+'gp_'+HL_L[j]+'_D'+str(domain_index_pair[i][1])+'.getdx())')
+                command_list.append('gp_'+HL_L[j]+'_D'+str(domain_index_pair[i][0])+'.setdy('+'gp_'+HL_L[j]+'_D'+str(domain_index_pair[i][1])+'.getdy())')
+                command_list.append('gp_'+HL_L[j]+'_D'+str(domain_index_pair[i][0])+'.setdz('+'gp_'+HL_L[j]+'_D'+str(domain_index_pair[i][1])+'.getdz())')
+                command_list.append('gp_'+HL_L[j]+'_D'+str(domain_index_pair[i][0])+'.setoc('+'gp_'+HL_L[j]+'_D'+str(domain_index_pair[i][1])+'.getoc())')
+        elif domain_type_pair[i]==['HL_S','HL_L']:
+            for j in range(10-grouping_depth[i],10):
+                command_list.append('gp_'+HL_S[j]+'_D'+str(domain_index_pair[i][0])+'.setdx('+'-gp_'+HL_L[j]+'_D'+str(domain_index_pair[i][1])+'.getdx())')
+                command_list.append('gp_'+HL_S[j]+'_D'+str(domain_index_pair[i][0])+'.setdy('+'gp_'+HL_L[j]+'_D'+str(domain_index_pair[i][1])+'.getdy())')
+                command_list.append('gp_'+HL_S[j]+'_D'+str(domain_index_pair[i][0])+'.setdz('+'gp_'+HL_L[j]+'_D'+str(domain_index_pair[i][1])+'.getdz())')
+                command_list.append('gp_'+HL_S[j]+'_D'+str(domain_index_pair[i][0])+'.setoc('+'gp_'+HL_L[j]+'_D'+str(domain_index_pair[i][1])+'.getoc())')
+        elif domain_type_pair[i]==['HL_L','HL_S']:
+            for j in range(10-grouping_depth[i],10):
+                command_list.append('gp_'+HL_L[j]+'_D'+str(domain_index_pair[i][0])+'.setdx('+'-gp_'+HL_S[j]+'_D'+str(domain_index_pair[i][1])+'.getdx())')
+                command_list.append('gp_'+HL_L[j]+'_D'+str(domain_index_pair[i][0])+'.setdy('+'gp_'+HL_S[j]+'_D'+str(domain_index_pair[i][1])+'.getdy())')
+                command_list.append('gp_'+HL_L[j]+'_D'+str(domain_index_pair[i][0])+'.setdz('+'gp_'+HL_S[j]+'_D'+str(domain_index_pair[i][1])+'.getdz())')
+                command_list.append('gp_'+HL_L[j]+'_D'+str(domain_index_pair[i][0])+'.setoc('+'gp_'+HL_S[j]+'_D'+str(domain_index_pair[i][1])+'.getoc())')
+
     return command_list
                 
 #extract xyz for atom with id in domain
@@ -228,6 +258,33 @@ def print_data(N_sorbate=4,domain='',z_shift=1,half_layer=False,full_layer_long=
         index.pop(2)
     f=open(save_file,'w')
     f.write(str(len(index))+'\n#\n')
+    for i in index:
+        if i==index[-1]:
+            s = '%-5s   %7.5e   %7.5e   %7.5e' % (data[3][i],data[0][i]*5.038,(data[1][i]-0.1391)*5.434,(data[2][i]-z_shift)*7.3707)
+            f.write(s)
+        else:
+            s = '%-5s   %7.5e   %7.5e   %7.5e\n' % (data[3][i],data[0][i]*5.038,(data[1][i]-0.1391)*5.434,(data[2][i]-z_shift)*7.3707)
+            f.write(s)
+    f.close()
+    
+#function to export refined atoms positions after fitting
+def print_data2(N_sorbate=4,domain='',z_shift=1,half_layer=False,half_layer_long=None,full_layer_long=0,save_file='D://model.xyz'):
+    data=domain._extract_values()
+    index_all=range(len(data[0]))
+    index=None
+    if half_layer:
+        index=index_all[0:20]+index_all[40:40+N_sorbate]
+    else:
+        index=index_all[0:22]+index_all[42:42+N_sorbate]
+    if half_layer:
+        index.pop(2)
+        index.pop(2)
+    f=open(save_file,'w')
+    f.write(str(len(index))+'\n#\n')
+    if half_layer_long==2 or full_layer_long==0:
+        z_shift=0.5
+    else:
+        z_shift=1
     for i in index:
         if i==index[-1]:
             s = '%-5s   %7.5e   %7.5e   %7.5e' % (data[3][i],data[0][i]*5.038,(data[1][i]-0.1391)*5.434,(data[2][i]-z_shift)*7.3707)
