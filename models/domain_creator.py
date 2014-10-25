@@ -50,7 +50,42 @@ f2=lambda p1,p2:np.sqrt(np.sum((p1-p2)**2))
 #direction of the basis is pointing from p1 to p2
 f3=lambda p1,p2:(1./f2(p1,p2))*(p2-p1)+p1
 
-
+def init_OS_auto(layer_index=[[0,6,6],[7],[10,14]],step_index=[2,3,1],OS_index=[6,14]):
+    OS_X=[]
+    OS_Y=[]
+    OS_Z=[]
+    for each in layer_index:
+        tmp_x,tmp_y,tmp_z=[],[],[]
+        for i in range(len(each)):
+            if each[i] not in OS_index:
+                tmp_x.append(None)
+                tmp_x.append(None)
+                tmp_y.append(None)
+                tmp_y.append(None)
+                tmp_z.append(None)
+                tmp_z.append(None)
+            else:
+                tmp_x.append(0.)
+                tmp_x.append(0.5)
+                tmp_y.append(0.)
+                tmp_y.append(0.5)
+                if step_index[layer_index.index(each)]==0:
+                    tmp_z.append(1.8)
+                    tmp_z.append(1.8)
+                elif step_index[layer_index.index(each)]==1:
+                    tmp_z.append(2.3)
+                    tmp_z.append(2.3)
+                elif step_index[layer_index.index(each)]==2:
+                    tmp_z.append(1.6)
+                    tmp_z.append(1.6)
+                elif step_index[layer_index.index(each)]==3:
+                    tmp_z.append(2.1)
+                    tmp_z.append(2.1)
+        OS_X.append(tmp_x)
+        OS_Y.append(tmp_y)
+        OS_Z.append(tmp_z)
+    return OS_X,OS_Y,OS_Z
+    
 def translate_domain_type(GROUPING_SCHEMES=[[0,1]],full_layer_pick=[None,None,0]):
     domain_type=[]
     def _translate_type(label):

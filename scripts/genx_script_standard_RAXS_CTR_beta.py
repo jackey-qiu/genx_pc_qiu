@@ -46,9 +46,9 @@ half_layer=[3,3]#2 for short slab and 3 for long slab
 full_layer=[1]#0 for short slab and 1 for long slab
 half_layer_pick=half_layer+[None]*len(full_layer)
 full_layer_pick=[None]*len(half_layer)+full_layer
-OS_X_REF=[[None,None,0,0.5,0,0.5],[None],[None,None,0,0.5]]
-OS_Y_REF=[[None,None,0,0.5,0,0.5],[None],[None,None,0,0.5]]
-OS_Z_REF=[[None,None,2.1,2.1,2.5,2.5],[None],[None,None,2.0,2.0]]
+OS_X_REF=domain_creator.init_OS_auto(pickup_index,half_layer+full_layer)[0]
+OS_Y_REF=domain_creator.init_OS_auto(pickup_index,half_layer+full_layer)[1]
+OS_Z_REF=domain_creator.init_OS_auto(pickup_index,half_layer+full_layer)[2]
 DOMAINS_BV=range(len(pickup_index))
 TABLE_DOMAINS=[1]*len(pickup_index)
 
