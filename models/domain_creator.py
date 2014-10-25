@@ -272,10 +272,14 @@ def print_data2(N_sorbate=4,domain='',z_shift=1,half_layer=False,half_layer_long
     data=domain._extract_values()
     index_all=range(len(data[0]))
     index=None
-    if half_layer:
+    if half_layer and half_layer_long==3:
         index=index_all[0:20]+index_all[40:40+N_sorbate]
-    else:
+    elif half_layer and half_layer_long==2:
+        index=index_all[0:20]+index_all[30:30+N_sorbate]
+    elif not half_layer and full_layer_long==1:
         index=index_all[0:22]+index_all[42:42+N_sorbate]
+    elif not half_layer and full_layer_long==0:
+        index=index_all[0:22]+index_all[32:32+N_sorbate] 
     if half_layer:
         index.pop(2)
         index.pop(2)
