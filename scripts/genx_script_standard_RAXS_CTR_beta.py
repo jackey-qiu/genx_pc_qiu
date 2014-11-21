@@ -1622,7 +1622,8 @@ def Sim(data,VARS=VARS):
     #print domain_creator.extract_component(domain2A,'Pb1_D2A',['dx1','dy2','dz3'])  
     #domain_creator.layer_spacing_calculator(domain1A,12,True)
     #domain_class_1.revert_coors_to_geometry_setting_tetrahedra_BD(domain5A,['O1_5_0_D5A','O1_8_0_D5A'],[None,'+x'],'As1_D5A','+y','Fe1_8_0_D5A','+x')
-
+    #domain_creator.print_data_for_publication(N_sorbate=4,domain=domain1A,z_shift=1,half_layer=True,full_layer_long=0,save_file='D://model.xyz')
+    
     if PRINT_MODEL_FILES:
         for i in range(DOMAIN_NUMBER):
             N_HB_SURFACE=sum(COVALENT_HYDROGEN_NUMBER[i])
@@ -1654,7 +1655,7 @@ def Sim(data,VARS=VARS):
             I=data_set.y
             eI=data_set.error
             #make dumy hkl and f to make the plot look smoother
-            l_dumy=np.arange(l[0],l[-1],0.1)
+            l_dumy=np.arange(l[0],l[-1]+0.1,0.1)
             N=len(l_dumy)
             h_dumy=np.array([h[0]]*N)
             k_dumy=np.array([k[0]]*N)
@@ -1713,15 +1714,17 @@ consider sorbate (Pb and Sb) of any combination
         HB1_O1_1_0_D1A, HB2_O1_1_0_D1A(doubly protonated surface oxygen)-->r[phi,theta]_H_1_1, r[phi,theta]_H_1_2 (first number in the tag is the index of surface oxygen, and the second the index of hydrogen atom)
         HB1_HO1_Pb1_D1A, HB2_HO1_Pb1_D1A(doubly protonated distal oxygen)-->r[phi,theta]_H_D_1_1, r[phi,theta]_H_D_1_2 (first number in the tag is the index of distal oxygen, and the second the index of hydrogen atom)
         HB1_Os1_D1A, HB2_Os1_D1A(doubly protonated water oxygen)-->r[phi,theta]_H_W_1_1_1, r[phi,theta]_H_W_1_1_2 (first number in the tag is the index of water set (single or paired), and the second the index of water in each set (at most 2 for water pair), and the last one for index of hydrogen atom)
-    ############group names###########
-    gp_Pb1_D1(discrete grouping for sorbate, group u dx dy dz)
-    gp_HO1_D1(discrete grouping for HO1 from different sorbate in domain1, ie one of HO1 from sorbate1 and the other from sorbate2 if any)
-    gp_Pb1_D1_D2(group Pb1 atom together from two domains, same for gp_HO1_D1_D2)
-    gp_Pb_D1(group two symmetry related Pb atoms together, ie Pb1 and Pb2 if there are two sorbate atoms)
-    gp_O1O7_D1(discrete grouping for surface atms, group dx dy in symmetry)
-    gp_sorbates_set1_D1(discrete grouping for each set of sorbates (O and metal), group oc)
-    gp_HO_set1_D1(discrete grouping for each set of oxygen sorbates, group u)
+    ############group names###########  
+    gp_Pb_set1_D1(group two symmetry related Pb atoms together (4 in total if considering those for the symmetry related domains))
+        Pb can be replaced with another other element symbol
+        set1 means first set consisting of two symmetry related atom within each domain
+        you can have multiple sets if you consider multiple sites being occupied simultaneously
+        note that the adjacent set indexes are 2 apart, so it goes from set1 to set3 to set5 and so on
+    gp_HO1_set1_D1(group two symmetry related distal oxygen atoms together (4 in total if considering those for the symmetry related domains))
+        the set index is the same as that described above for the sorbate
+        the number after HO specify the distal oxygen, so if there are 3 distal oxygens coordinated with the sorbate, then we use _HO1_, _HO2_ and _HO3_ to distinguish those
     gp_waters_set1_D1(discrete grouping for each set of water at same layer, group u, oc and dz)
+    gp_O1O7_D1(discrete grouping for surface atms, group dx dy in symmetry)
     gp_O1O2_O7O8_D1(sequence grouping for u, oc, dy, dz, or dx in an equal opposite way for O1O2 and O7O8)
     gp_O1O2_O7O8_D1_D2(same as gp_O1O2_O7O8_D1, but group each set of atoms from two different domains, you need to set DOMAIN_GP to have it work)
 
