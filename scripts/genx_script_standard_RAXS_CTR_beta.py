@@ -64,6 +64,8 @@ water_pars={'use_default':True,'number':[0,2,0],'ref_point':[[[]],[['O1_3_0','O1
 O_NUMBER_HL=[[[2,2]],[[0,0]],[[0,0]],[[0,0]],[[0,0]],[[0,0]],[[4,4]],[[0,0]]]
 O_NUMBER_FL=[[[0,0]],[[0,0]],[[0,0]],[[0,0]],[[0,0]],[[0,0]],[[4,4]],[[0,0]]]
 
+MIRROR=[True]*len(pickup_index)
+
 SORBATE_NUMBER_HL=[[2],[2],[2],[2],[2],[2],[2],[0]]
 SORBATE_NUMBER_FL=[[2],[2],[2],[2],[2],[2],[2],[0]]
 
@@ -149,6 +151,9 @@ COORS(a lib specifying the coordinates for sorbates)
 O_NUMBER_HL/FL(a list of list of [a,b],where a and b are integer numbers)
     one to one corresponding for the number of distal oxygens, which depend on local structure and binding configuration
     either zero oxygen ligand or enough ligands to complete coordinative shell
+MIRROR(a list of true or false)
+    Used to specify the way you add a distal oxygen to a surface complex with monodentate or bidentate binding configuration
+    Not applicable for a case with tridentate binding mode
 SORBATE_NUMBER_HL/FL(a list of list of [a], a can be either 1 or 2 or 0 for clean surface)
     If considering two symmetry sites, then a=2
     If considering one site (distribute the two on two different domains), then a=1
@@ -383,8 +388,6 @@ POTENTIAL_HYDROGEN_ACCEPTOR_HL=pick_half_layer(LHL=POTENTIAL_HYDROGEN_ACCEPTOR_H
 POTENTIAL_HYDROGEN_ACCEPTOR_SEPERATED=[pick(POTENTIAL_HYDROGEN_ACCEPTOR_HL_L+each_FL) for each_FL in POTENTIAL_HYDROGEN_ACCEPTOR_FL]
 POTENTIAL_HYDROGEN_ACCEPTOR_SEPERATED_HL=[pick(each_HL+POTENTIAL_HYDROGEN_ACCEPTOR_FL_L) for each_HL in POTENTIAL_HYDROGEN_ACCEPTOR_HL]
 POTENTIAL_HYDROGEN_ACCEPTOR=[POTENTIAL_HYDROGEN_ACCEPTOR_SEPERATED_HL[i][i] for i in range(N_HL)]+[POTENTIAL_HYDROGEN_ACCEPTOR_SEPERATED[i][N_HL+i] for i in range(N_FL)]
-    
-MIRROR=pick([False,False,True,None,None,False,False,True,None,None,None,None,None,None,None,None])
 
 ##pars for interfacial waters##
 WATER_NUMBER=None
