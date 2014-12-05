@@ -56,8 +56,8 @@ BV_OFFSET_SORBATE=[[0.2]*8]*len(pickup_index)
 SEARCH_RANGE_OFFSET=0.2
 
 USE_COORS=[[0,0,0,0]*5]*len(pickup_index)
-COORS={(0,0):{'sorbate':[[[0,0,0]]],'oxygen':[[[0,0,0],[0,0,0]]]},\
-       (2,0):{'sorbate':[[[0,0,0]]],'oxygen':[[[0,0,0],[0,0,0]]]}}
+COORS={(0,0):{'sorbate':[[0,0,0]],'oxygen':[[0,0,0],[0,0,0]]},\
+       (2,0):{'sorbate':[[0,0,0]],'oxygen':[[0,0,0],[0,0,0]]}}
 
 water_pars={'use_default':True,'number':[0,2,0],'ref_point':[[[]],[['O1_3_0','O1_4_0']],[[]]]}
 
@@ -138,14 +138,14 @@ SEARCH_RANGE_OFFSET(a number)
 commands(a list of str to be executed inside sim function)
     eg. ['gp_O1O2_O7O8_D1.setoc(gp_Fe4Fe6_Fe10Fe12_D1.getoc())']
     used to expand the funtionality of grouping or setting something important
-USE_COORS(a list of 0 or 1)
+USE_COORS(a list of [0,0] or [1,1] with two items for two symmetry sites)
     you may want to add sorbates by specifying the coordinates or having the program calculate the position from the geometry setting you considered
-    eg1 USE_COORS=[[0]]*len(pickup_index) not use coors for all domains
-    eg2 USE_COORS=[[1]]*len(pickup_index) use coors for all domains
-    eg3 USE_COORS=[[0],[1],[1]] use coors for only domain2 and domain3
+    eg1 USE_COORS=[[0,0]]*len(pickup_index) not use coors for all domains
+    eg2 USE_COORS=[[1,1]]*len(pickup_index) use coors for all domains
+    eg3 USE_COORS=[[0,0],[1,1],[1,1]] use coors for only domain2 and domain3
 COORS(a lib specifying the coordinates for sorbates)
     keys of COORS are the domain index and site index, ignore domain with no sorbates
-    len(COORS[(i,j)]['sorbate'][0])=1 while len(COORS[(i,j)]['oxygen'][0])>=1, which is the number of distal oxygens
+    len(COORS[(i,j)]['sorbate'])=1 while len(COORS[(i,j)]['oxygen'])>=1, which is the number of distal oxygens
     make sure the setup matches with the pick_up index and the sym_site_index as well as the number of distal oxygens
     if you dont consider oxygen in your model, you still need to specify the coordinates for the oxygen(just one oxygen) to avoid error prompt
 O_NUMBER_HL/FL(a list of list of [a,b],where a and b are integer numbers)
@@ -851,7 +851,7 @@ for i in range(DOMAIN_NUMBER):
                 domain_creator.add_atom(domain=vars()['domain'+str(int(i+1))+'B'],ref_coor=np.array(SORBATE_coors_a+O_coors_a)*[-1,1,1]-[-1.,0.06955,0.5],ids=sorbate_ids,els=sorbate_els)
             elif LOCAL_STRUCTURE=='trigonal_pyramid':
                 if USE_COORS[i][j]:
-                    sorbate_coors=COORS[(i,j)]['sorbate'][0]+COORS[(i,j)]['oxygen'][0]
+                    sorbate_coors=COORS[(i,j)]['sorbate'][0]
                 else:
                     sorbate_coors=vars()['domain_class_'+str(int(i+1))].adding_pb_share_triple4(domain=vars()['domain'+str(int(i+1))+'A'],top_angle=70,attach_atm_ids_ref=ids[0:2],attach_atm_id_third=[ids[-1]],offset=offset,pb_id=SORBATE_id,sorbate_el=SORBATE[0])
                 SORBATE_coors_a.append(sorbate_coors)
@@ -859,7 +859,7 @@ for i in range(DOMAIN_NUMBER):
                 #now put on sorbate on the symmetrically related domain
                 sorbate_ids=[SORBATE_id_B]
                 sorbate_els=[SORBATE_LIST[i][j]]
-                if USE_COORS[i]:
+                if USE_COORS[i][j]:
                     SORBATE_id_A=vars()['SORBATE_list_domain'+str(int(i+1))+'a'][j]
                     sorbate_ids_A=[SORBATE_id_A]
                     domain_creator.add_atom(domain=vars()['domain'+str(int(i+1))+'A'],ref_coor=np.array(SORBATE_coors_a),ids=sorbate_ids_A,els=sorbate_els)

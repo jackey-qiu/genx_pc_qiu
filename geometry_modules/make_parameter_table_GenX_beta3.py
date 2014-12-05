@@ -54,7 +54,7 @@ def make_structure(sorbate_N,O_N,water_N,Domains,Metal,binding_mode=['BD']*3,lon
         if use_domains[i]==1:
             oc_N=10
             #if sorbate_N[i]==0:oc_N=6
-            temp_surface={'dxdy':[0,[0.,-0.04,0.04],'True'],'dz':[18,[0,-0.03,0.03],'True'],'oc':[oc_N,[1,0.6,1],'True'],'u':[0,[0.4,0.32,0.8],'True']}
+            temp_surface={'dxdy':[0,[0.,-0.04,0.04],'True'],'dz':[12,[0,-0.03,0.03],'True'],'oc':[oc_N,[1,0.6,1],'True'],'u':[0,[0.4,0.32,0.8],'True']}
             domain_type=None
             full_layer_type=None
             half_layer_type=None
