@@ -318,6 +318,11 @@ class Sample:
         ftot=0
         coherence=self.coherence
         fb = self.calc_fb(h, k, l)
+        f_surface=None
+        if h[0]==0 and k[0]==0:
+            f_surface=self.calc_fs
+        else:
+            f_surface=self.calc_fs_offspecular
         for n in range(len(coherence)):
             ftot_A_C, ftot_A_IC=0,0
             ftot_B_C, ftot_B_IC=0,0
@@ -329,14 +334,14 @@ class Sample:
                 keys_domainB.append('domain'+str(i+1)+'B')
             for i in keys_domainA:
                 if coherence[n].keys()[0]:
-                    ftot_A_C=ftot_A_C+(fb+self.calc_fs(h, k, l,[self.domain[i]['slab']]))*self.domain[i]['wt']
+                    ftot_A_C=ftot_A_C+(fb+f_surface(h, k, l,[self.domain[i]['slab']]))*self.domain[i]['wt']
                 else:
-                    ftot_A_IC=ftot_A_IC+abs(fb+self.calc_fs(h, k, l,[self.domain[i]['slab']]))*self.domain[i]['wt']
+                    ftot_A_IC=ftot_A_IC+abs(fb+f_surface(h, k, l,[self.domain[i]['slab']]))*self.domain[i]['wt']
             for i in keys_domainB:
                 if coherence[n].keys()[0]:
-                    ftot_B_C=ftot_B_C+(fb+self.calc_fs(h, k, l,[self.domain[i]['slab']]))*self.domain[i]['wt']
+                    ftot_B_C=ftot_B_C+(fb+f_surface(h, k, l,[self.domain[i]['slab']]))*self.domain[i]['wt']
                 else:
-                    ftot_B_IC=ftot_B_IC+abs(fb+self.calc_fs(h, k, l,[self.domain[i]['slab']]))*self.domain[i]['wt']
+                    ftot_B_IC=ftot_B_IC+abs(fb+f_surface(h, k, l,[self.domain[i]['slab']]))*self.domain[i]['wt']
             ftot=ftot+abs(ftot_A_C)+ftot_A_IC+ftot_B_IC+abs(ftot_B_C)
             #ftot=ftot+ftot_A_C+ftot_A_IC+ftot_B_IC+ftot_B_C
         return abs(ftot)*self.inst.inten
@@ -355,6 +360,37 @@ class Sample:
         '''
         dinv = self.unit_cell.abs_hkl(h, k, l)
         x, y, z, u, oc, el = self._surf_pars(slabs)
+        f=self._get_f(el, dinv)
+        #print x, y,z
+        # Create all the atomic structure factors
+        #print f.shape, h.shape, oc.shape, x.shape, y.shape, z.shape,el.shape
+        #change mark 3
+        #delta_l=1
+        #if self.delta1==[]:delta_l=0
+        fs = np.sum(oc*f*np.exp(-2*np.pi**2*u*dinv[:,np.newaxis]**2)\
+            *np.sum([np.exp(2.0*np.pi*1.0J*(
+                 h[:,np.newaxis]*(sym_op.trans_x(x, y)+self.delta1) +
+                 k[:,np.newaxis]*(sym_op.trans_y(x, y)+self.delta2) +
+                 l[:,np.newaxis]*(z[np.newaxis, :]+1)))
+              for sym_op in self.surface_sym], 0)
+                    ,1)
+        """
+        for id in slabs[0].id:
+            if "Pb" in str(id):
+                
+                print id, np.sum([np.exp(2.0*np.pi*1.0J*(\
+                    1*(sym_op.trans_x(x, y)+self.delta1) +\
+                    1*(sym_op.trans_y(x, y)+self.delta2) +\
+                    1.3*(z[np.newaxis, :]+1)))\
+                    for sym_op in self.surface_sym][0][0])#[np.where(slabs[0].id==id)[0][0]]
+        """
+        return fs
+        
+    def calc_fs_offspecular(self, h, k, l,slabs):
+        '''Calculate the structure factors from the surface
+        '''
+        dinv = self.unit_cell.abs_hkl(h, k, l)
+        x, y, z, u, oc, el = self._surf_pars_offspecular(slabs)
         f=self._get_f(el, dinv)
         #print x, y,z
         # Create all the atomic structure factors
@@ -518,6 +554,35 @@ class Sample:
 
         return x, y, z, u, oc, el
     
+    def _surf_pars_offspecular(self,slabs):
+        '''Extracts the necessary parameters for simulating the surface part
+        '''
+        #the effect of interfacial molecules wont be included for the calculation of structure factor for offspecular rods
+        # Extract the parameters we need
+        # the star in zip(*... transform the list elements to arguments
+        
+        xt, yt, zt, elt, ut, oct, ct = zip(*[slab._extract_values_offspecular()
+                                  for slab in slabs])
+        
+        #x1 = np. r_[xt]
+        #y1 = np.r_[yt]
+        # scale and shift the slabs with respect to each other
+        cn = np.cumsum(np.r_[0, ct])[:-1]
+        z = np.concatenate([zs*c_s + c_cum
+                            for zs, c_cum, c_s in zip(zt, cn, ct)])
+        x = np.concatenate([xs + c_cum*self.delta1
+                            for xs, c_cum, c_s in zip(xt, cn, ct)])
+        y = np.concatenate([ys + c_cum*self.delta2
+                            for ys, c_cum, c_s in zip(yt, cn, ct)])
+        el = np.r_[elt]
+        u = np.r_[ut]
+        # Account for overlapping atoms
+        oc = np.r_[oct]/float(len(self.surface_sym))
+        #print x,y,z, u
+        #print y-y1
+
+        return x, y, z, u, oc, el
+        
     def create_uc_output(self):
         ''' Create atomic positions and such for output '''
         x, y, z, u, oc, el = self._surf_pars()
@@ -978,6 +1043,22 @@ class Slab:
         elif self.T_factor=='u':
             return  self.x + self.dx1+self.dx2+self.dx3+self.dx4, self.y + self.dy1+self.dy2+self.dy3+self.dy4, self.z + self.dz1+ self.dz2+ self.dz3+self.dz4,\
                    self.el, self.u+self.du, (self.oc+self.doc)*self.m*self.slab_oc, self.c
+                   
+    def _extract_values_offspecular(self):    
+        ids=self.id
+        ii=None#index for first water molecule
+        for i in range(1,30):#water molecules will be added at the very end and wont exceed 10 usually
+            if 'Os' not in ids[-i]:
+                ii=len(ids)-i+1
+                break
+            else:
+                pass
+        if self.T_factor=='B':
+            return  self.x[0:ii] + self.dx1[0:ii]+self.dx2[0:ii]+self.dx3[0:ii]+self.dx4[0:ii], self.y[0:ii] + self.dy1[0:ii]+self.dy2[0:ii]+self.dy3[0:ii]+self.dy4[0:ii], self.z[0:ii] + self.dz1[0:ii]+ self.dz2[0:ii]+ self.dz3[0:ii]+self.dz4[0:ii],\
+                    self.el[0:ii], 3.*self.u[0:ii]/(8*np.pi**2)+self.du[0:ii], (self.oc[0:ii]+self.doc[0:ii])*self.m[0:ii]*self.slab_oc, self.c
+        elif self.T_factor=='u':
+            return  self.x[0:ii] + self.dx1[0:ii]+self.dx2[0:ii]+self.dx3[0:ii]+self.dx4[0:ii], self.y[0:ii] + self.dy1[0:ii]+self.dy2[0:ii]+self.dy3[0:ii]+self.dy4[0:ii], self.z[0:ii] + self.dz1[0:ii]+ self.dz2[0:ii]+ self.dz3[0:ii]+self.dz4[0:ii],\
+                   self.el[0:ii], self.u[0:ii]+self.du[0:ii], (self.oc[0:ii]+self.doc[0:ii])*self.m[0:ii]*self.slab_oc, self.c
                    
     def _extract_values2(self):
         return  self.x + self.dx1+self.dx2+self.dx3+self.dx4, self.y + self.dy1+self.dy2+self.dy3+self.dy4, self.z + self.dz1+ self.dz2+ self.dz3+self.dz4,\
