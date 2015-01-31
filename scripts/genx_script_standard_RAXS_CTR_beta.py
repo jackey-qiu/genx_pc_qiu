@@ -120,7 +120,13 @@ DOMAIN_GP(a list of list of domain indexs)
     the associated atom groups for both surface atoms and sorbates will be created (refer to manual)
     This feature is not necessary and so not supported anymore in this version.
 water_pars(a lib to set the interfacial waters quickly)
+    This water molecules are regarded as adsorbed water molecules with lateral and vertical ordering which will have effect on both the specular and offspecular rods
     you may use default which has no water or turn the switch off and set the number and anchor points
+layered_water_pars(a lib to set layered water structure)
+    layered water structure factor only have effect on the specular rod
+    Based on the equation(29) in Reviews in Mineralogy and Geochemistry v. 49 no. 1 p. 149-221
+    key of 'yes_OR_no':a list of 0 or 1 to specify whether or not considering the layered water structure
+    key of 'ref_layer_height' is a list of atom ids (domain information not needed) to specify the reference height for the layered water heights
 USE_BV(bool)
     a switch to apply bond valence constrain during surface modelling
 TABLE_DOMAINS(list of 0 or 1, the length should be higher than the total domain number)
@@ -1617,8 +1623,8 @@ def Sim(data,VARS=VARS):
             density_w=getattr(VARS['rgh_domain'+str(int(i+1))],'density_w')
             ref_atom=layered_water_pars['ref_layer_height'][i]+'_D'+str(i+1)+'A'
             ref_height=domain_creator.extract_coor(VARS['domain'+str(int(i+1))+'A'],ref_atom)[2]
-            layered_water_A=[u0,ubar,d_w,first_layer_height/7.3707+ref_height,density_w]
-            layered_water_B=[u0,ubar,d_w,first_layer_height/7.3707+ref_height-0.5,density_w]
+            layered_water_A=[u0,ubar,d_w,first_layer_height/7.3707+ref_height,density_w]#7.3707 is specifically for hematite rcut
+            layered_water_B=[u0,ubar,d_w,first_layer_height/7.3707+ref_height-0.5,density_w]#symmetry related domain has height offset of 0.5
         wt_DA=getattr(VARS['rgh_domain'+str(int(i+1))],'wt_domainA')
         domain['domain'+str(int(i+1))+'A']={'slab':VARS['domain'+str(int(i+1))+'A'],'wt':wt_DA*vars()['wt_domain'+str(int(i+1))]/total_wt,'layered_water':layered_water_A}
         domain['domain'+str(int(i+1))+'B']={'slab':VARS['domain'+str(int(i+1))+'B'],'wt':(1-wt_DA)*vars()['wt_domain'+str(int(i+1))]/total_wt,'layered_water':layered_water_B}
@@ -1636,7 +1642,7 @@ def Sim(data,VARS=VARS):
         dL = data_set.extra_data['dL']
         sample = model.Sample(inst, bulk, domain, unitcell,coherence=COHERENCE,surface_parms={'delta1':0.,'delta2':0.1391})
         rough = (1-beta)/((1-beta)**2 + 4*beta*np.sin(np.pi*(x-LB)/dL)**2)**0.5#roughness model, double check LB and dL values are correctly set up in data file
-        if h[0]==0 and k[0]==0:
+        if h[0]==0 and k[0]==0:#consider layered water only for specular rod if existent
             f = SCALES[0]*rough*sample.calc_f4_specular(h, k, x)
         else:
             f = SCALES[0]*rough*sample.calc_f4(h, k, x)

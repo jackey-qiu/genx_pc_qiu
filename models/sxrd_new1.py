@@ -319,10 +319,6 @@ class Sample:
         coherence=self.coherence
         fb = self.calc_fb(h, k, l)
         f_surface=self.calc_fs
-        #if h[0]==0 and k[0]==0:
-        #    f_surface=self.calc_fs
-        #else:
-        #    f_surface=self.calc_fs_offspecular
         for n in range(len(coherence)):
             ftot_A_C, ftot_A_IC=0,0
             ftot_B_C, ftot_B_IC=0,0
@@ -355,10 +351,6 @@ class Sample:
         coherence=self.coherence
         fb = self.calc_fb(h, k, l)
         f_surface=self.calc_fs
-        #if h[0]==0 and k[0]==0:
-        #    f_surface=self.calc_fs
-        #else:
-        #    f_surface=self.calc_fs_offspecular
         
         for n in range(len(coherence)):
             ftot_A_C, ftot_A_IC=0,0
@@ -390,11 +382,14 @@ class Sample:
         return abs(ftot)*self.inst.inten
         
     def calc_f_layered_water(self,h,k,l,u0,ubar,d_w,first_layer_height,density_w=0.033):
+        #contribution of layered water calculated as equation(29) in Reviews in Mineralogy and Geochemistry v. 49 no. 1 p. 149-221
+        #note here the height of first atom layer is not at 0 as in that equation but is specified by the first_layer_height. and the corrections were done accordingly
+        #In addition, the occupancy of layered water molecules was correctly calculated here by Auc*d_w*density_w
+        #the u0 and ubar here are in A
         dinv = self.unit_cell.abs_hkl(h, k, l)
         f=self._get_f(np.array(['O']), dinv)[:,0]
         Auc=self.unit_cell.a*self.unit_cell.b
         q=2*np.pi*dinv
-        #print f,Auc,d_w,density_w,q,u0,first_layer_height
         F_layered_water=f*(Auc*d_w*density_w)*np.exp(-0.5*q**2*u0**2)*np.exp(q*first_layer_height*1.0J)\
                         /(1-np.exp(-0.5*q**2*ubar**2)*np.exp(q*d_w*1.0J))
         return F_layered_water
