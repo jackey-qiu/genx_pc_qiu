@@ -318,11 +318,11 @@ class Sample:
         ftot=0
         coherence=self.coherence
         fb = self.calc_fb(h, k, l)
-        f_surface=None
-        if h[0]==0 and k[0]==0:
-            f_surface=self.calc_fs
-        else:
-            f_surface=self.calc_fs_offspecular
+        f_surface=self.calc_fs
+        #if h[0]==0 and k[0]==0:
+        #    f_surface=self.calc_fs
+        #else:
+        #    f_surface=self.calc_fs_offspecular
         for n in range(len(coherence)):
             ftot_A_C, ftot_A_IC=0,0
             ftot_B_C, ftot_B_IC=0,0
@@ -346,6 +346,59 @@ class Sample:
             #ftot=ftot+ftot_A_C+ftot_A_IC+ftot_B_IC+ftot_B_C
         return abs(ftot)*self.inst.inten
         
+    def calc_f4_specular(self, h, k, l):
+        #now the coherence looks like [{True:[0,1]},{False:[2,3]}] which means adding up first two domains coherently
+        #and last two domains in-coherently. After calculation of structure factor for each item of the list, absolute 
+        #value of SF will be calculated followed by being summed up
+        #so [{True:[0,1]},{True:[2,3]}] is different from [{True:[0,1,2,3]}]
+        ftot=0
+        coherence=self.coherence
+        fb = self.calc_fb(h, k, l)
+        f_surface=self.calc_fs
+        #if h[0]==0 and k[0]==0:
+        #    f_surface=self.calc_fs
+        #else:
+        #    f_surface=self.calc_fs_offspecular
+        
+        for n in range(len(coherence)):
+            ftot_A_C, ftot_A_IC=0,0
+            ftot_B_C, ftot_B_IC=0,0
+            keys_domainA=[]
+            keys_domainB=[]
+            
+            for i in coherence[n].values()[0]:
+                keys_domainA.append('domain'+str(i+1)+'A')
+                keys_domainB.append('domain'+str(i+1)+'B')
+            for i in keys_domainA:
+                f_layered_water=0
+                if self.domain[i]['layered_water']!=[]:
+                    f_layered_water=self.calc_f_layered_water(h,k,l,*self.domain[i]['layered_water'])
+                if coherence[n].keys()[0]:
+                    ftot_A_C=ftot_A_C+(fb+f_surface(h, k, l,[self.domain[i]['slab']])+f_layered_water)*self.domain[i]['wt']
+                else:
+                    ftot_A_IC=ftot_A_IC+abs(fb+f_surface(h, k, l,[self.domain[i]['slab']])+f_layered_water)*self.domain[i]['wt']
+            for i in keys_domainB:
+                f_layered_water=0
+                if self.domain[i]['layered_water']!=[]:
+                    f_layered_water=self.calc_f_layered_water(h,k,l,*self.domain[i]['layered_water'])
+                if coherence[n].keys()[0]:
+                    ftot_B_C=ftot_B_C+(fb+f_surface(h, k, l,[self.domain[i]['slab']])+f_layered_water)*self.domain[i]['wt']
+                else:
+                    ftot_B_IC=ftot_B_IC+abs(fb+f_surface(h, k, l,[self.domain[i]['slab']])+f_layered_water)*self.domain[i]['wt']
+            ftot=ftot+abs(ftot_A_C)+ftot_A_IC+ftot_B_IC+abs(ftot_B_C)
+            #ftot=ftot+ftot_A_C+ftot_A_IC+ftot_B_IC+ftot_B_C
+        return abs(ftot)*self.inst.inten
+        
+    def calc_f_layered_water(self,h,k,l,u0,ubar,d_w,first_layer_height,density_w=0.033):
+        dinv = self.unit_cell.abs_hkl(h, k, l)
+        f=self._get_f(np.array(['O']), dinv)[:,0]
+        Auc=self.unit_cell.a*self.unit_cell.b
+        q=2*np.pi*dinv
+        #print f,Auc,d_w,density_w,q,u0,first_layer_height
+        F_layered_water=f*(Auc*d_w*density_w)*np.exp(-0.5*q**2*u0**2)*np.exp(q*first_layer_height*1.0J)\
+                        /(1-np.exp(-0.5*q**2*ubar**2)*np.exp(q*d_w*1.0J))
+        return F_layered_water
+        
     def turbo_calc_f(self, h, k, l):
         '''Calculate the structure factors for the sample with
         inline c code for the surface.
@@ -367,7 +420,7 @@ class Sample:
         #change mark 3
         #delta_l=1
         #if self.delta1==[]:delta_l=0
-        fs = np.sum(oc*f*np.exp(-2*np.pi**2*u*dinv[:,np.newaxis]**2)\
+        fs = np.sum(oc*f*np.exp(-2*np.pi**2*u**2*dinv[:,np.newaxis]**2)\
             *np.sum([np.exp(2.0*np.pi*1.0J*(
                  h[:,np.newaxis]*(sym_op.trans_x(x, y)+self.delta1) +
                  k[:,np.newaxis]*(sym_op.trans_y(x, y)+self.delta2) +
@@ -398,7 +451,7 @@ class Sample:
         #change mark 3
         #delta_l=1
         #if self.delta1==[]:delta_l=0
-        fs = np.sum(oc*f*np.exp(-2*np.pi**2*u*dinv[:,np.newaxis]**2)\
+        fs = np.sum(oc*f*np.exp(-2*np.pi**2*u**2*dinv[:,np.newaxis]**2)\
             *np.sum([np.exp(2.0*np.pi*1.0J*(
                  h[:,np.newaxis]*(sym_op.trans_x(x, y)+self.delta1) +
                  k[:,np.newaxis]*(sym_op.trans_y(x, y)+self.delta2) +
@@ -499,7 +552,7 @@ class Sample:
         delta_funcs=(abs(h - np.round(h)) < 1e-12)*(
             abs(k - np.round(k)) < 1e-12)
         # Sum up the uc struct factors
-        f_u = np.sum(oc*f*np.exp(-2*np.pi**2*u*dinv[:, np.newaxis]**2)*
+        f_u = np.sum(oc*f*np.exp(-2*np.pi**2*u**2*dinv[:, np.newaxis]**2)*
                      np.sum([np.exp(2.0*np.pi*1.0J*(
                             h[:,np.newaxis]*sym_op.trans_x(x, y) +
                             k[:,np.newaxis]*sym_op.trans_y(x, y) +
@@ -1037,9 +1090,11 @@ class Slab:
         return get_par
             
     def _extract_values(self):
+        #B=8*pi*pi*u*u in A2
+        #u in A
         if self.T_factor=='B':
             return  self.x + self.dx1+self.dx2+self.dx3+self.dx4, self.y + self.dy1+self.dy2+self.dy3+self.dy4, self.z + self.dz1+ self.dz2+ self.dz3+self.dz4,\
-                    self.el, 3.*self.u/(8*np.pi**2)+self.du, (self.oc+self.doc)*self.m*self.slab_oc, self.c
+                    self.el, (self.u/(8*np.pi**2))**0.5+self.du, (self.oc+self.doc)*self.m*self.slab_oc, self.c
         elif self.T_factor=='u':
             return  self.x + self.dx1+self.dx2+self.dx3+self.dx4, self.y + self.dy1+self.dy2+self.dy3+self.dy4, self.z + self.dz1+ self.dz2+ self.dz3+self.dz4,\
                    self.el, self.u+self.du, (self.oc+self.doc)*self.m*self.slab_oc, self.c
@@ -1055,7 +1110,7 @@ class Slab:
                 pass
         if self.T_factor=='B':
             return  self.x[0:ii] + self.dx1[0:ii]+self.dx2[0:ii]+self.dx3[0:ii]+self.dx4[0:ii], self.y[0:ii] + self.dy1[0:ii]+self.dy2[0:ii]+self.dy3[0:ii]+self.dy4[0:ii], self.z[0:ii] + self.dz1[0:ii]+ self.dz2[0:ii]+ self.dz3[0:ii]+self.dz4[0:ii],\
-                    self.el[0:ii], 3.*self.u[0:ii]/(8*np.pi**2)+self.du[0:ii], (self.oc[0:ii]+self.doc[0:ii])*self.m[0:ii]*self.slab_oc, self.c
+                    self.el[0:ii], (self.u[0:ii]/(8*np.pi**2))**0.5+self.du[0:ii], (self.oc[0:ii]+self.doc[0:ii])*self.m[0:ii]*self.slab_oc, self.c
         elif self.T_factor=='u':
             return  self.x[0:ii] + self.dx1[0:ii]+self.dx2[0:ii]+self.dx3[0:ii]+self.dx4[0:ii], self.y[0:ii] + self.dy1[0:ii]+self.dy2[0:ii]+self.dy3[0:ii]+self.dy4[0:ii], self.z[0:ii] + self.dz1[0:ii]+ self.dz2[0:ii]+ self.dz3[0:ii]+self.dz4[0:ii],\
                    self.el[0:ii], self.u[0:ii]+self.du[0:ii], (self.oc[0:ii]+self.doc[0:ii])*self.m[0:ii]*self.slab_oc, self.c

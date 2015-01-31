@@ -60,6 +60,7 @@ COORS={(0,0):{'sorbate':[[0,0,0]],'oxygen':[[0,0,0],[0,0,0]]},\
        (2,0):{'sorbate':[[0,0,0]],'oxygen':[[0,0,0],[0,0,0]]}}
 
 water_pars={'use_default':True,'number':[0,2,0],'ref_point':[[[]],[['O1_3_0','O1_4_0']],[[]]]}
+layered_water_pars={'yes_OR_no':[0]*len(pickup_index),'ref_layer_height'=[]}
 
 O_NUMBER_HL=[[[2,2]],[[0,0]],[[0,0]],[[0,0]],[[0,0]],[[0,0]],[[4,4]],[[0,0]]]
 O_NUMBER_FL=[[[0,0]],[[0,0]],[[0,0]],[[0,0]],[[0,0]],[[0,0]],[[4,4]],[[0,0]]]
@@ -959,6 +960,12 @@ for i in range(DOMAIN_NUMBER):
                     HB_MATCH[vars()['HO_list_domain'+str(int(i+1))+'a'][i_distal]]=['HB'+str(j_distal+1)+'_'+vars()['HO_list_domain'+str(int(i+1))+'a'][i_distal]]
                 HB_MATCH['HB'+str(j_distal+1)+'_'+vars()['HO_list_domain'+str(int(i+1))+'a'][i_distal]]=[vars()['HO_list_domain'+str(int(i+1))+'a'][i_distal]]
 
+    if layered_water_pars['yes_OR_no'][i]:
+        vars()['rgh_domain'+str(int(i+1))].new_var('u0',0.4)
+        vars()['rgh_domain'+str(int(i+1))].new_var('ubar',0.4)
+        vars()['rgh_domain'+str(int(i+1))].new_var('first_layer_height',4.0)
+        vars()['rgh_domain'+str(int(i+1))].new_var('d_w',1.9)
+        vars()['rgh_domain'+str(int(i+1))].new_var('density_w',0.033)
     if WATER_NUMBER[i]!=0:#add water molecules if any
         if WATER_PAIR:
             for jj in range(WATER_NUMBER[i]/2):#note will add water pair (two oxygens) each time, and you can't add single water 
@@ -1599,9 +1606,22 @@ def Sim(data,VARS=VARS):
     #set up multiple domains
     #note for each domain there are two sub domains which symmetrically related to each other, so have equivalent wt
     for i in range(DOMAIN_NUMBER):
+        u0,ubar,d_w,first_layer_height,density_w=0,0,0,0,0
+        ref_height=None
+        layered_water_A,layered_water_B=[],[]
+        if layered_water_pars['yes_OR_no'][i]:
+            u0=getattr(VARS['rgh_domain'+str(int(i+1))],'u0')
+            ubar=getattr(VARS['rgh_domain'+str(int(i+1))],'ubar')
+            d_w=getattr(VARS['rgh_domain'+str(int(i+1))],'d_w')
+            first_layer_height=getattr(VARS['rgh_domain'+str(int(i+1))],'first_layer_height')
+            density_w=getattr(VARS['rgh_domain'+str(int(i+1))],'density_w')
+            ref_atom=layered_water_pars['ref_layer_height'][i]+'_D'+str(i+1)+'A'
+            ref_height=domain_creator.extract_coor(VARS['domain'+str(int(i+1))+'A'],ref_atom)[2]
+            layered_water_A=[u0,ubar,d_w,first_layer_height/7.3707+ref_height,density_w]
+            layered_water_B=[u0,ubar,d_w,first_layer_height/7.3707+ref_height-0.5,density_w]
         wt_DA=getattr(VARS['rgh_domain'+str(int(i+1))],'wt_domainA')
-        domain['domain'+str(int(i+1))+'A']={'slab':VARS['domain'+str(int(i+1))+'A'],'wt':wt_DA*vars()['wt_domain'+str(int(i+1))]/total_wt}
-        domain['domain'+str(int(i+1))+'B']={'slab':VARS['domain'+str(int(i+1))+'B'],'wt':(1-wt_DA)*vars()['wt_domain'+str(int(i+1))]/total_wt}
+        domain['domain'+str(int(i+1))+'A']={'slab':VARS['domain'+str(int(i+1))+'A'],'wt':wt_DA*vars()['wt_domain'+str(int(i+1))]/total_wt,'layered_water':layered_water_A}
+        domain['domain'+str(int(i+1))+'B']={'slab':VARS['domain'+str(int(i+1))+'B'],'wt':(1-wt_DA)*vars()['wt_domain'+str(int(i+1))]/total_wt,'layered_water':layered_water_B}
       
     if COUNT_TIME:t_2=datetime.now()
     
@@ -1616,7 +1636,10 @@ def Sim(data,VARS=VARS):
         dL = data_set.extra_data['dL']
         sample = model.Sample(inst, bulk, domain, unitcell,coherence=COHERENCE,surface_parms={'delta1':0.,'delta2':0.1391})
         rough = (1-beta)/((1-beta)**2 + 4*beta*np.sin(np.pi*(x-LB)/dL)**2)**0.5#roughness model, double check LB and dL values are correctly set up in data file
-        f = SCALES[0]*rough*sample.calc_f4(h, k, x)
+        if h[0]==0 and k[0]==0:
+            f = SCALES[0]*rough*sample.calc_f4_specular(h, k, x)
+        else:
+            f = SCALES[0]*rough*sample.calc_f4(h, k, x)
         F.append(abs(f))
         fom_scaler.append(1)
     
