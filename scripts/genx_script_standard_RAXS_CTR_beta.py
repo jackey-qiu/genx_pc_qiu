@@ -60,7 +60,7 @@ COORS={(0,0):{'sorbate':[[0,0,0]],'oxygen':[[0,0,0],[0,0,0]]},\
        (2,0):{'sorbate':[[0,0,0]],'oxygen':[[0,0,0],[0,0,0]]}}
 
 water_pars={'use_default':True,'number':[0,2,0],'ref_point':[[[]],[['O1_3_0','O1_4_0']],[[]]]}
-layered_water_pars={'yes_OR_no':[0]*len(pickup_index),'ref_layer_height'=[]}
+layered_water_pars={'yes_OR_no':[0]*len(pickup_index),'ref_layer_height':[]}
 
 O_NUMBER_HL=[[[2,2]],[[0,0]],[[0,0]],[[0,0]],[[0,0]],[[0,0]],[[4,4]],[[0,0]]]
 O_NUMBER_FL=[[[0,0]],[[0,0]],[[0,0]],[[0,0]],[[0,0]],[[0,0]],[[4,4]],[[0,0]]]
@@ -1693,6 +1693,7 @@ def Sim(data,VARS=VARS):
             k_dumy=np.array([k[0]]*N)
             LB_dumy=[]
             dL_dumy=[]
+            f_dumy=[]
             
             for i in range(N):
                 key=None
@@ -1707,7 +1708,10 @@ def Sim(data,VARS=VARS):
             LB_dumy=np.array(LB_dumy)
             dL_dumy=np.array(dL_dumy)
             rough_dumy = (1-beta)/((1-beta)**2 + 4*beta*np.sin(np.pi*(l_dumy-LB_dumy)/dL_dumy)**2)**0.5
-            f_dumy = SCALES[0]*rough_dumy*sample.calc_f4(h_dumy, k_dumy, l_dumy)
+            if h_dumy[0]==0 and k_dumy[0]==0:
+                f_dumy = SCALES[0]*rough_dumy*sample.calc_f4_specular(h_dumy, k_dumy, l_dumy)
+            else:
+                f_dumy = SCALES[0]*rough_dumy*sample.calc_f4(h_dumy, k_dumy, l_dumy)
             
             label=str(int(h[0]))+str(int(k[0]))+'L'
             plot_data_container_experiment[label]=np.concatenate((l[:,np.newaxis],I[:,np.newaxis],eI[:,np.newaxis]),axis=1)
