@@ -381,6 +381,156 @@ class Sample:
             #ftot=ftot+ftot_A_C+ftot_A_IC+ftot_B_IC+ftot_B_C
         return abs(ftot)*self.inst.inten
         
+    def calc_f4_specular_RAXR(self, h, k, l,E,E0,f1f2,a,b,A_list=[],P_list=[],resonant_els=[False,False,False]):
+        #now the coherence looks like [{True:[0,1]},{False:[2,3]}] which means adding up first two domains coherently
+        #and last two domains in-coherently. After calculation of structure factor for each item of the list, absolute 
+        #value of SF will be calculated followed by being summed up
+        #so [{True:[0,1]},{True:[2,3]}] is different from [{True:[0,1,2,3]}]
+        #resonant_els:a list of True or False specifying whether or not considering the resonant scattering in each domain
+        #             so the len(resonant_els) is equal to the total domain numbers
+        #E is the energy scan list, and make sure items in E is one-to-one corresponding to those in f1f2
+        #E0 is the center of the range of energy scan
+        #f1f2 numpy array of anomalous correction items (n*2 shape) with the first column as f' and the second as f''
+        #a,b are fitting parameters for extrinsic factors
+        #P_list and A_list are two lists of Fourier components. Depending on the total domains, you can consider different Fourier
+        #                  components for chemically different domains.
+        #Resonant structure factor is calculated using equation (9) presented in paper of "Park, Changyong and Fenter, Paul A.(2007) J. Appl. Cryst.40, 290-301"
+
+        ftot=0
+        coherence=self.coherence
+        fb = self.calc_fb(h, k, l)
+        f_surface=self.calc_fs
+        A_list_formated=[]
+        P_list_formated=[]
+        i=0
+        #formating the A and P list considering some domain does not have the resonent element
+        for each in resonant_els:
+            if each:
+                A_list_formated.append(A_list[i])
+                P_list_formated.append(P_list[i])
+                i+=1
+            else:
+                A_list_formated.append(None)
+                P_list_formated.append(None)
+        
+        for n in range(len(coherence)):
+            ftot_A_C, ftot_A_IC=0,0
+            ftot_B_C, ftot_B_IC=0,0
+            keys_domainA=[]
+            keys_domainB=[]
+            
+            for i in coherence[n].values()[0]:
+                keys_domainA.append('domain'+str(i+1)+'A')
+                keys_domainB.append('domain'+str(i+1)+'B')
+            for i in keys_domainA:
+                ii=keys_domainA.index(i)
+                f_layered_water=0
+                if self.domain[i]['layered_water']!=[]:
+                    f_layered_water=self.calc_f_layered_water(h,k,l,*self.domain[i]['layered_water'])
+                if coherence[n].keys()[0]:
+                    if resonant_els[ii]:
+                        ftot_A_C=ftot_A_C+(fb+f_surface(h, k, l,[self.domain[i]['slab']])+f_layered_water+(f1f2[:,0]+1.0J*f1f2[0:,1])*A_list_formated[ii]*np.exp(1.0J*np.pi*2*P_list_formated[ii]))*self.domain[i]['wt']
+                    else:
+                        ftot_A_C=ftot_A_C+(fb+f_surface(h, k, l,[self.domain[i]['slab']])+f_layered_water)*self.domain[i]['wt']
+                else:
+                    if resonant_els[ii]:
+                        ftot_A_IC=ftot_A_IC+abs(fb+f_surface(h, k, l,[self.domain[i]['slab']])+f_layered_water+(f1f2[:,0]+1.0J*f1f2[0:,1])*A_list_formated[ii]*np.exp(1.0J*np.pi*2*P_list_formated[ii]))*self.domain[i]['wt']
+                    else:
+                        ftot_A_IC=ftot_A_IC+abs(fb+f_surface(h, k, l,[self.domain[i]['slab']])+f_layered_water)*self.domain[i]['wt']
+            for i in keys_domainB:
+                #in this specific case (rcut hematite, domainB is symmetricaly related to domainA with half unit cell step lower)
+                #in light of that, the Fourier component A(amplitude) is same as that for the associated domainA, but the other one (phase) should be 0.5 off
+                ii=keys_domainB.index(i)
+                f_layered_water=0
+                if self.domain[i]['layered_water']!=[]:
+                    f_layered_water=self.calc_f_layered_water(h,k,l,*self.domain[i]['layered_water'])
+                if coherence[n].keys()[0]:
+                    if resonant_els[ii]:
+                        ftot_B_C=ftot_B_C+(fb+f_surface(h, k, l,[self.domain[i]['slab']])+f_layered_water+(f1f2[:,0]+1.0J*f1f2[0:,1])*A_list_formated[ii]*np.exp(1.0J*np.pi*2*(P_list_formated[ii]-0.5)))*self.domain[i]['wt']
+                    else:
+                        ftot_B_C=ftot_B_C+(fb+f_surface(h, k, l,[self.domain[i]['slab']])+f_layered_water)*self.domain[i]['wt']
+                else:
+                    if resonant_els[ii]:
+                        ftot_B_IC=ftot_B_IC+abs(fb+f_surface(h, k, l,[self.domain[i]['slab']])+f_layered_water+(f1f2[:,0]+1.0J*f1f2[0:,1])*A_list_formated[ii]*np.exp(1.0J*np.pi*2*(P_list_formated[ii]-0.5)))*self.domain[i]['wt']
+                    else:
+                        ftot_B_IC=ftot_B_IC+abs(fb+f_surface(h, k, l,[self.domain[i]['slab']])+f_layered_water)*self.domain[i]['wt']
+
+            ftot=(a+b*(E-E0))*(ftot+abs(ftot_A_C)+ftot_A_IC+ftot_B_IC+abs(ftot_B_C))
+            #ftot=ftot+ftot_A_C+ftot_A_IC+ftot_B_IC+ftot_B_C
+        return abs(ftot)*self.inst.inten
+        
+    def calc_f4_nonspecular_RAXR(self, h, k, l,E,E0,f1f2,a,b,A_list=[],P_list=[],resonant_els=[False,False,False]):
+        #now the coherence looks like [{True:[0,1]},{False:[2,3]}] which means adding up first two domains coherently
+        #and last two domains in-coherently. After calculation of structure factor for each item of the list, absolute 
+        #value of SF will be calculated followed by being summed up
+        #so [{True:[0,1]},{True:[2,3]}] is different from [{True:[0,1,2,3]}]
+        #resonant_els:a list of True or False specifying whether or not considering the resonant scattering in each domain
+        #             so the len(resonant_els) is equal to the total domain numbers
+        #E is the energy scan list, and make sure items in E is one-to-one corresponding to those in f1f2
+        #E0 is the center of the range of energy scan
+        #f1f2 numpy array of anomalous correction items (n*2 shape) with the first column as f' and the second as f''
+        #a,b are fitting parameters for extrinsic factors
+        #P_list and A_list are two lists of Fourier components. Depending on the total domains, you can consider different Fourier
+        #                  components for chemically different domains.
+        #Resonant structure factor is calculated using equation (9) presented in paper of "Park, Changyong and Fenter, Paul A.(2007) J. Appl. Cryst.40, 290-301"
+        ftot=0
+        coherence=self.coherence
+        fb = self.calc_fb(h, k, l)
+        f_surface=self.calc_fs
+        A_list_formated=[]
+        P_list_formated=[]
+        i=0
+        #formating the A and P list considering some domain does not have the resonent element
+        for each in resonant_els:
+            if each:
+                A_list_formated.append(A_list[i])
+                P_list_formated.append(P_list[i])
+                i+=1
+            else:
+                A_list_formated.append(None)
+                P_list_formated.append(None)
+        
+        for n in range(len(coherence)):
+            ftot_A_C, ftot_A_IC=0,0
+            ftot_B_C, ftot_B_IC=0,0
+            keys_domainA=[]
+            keys_domainB=[]
+            
+            for i in coherence[n].values()[0]:
+                keys_domainA.append('domain'+str(i+1)+'A')
+                keys_domainB.append('domain'+str(i+1)+'B')
+            for i in keys_domainA:
+                ii=keys_domainA.index(i)
+
+                if coherence[n].keys()[0]:
+                    if resonant_els[ii]:
+                        ftot_A_C=ftot_A_C+(fb+f_surface(h, k, l,[self.domain[i]['slab']])+(f1f2[:,0]+1.0J*f1f2[0:,1])*A_list_formated[ii]*np.exp(1.0J*np.pi*2*P_list_formated[ii]))*self.domain[i]['wt']
+                    else:
+                        ftot_A_C=ftot_A_C+(fb+f_surface(h, k, l,[self.domain[i]['slab']]))*self.domain[i]['wt']
+                else:
+                    if resonant_els[ii]:
+                        ftot_A_IC=ftot_A_IC+abs(fb+f_surface(h, k, l,[self.domain[i]['slab']])+(f1f2[:,0]+1.0J*f1f2[0:,1])*A_list_formated[ii]*np.exp(1.0J*np.pi*2*P_list_formated[ii]))*self.domain[i]['wt']
+                    else:
+                        ftot_A_IC=ftot_A_IC+abs(fb+f_surface(h, k, l,[self.domain[i]['slab']]))*self.domain[i]['wt']
+            for i in keys_domainB:
+                #in this specific case (rcut hematite, domainB is symmetricaly related to domainA with half unit cell step lower)
+                #in light of that, the Fourier component A(amplitude) is same as that for the associated domainA, but the other one (phase) should be 0.5 off
+                ii=keys_domainB.index(i)
+                if coherence[n].keys()[0]:
+                    if resonant_els[ii]:
+                        ftot_B_C=ftot_B_C+(fb+f_surface(h, k, l,[self.domain[i]['slab']])+(f1f2[:,0]+1.0J*f1f2[0:,1])*A_list_formated[ii]*np.exp(1.0J*np.pi*2*(P_list_formated[ii]-0.5)))*self.domain[i]['wt']
+                    else:
+                        ftot_B_C=ftot_B_C+(fb+f_surface(h, k, l,[self.domain[i]['slab']]))*self.domain[i]['wt']
+                else:
+                    if resonant_els[ii]:
+                        ftot_B_IC=ftot_B_IC+abs(fb+f_surface(h, k, l,[self.domain[i]['slab']])+(f1f2[:,0]+1.0J*f1f2[0:,1])*A_list_formated[ii]*np.exp(1.0J*np.pi*2*(P_list_formated[ii]-0.5)))*self.domain[i]['wt']
+                    else:
+                        ftot_B_IC=ftot_B_IC+abs(fb+f_surface(h, k, l,[self.domain[i]['slab']]))*self.domain[i]['wt']
+
+            ftot=(a+b*(E-E0))*(ftot+abs(ftot_A_C)+ftot_A_IC+ftot_B_IC+abs(ftot_B_C))
+            #ftot=ftot+ftot_A_C+ftot_A_IC+ftot_B_IC+ftot_B_C
+        return abs(ftot)*self.inst.inten
+        
     def calc_f_layered_water(self,h,k,l,u0,ubar,d_w,first_layer_height,density_w=0.033):
         #contribution of layered water calculated as equation(29) in Reviews in Mineralogy and Geochemistry v. 49 no. 1 p. 149-221
         #note here the height of first atom layer is not at 0 as in that equation but is specified by the first_layer_height. and the corrections were done accordingly

@@ -52,6 +52,15 @@ OS_Z_REF=domain_creator.init_OS_auto(pickup_index,half_layer+full_layer)[2]
 DOMAINS_BV=range(len(pickup_index))
 TABLE_DOMAINS=[1]*len(pickup_index)
 
+FIT_RAXR=False
+if FIT_RAXR:
+    USE_BV=False
+NUMBER_SPECTRA=5
+RESONANT_EL_LIST=[True,False,True]
+E0=13000
+F1F2_FILE="Pb.f1f2"
+F1F2=None
+
 BV_OFFSET_SORBATE=[[0.2]*8]*len(pickup_index)
 SEARCH_RANGE_OFFSET=0.2
 
@@ -132,6 +141,18 @@ USE_BV(bool)
 TABLE_DOMAINS(list of 0 or 1, the length should be higher than the total domain number)
     specify whether or not generate the associated pars for each domain
     [0,1,1] means only generate the pars for last two domains
+FIT_RAXR(True or False, a switch for RAXR model fitting)
+    If you switch to fit RAXR data, make sure delete the CTR data before launch the fitting process
+NUMBER_SPECTRA(number of RAXR spectras)
+    Note each spectra, there will be a independent set of fitting parameters (a,b,A,P)
+RESONANT_EL_LIST(a list of True or False)
+    Used to specify the domain containing resonant element)
+E0=13000
+    Center of Scan energy range for RAXR data
+F1F2_FILE="Pb.f1f2"
+    Absolute file path for the f1f2 file containing anomalous correction items at each energy  
+F1F2=None
+    Global variable to hold the f1f2 values after loading the f1f2 file if the FIT_RAXR is True
 COVALENT_HYDROGEN_RANDOM(bool)
     a switch to not explicitly specify the protonation of surface functional groups
     different protonation scheme (0,1 or 2 protons) will be tried and compared, the one with best bv result will be used
@@ -610,6 +631,18 @@ rgh.new_var('beta', 0.0)
 scales=['scale_CTR']
 for scale in scales:
     rgh.new_var(scale,1.)
+rgh_raxs=None
+if FIT_RAXR:
+    F1F2=np.loadtxt(F1F2_FILE)
+    rgh_raxr=UserVars()
+    for i in range(NUMBER_SPECTRA):
+        rgh_raxr.new_var('a'+str(i+1),0.0)
+        rgh_raxr.new_var('b'+str(i+1),0.0)
+        for j in range(len(RESONANT_EL_LIST)):
+            if RESONANT_EL_LIST[j]:
+                rgh_raxr.new_var('A_D'+str(j+1)+'_'+str(i+1),2.0)
+                rgh_raxr.new_var('P_D'+str(j+1)+'_'+str(i+1),0.0)
+            
     
 ################################################build up ref domains############################################
 #add atoms for bulk and two ref domains (ref_domain1<half layer> and ref_domain2<full layer>)
@@ -1632,22 +1665,50 @@ def Sim(data,VARS=VARS):
     if COUNT_TIME:t_2=datetime.now()
     
     #cal structure factor for each dataset in this for loop
-    for data_set in data:
-        f=np.array([])   
-        h = data_set.extra_data['h']
-        k = data_set.extra_data['k']
-        x = data_set.x
-        y = data_set.extra_data['Y']
-        LB = data_set.extra_data['LB']
-        dL = data_set.extra_data['dL']
-        sample = model.Sample(inst, bulk, domain, unitcell,coherence=COHERENCE,surface_parms={'delta1':0.,'delta2':0.1391})
-        rough = (1-beta)/((1-beta)**2 + 4*beta*np.sin(np.pi*(x-LB)/dL)**2)**0.5#roughness model, double check LB and dL values are correctly set up in data file
-        if h[0]==0 and k[0]==0:#consider layered water only for specular rod if existent
-            f = SCALES[0]*rough*sample.calc_f4_specular(h, k, x)
-        else:
-            f = SCALES[0]*rough*sample.calc_f4(h, k, x)
-        F.append(abs(f))
-        fom_scaler.append(1)
+    if FIT_RAXR:
+        i=0
+        for data_set in data:
+            if data_set.x[0]>15:
+                a=getattr(VARS['rgh_raxr'],'a'+str(i+1))
+                b=getattr(VARS['rgh_raxr'],'b'+str(i+1))
+                A_list,P_list=[],[]
+                for index_resonant_el in range(len(RESONANT_EL_LIST)):
+                    if RESONANT_EL_LIST[index_resonant_el]:
+                        A_list.append(getattr(VARS['rgh_raxr'],'A_D'+str(index_resonant_el+1)+'_'+str(i+1)))
+                        P_list.append(getattr(VARS['rgh_raxr'],'P_D'+str(index_resonant_el+1)+'_'+str(i+1)))
+                f=np.array([])   
+                h = data_set.extra_data['h']
+                k = data_set.extra_data['k']
+                x = data_set.x
+                y = data_set.extra_data['Y']
+                LB = data_set.extra_data['LB']
+                dL = data_set.extra_data['dL']
+                sample = model.Sample(inst, bulk, domain, unitcell,coherence=COHERENCE,surface_parms={'delta1':0.,'delta2':0.1391})
+                rough = (1-beta)/((1-beta)**2 + 4*beta*np.sin(np.pi*(y-LB)/dL)**2)**0.5#roughness model, double check LB and dL values are correctly set up in data file
+                if h[0]==0 and k[0]==0:#consider layered water only for specular rod if existent
+                    f = SCALES[0]*rough*sample.calc_f4_specular_RAXR(h, k, y, x, E0, F1F2, a, b, A_list, P_list, RESONANT_EL_LIST)
+                else:
+                    f = SCALES[0]*rough*sample.calc_f4_nonspecular_RAXR(h, k, y, x, E0, F1F2, a, b, A_list, P_list, RESONANT_EL_LIST)
+                F.append(abs(f))
+                fom_scaler.append(1)
+                i+=1
+    else:
+        for data_set in data:
+            f=np.array([])   
+            h = data_set.extra_data['h']
+            k = data_set.extra_data['k']
+            x = data_set.x
+            y = data_set.extra_data['Y']
+            LB = data_set.extra_data['LB']
+            dL = data_set.extra_data['dL']
+            sample = model.Sample(inst, bulk, domain, unitcell,coherence=COHERENCE,surface_parms={'delta1':0.,'delta2':0.1391})
+            rough = (1-beta)/((1-beta)**2 + 4*beta*np.sin(np.pi*(x-LB)/dL)**2)**0.5#roughness model, double check LB and dL values are correctly set up in data file
+            if h[0]==0 and k[0]==0:#consider layered water only for specular rod if existent
+                f = SCALES[0]*rough*sample.calc_f4_specular(h, k, x)
+            else:
+                f = SCALES[0]*rough*sample.calc_f4(h, k, x)
+            F.append(abs(f))
+            fom_scaler.append(1)
     
     #domain_class_1.find_neighbors2(domain_class_1.build_super_cell(domain2A,['Fe1_2_0_D2A','Fe1_3_0_D2A','Pb2_D2A','HO1_Pb2_D2A']),'HO1_Pb1_D2A',3)
     #print 'As1_D1A',domain_creator.extract_coor(domain1A,'As1_D1A')
