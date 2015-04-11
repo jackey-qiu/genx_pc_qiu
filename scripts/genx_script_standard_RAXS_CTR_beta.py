@@ -56,7 +56,7 @@ FIT_RAXR=False
 if FIT_RAXR:
     USE_BV=False
 NUMBER_SPECTRA=5
-RESONANT_EL_LIST=[True,False,True]
+RESONANT_EL_LIST=[1,0,1]
 E0=13000
 F1F2_FILE="Pb.f1f2"
 F1F2=None
@@ -145,8 +145,10 @@ FIT_RAXR(True or False, a switch for RAXR model fitting)
     If you switch to fit RAXR data, make sure delete the CTR data before launch the fitting process
 NUMBER_SPECTRA(number of RAXR spectras)
     Note each spectra, there will be a independent set of fitting parameters (a,b,A,P)
-RESONANT_EL_LIST(a list of True or False)
-    Used to specify the domain containing resonant element)
+RESONANT_EL_LIST(a list of integer number)
+    Used to specify the domain containing resonant element, and specify the number of species in each domain.
+    0 means no resonant element
+    1 means one resonant species and 2 means two resonant species, and so on
 E0=13000
     Center of Scan energy range for RAXR data
 F1F2_FILE="Pb.f1f2"
@@ -639,11 +641,12 @@ if FIT_RAXR:
         rgh_raxr.new_var('a'+str(i+1),0.0)
         rgh_raxr.new_var('b'+str(i+1),0.0)
         for j in range(len(RESONANT_EL_LIST)):
-            if RESONANT_EL_LIST[j]:
-                rgh_raxr.new_var('A_D'+str(j+1)+'_'+str(i+1),2.0)
-                rgh_raxr.new_var('P_D'+str(j+1)+'_'+str(i+1),0.0)
-            
-    
+            if RESONANT_EL_LIST[j]!=0:
+                for k in range(RESONANT_EL_LIST[j]):
+                    rgh_raxr.new_var('A'+str(k+1)+'_D'+str(j+1)+'_'+str(i+1),2.0)
+                    rgh_raxr.new_var('P'+str(k+1)+'_D'+str(j+1)+'_'+str(i+1),0.0)
+#Fourier component looks like An0_Dn1_n3, where n0, n1 and n3 used to specify the index for species(on the same domain), domain, and spectra, respectively
+
 ################################################build up ref domains############################################
 #add atoms for bulk and two ref domains (ref_domain1<half layer> and ref_domain2<full layer>)
 #In those two reference domains, the atoms are ordered according to first hight (z values), then y values
@@ -1665,35 +1668,38 @@ def Sim(data,VARS=VARS):
     if COUNT_TIME:t_2=datetime.now()
     
     #cal structure factor for each dataset in this for loop
-    if FIT_RAXR:
-        i=0
-        for data_set in data:
-            if data_set.x[0]>15:
-                a=getattr(VARS['rgh_raxr'],'a'+str(i+1))
-                b=getattr(VARS['rgh_raxr'],'b'+str(i+1))
-                A_list,P_list=[],[]
-                for index_resonant_el in range(len(RESONANT_EL_LIST)):
-                    if RESONANT_EL_LIST[index_resonant_el]:
-                        A_list.append(getattr(VARS['rgh_raxr'],'A_D'+str(index_resonant_el+1)+'_'+str(i+1)))
-                        P_list.append(getattr(VARS['rgh_raxr'],'P_D'+str(index_resonant_el+1)+'_'+str(i+1)))
-                f=np.array([])   
-                h = data_set.extra_data['h']
-                k = data_set.extra_data['k']
-                x = data_set.x
-                y = data_set.extra_data['Y']
-                LB = data_set.extra_data['LB']
-                dL = data_set.extra_data['dL']
-                sample = model.Sample(inst, bulk, domain, unitcell,coherence=COHERENCE,surface_parms={'delta1':0.,'delta2':0.1391})
-                rough = (1-beta)/((1-beta)**2 + 4*beta*np.sin(np.pi*(y-LB)/dL)**2)**0.5#roughness model, double check LB and dL values are correctly set up in data file
-                if h[0]==0 and k[0]==0:#consider layered water only for specular rod if existent
-                    f = SCALES[0]*rough*sample.calc_f4_specular_RAXR(h, k, y, x, E0, F1F2, a, b, A_list, P_list, RESONANT_EL_LIST)
-                else:
-                    f = SCALES[0]*rough*sample.calc_f4_nonspecular_RAXR(h, k, y, x, E0, F1F2, a, b, A_list, P_list, RESONANT_EL_LIST)
-                F.append(abs(f))
-                fom_scaler.append(1)
-                i+=1
-    else:
-        for data_set in data:
+    i=0
+    for data_set in data:
+        if data_set.x[0]>15:#doing RAXR calculation(x is energy column typically in magnitude of 10000 ev)
+            a=getattr(VARS['rgh_raxr'],'a'+str(i+1))
+            b=getattr(VARS['rgh_raxr'],'b'+str(i+1))
+            A_list,P_list=[],[]
+            for index_resonant_el in range(len(RESONANT_EL_LIST)):
+                A_list_domain=[]
+                P_list_domain=[]
+                if RESONANT_EL_LIST[index_resonant_el]!=0:
+                    for index_species in range(RESONANT_EL_LIST[index_resonant_el]):
+                        A_list_domain.append(getattr(VARS['rgh_raxr'],'A'+str(index_species+1)+'_D'+str(index_resonant_el+1)+'_'+str(i+1)))
+                        P_list_domain.append(getattr(VARS['rgh_raxr'],'P'+str(index_species+1)+'_D'+str(index_resonant_el+1)+'_'+str(i+1)))
+                A_list.append(A_list_domain)
+                P_list.append(P_list_domain)
+            f=np.array([])   
+            h = data_set.extra_data['h']
+            k = data_set.extra_data['k']
+            x = data_set.x
+            y = data_set.extra_data['Y']
+            LB = data_set.extra_data['LB']
+            dL = data_set.extra_data['dL']
+            sample = model.Sample(inst, bulk, domain, unitcell,coherence=COHERENCE,surface_parms={'delta1':0.,'delta2':0.1391})
+            rough = (1-beta)/((1-beta)**2 + 4*beta*np.sin(np.pi*(y-LB)/dL)**2)**0.5#roughness model, double check LB and dL values are correctly set up in data file
+            if h[0]==0 and k[0]==0:#consider layered water only for specular rod if existent
+                f = SCALES[0]*rough*sample.calc_f4_specular_RAXR(h, k, y, x, E0, F1F2, a, b, A_list, P_list, RESONANT_EL_LIST)
+            else:
+                f = SCALES[0]*rough*sample.calc_f4_nonspecular_RAXR(h, k, y, x, E0, F1F2, a, b, A_list, P_list, RESONANT_EL_LIST)
+            F.append(abs(f))
+            fom_scaler.append(1)
+            i+=1
+        else:#doing CTR calculation (x is perpendicular momentum transfer L typically smaller than 15)
             f=np.array([])   
             h = data_set.extra_data['h']
             k = data_set.extra_data['k']
@@ -1739,44 +1745,47 @@ def Sim(data,VARS=VARS):
         plot_data_container_experiment={}
         plot_data_container_model={}
         for data_set in data:
-            f=np.array([])   
-            h = data_set.extra_data['h']
-            k = data_set.extra_data['k']
-            l = data_set.x
-            LB = data_set.extra_data['LB']
-            dL = data_set.extra_data['dL']
-            I=data_set.y
-            eI=data_set.error
-            #make dumy hkl and f to make the plot look smoother
-            l_dumy=np.arange(l[0],l[-1]+0.1,0.1)
-            N=len(l_dumy)
-            h_dumy=np.array([h[0]]*N)
-            k_dumy=np.array([k[0]]*N)
-            LB_dumy=[]
-            dL_dumy=[]
-            f_dumy=[]
-            
-            for i in range(N):
-                key=None
-                if l_dumy[i]>=0:
-                    key=str(int(h[0]))+'_'+str(int(k[0]))
-                else:key=str(int(-h[0]))+'_'+str(int(-k[0]))
-                for ii in bl_dl[key]['segment']:
-                    if abs(l_dumy[i])>=ii[0] and abs(l_dumy[i])<ii[1]:
-                        n=bl_dl[key]['segment'].index(ii)
-                        LB_dumy.append(bl_dl[key]['info'][n][1])
-                        dL_dumy.append(bl_dl[key]['info'][n][0])
-            LB_dumy=np.array(LB_dumy)
-            dL_dumy=np.array(dL_dumy)
-            rough_dumy = (1-beta)/((1-beta)**2 + 4*beta*np.sin(np.pi*(l_dumy-LB_dumy)/dL_dumy)**2)**0.5
-            if h_dumy[0]==0 and k_dumy[0]==0:
-                f_dumy = SCALES[0]*rough_dumy*sample.calc_f4_specular(h_dumy, k_dumy, l_dumy)
-            else:
-                f_dumy = SCALES[0]*rough_dumy*sample.calc_f4(h_dumy, k_dumy, l_dumy)
-            
-            label=str(int(h[0]))+str(int(k[0]))+'L'
-            plot_data_container_experiment[label]=np.concatenate((l[:,np.newaxis],I[:,np.newaxis],eI[:,np.newaxis]),axis=1)
-            plot_data_container_model[label]=np.concatenate((l_dumy[:,np.newaxis],f_dumy[:,np.newaxis]),axis=1)
+            if data_set.x[0]<15:
+                f=np.array([])   
+                h = data_set.extra_data['h']
+                k = data_set.extra_data['k']
+                l = data_set.x
+                LB = data_set.extra_data['LB']
+                dL = data_set.extra_data['dL']
+                I=data_set.y
+                eI=data_set.error
+                #make dumy hkl and f to make the plot look smoother
+                l_dumy=np.arange(l[0],l[-1]+0.1,0.1)
+                N=len(l_dumy)
+                h_dumy=np.array([h[0]]*N)
+                k_dumy=np.array([k[0]]*N)
+                LB_dumy=[]
+                dL_dumy=[]
+                f_dumy=[]
+                
+                for i in range(N):
+                    key=None
+                    if l_dumy[i]>=0:
+                        key=str(int(h[0]))+'_'+str(int(k[0]))
+                    else:key=str(int(-h[0]))+'_'+str(int(-k[0]))
+                    for ii in bl_dl[key]['segment']:
+                        if abs(l_dumy[i])>=ii[0] and abs(l_dumy[i])<ii[1]:
+                            n=bl_dl[key]['segment'].index(ii)
+                            LB_dumy.append(bl_dl[key]['info'][n][1])
+                            dL_dumy.append(bl_dl[key]['info'][n][0])
+                LB_dumy=np.array(LB_dumy)
+                dL_dumy=np.array(dL_dumy)
+                rough_dumy = (1-beta)/((1-beta)**2 + 4*beta*np.sin(np.pi*(l_dumy-LB_dumy)/dL_dumy)**2)**0.5
+                if h_dumy[0]==0 and k_dumy[0]==0:
+                    f_dumy = SCALES[0]*rough_dumy*sample.calc_f4_specular(h_dumy, k_dumy, l_dumy)
+                else:
+                    f_dumy = SCALES[0]*rough_dumy*sample.calc_f4(h_dumy, k_dumy, l_dumy)
+                
+                label=str(int(h[0]))+str(int(k[0]))+'L'
+                plot_data_container_experiment[label]=np.concatenate((l[:,np.newaxis],I[:,np.newaxis],eI[:,np.newaxis]),axis=1)
+                plot_data_container_model[label]=np.concatenate((l_dumy[:,np.newaxis],f_dumy[:,np.newaxis]),axis=1)
+            else:#to be finished for plotting RAXR models here
+                pass
         hkls=['00L','02L','10L','11L','20L','22L','30L','2-1L','21L']
         plot_data_list=[]
         for hkl in hkls:

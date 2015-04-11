@@ -381,7 +381,7 @@ class Sample:
             #ftot=ftot+ftot_A_C+ftot_A_IC+ftot_B_IC+ftot_B_C
         return abs(ftot)*self.inst.inten
         
-    def calc_f4_specular_RAXR(self, h, k, l,E,E0,f1f2,a,b,A_list=[],P_list=[],resonant_els=[False,False,False]):
+    def calc_f4_specular_RAXR(self, h, k, l,E,E0,f1f2,a,b,A_list=[],P_list=[],resonant_els=[1,0,0]):
         #now the coherence looks like [{True:[0,1]},{False:[2,3]}] which means adding up first two domains coherently
         #and last two domains in-coherently. After calculation of structure factor for each item of the list, absolute 
         #value of SF will be calculated followed by being summed up
@@ -400,18 +400,7 @@ class Sample:
         coherence=self.coherence
         fb = self.calc_fb(h, k, l)
         f_surface=self.calc_fs
-        A_list_formated=[]
-        P_list_formated=[]
-        i=0
-        #formating the A and P list considering some domain does not have the resonent element
-        for each in resonant_els:
-            if each:
-                A_list_formated.append(A_list[i])
-                P_list_formated.append(P_list[i])
-                i+=1
-            else:
-                A_list_formated.append(None)
-                P_list_formated.append(None)
+
         
         for n in range(len(coherence)):
             ftot_A_C, ftot_A_IC=0,0
@@ -429,12 +418,12 @@ class Sample:
                     f_layered_water=self.calc_f_layered_water(h,k,l,*self.domain[i]['layered_water'])
                 if coherence[n].keys()[0]:
                     if resonant_els[ii]:
-                        ftot_A_C=ftot_A_C+(fb+f_surface(h, k, l,[self.domain[i]['slab']])+f_layered_water+(f1f2[:,0]+1.0J*f1f2[0:,1])*A_list_formated[ii]*np.exp(1.0J*np.pi*2*P_list_formated[ii]))*self.domain[i]['wt']
+                        ftot_A_C=ftot_A_C+(fb+f_surface(h, k, l,[self.domain[i]['slab']])+f_layered_water+(f1f2[:,0]+1.0J*f1f2[0:,1])*np.sum(np.array(A_list[ii])*np.exp(1.0J*np.pi*2*np.array(P_list[ii]))))*self.domain[i]['wt']
                     else:
                         ftot_A_C=ftot_A_C+(fb+f_surface(h, k, l,[self.domain[i]['slab']])+f_layered_water)*self.domain[i]['wt']
                 else:
                     if resonant_els[ii]:
-                        ftot_A_IC=ftot_A_IC+abs(fb+f_surface(h, k, l,[self.domain[i]['slab']])+f_layered_water+(f1f2[:,0]+1.0J*f1f2[0:,1])*A_list_formated[ii]*np.exp(1.0J*np.pi*2*P_list_formated[ii]))*self.domain[i]['wt']
+                        ftot_A_IC=ftot_A_IC+abs(fb+f_surface(h, k, l,[self.domain[i]['slab']])+f_layered_water+(f1f2[:,0]+1.0J*f1f2[0:,1])*np.sum(np.array(A_list[ii])*np.exp(1.0J*np.pi*2*np.array(P_list[ii]))))*self.domain[i]['wt']
                     else:
                         ftot_A_IC=ftot_A_IC+abs(fb+f_surface(h, k, l,[self.domain[i]['slab']])+f_layered_water)*self.domain[i]['wt']
             for i in keys_domainB:
@@ -446,12 +435,12 @@ class Sample:
                     f_layered_water=self.calc_f_layered_water(h,k,l,*self.domain[i]['layered_water'])
                 if coherence[n].keys()[0]:
                     if resonant_els[ii]:
-                        ftot_B_C=ftot_B_C+(fb+f_surface(h, k, l,[self.domain[i]['slab']])+f_layered_water+(f1f2[:,0]+1.0J*f1f2[0:,1])*A_list_formated[ii]*np.exp(1.0J*np.pi*2*(P_list_formated[ii]-0.5)))*self.domain[i]['wt']
+                        ftot_B_C=ftot_B_C+(fb+f_surface(h, k, l,[self.domain[i]['slab']])+f_layered_water+(f1f2[:,0]+1.0J*f1f2[0:,1])*np.sum(np.array(A_list[ii])*np.exp(1.0J*np.pi*2*(np.array(P_list[ii])-0.5))))*self.domain[i]['wt']
                     else:
                         ftot_B_C=ftot_B_C+(fb+f_surface(h, k, l,[self.domain[i]['slab']])+f_layered_water)*self.domain[i]['wt']
                 else:
                     if resonant_els[ii]:
-                        ftot_B_IC=ftot_B_IC+abs(fb+f_surface(h, k, l,[self.domain[i]['slab']])+f_layered_water+(f1f2[:,0]+1.0J*f1f2[0:,1])*A_list_formated[ii]*np.exp(1.0J*np.pi*2*(P_list_formated[ii]-0.5)))*self.domain[i]['wt']
+                        ftot_B_IC=ftot_B_IC+abs(fb+f_surface(h, k, l,[self.domain[i]['slab']])+f_layered_water+(f1f2[:,0]+1.0J*f1f2[0:,1])*np.sum(np.array(A_list[ii])*np.exp(1.0J*np.pi*2*(np.array(P_list[ii]-0.5)))))*self.domain[i]['wt']
                     else:
                         ftot_B_IC=ftot_B_IC+abs(fb+f_surface(h, k, l,[self.domain[i]['slab']])+f_layered_water)*self.domain[i]['wt']
 
@@ -459,12 +448,12 @@ class Sample:
             #ftot=ftot+ftot_A_C+ftot_A_IC+ftot_B_IC+ftot_B_C
         return abs(ftot)*self.inst.inten
         
-    def calc_f4_nonspecular_RAXR(self, h, k, l,E,E0,f1f2,a,b,A_list=[],P_list=[],resonant_els=[False,False,False]):
+    def calc_f4_nonspecular_RAXR(self, h, k, l,E,E0,f1f2,a,b,A_list=[],P_list=[],resonant_els=[1,1,0]):
         #now the coherence looks like [{True:[0,1]},{False:[2,3]}] which means adding up first two domains coherently
         #and last two domains in-coherently. After calculation of structure factor for each item of the list, absolute 
         #value of SF will be calculated followed by being summed up
         #so [{True:[0,1]},{True:[2,3]}] is different from [{True:[0,1,2,3]}]
-        #resonant_els:a list of True or False specifying whether or not considering the resonant scattering in each domain
+        #resonant_els:a list of integer numbers (>=0) specifying whether or not considering the resonant scattering in each domain, and how many species on each domain
         #             so the len(resonant_els) is equal to the total domain numbers
         #E is the energy scan list, and make sure items in E is one-to-one corresponding to those in f1f2
         #E0 is the center of the range of energy scan
@@ -477,18 +466,6 @@ class Sample:
         coherence=self.coherence
         fb = self.calc_fb(h, k, l)
         f_surface=self.calc_fs
-        A_list_formated=[]
-        P_list_formated=[]
-        i=0
-        #formating the A and P list considering some domain does not have the resonent element
-        for each in resonant_els:
-            if each:
-                A_list_formated.append(A_list[i])
-                P_list_formated.append(P_list[i])
-                i+=1
-            else:
-                A_list_formated.append(None)
-                P_list_formated.append(None)
         
         for n in range(len(coherence)):
             ftot_A_C, ftot_A_IC=0,0
@@ -504,12 +481,12 @@ class Sample:
 
                 if coherence[n].keys()[0]:
                     if resonant_els[ii]:
-                        ftot_A_C=ftot_A_C+(fb+f_surface(h, k, l,[self.domain[i]['slab']])+(f1f2[:,0]+1.0J*f1f2[0:,1])*A_list_formated[ii]*np.exp(1.0J*np.pi*2*P_list_formated[ii]))*self.domain[i]['wt']
+                        ftot_A_C=ftot_A_C+(fb+f_surface(h, k, l,[self.domain[i]['slab']])+(f1f2[:,0]+1.0J*f1f2[0:,1])*np.sum(np.array(A_list[ii])*np.exp(1.0J*np.pi*2*np.array(P_list[ii]))))*self.domain[i]['wt']
                     else:
                         ftot_A_C=ftot_A_C+(fb+f_surface(h, k, l,[self.domain[i]['slab']]))*self.domain[i]['wt']
                 else:
                     if resonant_els[ii]:
-                        ftot_A_IC=ftot_A_IC+abs(fb+f_surface(h, k, l,[self.domain[i]['slab']])+(f1f2[:,0]+1.0J*f1f2[0:,1])*A_list_formated[ii]*np.exp(1.0J*np.pi*2*P_list_formated[ii]))*self.domain[i]['wt']
+                        ftot_A_C=ftot_A_C+abs(fb+f_surface(h, k, l,[self.domain[i]['slab']])+(f1f2[:,0]+1.0J*f1f2[0:,1])*np.sum(np.array(A_list[ii])*np.exp(1.0J*np.pi*2*np.array(P_list[ii]))))*self.domain[i]['wt']
                     else:
                         ftot_A_IC=ftot_A_IC+abs(fb+f_surface(h, k, l,[self.domain[i]['slab']]))*self.domain[i]['wt']
             for i in keys_domainB:
@@ -518,12 +495,12 @@ class Sample:
                 ii=keys_domainB.index(i)
                 if coherence[n].keys()[0]:
                     if resonant_els[ii]:
-                        ftot_B_C=ftot_B_C+(fb+f_surface(h, k, l,[self.domain[i]['slab']])+(f1f2[:,0]+1.0J*f1f2[0:,1])*A_list_formated[ii]*np.exp(1.0J*np.pi*2*(P_list_formated[ii]-0.5)))*self.domain[i]['wt']
+                        ftot_B_C=ftot_B_C+(fb+f_surface(h, k, l,[self.domain[i]['slab']])+(f1f2[:,0]+1.0J*f1f2[0:,1])*np.sum(np.array(A_list[ii])*np.exp(1.0J*np.pi*2*(np.array(P_list[ii])-0.5))))*self.domain[i]['wt']
                     else:
                         ftot_B_C=ftot_B_C+(fb+f_surface(h, k, l,[self.domain[i]['slab']]))*self.domain[i]['wt']
                 else:
                     if resonant_els[ii]:
-                        ftot_B_IC=ftot_B_IC+abs(fb+f_surface(h, k, l,[self.domain[i]['slab']])+(f1f2[:,0]+1.0J*f1f2[0:,1])*A_list_formated[ii]*np.exp(1.0J*np.pi*2*(P_list_formated[ii]-0.5)))*self.domain[i]['wt']
+                        ftot_B_C=ftot_B_C+abs(fb+f_surface(h, k, l,[self.domain[i]['slab']])+(f1f2[:,0]+1.0J*f1f2[0:,1])*np.sum(np.array(A_list[ii])*np.exp(1.0J*np.pi*2*(np.array(P_list[ii])-0.5))))*self.domain[i]['wt']
                     else:
                         ftot_B_IC=ftot_B_IC+abs(fb+f_surface(h, k, l,[self.domain[i]['slab']]))*self.domain[i]['wt']
 
