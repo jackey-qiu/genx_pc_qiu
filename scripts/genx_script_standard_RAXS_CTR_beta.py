@@ -144,7 +144,7 @@ TABLE_DOMAINS(list of 0 or 1, the length should be higher than the total domain 
 FIT_RAXR(True or False, a switch for RAXR model fitting)
     If you switch to fit RAXR data, make sure delete the CTR data before launch the fitting process
 NUMBER_SPECTRA(number of RAXR spectras)
-    Note each spectra, there will be a independent set of fitting parameters (a,b,A,P)
+    Note each spectra, there will be an independent set of fitting parameters (a,b,A,P)
 RESONANT_EL_LIST(a list of integer number)
     Used to specify the domain containing resonant element, and specify the number of species in each domain.
     0 means no resonant element
