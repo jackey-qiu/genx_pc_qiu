@@ -144,6 +144,7 @@ AtomGroup was changed to consider moving atoms on symmetrical basis
 import numpy as np
 from utils import f, rho
 import time
+import pickle
 
 try:
     from scipy import weave
@@ -530,6 +531,49 @@ class Sample:
         ftot = fs + fb
         return ftot*self.inst.inten
     
+    
+    def plot_electron_density(self,slabs,el_lib={'O':8,'Fe':26,'As':33},z_min=0.,z_max=20.,N_layered_water=10,resolution=1000):
+        #print dinv
+        e_data=[]
+        labels=[]
+        e_total=np.zeros(resolution)
+        for key in slabs.keys():
+            if "A" in key:
+                slab=[slabs[key]['slab']]
+                x, y, z, u, oc, el = self._surf_pars(slab)
+                z=z*self.unit_cell.c
+                f=np.array([el_lib[each] for each in el])
+                Auc=self.unit_cell.a*self.unit_cell.b*np.sin(self.unit_cell.gamma)
+                z_min,z_max=z_min,z_max
+                eden=[]
+                z_plot=[]
+                layered_water,z_layered_water,sigma_layered_water,d_w,water_density=None,[],[],None,None
+                if slabs[key]['layered_water']!=[]:
+                    #the items for the layered water is [u0,ubar,d_w(in A),first_layer_height(in fractional),density_w (in # of waters/A^3)]
+                    layered_water=slabs[key]['layered_water']
+                    d_w=layered_water[2]
+                    water_density=layered_water[-1]
+                    for i in range(N_layered_water):
+                        z_layered_water.append(layered_water[3]*self.unit_cell.c+i*layered_water[2])
+                        sigma_layered_water.append((layered_water[0]**2+i*layered_water[1]**2)**0.5)
+                #print u,f,z
+                for i in range(resolution):
+                    z_each=(z_max-z_min)/resolution*i+z_min
+                    z_plot.append(z_each)
+                    #normalized with occupancy and weight factor (manually scaled by a factor 2 to consider the half half of domainA and domainB)
+                    eden.append(np.sum(slabs[key]['wt']*2*oc*f/Auc*(2*np.pi*u**2)**-0.5*np.exp(-0.5/u**2*(z_each-z)**2)))
+                    if slabs[key]['layered_water']!=[]:
+                        eden[-1]=eden[-1]+np.sum(8*slabs[key]['wt']*2*Auc*d_w*water_density*(2*np.pi*np.array(sigma_layered_water)**2)**-0.5*np.exp(-0.5/np.array(sigma_layered_water)**2*(z_each-np.array(z_layered_water))**2))
+                labels.append(key)
+                e_data.append(np.array([z_plot,eden]))
+                e_total=e_total+np.array(eden)
+        labels.append('Total electron density')
+        e_data.append(np.array([list(e_data[0])[0],e_total]))
+        try:
+            pickle.dump([e_data,labels],open("D:\\Google Drive\\useful codes\\plotting\\temp_plot_eden","wb"))
+        except:
+            pickle.dump([e_data,labels],open("C:\\Users\\jackey\\Google Drive\\useful codes\\plotting\\temp_plot_eden","wb"))
+
     def calc_fs(self, h, k, l,slabs):
         '''Calculate the structure factors from the surface
         '''
@@ -655,8 +699,6 @@ class Sample:
         #print t2-t1
         return fs
 
-        
-
     def calc_fb(self, h, k, l):
         '''Calculate the structure factors from the bulk
         '''
@@ -685,10 +727,12 @@ class Sample:
         fb = f_u/denom*delta_funcs
                        
         return fb
+        
     def calc_rhos(self, x, y, z, sb = 0.8):
         '''Calcualte the electron density of the unitcell
+           Not working yet
         '''
-        px, py, pz, u, oc, el = self._surf_pars()
+        px, py, pz, u, oc, el = self._surf_pars([self.domain['domain1A']['slab']])
         rhos = self._get_rho(el)
 
 

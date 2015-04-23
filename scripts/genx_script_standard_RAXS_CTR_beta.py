@@ -1005,9 +1005,9 @@ for i in range(DOMAIN_NUMBER):
     if layered_water_pars['yes_OR_no'][i]:
         vars()['rgh_domain'+str(int(i+1))].new_var('u0',0.4)
         vars()['rgh_domain'+str(int(i+1))].new_var('ubar',0.4)
-        vars()['rgh_domain'+str(int(i+1))].new_var('first_layer_height',4.0)
-        vars()['rgh_domain'+str(int(i+1))].new_var('d_w',1.9)
-        vars()['rgh_domain'+str(int(i+1))].new_var('density_w',0.033)
+        vars()['rgh_domain'+str(int(i+1))].new_var('first_layer_height',4.0)#relative height in A
+        vars()['rgh_domain'+str(int(i+1))].new_var('d_w',1.9)#inter-layer water seperation in A
+        vars()['rgh_domain'+str(int(i+1))].new_var('density_w',0.033)#number density in unit of # of waters per cubic A
     if WATER_NUMBER[i]!=0:#add water molecules if any
         if WATER_PAIR:
             for jj in range(WATER_NUMBER[i]/2):#note will add water pair (two oxygens) each time, and you can't add single water 
@@ -1736,6 +1736,8 @@ def Sim(data,VARS=VARS):
     
     #export the model results for plotting if PLOT set to true
     if PLOT:
+        sample = model.Sample(inst, bulk, domain, unitcell,coherence=COHERENCE,surface_parms={'delta1':0.,'delta2':0.1391})
+        sample.plot_electron_density(sample.domain)
         bl_dl={'3_0':{'segment':[[0,1],[1,9]],'info':[[2,1],[6,1]]},'2_0':{'segment':[[0,9]],'info':[[2,2.0]]},'2_1':{'segment':[[0,9]],'info':[[4,0.8609]]},'2_2':{'segment':[[0,9]],'info':[[2,1.7218]]},\
             '2_-1':{'segment':[[0,3.1391],[3.1391,9]],'info':[[4,3.1391],[2,3.1391]]},'1_1':{'segment':[[0,9]],'info':[[2,1.8609]]},'1_0':{'segment':[[0,3],[3,9]],'info':[[6,3],[2,3]]},'0_2':{'segment':[[0,9]],'info':[[2,1.7218]]},\
             '0_0':{'segment':[[0,13]],'info':[[2,2]]},'-1_0':{'segment':[[0,3],[3,9]],'info':[[6,-3],[2,-3]]},'0_-2':{'segment':[[0,9]],'info':[[2,-6.2782]]},\
