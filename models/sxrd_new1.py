@@ -144,7 +144,7 @@ AtomGroup was changed to consider moving atoms on symmetrical basis
 import numpy as np
 from utils import f, rho
 import time
-import pickle
+import pickle,copy
 
 try:
     from scipy import weave
@@ -394,7 +394,8 @@ class Sample:
         #f1f2 numpy array of anomalous correction items (n*2 shape) with the first column as f' and the second as f''
         #a,b are fitting parameters for extrinsic factors
         #P_list and A_list are two lists of Fourier components. Depending on the total domains, you can consider different Fourier
-        #                  components for chemically different domains.
+        #                  components for chemically different domains.Note in P or A_list, the 0 item means no resonant element
+        #                  so len(P_list)==len(resonant_els)
         #Resonant structure factor is calculated using equation (9) presented in paper of "Park, Changyong and Fenter, Paul A.(2007) J. Appl. Cryst.40, 290-301"
 
         ftot=0
@@ -413,35 +414,35 @@ class Sample:
                 keys_domainA.append('domain'+str(i+1)+'A')
                 keys_domainB.append('domain'+str(i+1)+'B')
             for i in keys_domainA:
-                ii=keys_domainA.index(i)
+                ii=int(i[6:-1])-1#extract the domain index from the domain key, eg for "domain10A" will have a 9 as the domain index
                 f_layered_water=0
                 if self.domain[i]['layered_water']!=[]:
                     f_layered_water=self.calc_f_layered_water(h,k,l,*self.domain[i]['layered_water'])
                 if coherence[n].keys()[0]:
                     if resonant_els[ii]:
-                        ftot_A_C=ftot_A_C+(fb+f_surface(h, k, l,[self.domain[i]['slab']])+f_layered_water+(f1f2[:,0]+1.0J*f1f2[0:,1])*np.sum(np.array(A_list[ii])*np.exp(1.0J*np.pi*2*np.array(P_list[ii]))))*self.domain[i]['wt']
+                        ftot_A_C=ftot_A_C+(fb+f_surface(h, k, l,[self.domain[i]['slab']])+f_layered_water+(f1f2[:,0]+1.0J*f1f2[0:,1])*A_list[ii]*np.exp(1.0J*np.pi*2*P_list[ii]))*self.domain[i]['wt']
                     else:
                         ftot_A_C=ftot_A_C+(fb+f_surface(h, k, l,[self.domain[i]['slab']])+f_layered_water)*self.domain[i]['wt']
                 else:
                     if resonant_els[ii]:
-                        ftot_A_IC=ftot_A_IC+abs(fb+f_surface(h, k, l,[self.domain[i]['slab']])+f_layered_water+(f1f2[:,0]+1.0J*f1f2[0:,1])*np.sum(np.array(A_list[ii])*np.exp(1.0J*np.pi*2*np.array(P_list[ii]))))*self.domain[i]['wt']
+                        ftot_A_IC=ftot_A_IC+abs(fb+f_surface(h, k, l,[self.domain[i]['slab']])+f_layered_water+(f1f2[:,0]+1.0J*f1f2[0:,1])*A_list[ii]*np.exp(1.0J*np.pi*2*P_list[ii]))*self.domain[i]['wt']
                     else:
                         ftot_A_IC=ftot_A_IC+abs(fb+f_surface(h, k, l,[self.domain[i]['slab']])+f_layered_water)*self.domain[i]['wt']
             for i in keys_domainB:
                 #in this specific case (rcut hematite, domainB is symmetricaly related to domainA with half unit cell step lower)
                 #in light of that, the Fourier component A(amplitude) is same as that for the associated domainA, but the other one (phase) should be 0.5 off
-                ii=keys_domainB.index(i)
+                ii=int(i[6:-1])-1#extract the domain index from the domain key, eg for "domain10A" will have a 9 as the domain index
                 f_layered_water=0
                 if self.domain[i]['layered_water']!=[]:
                     f_layered_water=self.calc_f_layered_water(h,k,l,*self.domain[i]['layered_water'])
                 if coherence[n].keys()[0]:
                     if resonant_els[ii]:
-                        ftot_B_C=ftot_B_C+(fb+f_surface(h, k, l,[self.domain[i]['slab']])+f_layered_water+(f1f2[:,0]+1.0J*f1f2[0:,1])*np.sum(np.array(A_list[ii])*np.exp(1.0J*np.pi*2*(np.array(P_list[ii])-0.5))))*self.domain[i]['wt']
+                        ftot_B_C=ftot_B_C+(fb+f_surface(h, k, l,[self.domain[i]['slab']])+f_layered_water+(f1f2[:,0]+1.0J*f1f2[0:,1])*A_list[ii]*np.exp(1.0J*np.pi*2*(P_list[ii]-0.5)))*self.domain[i]['wt']
                     else:
                         ftot_B_C=ftot_B_C+(fb+f_surface(h, k, l,[self.domain[i]['slab']])+f_layered_water)*self.domain[i]['wt']
                 else:
                     if resonant_els[ii]:
-                        ftot_B_IC=ftot_B_IC+abs(fb+f_surface(h, k, l,[self.domain[i]['slab']])+f_layered_water+(f1f2[:,0]+1.0J*f1f2[0:,1])*np.sum(np.array(A_list[ii])*np.exp(1.0J*np.pi*2*(np.array(P_list[ii]-0.5)))))*self.domain[i]['wt']
+                        ftot_B_IC=ftot_B_IC+abs(fb+f_surface(h, k, l,[self.domain[i]['slab']])+f_layered_water+(f1f2[:,0]+1.0J*f1f2[0:,1])*A_list[ii]*np.exp(1.0J*np.pi*2*(P_list[ii]-0.5)))*self.domain[i]['wt']
                     else:
                         ftot_B_IC=ftot_B_IC+abs(fb+f_surface(h, k, l,[self.domain[i]['slab']])+f_layered_water)*self.domain[i]['wt']
 
@@ -478,8 +479,7 @@ class Sample:
                 keys_domainA.append('domain'+str(i+1)+'A')
                 keys_domainB.append('domain'+str(i+1)+'B')
             for i in keys_domainA:
-                ii=keys_domainA.index(i)
-
+                ii=int(i[6:-1])-1#extract the domain index from the domain key, eg for "domain10A" will have a 9 as the domain index
                 if coherence[n].keys()[0]:
                     if resonant_els[ii]:
                         ftot_A_C=ftot_A_C+(fb+f_surface(h, k, l,[self.domain[i]['slab']])+(f1f2[:,0]+1.0J*f1f2[0:,1])*np.sum(np.array(A_list[ii])*np.exp(1.0J*np.pi*2*np.array(P_list[ii]))))*self.domain[i]['wt']
@@ -493,7 +493,7 @@ class Sample:
             for i in keys_domainB:
                 #in this specific case (rcut hematite, domainB is symmetricaly related to domainA with half unit cell step lower)
                 #in light of that, the Fourier component A(amplitude) is same as that for the associated domainA, but the other one (phase) should be 0.5 off
-                ii=keys_domainB.index(i)
+                ii=int(i[6:-1])-1#extract the domain index from the domain key, eg for "domain10A" will have a 9 as the domain index
                 if coherence[n].keys()[0]:
                     if resonant_els[ii]:
                         ftot_B_C=ftot_B_C+(fb+f_surface(h, k, l,[self.domain[i]['slab']])+(f1f2[:,0]+1.0J*f1f2[0:,1])*np.sum(np.array(A_list[ii])*np.exp(1.0J*np.pi*2*(np.array(P_list[ii])-0.5))))*self.domain[i]['wt']
@@ -530,7 +530,23 @@ class Sample:
         fb = self.calc_fb(h, k, l)
         ftot = fs + fb
         return ftot*self.inst.inten
-    
+        
+    def fourier_synthesis(self,HKL_list,P_list,A_list,z_min=0.,z_max=20.,ZR=82,resolution=1000):
+        q_list = self.unit_cell.abs_hkl(HKL_list[0], HKL_list[1], HKL_list[2])
+        q_list_sorted=copy.copy(q_list)
+        q_list_sorted=q_list_sorted.sort()
+        delta_q=np.average([dinv[i+1]-dinv[i] for i in range(len(dinv)-1)])
+        Auc=self.unit_cell.a*self.unit_cell.b*np.sin(self.unit_cell.gamma)
+        z_plot=[]
+        eden_plot=[]
+        for i in range(resolution):
+            z_each=float(z_max-z_min)/resolution*i+z_min
+            z_plot.append(z_each)
+            eden=None
+            for j in range(len(P_list)):
+                eden+=ZR/Auc/(np.pi*2)*np.sum(A_list[j]*np.cos(2*np.pi*P_list[j]-np.array(q_list)*z_each)*delta_q)
+            eden_plot.append(eden)
+        return z_plot,eden_plot
     
     def plot_electron_density(self,slabs,el_lib={'O':8,'Fe':26,'As':33},z_min=0.,z_max=20.,N_layered_water=10,resolution=1000):
         #print dinv
@@ -558,7 +574,7 @@ class Sample:
                         sigma_layered_water.append((layered_water[0]**2+i*layered_water[1]**2)**0.5)
                 #print u,f,z
                 for i in range(resolution):
-                    z_each=(z_max-z_min)/resolution*i+z_min
+                    z_each=float(z_max-z_min)/resolution*i+z_min
                     z_plot.append(z_each)
                     #normalized with occupancy and weight factor (manually scaled by a factor 2 to consider the half half of domainA and domainB)
                     eden.append(np.sum(slabs[key]['wt']*2*oc*f/Auc*(2*np.pi*u**2)**-0.5*np.exp(-0.5/u**2*(z_each-z)**2)))
