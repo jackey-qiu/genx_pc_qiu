@@ -534,55 +534,61 @@ class Sample:
     def fourier_synthesis(self,HKL_list,P_list,A_list,z_min=0.,z_max=20.,ZR=82,resolution=1000):
         q_list = self.unit_cell.abs_hkl(HKL_list[0], HKL_list[1], HKL_list[2])
         q_list_sorted=copy.copy(q_list)
-        q_list_sorted=q_list_sorted.sort()
-        delta_q=np.average([dinv[i+1]-dinv[i] for i in range(len(dinv)-1)])
+        q_list_sorted.sort()
+        delta_q=np.average([q_list_sorted[i+1]-q_list_sorted[i] for i in range(len(q_list_sorted)-1)])
         Auc=self.unit_cell.a*self.unit_cell.b*np.sin(self.unit_cell.gamma)
         z_plot=[]
         eden_plot=[]
+        eden_domain_plot=[]
         for i in range(resolution):
             z_each=float(z_max-z_min)/resolution*i+z_min
             z_plot.append(z_each)
-            eden=None
+            eden=0
+            eden_domains=[]
             for j in range(len(P_list)):
-                eden+=ZR/Auc/(np.pi*2)*np.sum(A_list[j]*np.cos(2*np.pi*P_list[j]-np.array(q_list)*z_each)*delta_q)
+                eden_each_domain=ZR/Auc/(np.pi*2)*np.sum(A_list[j]*np.cos(2*np.pi*P_list[j]-np.array(q_list)*z_each)*delta_q)
+                eden_domains.append(eden_each_domain)
+                eden+=eden_each_domain
             eden_plot.append(eden)
-        return z_plot,eden_plot
+            eden_domain_plot.append(eden_domains)
+        return z_plot,eden_plot,eden_domain_plot
     
-    def plot_electron_density(self,slabs,el_lib={'O':8,'Fe':26,'As':33},z_min=0.,z_max=20.,N_layered_water=10,resolution=1000):
+    def plot_electron_density(self,slabs,el_lib={'O':8,'Fe':26,'As':33,'Pb':82,'Sb':51},z_min=0.,z_max=20.,N_layered_water=10,resolution=1000):
         #print dinv
         e_data=[]
         labels=[]
         e_total=np.zeros(resolution)
-        for key in slabs.keys():
-            if "A" in key:
-                slab=[slabs[key]['slab']]
-                x, y, z, u, oc, el = self._surf_pars(slab)
-                z=z*self.unit_cell.c
-                f=np.array([el_lib[each] for each in el])
-                Auc=self.unit_cell.a*self.unit_cell.b*np.sin(self.unit_cell.gamma)
-                z_min,z_max=z_min,z_max
-                eden=[]
-                z_plot=[]
-                layered_water,z_layered_water,sigma_layered_water,d_w,water_density=None,[],[],None,None
+        keys_sorted=[each for each in slabs.keys() if "A" in each]
+        keys_sorted.sort()
+        for key in keys_sorted:
+            slab=[slabs[key]['slab']]
+            x, y, z, u, oc, el = self._surf_pars(slab)
+            z=z*self.unit_cell.c
+            f=np.array([el_lib[each] for each in el])
+            Auc=self.unit_cell.a*self.unit_cell.b*np.sin(self.unit_cell.gamma)
+            z_min,z_max=z_min,z_max
+            eden=[]
+            z_plot=[]
+            layered_water,z_layered_water,sigma_layered_water,d_w,water_density=None,[],[],None,None
+            if slabs[key]['layered_water']!=[]:
+                #the items for the layered water is [u0,ubar,d_w(in A),first_layer_height(in fractional),density_w (in # of waters/A^3)]
+                layered_water=slabs[key]['layered_water']
+                d_w=layered_water[2]
+                water_density=layered_water[-1]
+                for i in range(N_layered_water):
+                    z_layered_water.append(layered_water[3]*self.unit_cell.c+i*layered_water[2])
+                    sigma_layered_water.append((layered_water[0]**2+i*layered_water[1]**2)**0.5)
+            #print u,f,z
+            for i in range(resolution):
+                z_each=float(z_max-z_min)/resolution*i+z_min
+                z_plot.append(z_each)
+                #normalized with occupancy and weight factor (manually scaled by a factor 2 to consider the half half of domainA and domainB)
+                eden.append(np.sum(slabs[key]['wt']*2*oc*f/Auc*(2*np.pi*u**2)**-0.5*np.exp(-0.5/u**2*(z_each-z)**2)))
                 if slabs[key]['layered_water']!=[]:
-                    #the items for the layered water is [u0,ubar,d_w(in A),first_layer_height(in fractional),density_w (in # of waters/A^3)]
-                    layered_water=slabs[key]['layered_water']
-                    d_w=layered_water[2]
-                    water_density=layered_water[-1]
-                    for i in range(N_layered_water):
-                        z_layered_water.append(layered_water[3]*self.unit_cell.c+i*layered_water[2])
-                        sigma_layered_water.append((layered_water[0]**2+i*layered_water[1]**2)**0.5)
-                #print u,f,z
-                for i in range(resolution):
-                    z_each=float(z_max-z_min)/resolution*i+z_min
-                    z_plot.append(z_each)
-                    #normalized with occupancy and weight factor (manually scaled by a factor 2 to consider the half half of domainA and domainB)
-                    eden.append(np.sum(slabs[key]['wt']*2*oc*f/Auc*(2*np.pi*u**2)**-0.5*np.exp(-0.5/u**2*(z_each-z)**2)))
-                    if slabs[key]['layered_water']!=[]:
-                        eden[-1]=eden[-1]+np.sum(8*slabs[key]['wt']*2*Auc*d_w*water_density*(2*np.pi*np.array(sigma_layered_water)**2)**-0.5*np.exp(-0.5/np.array(sigma_layered_water)**2*(z_each-np.array(z_layered_water))**2))
-                labels.append(key)
-                e_data.append(np.array([z_plot,eden]))
-                e_total=e_total+np.array(eden)
+                    eden[-1]=eden[-1]+np.sum(8*slabs[key]['wt']*2*Auc*d_w*water_density*(2*np.pi*np.array(sigma_layered_water)**2)**-0.5*np.exp(-0.5/np.array(sigma_layered_water)**2*(z_each-np.array(z_layered_water))**2))
+            labels.append(key)
+            e_data.append(np.array([z_plot,eden]))
+            e_total=e_total+np.array(eden)
         labels.append('Total electron density')
         e_data.append(np.array([list(e_data[0])[0],e_total]))
         try:

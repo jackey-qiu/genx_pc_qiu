@@ -1750,7 +1750,6 @@ def Sim(data,VARS=VARS):
     #export the model results for plotting if PLOT set to true
     if PLOT:
         sample = model.Sample(inst, bulk, domain, unitcell,coherence=COHERENCE,surface_parms={'delta1':0.,'delta2':0.1391})
-        sample.plot_electron_density(sample.domain)
         bl_dl={'3_0':{'segment':[[0,1],[1,9]],'info':[[2,1],[6,1]]},'2_0':{'segment':[[0,9]],'info':[[2,2.0]]},'2_1':{'segment':[[0,9]],'info':[[4,0.8609]]},'2_2':{'segment':[[0,9]],'info':[[2,1.7218]]},\
             '2_-1':{'segment':[[0,3.1391],[3.1391,9]],'info':[[4,3.1391],[2,3.1391]]},'1_1':{'segment':[[0,9]],'info':[[2,1.8609]]},'1_0':{'segment':[[0,3],[3,9]],'info':[[6,3],[2,3]]},'0_2':{'segment':[[0,9]],'info':[[2,1.7218]]},\
             '0_0':{'segment':[[0,13]],'info':[[2,2]]},'-1_0':{'segment':[[0,3],[3,9]],'info':[[6,-3],[2,-3]]},'0_-2':{'segment':[[0,9]],'info':[[2,-6.2782]]},\
@@ -1761,7 +1760,10 @@ def Sim(data,VARS=VARS):
         plot_data_container_model={}
         plot_raxr_container_experiment={}
         plot_raxr_container_model={}
-        i=0
+        A_list_Fourier_synthesis=[]
+        P_list_Fourier_synthesis=[]
+        HKL_list_raxr=[[],[],[]]
+        spectra_index=0
         for data_set in data:
             if data_set.x[0]<15:
                 f=np.array([])   
@@ -1803,15 +1805,15 @@ def Sim(data,VARS=VARS):
                 plot_data_container_experiment[label]=np.concatenate((l[:,np.newaxis],I[:,np.newaxis],eI[:,np.newaxis]),axis=1)
                 plot_data_container_model[label]=np.concatenate((l_dumy[:,np.newaxis],f_dumy[:,np.newaxis]),axis=1)
             else:#to be finished for plotting RAXR models here
-                a=getattr(VARS['rgh_raxr'],'a'+str(i+1))
-                b=getattr(VARS['rgh_raxr'],'b'+str(i+1))
+                a=getattr(VARS['rgh_raxr'],'a'+str(spectra_index+1))
+                b=getattr(VARS['rgh_raxr'],'b'+str(spectra_index+1))
                 A_list,P_list=[],[]
                 for index_resonant_el in range(len(RESONANT_EL_LIST)):
                     A_list_domain=0
                     P_list_domain=0
                     if RESONANT_EL_LIST[index_resonant_el]!=0:
-                        A_list_domain=getattr(VARS['rgh_raxr'],'A_D'+str(index_resonant_el+1)+'_'+str(i+1))
-                        P_list_domain=getattr(VARS['rgh_raxr'],'P_D'+str(index_resonant_el+1)+'_'+str(i+1))
+                        A_list_domain=getattr(VARS['rgh_raxr'],'A_D'+str(index_resonant_el+1)+'_'+str(spectra_index+1))
+                        P_list_domain=getattr(VARS['rgh_raxr'],'P_D'+str(index_resonant_el+1)+'_'+str(spectra_index+1))
                     A_list.append(A_list_domain)
                     P_list.append(P_list_domain)
                 f=np.array([])   
@@ -1823,16 +1825,21 @@ def Sim(data,VARS=VARS):
                 dL = data_set.extra_data['dL']
                 I=data_set.y
                 eI=data_set.error
-                
+                A_list_Fourier_synthesis.append(A_list)
+                P_list_Fourier_synthesis.append(P_list)
+                HKL_list_raxr[0].append(h[0])
+                HKL_list_raxr[1].append(k[0])
+                HKL_list_raxr[2].append(y[0])
                 rough = (1-beta)/((1-beta)**2 + 4*beta*np.sin(np.pi*(y-LB)/dL)**2)**0.5#roughness model, double check LB and dL values are correctly set up in data file
                 if h[0]==0 and k[0]==0:#consider layered water only for specular rod if existent
                     f = SCALES[0]*rough*sample.calc_f4_specular_RAXR(h, k, y, x, E0, F1F2, a, b, A_list, P_list, RESONANT_EL_LIST)
                 else:
                     f = SCALES[0]*rough*sample.calc_f4_nonspecular_RAXR(h, k, y, x, E0, F1F2, a, b, A_list, P_list, RESONANT_EL_LIST)
-                label=str(int(h[0]))+str(int(k[0]))+str(int(y[0]))
+                label=str(int(h[0]))+'_'+str(int(k[0]))+'_'+str(y[0])
                 plot_raxr_container_experiment[label]=np.concatenate((x[:,np.newaxis],I[:,np.newaxis],eI[:,np.newaxis]),axis=1)
                 plot_raxr_container_model[label]=np.concatenate((x[:,np.newaxis],f[:,np.newaxis]),axis=1)
-                i+=1
+                spectra_index+=1
+        #dump CTR data and profiles
         hkls=['00L','02L','10L','11L','20L','22L','30L','2-1L','21L']
         plot_data_list=[]
         for hkl in hkls:
@@ -1841,6 +1848,20 @@ def Sim(data,VARS=VARS):
             pickle.dump(plot_data_list,open("D:\\Google Drive\\useful codes\\plotting\\temp_plot","wb"))
         except:
             pickle.dump(plot_data_list,open("C:\\Users\\jackey\\Google Drive\\useful codes\\plotting\\temp_plot","wb"))
+        #dump raxr data and profiles
+        try:
+            pickle.dump([plot_raxr_container_experiment,plot_raxr_container_model],open("D:\\Google Drive\\useful codes\\plotting\\temp_plot_raxr","wb"))
+        except:
+            pickle.dump([plot_raxr_container_experiment,plot_raxr_container_model],open("C:\\Users\\jackey\\Google Drive\\useful codes\\plotting\\temp_plot_raxr","wb"))
+        #dump electron density profiles
+        #e density based on model fitting
+        sample.plot_electron_density(sample.domain)#dumpt file name is "temp_plot_eden" 
+        #e density based on Fourier synthesis
+        z_plot,eden_plot,eden_domains=sample.fourier_synthesis(np.array(HKL_list_raxr),np.array(A_list_Fourier_synthesis).transpose(),np.array(P_list_Fourier_synthesis).transpose(),z_min=0.,z_max=20.,ZR=33,resolution=1000)
+        try:
+            pickle.dump([z_plot,eden_plot,eden_domains],open("D:\\Google Drive\\useful codes\\plotting\\temp_plot_eden_fourier_synthesis","wb"))
+        except:
+            pickle.dump([z_plot,eden_plot,eden_domains],open("C:\\Users\\jackey\\Google Drive\\useful codes\\plotting\\temp_plot_eden_fourier_synthesis","wb"))
     #you may play with the weighting rule by setting eg 2**bv, 5**bv for the wt factor, that way you are pushing the GenX to find a fit btween 
     #good fit (low wt factor) and a reasonable fit (high wt factor)
     if COUNT_TIME:t_3=datetime.now()
