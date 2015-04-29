@@ -48,7 +48,7 @@ structure={'domain1':{'domain_type':'half_layer','domain_tag':1,'surface':surfac
            'domain2':{'domain_type':'half_layer','domain_tag':2,'surface':surface2,'sorbate':sorbate2,'water':water2},\
            'domain3':{'domain_type':'half_layer','domain_tag':3,'surface':surface3,'sorbate':None,'water':water2}}
 #make_structure will be used inside genx script to generate the parameter table           
-def make_structure(sorbate_N,O_N,water_N,Domains,Metal,binding_mode=['BD']*3,long_slab=False,long_slab_HL=False,local_structure='tetrahedral',add_distal_wild=None,use_domains=[1]*10):
+def make_structure(sorbate_N,O_N,water_N,Domains,Metal,binding_mode=['BD']*3,long_slab=False,long_slab_HL=False,local_structure='tetrahedral',add_distal_wild=None,use_domains=[1]*10,N_raxr=0,domain_raxr_el=[1,1,0,0]):
     structure={}
     for i in range(len(Domains)):
         if use_domains[i]==1:
@@ -91,16 +91,16 @@ def make_structure(sorbate_N,O_N,water_N,Domains,Metal,binding_mode=['BD']*3,lon
             structure['domain'+str(i+1)]={'binding_mode':binding_mode[i],'full_layer_type':full_layer_type,'half_layer_type':half_layer_type,'domain_type':domain_type,'domain_tag':i+1,'surface':temp_surface,'sorbate':temp_sorbate,'water':temp_water}
         else:
             pass
-    return table_maker(structure_info=structure,local_structure=local_structure)    
+    return table_maker(structure_info=structure,local_structure=local_structure,N_raxr=N_raxr,domain_raxr_el=domain_raxr_el)    
 
-def table_maker(table_file_path='D:\\table.tab',structure_info=structure,local_structure='tetrahedral'):
+def table_maker(table_file_path='D:\\table.tab',structure_info=structure,local_structure='tetrahedral',N_raxr=0,domain_raxr_el=[1,1,0,0]):
 
     f=open(table_file_path,'w')
     f.write('#Parameter Value Fit Min Max Error\n')
     f.write('inst.set_inten\t1\tTrue\t1\t10\t-\n')
     #f.write('rgh.setScale_CTR_specular\t1\tTrue\t0.6\t1.5\t-\n')
     f.write('rgh.setBeta\t0\tTrue\t0\t0.4\t-\n')
-    f.write('\t0\tFalse\t0\t0\t-\n')
+    f.write('\t0\tFalse\t0\t0\t-\n')           
     domain_N=len(structure_info.keys())
     for i in range(domain_N):
         f.write('rgh_domain'+str(i+1)+'.setWt\t1\tFalse\t0\t1\t-\n')
@@ -302,4 +302,12 @@ def table_maker(table_file_path='D:\\table.tab',structure_info=structure,local_s
                 s_u="%s\t%5.4f\t%s\t%5.4f\t%5.4f\t%s\n"%('gp_waters_set'+str(i+1)+'_D'+domain_tag+'.setu',temp_water['u'][i][0],temp_water['u'][i][-1],temp_water['u'][i][1],temp_water['u'][i][2],'-')
                 f.write(s_u)
             f.write('\t0\tFalse\t0\t0\t-\n')
+    for i in range(N_raxr):
+        f.write('rgh_raxr.setA'+str(i+1)+'\t1\tTrue\t0\t5\t-\n')
+        f.write('rgh_raxr.setB'+str(i+1)+'\t0\tTrue\t0\t5\t-\n')
+        for j in range(len(domain_raxr_el)):
+            if domain_raxr_el[j]:
+                f.write('rgh_raxr.setA_D'+str(j+1)+'_'+str(i+1)+'\t1\tTrue\t0\t5\t-\n')
+                f.write('rgh_raxr.setP_D'+str(j+1)+'_'+str(i+1)+'\t1\tTrue\t0\t5\t-\n')
+        f.write('\t0\tFalse\t0\t0\t-\n')
     f.close()

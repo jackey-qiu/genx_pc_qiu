@@ -450,6 +450,97 @@ class Sample:
             #ftot=ftot+ftot_A_C+ftot_A_IC+ftot_B_IC+ftot_B_C
         return abs(ftot)*self.inst.inten
         
+    def calc_f4_specular_RAXR_for_test_purpose(self, h, k, l,f1f2,res_el='Pb'):
+        #this function is used to generate an arbitrary raxr dataset for testing purpose
+        #hkl is a list of hkl values
+        #f1f2 is in form of [[f1_1,f2_1],[f1_2,f2_2]]
+        #The return value is in form of [[],[]] with length =len(f1f2) and the length of each item=len(hkl)
+        #now the coherence looks like [{True:[0,1]},{False:[2,3]}] which means adding up first two domains coherently
+        #and last two domains in-coherently. After calculation of structure factor for each item of the list, absolute 
+        #value of SF will be calculated followed by being summed up
+        #so [{True:[0,1]},{True:[2,3]}] is different from [{True:[0,1,2,3]}]
+        #resonant_els:a list of True or False specifying whether or not considering the resonant scattering in each domain
+        #             so the len(resonant_els) is equal to the total domain numbers
+        #E is the energy scan list, and make sure items in E is one-to-one corresponding to those in f1f2
+        #E0 is the center of the range of energy scan
+        #f1f2 numpy array of anomalous correction items (n*2 shape) with the first column as f' and the second as f''
+        #a,b are fitting parameters for extrinsic factors
+        #P_list and A_list are two lists of Fourier components. Depending on the total domains, you can consider different Fourier
+        #                  components for chemically different domains.Note in P or A_list, the 0 item means no resonant element
+        #                  so len(P_list)==len(resonant_els)
+        #Resonant structure factor is calculated using equation (9) presented in paper of "Park, Changyong and Fenter, Paul A.(2007) J. Appl. Cryst.40, 290-301"
+
+        
+        coherence=self.coherence
+        fb = self.calc_fb(h, k, l)
+        f_surface=self.calc_fs_test_purpose
+        f_total_container=[]
+        for each_f1f2 in f1f2:
+            ftot=0
+            for n in range(len(coherence)):
+                ftot_A_C, ftot_A_IC=0,0
+                ftot_B_C, ftot_B_IC=0,0
+                keys_domainA=[]
+                keys_domainB=[]
+                
+                for i in coherence[n].values()[0]:
+                    keys_domainA.append('domain'+str(i+1)+'A')
+                    keys_domainB.append('domain'+str(i+1)+'B')
+                for i in keys_domainA:
+                    ii=int(i[6:-1])-1#extract the domain index from the domain key, eg for "domain10A" will have a 9 as the domain index
+                    f_layered_water=0
+                    if self.domain[i]['layered_water']!=[]:
+                        f_layered_water=self.calc_f_layered_water(h,k,l,*self.domain[i]['layered_water'])
+                    if coherence[n].keys()[0]:
+                        ftot_A_C=ftot_A_C+(fb+f_surface(h, k, l,[self.domain[i]['slab']],each_f1f2,res_el)+f_layered_water)*self.domain[i]['wt']
+                    else:
+                        ftot_A_IC=ftot_A_IC+abs(fb+f_surface(h, k, l,[self.domain[i]['slab']],each_f1f2,res_el)+f_layered_water)*self.domain[i]['wt']
+                for i in keys_domainB:
+                    #in this specific case (rcut hematite, domainB is symmetricaly related to domainA with half unit cell step lower)
+                    #in light of that, the Fourier component A(amplitude) is same as that for the associated domainA, but the other one (phase) should be 0.5 off
+                    ii=int(i[6:-1])-1#extract the domain index from the domain key, eg for "domain10A" will have a 9 as the domain index
+                    f_layered_water=0
+                    if self.domain[i]['layered_water']!=[]:
+                        f_layered_water=self.calc_f_layered_water(h,k,l,*self.domain[i]['layered_water'])
+                    if coherence[n].keys()[0]:
+                        ftot_B_C=ftot_B_C+(fb+f_surface(h, k, l,[self.domain[i]['slab']],each_f1f2,res_el)+f_layered_water)*self.domain[i]['wt']
+                    else:
+                        ftot_B_IC=ftot_B_IC+abs(fb+f_surface(h, k, l,[self.domain[i]['slab']],each_f1f2,res_el)+f_layered_water)*self.domain[i]['wt']
+
+                ftot=ftot+abs(ftot_A_C)+ftot_A_IC+ftot_B_IC+abs(ftot_B_C)
+                #ftot=ftot+ftot_A_C+ftot_A_IC+ftot_B_IC+ftot_B_C
+            f_total_container.append(abs(ftot)*self.inst.inten)
+        return f_total_container
+        
+    def calc_fs_test_purpose(self, h, k, l,slabs,single_f1f2,res_el):
+        '''Calculate the structure factors from the surface
+        '''
+        #print single_f1f2
+        dinv = self.unit_cell.abs_hkl(h, k, l)
+        x, y, z, u, oc, el = self._surf_pars(slabs)
+        f=self._get_f(el, dinv)
+        shape=f.shape
+        f_offset=np.zeros(shape=shape)+0J
+        for i in range(shape[0]):
+            for j in range(shape[1]):
+                if res_el==el[j]:
+                    f_offset[i][j]=single_f1f2[0]+1.0J*single_f1f2[1]
+        f=f+f_offset
+        #print x, y,z
+        # Create all the atomic structure factors
+        #print f.shape, h.shape, oc.shape, x.shape, y.shape, z.shape
+        #change mark 3
+        #delta_l=1
+        #if self.delta1==[]:delta_l=0
+        fs = np.sum(oc*f*np.exp(-2*np.pi**2*u*dinv[:,np.newaxis]**2)\
+            *np.sum([np.exp(2.0*np.pi*1.0J*(
+                 h[:,np.newaxis]*(sym_op.trans_x(x, y)+self.delta1) +
+                 k[:,np.newaxis]*(sym_op.trans_y(x, y)+self.delta2) +
+                 l[:,np.newaxis]*(z[np.newaxis, :]+1)))
+              for sym_op in self.surface_sym], 0)
+                    ,1)
+        return fs
+        
     def calc_f4_nonspecular_RAXR(self, h, k, l,E,E0,f1f2,a,b,A_list=[],P_list=[],resonant_els=[1,1,0]):
         #now the coherence looks like [{True:[0,1]},{False:[2,3]}] which means adding up first two domains coherently
         #and last two domains in-coherently. After calculation of structure factor for each item of the list, absolute 

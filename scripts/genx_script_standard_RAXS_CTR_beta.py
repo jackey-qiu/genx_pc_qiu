@@ -55,7 +55,7 @@ TABLE_DOMAINS=[1]*len(pickup_index)
 FIT_RAXR=False
 if FIT_RAXR:
     USE_BV=False
-NUMBER_SPECTRA=5
+NUMBER_SPECTRA=0
 RESONANT_EL_LIST=[1,0,1]
 E0=13000
 F1F2_FILE="Pb.f1f2"
@@ -465,7 +465,7 @@ if TABLE:
                 elif len(SORBATE_ATTACH_ATOM[i][j])==3:
                     temp_binding_mode.append('TD')   
         binding_mode.append(temp_binding_mode)
-    make_grid.make_structure(map(sum,SORBATE_NUMBER),O_N,WATER_NUMBER,DOMAIN,Metal=SORBATE[0],binding_mode=binding_mode,long_slab=full_layer_pick,long_slab_HL=half_layer_pick,local_structure=LOCAL_STRUCTURE,add_distal_wild=ADD_DISTAL_LIGAND_WILD,use_domains=TABLE_DOMAINS)
+    make_grid.make_structure(map(sum,SORBATE_NUMBER),O_N,WATER_NUMBER,DOMAIN,Metal=SORBATE[0],binding_mode=binding_mode,long_slab=full_layer_pick,long_slab_HL=half_layer_pick,local_structure=LOCAL_STRUCTURE,add_distal_wild=ADD_DISTAL_LIGAND_WILD,use_domains=TABLE_DOMAINS,N_raxr=NUMBER_SPECTRA,domain_raxr_el=RESONANT_EL_LIST)
 
 #function to group the Fourier components (FC) from different domains in each RAXR spectra
 #domain_index=[0,1] means setting the FC for domain2 (1+1) same as domain1 (0+1)
