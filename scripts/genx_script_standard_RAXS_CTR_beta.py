@@ -1861,7 +1861,7 @@ def Sim(data,VARS=VARS):
         #e density based on model fitting
         sample.plot_electron_density(sample.domain)#dumpt file name is "temp_plot_eden" 
         #e density based on Fourier synthesis
-        z_plot,eden_plot,eden_domains=sample.fourier_synthesis(np.array(HKL_list_raxr),np.array(A_list_Fourier_synthesis).transpose(),np.array(P_list_Fourier_synthesis).transpose(),z_min=0.,z_max=20.,ZR=33,resolution=1000)
+        z_plot,eden_plot,eden_domains=sample.fourier_synthesis(np.array(HKL_list_raxr),np.array(A_list_Fourier_synthesis).transpose(),np.array(P_list_Fourier_synthesis).transpose(),z_min=0.,z_max=20.,resonant_el=SORBATE[0],resolution=1000)
         try:
             pickle.dump([z_plot,eden_plot,eden_domains],open("D:\\Google Drive\\useful codes\\plotting\\temp_plot_eden_fourier_synthesis","wb"))
         except:

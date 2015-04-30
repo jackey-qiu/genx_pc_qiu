@@ -622,10 +622,12 @@ class Sample:
         ftot = fs + fb
         return ftot*self.inst.inten
         
-    def fourier_synthesis(self,HKL_list,P_list,A_list,z_min=0.,z_max=20.,ZR=82,resolution=1000):
-        q_list = self.unit_cell.abs_hkl(HKL_list[0], HKL_list[1], HKL_list[2])
+    def fourier_synthesis(self,HKL_list,P_list,A_list,z_min=0.,z_max=20.,el_lib={'O':8,'Fe':26,'As':33,'Pb':82,'Sb':51},resonant_el='Pb',resolution=1000):
+        ZR=el_lib[resonant_el]
+        q_list = self.unit_cell.abs_hkl(HKL_list[0], HKL_list[1], HKL_list[2])#a list of 1/d for each hkl set
         q_list_sorted=copy.copy(q_list)
         q_list_sorted.sort()
+        q_list_sorted=np.array(q_list_sorted)*np.pi*2#note that q=2pi/d
         delta_q=np.average([q_list_sorted[i+1]-q_list_sorted[i] for i in range(len(q_list_sorted)-1)])
         Auc=self.unit_cell.a*self.unit_cell.b*np.sin(self.unit_cell.gamma)
         z_plot=[]
