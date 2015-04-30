@@ -649,7 +649,11 @@ for scale in scales:
     rgh.new_var(scale,1.)
 rgh_raxs=None
 if FIT_RAXR:
-    F1F2=np.loadtxt(F1F2_FILE)
+    try:
+        F1F2=np.loadtxt(F1F2_FILE)
+    except:
+        F1F2_FILE='/u1/uaf/cqiu/batchfile/f1f2_temp.f1f2'
+        F1F2=np.loadtxt(F1F2_FILE)
     rgh_raxr=UserVars()
     for i in range(NUMBER_SPECTRA):
         rgh_raxr.new_var('a'+str(i+1),0.0)

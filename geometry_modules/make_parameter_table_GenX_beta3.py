@@ -308,6 +308,6 @@ def table_maker(table_file_path='D:\\table.tab',structure_info=structure,local_s
         for j in range(len(domain_raxr_el)):
             if domain_raxr_el[j]:
                 f.write('rgh_raxr.setA_D'+str(j+1)+'_'+str(i+1)+'\t1\tTrue\t0\t5\t-\n')
-                f.write('rgh_raxr.setP_D'+str(j+1)+'_'+str(i+1)+'\t1\tTrue\t0\t5\t-\n')
+                f.write('rgh_raxr.setP_D'+str(j+1)+'_'+str(i+1)+'\t1\tTrue\t0\t1\t-\n')
         f.write('\t0\tFalse\t0\t0\t-\n')
     f.close()
