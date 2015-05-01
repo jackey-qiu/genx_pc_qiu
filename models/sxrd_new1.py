@@ -437,12 +437,12 @@ class Sample:
                     f_layered_water=self.calc_f_layered_water(h,k,l,*self.domain[i]['layered_water'])
                 if coherence[n].keys()[0]:
                     if resonant_els[ii]:
-                        ftot_B_C=ftot_B_C+(fb+f_surface(h, k, l,[self.domain[i]['slab']])+f_layered_water+(f1f2[:,0]+1.0J*f1f2[0:,1])*A_list[ii]*np.exp(1.0J*np.pi*2*(P_list[ii]-0.5)))*self.domain[i]['wt']
+                        ftot_B_C=ftot_B_C+(fb+f_surface(h, k, l,[self.domain[i]['slab']])+f_layered_water+(f1f2[:,0]+1.0J*f1f2[0:,1])*A_list[ii]*np.exp(1.0J*np.pi*2*(P_list[ii]-0.5*l[0])))*self.domain[i]['wt']
                     else:
                         ftot_B_C=ftot_B_C+(fb+f_surface(h, k, l,[self.domain[i]['slab']])+f_layered_water)*self.domain[i]['wt']
                 else:
                     if resonant_els[ii]:
-                        ftot_B_IC=ftot_B_IC+abs(fb+f_surface(h, k, l,[self.domain[i]['slab']])+f_layered_water+(f1f2[:,0]+1.0J*f1f2[0:,1])*A_list[ii]*np.exp(1.0J*np.pi*2*(P_list[ii]-0.5)))*self.domain[i]['wt']
+                        ftot_B_IC=ftot_B_IC+abs(fb+f_surface(h, k, l,[self.domain[i]['slab']])+f_layered_water+(f1f2[:,0]+1.0J*f1f2[0:,1])*A_list[ii]*np.exp(1.0J*np.pi*2*(P_list[ii]-0.5*l[0])))*self.domain[i]['wt']
                     else:
                         ftot_B_IC=ftot_B_IC+abs(fb+f_surface(h, k, l,[self.domain[i]['slab']])+f_layered_water)*self.domain[i]['wt']
 
