@@ -1319,7 +1319,7 @@ def Sim(data,VARS=VARS):
                         offset=VARS['SORBATE_ATTACH_ATOM_OFFSET'][i][j]
                         SORBATE_id=VARS['SORBATE_list_domain'+str(int(i+1))+'a'][j]
                         sorbate_coors=VARS['domain_class_'+str(int(i+1))].adding_pb_share_triple4(domain=VARS['domain'+str(int(i+1))+'A'],top_angle=top_angle,attach_atm_ids_ref=ids[0:2],attach_atm_id_third=[ids[-1]],offset=offset,pb_id=SORBATE_id,sorbate_el=SORBATE[0])
-                        SORBATE_coors_a.append(sorbate_coors)
+                        SORBATE_coors_a.append(sorbate_coors[0])
                         SORBATE_id_B=VARS['SORBATE_list_domain'+str(int(i+1))+'b'][j]
                         #now put on sorbate on the symmetrically related domain
                         sorbate_ids=[SORBATE_id_B]

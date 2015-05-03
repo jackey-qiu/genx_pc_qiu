@@ -271,7 +271,6 @@ def add_atom(domain,ref_coor=[],ids=[],els=[]):
             domain.add_atom(ids[i],els[i],ref_coor[i][0],ref_coor[i][1],ref_coor[i][2],0.5,1.0,1.0)
         except:
             index=np.where(domain.id==ids[i])[0][0]
-            #print ref_coor
             domain.x[index]=ref_coor[i][0]
             domain.y[index]=ref_coor[i][1]
             domain.z[index]=ref_coor[i][2]

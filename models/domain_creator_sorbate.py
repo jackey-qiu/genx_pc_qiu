@@ -394,7 +394,7 @@ class domain_creator_sorbate():
         #then based on these three points and top angle, calculate the apex coords
         #step two: (has been commented out for this step)
         #update the coord of the third oxygen to the new third coords (be carefule about the offset, you must consider the coor within the unitcell)
-        top_angle=top_angle/180*np.pi
+        top_angle=float(top_angle)/180*np.pi
         p_O1_index=np.where(domain.id==attach_atm_ids_ref[0])
         p_O2_index=np.where(domain.id==attach_atm_ids_ref[1])
         p_O3_index=np.where(domain.id==attach_atm_id_third[0])
@@ -450,7 +450,7 @@ class domain_creator_sorbate():
         #dif_value=(p_O3-p_O3_old)/basis
         #domain.dx1[p_O3_index],domain.dy1[p_O3_index],domain.dz1[p_O3_index]=dif_value[0],dif_value[1],dif_value[2]
         #_add_sorbate(domain=domain,id_sorbate=attach_atm_id_third[0],el='O',sorbate_v=(p_O3-_translate_offset_symbols(offset[2]))/basis)
-        return pyramid_distortion.apex/basis
+        return [pyramid_distortion.apex/basis]
         
     def adding_share_triple_octahedra(self,domain,attach_atm_ids_ref=['id1','id2'],attach_atm_id_third=['id3'],offset=[None,None,None],sorbate_id='Sb_id',sorbate_el='Sb',sorbate_oxygen_ids=['HO1','HO2','HO3'],dr=[0,0,0]):
         #here only consider the configuration of regular octahedra
