@@ -624,7 +624,7 @@ class Sample:
         
     def fourier_synthesis(self,HKL_list,P_list,A_list,z_min=0.,z_max=20.,el_lib={'O':8,'Fe':26,'As':33,'Pb':82,'Sb':51},resonant_el='Pb',resolution=1000):
         ZR=el_lib[resonant_el]
-        q_list = self.unit_cell.abs_hkl(HKL_list[0], HKL_list[1], HKL_list[2])#a list of 1/d for each hkl set
+        q_list = self.unit_cell.abs_hkl(np.array(HKL_list[0]), np.array(HKL_list[1]), np.array(HKL_list[2]))#a list of 1/d for each hkl set
         q_list_sorted=copy.copy(q_list)
         q_list_sorted.sort()
         q_list_sorted=np.array(q_list_sorted)*np.pi*2#note that q=2pi/d
