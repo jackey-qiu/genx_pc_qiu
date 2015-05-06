@@ -532,7 +532,16 @@ class Sample:
         #change mark 3
         #delta_l=1
         #if self.delta1==[]:delta_l=0
-        fs = np.sum(oc*f*np.exp(-2*np.pi**2*u*dinv[:,np.newaxis]**2)\
+        #print "shapes",el,u
+        #print "len of dinv",len(dinv)
+        #print "u for sorbate",sorbate_index_container
+        #print "A and P=",oc*np.exp(-2*np.pi**2*u*dinv[:,np.newaxis]**2)[0]
+        #oc_sorbate=0
+        #print "f1f2=",single_f1f2
+        #print "P=",l*z[sorbate[0]]
+        #print "A=",oc[sorbate[0]]*2*np.exp(-2*np.pi**2*u[sorbate[0]]*dinv[:,np.newaxis]**2)
+
+        fs = np.sum(oc*f*np.exp(-2*np.pi**2*u**2*dinv[:,np.newaxis]**2)\
             *np.sum([np.exp(2.0*np.pi*1.0J*(
                  h[:,np.newaxis]*(sym_op.trans_x(x, y)+self.delta1) +
                  k[:,np.newaxis]*(sym_op.trans_y(x, y)+self.delta2) +
@@ -694,6 +703,7 @@ class Sample:
         '''
         dinv = self.unit_cell.abs_hkl(h, k, l)
         x, y, z, u, oc, el = self._surf_pars(slabs)
+        #Note that the u here has been recalculated to represent for the Gaussian distribution width of the thermal vibration (ie sigma in Angstrom)
         f=self._get_f(el, dinv)
         #print x, y,z
         # Create all the atomic structure factors
