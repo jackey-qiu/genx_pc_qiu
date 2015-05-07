@@ -1751,6 +1751,19 @@ def Sim(data,VARS=VARS):
                 TOTAL_NUMBER=N_HB_SURFACE+N_HB_DISTAL+total_sorbate_number+water_number
             domain_creator.print_data2(N_sorbate=TOTAL_NUMBER,domain=VARS['domain'+str(i+1)+'A'],z_shift=1,half_layer=DOMAIN[i]-2,half_layer_long=half_layer_pick[i],full_layer_long=full_layer_pick[i],save_file='D://'+'Model_domain'+str(i+1)+'.xyz')    
     
+    #make dummy raxr dataset you will need to double check the LB,dL and the hkl
+    DUMMY_RAXR_BUILT=False
+    if DUMMY_RAXR_BUILT:
+        LB=2
+        dL=2
+        h,k,l=np.zeros(30),np.zeros(30),np.arange(0,10.38,0.35)
+        rough_temp = (1-beta)/((1-beta)**2 + 4*beta*np.sin(np.pi*(l-LB)/dL)**2)**0.5
+        f1f2_data_calculated=np.loadtxt('C:\\Users\\jackey\\Google Drive\\data\\Lead_CL_output.f1f2')
+        sample = model.Sample(inst, bulk, domain, unitcell,coherence=COHERENCE,surface_parms={'delta1':0.,'delta2':0.1391})
+        aa=rough_temp*sample.calc_f4_specular_RAXR_for_test_purpose(h,k,l,f1f2_data_calculated[:,(1,2)],res_el='Pb')
+        pickle.dump(aa,open("C:\\Users\\jackey\\Google Drive\\useful codes\\plotting\\temp_plot_dummy_raxr","wb"))
+        #after this step you should execute the "D:\Google Drive\useful codes\temp_make_dummy_raxr_data.py" in terminal
+        
     #export the model results for plotting if PLOT set to true
     if PLOT:
         sample = model.Sample(inst, bulk, domain, unitcell,coherence=COHERENCE,surface_parms={'delta1':0.,'delta2':0.1391})

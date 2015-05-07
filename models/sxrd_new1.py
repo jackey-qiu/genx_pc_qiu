@@ -518,6 +518,7 @@ class Sample:
         #print single_f1f2
         dinv = self.unit_cell.abs_hkl(h, k, l)
         x, y, z, u, oc, el = self._surf_pars(slabs)
+        sorbate=[]
         f=self._get_f(el, dinv)
         shape=f.shape
         f_offset=np.zeros(shape=shape)+0J
@@ -525,22 +526,8 @@ class Sample:
             for j in range(shape[1]):
                 if res_el==el[j]:
                     f_offset[i][j]=single_f1f2[0]+1.0J*single_f1f2[1]
+                    if i==0:sorbate.append(j)
         f=f+f_offset
-        #print x, y,z
-        # Create all the atomic structure factors
-        #print f.shape, h.shape, oc.shape, x.shape, y.shape, z.shape
-        #change mark 3
-        #delta_l=1
-        #if self.delta1==[]:delta_l=0
-        #print "shapes",el,u
-        #print "len of dinv",len(dinv)
-        #print "u for sorbate",sorbate_index_container
-        #print "A and P=",oc*np.exp(-2*np.pi**2*u*dinv[:,np.newaxis]**2)[0]
-        #oc_sorbate=0
-        #print "f1f2=",single_f1f2
-        #print "P=",l*z[sorbate[0]]
-        #print "A=",oc[sorbate[0]]*2*np.exp(-2*np.pi**2*u[sorbate[0]]*dinv[:,np.newaxis]**2)
-
         fs = np.sum(oc*f*np.exp(-2*np.pi**2*u**2*dinv[:,np.newaxis]**2)\
             *np.sum([np.exp(2.0*np.pi*1.0J*(
                  h[:,np.newaxis]*(sym_op.trans_x(x, y)+self.delta1) +
@@ -548,7 +535,30 @@ class Sample:
                  l[:,np.newaxis]*(z[np.newaxis, :]+1)))
               for sym_op in self.surface_sym], 0)
                     ,1)
+        
+        #calculate the Fourier components from oc, l, u and z
+        #this function will be pulled out as a separated function
+        def _find_A_P(oc,l,u,z):
+            A_container,P_container=[],[]
+            for each_l in l:
+                q=each_l*2*np.pi/7.3707
+                A1=oc*np.exp(-q**2*u**2/2)
+                complex_sum=np.sum(np.exp(1.0J*2*np.pi*each_l*(z+1)))#z should be plus 1 to account for the fact that surface slab sitting on top of bulk slab
+                A=A1*abs(complex_sum)
+                P=np.arctan(np.imag(complex_sum)/np.real(complex_sum))/np.pi/2.
+                A_container.append(A)
+                P_container.append(P)
+            return A_container,P_container
+        u_test=u[sorbate[0]]
+        z_test=np.array([z[sorbate[0]],z[sorbate[1]]])
+        oc_test=oc[sorbate[0]]
+        AP=_find_A_P(oc_test,l,u_test,z_test)
+        #print "l",l
+        #print "A",AP[0]
+        #print "P",AP[1]
+            
         return fs
+        
         
     def calc_f4_nonspecular_RAXR(self, h, k, l,E,E0,f1f2,a,b,A_list=[],P_list=[],resonant_els=[1,1,0]):
         #now the coherence looks like [{True:[0,1]},{False:[2,3]}] which means adding up first two domains coherently
