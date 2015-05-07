@@ -332,6 +332,39 @@ def print_data2(N_sorbate=4,domain='',z_shift=1,half_layer=False,half_layer_long
             f.write(s)
     f.close()
     
+def print_data2B(N_sorbate=4,domain='',z_shift=1,half_layer=False,half_layer_long=None,full_layer_long=0,save_file='D://model.xyz'):
+    #moving slab down if z_shift is a negative number
+    #moving slab up if z_shift is a positive number
+    data=domain._extract_values()
+    index_all=range(len(data[0]))
+    index=None
+    z_offset=0
+    if half_layer and half_layer_long==3:
+        index=index_all[0:20]+index_all[40:40+N_sorbate]
+    elif half_layer and half_layer_long==2:
+        index=index_all[0:20]+index_all[30:30+N_sorbate]
+    elif not half_layer and full_layer_long==1:
+        index=index_all[0:22]+index_all[42:42+N_sorbate]
+    elif not half_layer and full_layer_long==0:
+        index=index_all[0:22]+index_all[32:32+N_sorbate] 
+    if half_layer:
+        index.pop(2)
+        index.pop(2)
+    f=open(save_file,'w')
+    f.write(str(len(index))+'\n#\n')
+    if half_layer_long==2 or full_layer_long==0:
+        z_offset=z_shift-0.5
+    else:
+        z_offset=z_shift-1
+    for i in index:
+        if i==index[-1]:
+            s = '%-5s   %7.5e   %7.5e   %7.5e' % (data[3][i],data[0][i]*5.038,(data[1][i]+z_offset*0.1391)*5.434,(data[2][i]+z_offset)*7.3707)
+            f.write(s)
+        else:
+            s = '%-5s   %7.5e   %7.5e   %7.5e\n' % (data[3][i],data[0][i]*5.038,(data[1][i]+z_offset*0.1391)*5.434,(data[2][i]+z_offset)*7.3707)
+            f.write(s)
+    f.close()
+    
 def print_data_for_publication(N_sorbate=4,domain='',z_shift=1,half_layer=False,full_layer_long=0,save_file='D://model.xyz'):
     data=domain._extract_values()
     index_all=range(len(data[0]))
