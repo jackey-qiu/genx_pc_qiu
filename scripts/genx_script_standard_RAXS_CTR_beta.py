@@ -481,6 +481,17 @@ def set_RAXR(domain_index=[],number_spectra=NUMBER_SPECTRA):
             eval('rgh_raxr'+'.setA_D'+str(j+1)+'_'+str(i+1)+'(rgh_raxr'+'.getA_D'+str(domains[0]+1)+'_'+str(i+1)+'())')
             eval('rgh_raxr'+'.setP_D'+str(j+1)+'_'+str(i+1)+'(rgh_raxr'+'.getP_D'+str(domains[0]+1)+'_'+str(i+1)+'())')
             
+#freeze A and B in the process of model fitting
+def set_RAXR_AB(number_spectra=NUMBER_SPECTRA):
+    spectra=None
+    if type(number_spectra)!=type([]):
+        spectra=range(number_spectra)
+    else:
+        spectra=number_spectra
+    for i in spectra:
+        eval('rgh_raxr'+'.setA'+str(i+1)+'(1.)')
+        eval('rgh_raxr'+'.setB'+str(i+1)+'(0.)') 
+            
 #function to group outer-sphere pars from different domains (to be placed inside sim function)
 def set_OS(domain_names=['domain5','domain4']):
     eval('rgh_'+domain_names[0]+'.setCt_offset_dx_OS(rgh_'+domain_names[1]+'.getCt_offset_dx_OS())')
