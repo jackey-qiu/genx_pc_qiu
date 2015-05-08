@@ -675,7 +675,7 @@ class Sample:
         for key in keys_sorted:
             slab=[slabs[key]['slab']]
             x, y, z, u, oc, el = self._surf_pars(slab)
-            z=z*self.unit_cell.c
+            z=(z+1.)*self.unit_cell.c
             f=np.array([el_lib[each] for each in el])
             Auc=self.unit_cell.a*self.unit_cell.b*np.sin(self.unit_cell.gamma)
             z_min,z_max=z_min,z_max
@@ -688,7 +688,7 @@ class Sample:
                 d_w=layered_water[2]
                 water_density=layered_water[-1]
                 for i in range(N_layered_water):
-                    z_layered_water.append(layered_water[3]*self.unit_cell.c+i*layered_water[2])
+                    z_layered_water.append((layered_water[3]+1.)*self.unit_cell.c+i*layered_water[2])
                     sigma_layered_water.append((layered_water[0]**2+i*layered_water[1]**2)**0.5)
             #print u,f,z
             for i in range(resolution):
