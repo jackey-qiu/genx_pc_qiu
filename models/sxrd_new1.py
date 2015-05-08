@@ -658,7 +658,7 @@ class Sample:
             eden=0
             eden_domains=[]
             for j in range(len(P_list)):
-                eden_each_domain=ZR/Auc/(np.pi*2)*np.sum(A_list[j]*np.cos(2*np.pi*P_list[j]-np.array(q_list)*z_each)*delta_q)
+                eden_each_domain=ZR/Auc/(np.pi*2)*np.sum(A_list[j]*np.cos(2*np.pi*P_list[j]-np.array(q_list_sorted)*z_each)*delta_q)
                 eden_domains.append(eden_each_domain)
                 eden+=eden_each_domain
             eden_plot.append(eden)
