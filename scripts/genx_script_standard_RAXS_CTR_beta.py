@@ -57,8 +57,8 @@ if FIT_RAXR:
     USE_BV=False
 NUMBER_SPECTRA=0
 RESONANT_EL_LIST=[1,0,1]
-E0=13000
-F1F2_FILE="Pb.f1f2"
+E0=13035
+F1F2_FILE="D:\\Google Drive\\data\\f1f2_temp.f1f2"
 F1F2=None
 
 BV_OFFSET_SORBATE=[[0.2]*8]*len(pickup_index)
@@ -658,13 +658,21 @@ rgh.new_var('beta', 0.0)
 scales=['scale_CTR']
 for scale in scales:
     rgh.new_var(scale,1.)
+    
 rgh_raxs=None
 if FIT_RAXR:
     try:
         F1F2=np.loadtxt(F1F2_FILE)
+    except first_Er:
+        F1F2_FILE="D:\\Google Drive\\data\\f1f2_temp.f1f2"
+        F1F2=np.loadtxt(F1F2_FILE)
+    except second_Er:
+        F1F2_FILE="C:\\Users\\jackey\\Google Drive\\data\\f1f2_temp.f1f2"
+        F1F2=np.loadtxt(F1F2_FILE)
     except:
         F1F2_FILE='/u1/uaf/cqiu/batchfile/f1f2_temp.f1f2'
         F1F2=np.loadtxt(F1F2_FILE)
+        
     rgh_raxr=UserVars()
     for i in range(NUMBER_SPECTRA):
         rgh_raxr.new_var('a'+str(i+1),0.0)
@@ -1767,13 +1775,25 @@ def Sim(data,VARS=VARS):
     if DUMMY_RAXR_BUILT:
         LB=2
         dL=2
-        h,k,l=np.zeros(30),np.zeros(30),np.arange(0,10.38,0.35)
+        h,k,l=np.zeros(28),np.zeros(28),np.arange(0.35,9.9,0.35)
         rough_temp = (1-beta)/((1-beta)**2 + 4*beta*np.sin(np.pi*(l-LB)/dL)**2)**0.5
-        f1f2_data_calculated=np.loadtxt('C:\\Users\\jackey\\Google Drive\\data\\Lead_CL_output.f1f2')
+        f1f2_data_calculated=None
+        try:
+            f1f2_data_calculated=np.loadtxt('C:\\Users\\jackey\\Google Drive\\data\\Lead_CL_output.f1f2')
+        except:
+            f1f2_data_calculated=np.loadtxt('D:\\Google Drive\\data\\Lead_CL_output.f1f2')
         sample = model.Sample(inst, bulk, domain, unitcell,coherence=COHERENCE,surface_parms={'delta1':0.,'delta2':0.1391})
         aa=rough_temp*sample.calc_f4_specular_RAXR_for_test_purpose(h,k,l,f1f2_data_calculated[:,(1,2)],res_el='Pb')
-        pickle.dump(aa,open("C:\\Users\\jackey\\Google Drive\\useful codes\\plotting\\temp_plot_dummy_raxr","wb"))
+        try:
+            pickle.dump(aa,open("C:\\Users\\jackey\\Google Drive\\useful codes\\plotting\\temp_plot_dummy_raxr","wb"))
+        except:
+            pickle.dump(aa,open("D:\\Google Drive\\useful codes\\plotting\\temp_plot_dummy_raxr","wb"))
         #after this step you should execute the "D:\Google Drive\useful codes\temp_make_dummy_raxr_data.py" in terminal
+    
+    #The A and P list returned is calculated based on the model dependent structure
+    Print_AP=False
+    if Print_AP:
+        AP=sample.find_A_P(np.arange(0,10.38,0.35),'Pb',True)
         
     #export the model results for plotting if PLOT set to true
     if PLOT:

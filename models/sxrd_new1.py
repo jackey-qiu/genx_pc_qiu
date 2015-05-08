@@ -518,7 +518,6 @@ class Sample:
         #print single_f1f2
         dinv = self.unit_cell.abs_hkl(h, k, l)
         x, y, z, u, oc, el = self._surf_pars(slabs)
-        sorbate=[]
         f=self._get_f(el, dinv)
         shape=f.shape
         f_offset=np.zeros(shape=shape)+0J
@@ -526,7 +525,6 @@ class Sample:
             for j in range(shape[1]):
                 if res_el==el[j]:
                     f_offset[i][j]=single_f1f2[0]+1.0J*single_f1f2[1]
-                    if i==0:sorbate.append(j)
         f=f+f_offset
         fs = np.sum(oc*f*np.exp(-2*np.pi**2*u**2*dinv[:,np.newaxis]**2)\
             *np.sum([np.exp(2.0*np.pi*1.0J*(
@@ -535,30 +533,57 @@ class Sample:
                  l[:,np.newaxis]*(z[np.newaxis, :]+1)))
               for sym_op in self.surface_sym], 0)
                     ,1)
-        
-        #calculate the Fourier components from oc, l, u and z
-        #this function will be pulled out as a separated function
-        def _find_A_P(oc,l,u,z):
-            A_container,P_container=[],[]
-            for each_l in l:
-                q=each_l*2*np.pi/7.3707
-                A1=oc*np.exp(-q**2*u**2/2)
-                complex_sum=np.sum(np.exp(1.0J*2*np.pi*each_l*(z+1)))#z should be plus 1 to account for the fact that surface slab sitting on top of bulk slab
-                A=A1*abs(complex_sum)
-                P=np.arctan(np.imag(complex_sum)/np.real(complex_sum))/np.pi/2.
-                A_container.append(A)
-                P_container.append(P)
-            return A_container,P_container
-        u_test=u[sorbate[0]]
-        z_test=np.array([z[sorbate[0]],z[sorbate[1]]])
-        oc_test=oc[sorbate[0]]
-        AP=_find_A_P(oc_test,l,u_test,z_test)
-        #print "l",l
-        #print "A",AP[0]
-        #print "P",AP[1]
             
         return fs
         
+    #calculate the Fourier components 
+    #this function will only consider the specular rod
+    #it will calculate Fourier components only for the domainA's
+    def find_A_P(self,l,res_el,print_AP=False):
+        keys=self.domain.keys()
+        keys_domainA=[key for key in keys if "A" in key]
+        keys_domainA.sort()
+        A,P={},{}
+        for each_key in keys_domainA:
+            single_domain=self.domain[each_key]
+            slabs=[single_domain['slab']]
+            domain_wt=single_domain['wt']
+            dinv = self.unit_cell.abs_hkl(np.zeros(len(l)), np.zeros(len(l)), np.array(l))
+            x, y, z, u, oc, el = self._surf_pars(slabs)
+            sorbate_index=[i for i in range(len(el)) if el[i]==res_el]
+            A_container,P_container=[],[]
+            
+            for each_l in l:
+                q=each_l*2*np.pi/self.unit_cell.c
+                complex_sum=0.+1.0J*0. 
+                for i in sorbate_index:
+                    complex_sum+=oc[i]*np.exp(-q**2*u[i]**2/2)*np.exp(1.0J*2*np.pi*each_l*(z[i]+1))#z should be plus 1 to account for the fact that surface slab sitting on top of bulk slab
+                A_container.append(domain_wt*abs(complex_sum))
+                img_complex_sum, real_complex_sum=np.imag(complex_sum),np.real(complex_sum)
+                if img_complex_sum==0.:
+                    P_container.append(0)
+                elif real_complex_sum==0 and img_complex_sum==1:
+                    P_container.append(0.25)#1/2pi/2pi
+                elif real_complex_sum==0 and img_complex_sum==-1:  
+                    P_container.append(0.75)#3/2pi/2pi
+                else:#adjustment is needed since the return of np.arctan is ranging from -1/2pi to 1/2pi
+                    if real_complex_sum>0 and img_complex_sum>0:
+                        P_container.append(np.arctan(img_complex_sum/real_complex_sum)/np.pi/2.)
+                    elif real_complex_sum>0 and img_complex_sum<0:
+                        P_container.append(np.arctan(img_complex_sum/real_complex_sum)/np.pi/2.+1.)
+                    elif real_complex_sum<0 and img_complex_sum>0:
+                        P_container.append(np.arctan(img_complex_sum/real_complex_sum)/np.pi/2.+0.5)
+                    elif real_complex_sum<0 and img_complex_sum<0:
+                        P_container.append(np.arctan(img_complex_sum/real_complex_sum)/np.pi/2.+0.5)
+            A[each_key]=A_container
+            P[each_key]=P_container
+        if print_AP:
+            print "l list=",l
+            for each_key in keys_domainA:
+                print '\n',each_key
+                print "A list=",['%.4f' % each_A for each_A in A[each_key]]
+                print "P list=",['%.4f' % each_P for each_P in P[each_key]]
+        return l,A,P
         
     def calc_f4_nonspecular_RAXR(self, h, k, l,E,E0,f1f2,a,b,A_list=[],P_list=[],resonant_els=[1,1,0]):
         #now the coherence looks like [{True:[0,1]},{False:[2,3]}] which means adding up first two domains coherently
