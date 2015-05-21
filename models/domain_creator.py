@@ -511,6 +511,13 @@ def create_HO_ids2(anchor_els=['Pb','Sb'],O_N=[[1,1],[3,3]],tag='_D1A'):
             [id_list.append(temp_id) for temp_id in temp_ids]
     return id_list
     
+def create_HO_ids3(anchor_els=['Pb','Sb'],O_N=[3,3],tag='_D1A'):
+    id_list=[]
+    for i in range(len(O_N)):
+        for j in range(O_N[i]):
+            id_list.append('HO'+str(j+1)+'_'+anchor_els[i]+str(i+1)+tag)
+    return id_list
+    
 def create_sorbate_ids2(el=['Pb','Sb'],N=[1,1],tag='_D1A'):
     id_list=[]
     for i in range(len(N)):
@@ -531,6 +538,16 @@ def create_sorbate_el_list(el=['Pb','Sb'],N=[[1,2],[1,0]]):
                 el_temp.append(el[j])
         el_container.append(el_temp)
     return el_container
+    
+def create_sorbate_el_list2(el=[['Pb','Sb'],['Pb']],N=[[1,2],[1]]):
+    el_container=[]
+    for i in range(len(N)):
+        el_temp=[]
+        for j in range(len(N[i])):
+            for k in range(N[i][j]):
+                el_temp.append(el[i][j])
+        el_container.append(el_temp)
+    return el_container    
 
 #based on the binding configuration, set up a library showing the coordinated atoms for each atoms
 def create_sorbate_match_lib2(metal='Pb',O_Number=[1],O_list=[['HO1_D1A']],anchors=[['O1_2_0','O1_1_0']],anchor_offsets=[['+y',None]],domain_tag=1):
