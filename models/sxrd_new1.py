@@ -690,7 +690,7 @@ class Sample:
             eden_domain_plot.append(eden_domains)
         return z_plot,eden_plot,eden_domain_plot
     
-    def plot_electron_density(self,slabs,el_lib={'O':8,'Fe':26,'As':33,'Pb':82,'Sb':51},z_min=0.,z_max=20.,N_layered_water=10,resolution=1000):
+    def plot_electron_density(self,slabs,el_lib={'O':8,'Fe':26,'As':33,'Pb':82,'Sb':51,'P':15},z_min=0.,z_max=20.,N_layered_water=10,resolution=1000):
         #print dinv
         e_data=[]
         labels=[]
