@@ -1554,6 +1554,89 @@ class domain_creator(domain_creator_water,domain_creator_sorbate,domain_creator_
             f.close()
         return bond_valence_container
         
+    #different from v6: not only consider for the bond valence sum but also consider for the coordination situation compared to the pre-defined coordinated members
+    def cal_bond_valence1_new2B_7(self,domain,center_atom_id,center_atom_el,searching_range_offset=0.2,ideal_bond_len_container={('Fe','O'):1.759,('H','O'):0.677,('Pb','O'):2.04,('Sb','O'):1.973},coordinated_atms=[],wt=100,print_file=False,r0_container={('Fe','O'):1.759,('H','O'):0.677,('Pb','O'):2.04,('Sb','O'):1.973},O_cutoff_limit=2.5,waiver_atoms=[]):
+        #different from version 5: there is a waiver_atom list, when each two inside the list are being considered for bond valence, such bond valence constrain will be ignored
+        bond_valence_container={}
+        basis=np.array([5.038,5.434,7.3707])
+        f2=lambda p1,p2:np.sqrt(np.sum((p1-p2)**2))
+        #f2=lambda p1,p2:spatial.distance.cdist([p1],[p2])
+        index=(center_atom_id,center_atom_el)
+        #print center_atom_id,f1(domain,index)
+        for key in domain.keys():
+            
+            dist=f2(domain[key]*basis,domain[index]*basis)
+            searching_range=None
+            if (index[1],key[1]) in ideal_bond_len_container.keys():
+                searching_range=ideal_bond_len_container[(index[1],key[1])]+searching_range_offset
+            elif (key[1],index[1]) in ideal_bond_len_container.keys():
+                searching_range=ideal_bond_len_container[(key[1],index[1])]+searching_range_offset
+            else:
+                searching_range=2.5
+            #print domain.id[i],center_atom_id,dist
+            if (dist<=searching_range)&(dist!=0.):
+                r0=0
+                if (index[1],key[1]) in r0_container.keys():
+                    r0=r0_container[(index[1],key[1])]
+                elif (key[1],index[1]) in r0_container.keys():
+                    r0=r0_container[(key[1],index[1])]
+                elif ((index[1]=='O')&(key[1]=='O')):
+                    if sum([each in key[0] for each in waiver_atoms])==1 and sum([eachcase in center_atom_id for eachcase in waiver_atoms])==1:
+                        r0=-10
+                    else:
+                        if dist<O_cutoff_limit:
+                            r0=20.#arbitrary r0 here, ensure oxygens are more than 2.65A apart
+                        else:r0=-10
+                elif ((index[1]=='H')&(key[1]=='H')):
+                    if dist<1.5:
+                        r0=0.677
+                        dist=0.679 #arbitrary distance to ensure the bv result is a huge number
+                    else:
+                        r0=0.677
+                        dist=20 #arbitrary distance to ensure the bv result is a tiny tiny number
+                else:
+                    if ((index[1]!='H')&(key[1]!='H')):
+                        r0=-10#allow short sorbate-sorbate distance for consideration of multiple sorbate within one average structure
+                    else:
+                        if dist<2:#cations are not allowed to be closer than 2A to hydrogen atom
+                            r0=0.677
+                            dist=0.679
+                        else:#ignore it if the distance bw cation and Hydrogen is less than 2.5 but higher than 2. A
+                            r0=0.677
+                            dist=20
+                sum_check=0
+                for atm in coordinated_atms:
+                    if atm in key[0]:
+                        sum_check+=1
+                    elif 'HB' in key[0]:
+                        sum_check+=1
+                #print "sum_check",sum_check
+                if sum_check==1:
+                    if r0==0.677:
+                        bond_valence_container[key[0]]=0.24/(dist-r0)
+                    else:
+                        bond_valence_container[key[0]]=np.exp((r0-dist)/0.37)
+                else:
+                    if r0==0.677:
+                        bond_valence_container[key[0]]=0.24/(dist-r0)
+                    else:
+                        bond_valence_container[key[0]]=np.exp((r0-dist)/0.37)*wt
+                #print domain.id[i],f1(domain,i)
+        sum_valence=0.
+        for key in bond_valence_container.keys():
+            sum_valence=sum_valence+bond_valence_container[key]
+        #Trigger penalty for under-coordination situation
+        if len(bond_valence_container.keys())<len(coordinated_atms):
+            sum_valence=sum_valence*wt
+        bond_valence_container['total_valence']=sum_valence
+        if print_file==True:
+            f=open('/home/tlab/sphalerite/jackey/model2/files_pb/bond_valence_'+center_atom_id+'.txt','w')
+            for i in bond_valence_container.keys():
+                s = '%-5s   %7.5e\n' % (i,bond_valence_container[i])
+                f.write(s)
+            f.close()
+        return bond_valence_container
+        
     def cal_bond_valence1_new2B3(self,domain,center_atom_id,center_atom_el,searching_range=2.5,coordinated_atms=[],wt=100,print_file=False):
         #different from new2B:consider a very soft limit for cation cation distance cutoff (1. instead of 2.3), everything else is the same
         #purposely be used to include sorbates into one domain
