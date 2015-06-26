@@ -66,7 +66,7 @@ F1F2_FILE="C:\\Users\\jackey\\Google Drive\\data\\f1f2_temp.f1f2"
 F1F2=None
 
 BV_OFFSET_SORBATE=[[0.2]*8]*len(pickup_index)
-SEARCH_RANGE_OFFSET=0.2
+SEARCH_RANGE_OFFSET=0.3
 
 USE_COORS=[[0,0,0,0]*10]*len(pickup_index)
 COORS={(0,0):{'sorbate':[[0,0,0]],'oxygen':[[0,0,0],[0,0,0]]},\
@@ -320,7 +320,7 @@ else:
     REF_POINTS=[REF_POINTS_SEPERATED_HL[i][i] for i in range(N_HL)]+[REF_POINTS_SEPERATED[i][N_HL+i] for i in range(N_FL)]+[[None]]*7#each item inside is a list of one or couple items, and each water set has its own ref point
         
 ##chemically different domain type##
-DOMAIN=pick([1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2])
+DOMAIN=pick([1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2])
 DOMAIN_NUMBER=len(DOMAIN)
 
 SORBATE_NUMBER=pick_act(SORBATE_NUMBER_HL+SORBATE_NUMBER_HL_EXTRA+SORBATE_NUMBER_FL+SORBATE_NUMBER_FL_EXTRA)

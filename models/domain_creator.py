@@ -1626,7 +1626,7 @@ class domain_creator(domain_creator_water,domain_creator_sorbate,domain_creator_
         for key in bond_valence_container.keys():
             sum_valence=sum_valence+bond_valence_container[key]
         #Trigger penalty for under-coordination situation
-        if len(bond_valence_container.keys())<len(coordinated_atms):
+        if len(bond_valence_container.keys())<len(coordinated_atms) and center_atom_el!='O': 
             sum_valence=sum_valence*wt
         bond_valence_container['total_valence']=sum_valence
         if print_file==True:
