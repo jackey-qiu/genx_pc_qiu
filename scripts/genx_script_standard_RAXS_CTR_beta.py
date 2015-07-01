@@ -7,6 +7,7 @@ import sys,pickle,__main__
 import models.domain_creator as domain_creator
 try:
     import make_parameter_table_GenX_beta4 as make_grid
+    import formate_xyz_to_vtk as xyz
 except:
     pass
 from copy import deepcopy
@@ -41,7 +42,7 @@ running_mode=1
 USE_BV=True
 COVALENT_HYDROGEN_RANDOM=False
 COUNT_DISTAL_OXYGEN=False
-ADD_DISTAL_LIGAND_WILD=[[False]*6]*10
+ADD_DISTAL_LIGAND_WILD=[[False]*10]*10
 BOND_VALENCE_WAIVER=[]
 
 SORBATE=[['Sb','Pb'],['Pb'],['As','As','As']]
@@ -1699,12 +1700,22 @@ def Sim(data,VARS=VARS):
             N_HB_SURFACE=sum(COVALENT_HYDROGEN_NUMBER[i])
             N_HB_DISTAL=sum(PROTONATION_DISTAL_OXYGEN[i])
             total_sorbate_number=sum(SORBATE_NUMBER[i])+sum([np.sum(N_list) for N_list in O_NUMBER[i]])
+            N_sorbate,N_distal_old=np.array(SORBATE_NUMBER[i]),np.array([np.sum(N_list) for N_list in O_NUMBER[i]])
+            N_distal=[np.sum(N_distal_old[j*2:j*2+2]) for j in range(len(N_distal_old)/2)]
+            N_sorbate_and_distal=N_sorbate+N_distal
+            first_item_index=[0]+[np.sum(N_sorbate_and_distal[0:j+1]) for j in range(len(N_sorbate_and_distal)-1)]
+            length_of_each_segment=list(N_sorbate_and_distal/2)
+            first_item_index.append(np.sum(N_sorbate_and_distal))
+            length_of_each_segment.append(WATER_NUMBER[i])
             water_number=WATER_NUMBER[i]*3
             TOTAL_NUMBER=total_sorbate_number+water_number/3
             if INCLUDE_HYDROGEN:
                 TOTAL_NUMBER=N_HB_SURFACE+N_HB_DISTAL+total_sorbate_number+water_number
-            domain_creator.print_data2(N_sorbate=TOTAL_NUMBER,domain=VARS['domain'+str(i+1)+'A'],z_shift=1,half_layer=DOMAIN[i]-2,half_layer_long=half_layer_pick[i],full_layer_long=full_layer_pick[i],save_file='D://'+'Model_domain'+str(i+1)+'.xyz')    
-    
+            domain_creator.print_data2(N_sorbate=TOTAL_NUMBER,domain=VARS['domain'+str(i+1)+'A'],z_shift=1,half_layer=DOMAIN[i]-2,half_layer_long=half_layer_pick[i],full_layer_long=full_layer_pick[i],save_file='D://'+'Model_domain'+str(i+1)+'_dsv.xyz')    
+            domain_creator.print_data2C(domain=VARS['domain'+str(i+1)+'A'],z_shift=1,half_layer=DOMAIN[i]-2,half_layer_long=half_layer_pick[i],full_layer_long=full_layer_pick[i],save_file='D://'+'Model_domain'+str(i+1)+'.xyz',sorbate_index_list=first_item_index,each_segment_length=length_of_each_segment)    
+            test=xyz.formate_vtk('D://'+'Model_domain'+str(i+1)+'.xyz')
+            test.all_in_all()
+
     #make dummy raxr dataset you will need to double check the LB,dL and the hkl
     DUMMY_RAXR_BUILT=False
     if DUMMY_RAXR_BUILT:
