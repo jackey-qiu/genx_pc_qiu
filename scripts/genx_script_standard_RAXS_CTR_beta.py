@@ -188,10 +188,10 @@ N_HL=len(pickup_index)-N_FL
 COHERENCE=[{True:range(len(pickup_index))}] #want to add up in coherence? items inside list corresponding to each domain
 ##cal bond valence switch##
 SEARCH_MODE_FOR_SURFACE_ATOMS=True#If true then cal bond valence of surface atoms based on searching within a spherical region
-METAL_VALENCE={'Pb':(2.,3.),'Sb':(5.,6.),'As':(5.,4.),'P':(5.,4.)}#for each value (valence charge,coordination number)
-R0_BV={('As','O'):1.767,('Fe','O'):1.759,('H','O'):0.677,('Pb','O'):2.04,('Sb','O'):1.973,('P','O'):1.617}#r0 for different couples
-IDEAL_BOND_LENGTH={('As','O'):1.68,('Fe','O'):2.02,('Pb','O'):2.19,('Sb','O'):2.04,('P','O'):1.534}#ideal bond length for each case
-LOCAL_STRUCTURE_MATCH_LIB={'trigonal_pyramid':['Pb'],'octahedral':['Sb','Fe'],'tetrahedral':['As','P']}
+METAL_VALENCE={'Pb':(2.,3.),'Sb':(5.,6.),'As':(5.,4.),'P':(5.,4.),'Cr':(6.,4.),'Cd':(2.,6.),'Cu':(2.,6.),'Zn':(2.,6.)}#for each value (valence charge,coordination number)
+R0_BV={('As','O'):1.767,('Cr','O'):1.794,('Cd','O'):1.904,('Cu','O'):1.679,('Zn','O'):1.704,('Fe','O'):1.759,('H','O'):0.677,('Pb','O'):2.04,('Sb','O'):1.973,('P','O'):1.617}#r0 for different couples
+IDEAL_BOND_LENGTH={('As','O'):1.68,('Cr','O'):1.64,('Cd','O'):2.31,('Cu','O'):2.09,('Zn','O'):2.11,('Fe','O'):2.02,('Pb','O'):2.19,('Sb','O'):2.04,('P','O'):1.534}#ideal bond length for each case
+LOCAL_STRUCTURE_MATCH_LIB={'trigonal_pyramid':['Pb'],'octahedral':['Sb','Fe','Cd','Cu','Zn'],'tetrahedral':['As','P','Cr']}
 debug_bv=not running_mode
 ##want to output the data for plotting?##
 PLOT=not running_mode

@@ -4,14 +4,15 @@ import numpy as np
 #global variables
 
 cal_dist=lambda p1,p2:np.sqrt(np.sum((p1-p2)**2))
-POLY_LIB={'tectrahedra':['As'],'pyramid':['Pb'],'octahedron':['Fe','Sb']}
-HT_CUTOFF={'As':6.0,'Pb':6.0,'Fe':0.0,'Sb':0.0}#height cutoff values for different elements,the associated elements with the heights above the cutoff will be shown in polyhedron otherwise shown in sphere
-BOND_CUTOFF={'Fe':2.22,'Pb':2.6,'Sb':2.35,'As':2.0}#cutoff bond length used to locate all the coordinated members
-PT_INFO={'Pb':[0.0,0.5],'Fe':[0.3,0.3],'O':[0.6,0.4],'Sb':[0.9,0.6],'As':[0.8,0.6]}#first value is scalar for the color and the second one the size
-LINE_INFO={'Pb':[0.,0.5],'Fe':[0.3,0.3],'Sb':[0.9,0.6],'As':[0.8,0.6]}#the same as above
-FACE_INFO={'Pb':0,'Fe':0.3,'Sb':0.9,'As':0.8}#color for each face of polyhedron
+POLY_LIB={'tectrahedra':['As','P','Cr'],'pyramid':['Pb'],'octahedron':['Sb','Fe','Cd','Cu','Zn']}
+HT_CUTOFF={'As':6.0,'Pb':6.0,'Fe':0.0,'Sb':0.0,'P':0.,'Cr':0.,'Cd':0.,'Cu':0.,'Zn':0.}#height cutoff values for different elements,the associated elements with the heights above the cutoff will be shown in polyhedron otherwise shown in sphere
+BOND_CUTOFF={'Fe':2.22,'Pb':2.6,'Sb':2.35,'As':2.0,'P':1.8,'Cr':1.84,'Cd':2.51,'Cu':2.3,'Zn':2.31}#cutoff bond length used to locate all the coordinated members
+PT_INFO={'Pb':[0.0,0.5],'Fe':[0.3,0.3],'O':[0.6,0.4],'Sb':[0.9,0.6],'As':[0.8,0.6],'P':[0.2,0.6],'Cr':[0.25,0.6],'Cd':[0.4,0.6],'Cu':[0.45,0.6],'Zn':[0.55,0.6]}#first value is scalar for the color and the second one the size
+LINE_INFO={'Pb':[0.,0.5],'Fe':[0.3,0.3],'Sb':[0.9,0.6],'As':[0.8,0.6],'P':[0.2,0.6],'Cr':[0.25,0.6],'Cd':[0.4,0.6],'Cu':[0.45,0.6],'Zn':[0.55,0.6]}#the same as above
+FACE_INFO={'Pb':0,'Fe':0.3,'Sb':0.9,'As':0.8,'P':0.2,'Cr':0.25,'Cd':0.4,'Cu':0.45,'Zn':0.55}#color for each face of polyhedron
 #rgba values for each element, these values needed to be manually set inside the paraview GUI by setting the color transfer function values, make sure the scalar values matches to the settings above
-COLOR_LIB={'Pb':[0.33984375,0.3515625,0.375,1.0],'Fe':[0.50390625,  0.48046875,  0.7734375,1],'O':[0.9375,0,0,1],'Sb':[0.62109375,  0.39453125,  0.70703125],'As':[0.742,  0.504,  0.887]}
+COLOR_LIB={'Pb':[0.33984375,0.3515625,0.375,1.0],'Fe':[0.50390625,  0.48046875,  0.7734375,1],'O':[0.9375,0,0,1],'Sb':[0.62109375,  0.39453125,  0.70703125],'As':[0.742,  0.504,  0.887],\
+           'P':[0.33984375,0.3515625,0.375,1.0],'Cr':[0.50390625,  0.48046875,  0.7734375,1],'Cd':[0.9375,0,0,1],'Cu':[0.62109375,  0.39453125,  0.70703125],'Zn':[0.742,  0.504,  0.887]}
 
 
 class formate_vtk():
@@ -146,7 +147,7 @@ class formate_vtk():
         for i in range(len(self.points)):
             f.write("%3.4f %3.4f %3.4f\n"%(self.points[i][0],self.points[i][1],self.points[i][2]))
         #write triangles
-        keys_tri_bond=self.triangle_unit_container.keys()
+        keys_tri_bond=[key for key in self.triangle_unit_container.keys() if self.triangle_unit_container[key]!=[]]
         N_triangles=np.sum([len(self.triangle_unit_container[each]) for each in keys_tri_bond])
         f.write('POLYGONS '+str(N_triangles)+' '+str(4*N_triangles)+'\n')
         for key in keys_tri_bond:
