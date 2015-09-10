@@ -111,7 +111,9 @@ def make_pick_index(full_layer_pick,pick,half_layer_cases=8,full_layer_cases=8):
     for i in range(len(full_layer_pick)):
         pick_index=[1]*full_layer_cases
         if full_layer_pick[i]!=None:
-            pick_index[pick[i][0]-half_layer_cases]=full_layer_pick[i]
+            #pick_index[pick[i][0]-half_layer_cases]=full_layer_pick[i]
+            for j in pick[i]:
+                pick_index[j-half_layer_cases]=full_layer_pick[i]
             pick_index_all.append(pick_index)
         else:
             pass
@@ -122,7 +124,9 @@ def make_pick_index_half_layer(half_layer_pick,pick,half_layer_cases=8):
     for i in range(len(half_layer_pick)):
         pick_index=[2]*half_layer_cases
         if half_layer_pick[i]!=None:
-            pick_index[pick[i][0]]=half_layer_pick[i]
+            #pick_index[pick[i][0]]=half_layer_pick[i]
+            for j in pick[i]:
+                pick_index[j]=half_layer_pick[i]
             pick_index_all.append(pick_index)
         else:
             pass
