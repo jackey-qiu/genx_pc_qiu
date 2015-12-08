@@ -720,9 +720,12 @@ class Sample:
                 z_each=float(z_max-z_min)/resolution*i+z_min
                 z_plot.append(z_each)
                 #normalized with occupancy and weight factor (manually scaled by a factor 2 to consider the half half of domainA and domainB)
+                #here considering the e density for each atom layer will be distributed within a volume of Auc*1, so the unit here is e/A3
                 eden.append(np.sum(slabs[key]['wt']*2*oc*f/Auc*(2*np.pi*u**2)**-0.5*np.exp(-0.5/u**2*(z_each-z)**2)))
                 if slabs[key]['layered_water']!=[]:
-                    eden[-1]=eden[-1]+np.sum(8*slabs[key]['wt']*2*Auc*d_w*water_density*(2*np.pi*np.array(sigma_layered_water)**2)**-0.5*np.exp(-0.5/np.array(sigma_layered_water)**2*(z_each-np.array(z_layered_water))**2))
+                    #eden[-1]=eden[-1]+np.sum(8*slabs[key]['wt']*2*Auc*d_w*water_density*(2*np.pi*np.array(sigma_layered_water)**2)**-0.5*np.exp(-0.5/np.array(sigma_layered_water)**2*(z_each-np.array(z_layered_water))**2))
+                    eden[-1]=eden[-1]+np.sum(8*slabs[key]['wt']*2*water_density*(2*np.pi*np.array(sigma_layered_water)**2)**-0.5*np.exp(-0.5/np.array(sigma_layered_water)**2*(z_each-np.array(z_layered_water))**2))
+                    
             labels.append(key)
             e_data.append(np.array([z_plot,eden]))
             e_total=e_total+np.array(eden)

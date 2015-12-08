@@ -1552,15 +1552,15 @@ def Sim(data,VARS=VARS):
                         #And note the maximum coordination number for O is 4
                         case_tag=len(VARS['match_lib_'+str(i+1)+'A'][key])#current coordination number
                         if COVALENT_HYDROGEN_RANDOM==True:
-                            if key in map(lambda x:x+'_D'+str(i+1)+'A',POTENTIAL_COVALENT_HYDROGEN_ACCEPTOR[i]):
-                                C_H_N=range(4-case_tag)#max CN allowed is 4
+                            if case_tag<4 and key in map(lambda x:x+'_D'+str(i+1)+'A',POTENTIAL_COVALENT_HYDROGEN_ACCEPTOR[i]):
+                                C_H_N=range(4-case_tag+1)#max CN allowed is 4,if case_tag=3, then range(4-case_tag+1)=[0,1]
                                 bv_offset=[ _widen_validness_range(2-0.88*N-temp_bv,2-0.68*N-temp_bv) for N in C_H_N]
                                 C_H_N=C_H_N[bv_offset.index(min(bv_offset))]
                                 case_tag=case_tag+C_H_N#CN after considering the proton
                                 if PRINT_PROTONATION:
                                     print key,C_H_N
                                 if key in map(lambda x:x+'_D'+str(i+1)+'A',POTENTIAL_HYDROGEN_ACCEPTOR[i]):#consider potential hydrogen bond (you can have or have not H-bonding)
-                                    if _widen_validness_range(2-0.88*C_H_N-temp_bv,2-0.68*C_H_N-temp_bv)==0 or _widen_validness_range(2-0.88*C_H_N-temp_bv,2-0.68*C_H_N-temp_bv)==100 or case_tag>=4:
+                                    if _widen_validness_range(2-0.88*C_H_N-temp_bv,2-0.68*C_H_N-temp_bv)==0 or _widen_validness_range(2-0.88*C_H_N-temp_bv,2-0.68*C_H_N-temp_bv)==100:
                                     #if saturated already or over-saturated, then adding H-bonding wont help decrease the the total bv anyhow
                                     #or reach the maximum CN(4), the adding one hydrogen bond is not allowed
                                         bv=bv+_widen_validness_range(2-0.88*C_H_N-temp_bv,2-0.68*C_H_N-temp_bv)
@@ -1569,20 +1569,12 @@ def Sim(data,VARS=VARS):
                                     #if undersaturation, then compare the cases of inclusion of H-bonding and exclusion of H-bonding. Whichever give rise to the lower bv will be used.
                                         bv=bv+min([_widen_validness_range(2-0.88*C_H_N-temp_bv,2-0.68*C_H_N-temp_bv),_widen_validness_range(2-0.88*C_H_N-temp_bv-0.25,2-0.68*C_H_N-temp_bv)])
                                         if debug_bv:bv_container[key]=min([_widen_validness_range(2-0.88*C_H_N-temp_bv,2-0.68*C_H_N-temp_bv),_widen_validness_range(2-0.88*C_H_N-temp_bv-0.25,2-0.68*C_H_N-temp_bv)])
-                                else:
+                                else:#consider covalent hydrogen bond only
                                     bv=bv+_widen_validness_range(2-0.88*C_H_N-temp_bv,2-0.68*C_H_N-temp_bv)
                                     if debug_bv:bv_container[key]=_widen_validness_range(2-0.88*C_H_N-temp_bv,2-0.68*C_H_N-temp_bv)
-                            else:#if no covalent hydrogen bond
-                                if key in map(lambda x:x+'_D'+str(i+1)+'A',POTENTIAL_HYDROGEN_ACCEPTOR[i]):#consider hydrogen bond
-                                    if _widen_validness(2-temp_bv)==0 or _widen_validness(2-temp_bv)==100 or case_tag>=4:
-                                        bv=bv+_widen_validness(2-temp_bv)
-                                        if debug_bv:bv_container[key]=_widen_validness(2-temp_bv)
-                                    else:
-                                        bv=bv+min([_widen_validness(2-temp_bv),_widen_validness_range(2-temp_bv-0.25,2-temp_bv-0.13)])
-                                        if debug_bv:bv_container[key]=min([_widen_validness(2-temp_bv),_widen_validness_range(2-temp_bv-0.25,2-temp_bv-0.13)])
-                                else:#neither covalent hydrogen bond nor hydrogen bond
-                                    bv=bv+_widen_validness(2-temp_bv)
-                                    if debug_bv:bv_container[key]=_widen_validness(2-temp_bv)
+                            elif case_tag==4:#coordination saturation achieved, so neighter covalent hydrogen bond nor hydrogen bond
+                                bv=bv+_widen_validness(2-temp_bv)
+                                if debug_bv:bv_container[key]=_widen_validness(2-temp_bv)
                         else:
                             if key in map(lambda x:x+'_D'+str(i+1)+'A',COVALENT_HYDROGEN_ACCEPTOR[i]):
                                 #if consider convalent hydrogen bond (bv=0.68 to 0.88) while the hydrogen bond has bv from 0.13 to 0.25
@@ -1720,6 +1712,7 @@ def Sim(data,VARS=VARS):
                 TOTAL_NUMBER=N_HB_SURFACE+N_HB_DISTAL+total_sorbate_number+water_number
             domain_creator.print_data2(N_sorbate=TOTAL_NUMBER,domain=VARS['domain'+str(i+1)+'A'],z_shift=1,half_layer=DOMAIN[i]-2,half_layer_long=half_layer_pick[i],full_layer_long=full_layer_pick[i],save_file='D://'+'Model_domain'+str(i+1)+'_dsv.xyz')    
             domain_creator.print_data2C(domain=VARS['domain'+str(i+1)+'A'],z_shift=1,half_layer=DOMAIN[i]-2,half_layer_long=half_layer_pick[i],full_layer_long=full_layer_pick[i],save_file='D://'+'Model_domain'+str(i+1)+'.xyz',sorbate_index_list=first_item_index,each_segment_length=length_of_each_segment)    
+            domain_creator.make_cif_file(domain=VARS['domain'+str(i+1)+'A'],z_shift=1,half_layer=DOMAIN[i]-2,half_layer_long=half_layer_pick[i],full_layer_long=full_layer_pick[i],save_file='D://'+'Model_domain'+str(i+1)+'.cif',sorbate_index_list=first_item_index,each_segment_length=length_of_each_segment)    
             test=xyz.formate_vtk('D://'+'Model_domain'+str(i+1)+'.xyz')
             test.all_in_all()
 
