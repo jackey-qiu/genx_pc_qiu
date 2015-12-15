@@ -1692,7 +1692,7 @@ def Sim(data,VARS=VARS):
     #print domain_creator.extract_component(domain2A,'Pb1_D2A',['dx1','dy2','dz3'])  
     #domain_creator.layer_spacing_calculator(domain1A,12,True)
     #domain_class_1.revert_coors_to_geometry_setting_tetrahedra_BD(domain5A,['O1_5_0_D5A','O1_8_0_D5A'],[None,'+x'],'As1_D5A','+y','Fe1_8_0_D5A','+x')
-    #domain_creator.print_data_for_publication(N_sorbate=4,domain=domain1A,z_shift=1,half_layer=True,full_layer_long=0,save_file='D://model.xyz')
+    #domain_creator.print_data_for_publication_B(N_sorbate=4,domain=domain1A,z_shift=1,half_layer=True,full_layer_long=0,save_file='D://model.xyz')
     
     if PRINT_MODEL_FILES:
         for i in range(DOMAIN_NUMBER):
