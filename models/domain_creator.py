@@ -507,6 +507,101 @@ def print_data_for_publication_B(N_sorbate=4,domain='',z_shift=1,half_layer=Fals
             f.write(s)
     f.close()
     
+def print_data_for_publication_B2(N_sorbate=4,domain='',z_shift=1,layer_types=0,save_file='D://model.xyz'):
+    #very similar to print_data_for_publication_B but use numbers to identify the layer type (long or short HLT/FLT)
+    #0(short FLT),1(long FLT), 2(short HLT), 3(long HLT)
+    data=domain._extract_values()
+    index_all=range(len(data[0]))
+    index=None
+    if layer_types==0:
+        index=index_all[0:12]+index_all[32:32+N_sorbate]
+    elif layer_types==1:
+        index=index_all[0:22]+index_all[42:42+N_sorbate]
+    elif layer_types==2:
+        index=index_all[0:10]+index_all[30:30+N_sorbate]
+        index.pop(2)
+        index.pop(2)
+    elif layer_types==3:
+        index=index_all[0:20]+index_all[40:40+N_sorbate]
+        index.pop(2)
+        index.pop(2)
+    f=open(save_file,'w')
+    #f.write(str(len(index))+'\n#\n')
+    for i in index:
+        if i==index[-1]:
+            s = '%s\t%s\t%5.3f\t%5.3f\t%5.3f\t%5.3f\t%5.3f\t%5.3f\t%4.2f\t%4.2f' % (domain.id[i],data[3][i],data[0][i],data[1][i]-0.1391,data[2][i]-z_shift,(data[0][i]-domain.x[i])*5.038,(data[1][i]-domain.y[i])*5.434,(data[2][i]-domain.z[i])*7.3707,domain.u[i],domain.oc[i])
+            f.write(s)
+        else:
+            s = '%s\t%s\t%5.3f\t%5.3f\t%5.3f\t%5.3f\t%5.3f\t%5.3f\t%4.2f\t%4.2f\n' % (domain.id[i],data[3][i],data[0][i],data[1][i]-0.1391,data[2][i]-z_shift,(data[0][i]-domain.x[i])*5.038,(data[1][i]-domain.y[i])*5.434,(data[2][i]-domain.z[i])*7.3707,domain.u[i],domain.oc[i])
+            f.write(s)
+    f.close()
+    
+def make_publication_table(model_file="D:\\Model_domain3A_publication.dat",par_file="D:\\test.tab",el_substrate=['Fe','O'],el_sorbate=['Pb'],abc=[5.038,5.434,7.3707]):
+    """This script is used to combine the output model file and the parameter table to a new file of table with errors for publication
+        The main idea is to extract the error info from the parameter table and append each to the right positions (atom displacements),
+        so that it can save you time to do the tedious work for editing the table for publication.
+        par_file:
+            Parameter table exported from GenX
+        model_file: 
+            A model files exported using the domain_creator.print_data_for_publication_B2()
+        so far this function cannot handle the model containing over 10 slabs (ambiguity could be caused)
+            "O1_11_0_D1A" (10th layer) could not be distinguished with "O1_11_t_D1A"(1st layer)
+        """
+    f_model=open(model_file,'r')
+    f_publication=open(model_file.replace('.dat','_combined.dat'),'w')
+    #the id of each atom looks like O1_1_0_D1A
+    match_lib={'O1':'O1O2','O2':'O1O2',\
+               'O3':'O3O4','O4':'O3O4',\
+               'O5':'O5O6','O6':'O5O6',\
+               'O7':'O7O8','O8':'O7O8',\
+               'O9':'O9O10','O10':'O9O10',\
+               'O11':'O11O12','O12':'O11O12',\
+               'Fe2':'Fe2Fe3','Fe3':'Fe2Fe3',\
+               'Fe4':'Fe4Fe6','Fe6':'Fe4Fe6',\
+               'Fe8':'Fe8Fe9','Fe9':'Fe8Fe9',\
+               'Fe10':'Fe10Fe12','Fe12':'Fe10Fe12'}
+               
+    parameter_values=np.zeros((0,6))
+    f_par=open(par_file,'r')
+    lines_par=f_par.readlines()
+    for line_par in lines_par:
+        if line_par[0:4] in ["gp_"+x[0] for x in el_substrate]:
+            line_par_items=line_par.split('\t')[:-1]
+            parameter_values=np.append(parameter_values,[line_par_items],axis=0)
+    f_par.close()
+
+    lines_model=f_model.readlines()
+
+    f_publication.write("Element\tX(fra)\tY(fra)\tZ(fra)\tdx(errors)(Angstrom)\tdy(errors)(Angstrom)\tdz(errors)(Angstrom)\tu\tocc\n")
+    for line_model in lines_model:
+        line_model_items=line_model.rstrip().split('\t')
+        line_publication_items=line_model_items[1:]
+        id=[None,line_model_items[0].split("_")[-1]]
+        if line_model_items[1] in el_substrate and el_sorbate[0] not in line_model_items[0]:
+            id[0]=line_model_items[1]+line_model_items[0].split("_")[1]
+            for par in parameter_values:
+                if match_lib[id[0]]==par[0].split("_")[1] and id[-1][0:-1] in par[0] and par[-1]!='None' and par[-1]!='-':
+                    opt=par[0].split(".")[-1]
+                    errors=[float(par[-1].split(",")[0][1:]),float(par[-1].split(",")[1][:-1])]
+                    if opt=="setdx":
+                        if par[0].split("_")[1].split(id[0])[0]=='':#sense of left(the glide plane symmetry makes the error boundaries swab as well)
+                            line_publication_items[4]=line_publication_items[4]+" ("+"%1.E" % (errors[0]*abc[0]) +", " + "%1.E" % (errors[1]*abc[0]) + ")"
+                        else:#sense of right
+                            line_publication_items[4]=line_publication_items[4]+" ("+"%1.E" % (-errors[1]*abc[0]) +", " + "%1.E" % (-errors[0]*abc[0]) + ")"
+                    elif opt=="setdy":
+                        line_publication_items[5]=line_publication_items[5]+" ("+"%1.E" % (errors[0]*abc[1]) +", " + "%1.E" % (errors[1]*abc[1]) + ")"
+                    elif opt=="setdz":
+                        line_publication_items[6]=line_publication_items[6]+" ("+"%1.E" % (errors[0]*abc[2]) +", " + "%1.E" % (errors[1]*abc[2]) + ")"
+                    elif opt=="setu":
+                        line_publication_items[7]=line_publication_items[7]+" ("+"%1.E" % errors[0] +", " + "%1.E" % errors[1] + ")"
+                    elif opt=="setoc":
+                        line_publication_items[8]=line_publication_items[8]+" ("+"%1.E" % errors[0] +", " + "%1.E" % errors[1] + ")"
+        elif line_model_items[1] in el_sorbate:#to be completed
+            pass
+        f_publication.write('\t'.join(line_publication_items)+"\n")
+    f_model.close()
+    f_publication.close()
+
 def print_data_for_publication2(N_sorbate=4,domain='',z_shift=1,half_layer=False,full_layer_long=0,save_file='D://model.xyz'):
     data=domain._extract_values()
     index_all=range(len(data[0]))

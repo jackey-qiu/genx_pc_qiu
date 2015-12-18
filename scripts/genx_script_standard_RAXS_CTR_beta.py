@@ -1715,6 +1715,12 @@ def Sim(data,VARS=VARS):
             domain_creator.make_cif_file(domain=VARS['domain'+str(i+1)+'A'],z_shift=1,half_layer=DOMAIN[i]-2,half_layer_long=half_layer_pick[i],full_layer_long=full_layer_pick[i],save_file='D://'+'Model_domain'+str(i+1)+'.cif',sorbate_index_list=first_item_index,each_segment_length=length_of_each_segment)    
             test=xyz.formate_vtk('D://'+'Model_domain'+str(i+1)+'.xyz')
             test.all_in_all()
+            #output for publication
+            if water_pars['use_default']:
+                domain_creator.print_data_for_publication_B2(N_sorbate=np.sum(SORBATE_NUMBER[i])+np.sum(O_NUMBER[i])+WATER_NUMBER[i],domain=VARS['domain'+str(int(i+1))+'A'],z_shift=1,layer_types=(half_layer+full_layer_long)[i],save_file='D://'+'Model_domain'+str(i+1)+'A_publication.dat')
+            else:
+                domain_creator.print_data_for_publication_B2(N_sorbate=np.sum(SORBATE_NUMBER[i])+np.sum(O_NUMBER[i]),domain=VARS['domain'+str(int(i+1))+'A'],z_shift=1,layer_types=(half_layer+full_layer_long)[i],save_file='D://'+'Model_domain'+str(i+1)+'A_publication.dat')
+            domain_creator.make_publication_table(model_file='D://'+'Model_domain'+str(i+1)+'A_publication.dat',par_file="D:\\test.tab",el_substrate=['Fe','O'],el_sorbate=['Pb'],abc=[5.038,5.434,7.3707])
 
     #make dummy raxr dataset you will need to double check the LB,dL and the hkl
     DUMMY_RAXR_BUILT=False
