@@ -5,11 +5,8 @@ from datetime import datetime
 import numpy as np
 import sys,pickle,__main__
 import models.domain_creator as domain_creator
-try:
-    import make_parameter_table_GenX_beta4 as make_grid
-    import formate_xyz_to_vtk as xyz
-except:
-    pass
+import supportive_functions.make_parameter_table_GenX_beta4 as make_grid
+import supportive_functions.formate_xyz_to_vtk as xyz
 from copy import deepcopy
 
 #************************************program begins from here **********************************************
@@ -39,7 +36,7 @@ TERNARY FL-->   23        24          25            26             27           
 """
 ##############################################main setup zone###############################################
 running_mode=1
-USE_BV=True
+USE_BV=False
 COVALENT_HYDROGEN_RANDOM=False
 COUNT_DISTAL_OXYGEN=False
 ADD_DISTAL_LIGAND_WILD=[[False]*10]*10
@@ -60,7 +57,7 @@ DOMAINS_BV=range(len(pickup_index))
 TABLE_DOMAINS=[1]*len(pickup_index)
 
 RAXR_EL='Pb'
-NUMBER_SPECTRA=28
+NUMBER_SPECTRA=0
 RESONANT_EL_LIST=[1,0,0]
 E0=13035
 F1F2_FILE="C:\\Users\\jackey\\Google Drive\\data\\f1f2_temp.f1f2"
@@ -75,6 +72,7 @@ COORS={(0,0):{'sorbate':[[0,0,0]],'oxygen':[[0,0,0],[0,0,0]]},\
 
 water_pars={'use_default':True,'number':[0,2,0],'ref_point':[[[]],[['O1_3_0','O1_4_0']],[[]]]}
 layered_water_pars={'yes_OR_no':[0]*len(pickup_index),'ref_layer_height':[]}
+layered_sorbate_pars={'yes_OR_no':[0]*len(pickup_index),'ref_layer_height':[],'el':''}
 
 O_NUMBER_HL=[[4,4],[0,0],[1,1],[0,0],[3,3],[0,0],[3,3],[0,0]]
 O_NUMBER_HL_EXTRA=[[0,0],[0,0],[0,0],[1,1],[1,1],[0,0],[0,0]]
@@ -96,6 +94,8 @@ commands_other=\
     
    ]
 commands=commands_other+commands_surface
+#depository path for output files(structure model files(.xyz,.cif), optimized values (CTR,RAXR,E_Density) for plotting
+output_file_path="D:\\"
 ##############################################end of main setup zone############################################
 
 ##file paths and wt factors##
@@ -376,7 +376,7 @@ if TABLE:
                 elif len(SORBATE_ATTACH_ATOM[i][j])==3:
                     temp_binding_mode.append('TD')   
         binding_mode.append(temp_binding_mode)
-    make_grid.make_structure(map(sum,SORBATE_NUMBER),O_N,WATER_NUMBER,DOMAIN,Metal=SORBATE,binding_mode=binding_mode,long_slab=full_layer_pick,long_slab_HL=half_layer_pick,local_structure=LOCAL_STRUCTURE,add_distal_wild=ADD_DISTAL_LIGAND_WILD,use_domains=TABLE_DOMAINS,N_raxr=NUMBER_SPECTRA,domain_raxr_el=RESONANT_EL_LIST)
+    make_grid.make_structure(map(sum,SORBATE_NUMBER),O_N,WATER_NUMBER,DOMAIN,Metal=SORBATE,binding_mode=binding_mode,long_slab=full_layer_pick,long_slab_HL=half_layer_pick,local_structure=LOCAL_STRUCTURE,add_distal_wild=ADD_DISTAL_LIGAND_WILD,use_domains=TABLE_DOMAINS,N_raxr=NUMBER_SPECTRA,domain_raxr_el=RESONANT_EL_LIST,layered_water=layered_water_pars['yes_OR_no'],layered_sorbate=layered_sorbate_pars['yes_OR_no'])
 
 #function to group the Fourier components (FC) from different domains in each RAXR spectra
 #domain_index=[0,1] means setting the FC for domain2 (1+1) same as domain1 (0+1)
@@ -970,6 +970,14 @@ for i in range(DOMAIN_NUMBER):
         vars()['rgh_domain'+str(int(i+1))].new_var('first_layer_height',4.0)#relative height in A
         vars()['rgh_domain'+str(int(i+1))].new_var('d_w',1.9)#inter-layer water seperation in A
         vars()['rgh_domain'+str(int(i+1))].new_var('density_w',0.033)#number density in unit of # of waters per cubic A
+        
+    if layered_sorbate_pars['yes_OR_no'][i]:
+        vars()['rgh_domain'+str(int(i+1))].new_var('u0_s',0.4)
+        vars()['rgh_domain'+str(int(i+1))].new_var('ubar_s',0.4)
+        vars()['rgh_domain'+str(int(i+1))].new_var('first_layer_height_s',4.0)#relative height in A
+        vars()['rgh_domain'+str(int(i+1))].new_var('d_s',1.9)#inter-layer sorbate seperation in A
+        vars()['rgh_domain'+str(int(i+1))].new_var('density_s',0.033)#number density in unit of # of sorbates per cubic A
+        
     if WATER_NUMBER[i]!=0:#add water molecules if any
         if WATER_PAIR:
             for jj in range(WATER_NUMBER[i]/2):#note will add water pair (two oxygens) each time, and you can't add single water 
@@ -1488,7 +1496,17 @@ def Sim(data,VARS=VARS):
                         if debug_bv:bv_container[id]=tmp_bv
             #cal bv for surface atoms and sorbates
             #only consdier domainA since domain B is symmetry related to domainA
-            for key in VARS['match_lib_'+str(i+1)+'A'].keys():
+            waiver_box=[]#the first set of anchored oxygens will be waived for being considered for bond valence constraints
+            attach_atom_ids=VARS['SORBATE_ATTACH_ATOM'][i]
+            if len(attach_atom_ids)==0:
+                pass
+            elif len(attach_atom_ids)!=0 and len(attach_atom_ids)%2==0:
+                if len(attach_atom_ids[0])<3:#only for monodentate and bidentate binding mode
+                    waiver_box=map(lambda x:x+'_D'+str(i+1)+'A',attach_atom_ids[0])
+                else:
+                    pass
+
+            for key in [each_key for each_key in VARS['match_lib_'+str(i+1)+'A'].keys() if each_key not in waiver_box]:
                 temp_bv=None
                 if ([sorbate not in key for sorbate in SORBATE_EL_LIST]==[True]*len(SORBATE_EL_LIST)) and ("HO" not in key) and ("Os" not in key):#surface atoms
                     if SEARCH_MODE_FOR_SURFACE_ATOMS:#cal temp_bv based on searching within spherical region
@@ -1620,6 +1638,7 @@ def Sim(data,VARS=VARS):
     #set up multiple domains
     #note for each domain there are two sub domains which symmetrically related to each other, so have equivalent wt
     for i in range(DOMAIN_NUMBER):
+        #extract layered water info
         u0,ubar,d_w,first_layer_height,density_w=0,0,0,0,0
         ref_height=None
         layered_water_A,layered_water_B=[],[]
@@ -1636,7 +1655,24 @@ def Sim(data,VARS=VARS):
         wt_DA=getattr(VARS['rgh_domain'+str(int(i+1))],'wt_domainA')
         domain['domain'+str(int(i+1))+'A']={'slab':VARS['domain'+str(int(i+1))+'A'],'wt':wt_DA*vars()['wt_domain'+str(int(i+1))]/total_wt,'layered_water':layered_water_A}
         domain['domain'+str(int(i+1))+'B']={'slab':VARS['domain'+str(int(i+1))+'B'],'wt':(1-wt_DA)*vars()['wt_domain'+str(int(i+1))]/total_wt,'layered_water':layered_water_B}
-      
+        #extract layered sorbate info
+        u0_s,ubar_s,d_s,first_layer_height_s,density_s=0,0,0,0,0
+        ref_height_s=None
+        layered_sorbate_A,layered_sorbate_B=[],[]
+        if layered_sorbate_pars['yes_OR_no'][i]:
+            u0_s=getattr(VARS['rgh_domain'+str(int(i+1))],'u0_s')
+            ubar_s=getattr(VARS['rgh_domain'+str(int(i+1))],'ubar_s')
+            d_s=getattr(VARS['rgh_domain'+str(int(i+1))],'d_s')
+            first_layer_height_s=getattr(VARS['rgh_domain'+str(int(i+1))],'first_layer_height_s')
+            density_s=getattr(VARS['rgh_domain'+str(int(i+1))],'density_s')
+            ref_atom_s=layered_sorbate_pars['ref_layer_height'][i]+'_D'+str(i+1)+'A'
+            ref_height_s=domain_creator.extract_coor(VARS['domain'+str(int(i+1))+'A'],ref_atom_s)[2]
+            layered_sorbate_A=[layered_sorbate_pars['el'],u0_s,ubar_s,d_s,first_layer_height_s/7.3707+ref_height_s,density_s,F1F2]#7.3707 is specifically for hematite rcut
+            layered_sorbate_B=[layered_sorbate_pars['el'],u0_s,ubar_s,d_s,first_layer_height_s/7.3707+ref_height_s-0.5,density_s,F1F2]#symmetry related domain has height offset of 0.5
+        wt_DA=getattr(VARS['rgh_domain'+str(int(i+1))],'wt_domainA')
+        domain['domain'+str(int(i+1))+'A']={'slab':VARS['domain'+str(int(i+1))+'A'],'wt':wt_DA*vars()['wt_domain'+str(int(i+1))]/total_wt,'layered_water':layered_water_A,'layered_sorbate':layered_sorbate_A}
+        domain['domain'+str(int(i+1))+'B']={'slab':VARS['domain'+str(int(i+1))+'B'],'wt':(1-wt_DA)*vars()['wt_domain'+str(int(i+1))]/total_wt,'layered_water':layered_water_B,'layered_sorbate':layered_sorbate_B}
+    
     if COUNT_TIME:t_2=datetime.now()
     
     #cal structure factor for each dataset in this for loop
@@ -1710,18 +1746,20 @@ def Sim(data,VARS=VARS):
             TOTAL_NUMBER=total_sorbate_number+water_number/3
             if INCLUDE_HYDROGEN:
                 TOTAL_NUMBER=N_HB_SURFACE+N_HB_DISTAL+total_sorbate_number+water_number
-            domain_creator.print_data2(N_sorbate=TOTAL_NUMBER,domain=VARS['domain'+str(i+1)+'A'],z_shift=1,half_layer=DOMAIN[i]-2,half_layer_long=half_layer_pick[i],full_layer_long=full_layer_pick[i],save_file='D://'+'Model_domain'+str(i+1)+'_dsv.xyz')    
-            domain_creator.print_data2C(domain=VARS['domain'+str(i+1)+'A'],z_shift=1,half_layer=DOMAIN[i]-2,half_layer_long=half_layer_pick[i],full_layer_long=full_layer_pick[i],save_file='D://'+'Model_domain'+str(i+1)+'.xyz',sorbate_index_list=first_item_index,each_segment_length=length_of_each_segment)    
-            domain_creator.make_cif_file(domain=VARS['domain'+str(i+1)+'A'],z_shift=1,half_layer=DOMAIN[i]-2,half_layer_long=half_layer_pick[i],full_layer_long=full_layer_pick[i],save_file='D://'+'Model_domain'+str(i+1)+'.cif',sorbate_index_list=first_item_index,each_segment_length=length_of_each_segment)    
-            test=xyz.formate_vtk('D://'+'Model_domain'+str(i+1)+'.xyz')
+            domain_creator.print_data2(N_sorbate=TOTAL_NUMBER,domain=VARS['domain'+str(i+1)+'A'],z_shift=1,half_layer=DOMAIN[i]-2,half_layer_long=half_layer_pick[i],full_layer_long=full_layer_pick[i],save_file=output_file_path+'Model_domain'+str(i+1)+'_dsv.xyz')    
+            domain_creator.print_data2C(domain=VARS['domain'+str(i+1)+'A'],z_shift=1,half_layer=DOMAIN[i]-2,half_layer_long=half_layer_pick[i],full_layer_long=full_layer_pick[i],save_file=output_file_path+'Model_domain'+str(i+1)+'.xyz',sorbate_index_list=first_item_index,each_segment_length=length_of_each_segment)    
+            domain_creator.make_cif_file(domain=VARS['domain'+str(i+1)+'A'],z_shift=1,half_layer=DOMAIN[i]-2,half_layer_long=half_layer_pick[i],full_layer_long=full_layer_pick[i],save_file=output_file_path+'Model_domain'+str(i+1)+'.cif',sorbate_index_list=first_item_index,each_segment_length=length_of_each_segment)    
+            test=xyz.formate_vtk(output_file_path+'Model_domain'+str(i+1)+'.xyz')
             test.all_in_all()
             #output for publication
             if water_pars['use_default']:
-                domain_creator.print_data_for_publication_B2(N_sorbate=np.sum(SORBATE_NUMBER[i])+np.sum(O_NUMBER[i])+WATER_NUMBER[i],domain=VARS['domain'+str(int(i+1))+'A'],z_shift=1,layer_types=(half_layer+full_layer_long)[i],save_file='D://'+'Model_domain'+str(i+1)+'A_publication.dat')
+                domain_creator.print_data_for_publication_B2(N_sorbate=np.sum(SORBATE_NUMBER[i])+np.sum(O_NUMBER[i])+WATER_NUMBER[i],domain=VARS['domain'+str(int(i+1))+'A'],z_shift=1,layer_types=(half_layer+full_layer)[i],save_file=output_file_path+'Model_domain'+str(i+1)+'A_publication.dat')
             else:
-                domain_creator.print_data_for_publication_B2(N_sorbate=np.sum(SORBATE_NUMBER[i])+np.sum(O_NUMBER[i]),domain=VARS['domain'+str(int(i+1))+'A'],z_shift=1,layer_types=(half_layer+full_layer_long)[i],save_file='D://'+'Model_domain'+str(i+1)+'A_publication.dat')
-            domain_creator.make_publication_table(model_file='D://'+'Model_domain'+str(i+1)+'A_publication.dat',par_file="D:\\test.tab",el_substrate=['Fe','O'],el_sorbate=['Pb'],abc=[5.038,5.434,7.3707])
-
+                domain_creator.print_data_for_publication_B2(N_sorbate=np.sum(SORBATE_NUMBER[i])+np.sum(O_NUMBER[i]),domain=VARS['domain'+str(int(i+1))+'A'],z_shift=1,layer_types=(half_layer+full_layer)[i],save_file=output_file_path+'Model_domain'+str(i+1)+'A_publication.dat')
+            try:#make sure you have the test.tab file in the specified folder
+                domain_creator.make_publication_table(model_file=output_file_path+'Model_domain'+str(i+1)+'A_publication.dat',par_file=output_file_path+"test.tab",el_substrate=['Fe','O'],el_sorbate=['Pb'],abc=[5.038,5.434,7.3707])
+            except:
+                pass
     #make dummy raxr dataset you will need to double check the LB,dL and the hkl
     DUMMY_RAXR_BUILT=False
     if DUMMY_RAXR_BUILT:
@@ -1844,24 +1882,15 @@ def Sim(data,VARS=VARS):
         plot_data_list=[]
         for hkl in hkls:
             plot_data_list.append([plot_data_container_experiment[hkl],plot_data_container_model[hkl]])
-        try:
-            pickle.dump(plot_data_list,open("D:\\Google Drive\\useful codes\\plotting\\temp_plot","wb"))
-        except:
-            pickle.dump(plot_data_list,open("C:\\Users\\jackey\\Google Drive\\useful codes\\plotting\\temp_plot","wb"))
+        pickle.dump(plot_data_list,open(output_file_path+"temp_plot","wb"))
         #dump raxr data and profiles
-        try:
-            pickle.dump([plot_raxr_container_experiment,plot_raxr_container_model],open("D:\\Google Drive\\useful codes\\plotting\\temp_plot_raxr","wb"))
-        except:
-            pickle.dump([plot_raxr_container_experiment,plot_raxr_container_model],open("C:\\Users\\jackey\\Google Drive\\useful codes\\plotting\\temp_plot_raxr","wb"))
+        pickle.dump([plot_raxr_container_experiment,plot_raxr_container_model],open(output_file_path+"temp_plot_raxr","wb"))
         #dump electron density profiles
         #e density based on model fitting
-        sample.plot_electron_density(sample.domain)#dumpt file name is "temp_plot_eden" 
+        sample.plot_electron_density(sample.domain,file_path=output_file_path,z_max=29)#dumpt file name is "temp_plot_eden" 
         #e density based on Fourier synthesis
-        z_plot,eden_plot,eden_domains=sample.fourier_synthesis(np.array(HKL_list_raxr),np.array(P_list_Fourier_synthesis).transpose(),np.array(A_list_Fourier_synthesis).transpose(),z_min=0.,z_max=20.,resonant_el=RAXR_EL,resolution=1000)
-        try:
-            pickle.dump([z_plot,eden_plot,eden_domains],open("D:\\Google Drive\\useful codes\\plotting\\temp_plot_eden_fourier_synthesis","wb"))
-        except:
-            pickle.dump([z_plot,eden_plot,eden_domains],open("C:\\Users\\jackey\\Google Drive\\useful codes\\plotting\\temp_plot_eden_fourier_synthesis","wb"))
+        z_plot,eden_plot,eden_domains=sample.fourier_synthesis(np.array(HKL_list_raxr),np.array(P_list_Fourier_synthesis).transpose(),np.array(A_list_Fourier_synthesis).transpose(),z_min=0.,z_max=29.,resonant_el=RAXR_EL,resolution=1000)
+        pickle.dump([z_plot,eden_plot,eden_domains],open(output_file_path+"temp_plot_eden_fourier_synthesis","wb"))
     #you may play with the weighting rule by setting eg 2**bv, 5**bv for the wt factor, that way you are pushing the GenX to find a fit btween 
     #good fit (low wt factor) and a reasonable fit (high wt factor)
     if COUNT_TIME:t_3=datetime.now()
@@ -1924,6 +1953,9 @@ layered_water_pars(a lib to set layered water structure)
     Based on the equation(29) in Reviews in Mineralogy and Geochemistry v. 49 no. 1 p. 149-221
     key of 'yes_OR_no':a list of 0 or 1 to specify whether or not considering the layered water structure
     key of 'ref_layer_height' is a list of atom ids (domain information not needed) to specify the reference height for the layered water heights
+layered_sorbate_pars(a lib to set layered sorbate structure)
+    pretty much the same as layered_water_pars
+    key of 'el' is the symbol for the resonant element
 USE_BV(bool)
     a switch to apply bond valence constrain during surface modelling
 TABLE_DOMAINS(list of 0 or 1, the length should be higher than the total domain number)

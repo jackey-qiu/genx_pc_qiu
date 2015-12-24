@@ -48,7 +48,7 @@ structure={'domain1':{'domain_type':'half_layer','domain_tag':1,'surface':surfac
            'domain2':{'domain_type':'half_layer','domain_tag':2,'surface':surface2,'sorbate':sorbate2,'water':water2},\
            'domain3':{'domain_type':'half_layer','domain_tag':3,'surface':surface3,'sorbate':None,'water':water2}}
 #make_structure will be used inside genx script to generate the parameter table           
-def make_structure(sorbate_N,O_N,water_N,Domains,Metal,binding_mode=['BD']*3,long_slab=False,long_slab_HL=False,local_structure='tetrahedral',add_distal_wild=None,use_domains=[1]*10,N_raxr=0,domain_raxr_el=[1,1,0,0]):
+def make_structure(sorbate_N,O_N,water_N,Domains,Metal,binding_mode=['BD']*3,long_slab=False,long_slab_HL=False,local_structure='tetrahedral',add_distal_wild=None,use_domains=[1]*10,N_raxr=0,domain_raxr_el=[1,1,0,0],layered_water=None,layered_sorbate=None):
     structure={}
     for i in range(len(Domains)):
         if use_domains[i]==1:
@@ -91,9 +91,9 @@ def make_structure(sorbate_N,O_N,water_N,Domains,Metal,binding_mode=['BD']*3,lon
             structure['domain'+str(i+1)]={'binding_mode':binding_mode[i],'full_layer_type':full_layer_type,'half_layer_type':half_layer_type,'domain_type':domain_type,'domain_tag':i+1,'surface':temp_surface,'sorbate':temp_sorbate,'water':temp_water}
         else:
             pass
-    return table_maker(structure_info=structure,local_structure=local_structure,N_raxr=N_raxr,domain_raxr_el=domain_raxr_el)    
+    return table_maker(structure_info=structure,local_structure=local_structure,N_raxr=N_raxr,domain_raxr_el=domain_raxr_el,layered_water=layered_water,layered_sorbate=layered_sorbate)    
 
-def table_maker(table_file_path='D:\\table.tab',structure_info=structure,local_structure='tetrahedral',N_raxr=0,domain_raxr_el=[1,1,0,0]):
+def table_maker(table_file_path='D:\\table.tab',structure_info=structure,local_structure='tetrahedral',N_raxr=0,domain_raxr_el=[1,1,0,0],layered_water=None,layered_sorbate=None):
 
     f=open(table_file_path,'w')
     f.write('#Parameter Value Fit Min Max Error\n')
@@ -311,4 +311,23 @@ def table_maker(table_file_path='D:\\table.tab',structure_info=structure,local_s
                 f.write('rgh_raxr.setA_D'+str(j+1)+'_'+str(i+1)+'\t1\tFalse\t0\t5\t-\n')
                 f.write('rgh_raxr.setP_D'+str(j+1)+'_'+str(i+1)+'\t1\tFalse\t0\t1\t-\n')
         f.write('\t0\tFalse\t0\t0\t-\n')
+    if layered_water!=None:
+        for i in range(len(layered_water)):
+            if layered_water[i]:
+                f.write('rgh_domain'+str(i+1)+'.setU0\t0.4\tFalse\t0\t5\t-\n')
+                f.write('rgh_domain'+str(i+1)+'.setUbar\t0.4\tFalse\t0\t5\t-\n')
+                f.write('rgh_domain'+str(i+1)+'.setFirst_layer_height\t2\tFalse\t0\t5\t-\n')
+                f.write('rgh_domain'+str(i+1)+'.setD_w\t2.0\tFalse\t1\t4\t-\n')
+                f.write('rgh_domain'+str(i+1)+'.setDensity_w\t0.033\tFalse\t0\t0.033\t-\n')
+                f.write('\t0\tFalse\t0\t0\t-\n')
+                
+    if layered_sorbate!=None:
+        for i in range(len(layered_sorbate)):
+            if layered_sorbate[i]:
+                f.write('rgh_domain'+str(i+1)+'.setU0_s\t0.4\tFalse\t0\t5\t-\n')
+                f.write('rgh_domain'+str(i+1)+'.setUbar_s\t0.4\tFalse\t0\t5\t-\n')
+                f.write('rgh_domain'+str(i+1)+'.setFirst_layer_height_s\t2\tFalse\t0\t5\t-\n')
+                f.write('rgh_domain'+str(i+1)+'.setD_s\t2.0\tFalse\t1\t4\t-\n')
+                f.write('rgh_domain'+str(i+1)+'.setDensity_s\t0.033\tFalse\t0\t0.033\t-\n')
+                f.write('\t0\tFalse\t0\t0\t-\n')
     f.close()

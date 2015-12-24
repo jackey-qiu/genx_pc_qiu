@@ -8,8 +8,7 @@ import operator
 from numpy.linalg import inv
 from copy import deepcopy
 from random import uniform
-import hexahedra,hexahedra_distortion,tetrahedra,octahedra,tetrahedra_edge_distortion,trigonal_pyramid_distortion,trigonal_pyramid_distortion_B,trigonal_pyramid_distortion_shareface,trigonal_pyramid_distortion2,trigonal_pyramid_distortion3,trigonal_pyramid_distortion4
-import trigonal_pyramid_known_apex
+from geometry_modules import *
 from domain_creator_water import domain_creator_water
 from domain_creator_sorbate import domain_creator_sorbate
 from domain_creator_surface import domain_creator_surface
