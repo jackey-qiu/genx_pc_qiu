@@ -162,7 +162,7 @@ if __name__=="__main__":
     e_file_FS="D:\\temp_plot_eden_fourier_synthesis" #e density from Fourier synthesis
     ctr_file_folder="D:\\"
     ctr_file_names=["temp_plot"]#you may want to overplot differnt ctr profiles based on differnt models
-    raxr_file="D:\\raxr_temp"
+    raxr_file="D:\\temp_plot_raxr"
     #plot electron density profile
     if plot_e: 
         data_eden=pickle.load(open(e_file,"rb"))
@@ -189,7 +189,7 @@ if __name__=="__main__":
         plotting_many_modelB(save_file=ctr_file_folder+"temp_plot_ctr.png",head=ctr_file_folder,object_files=ctr_file_names,color=['b','r'],l_dashes=[(None,None)],lw=2)
     if plot_raxr:
         #plot raxr profiles
-        data_raxr=pickle.load(open(os.getcwd()+"\\plotting\\temp_plot_raxr","rb"))
+        data_raxr=pickle.load(open(raxr_file,"rb"))
         plotting_raxr_new(data_raxr,savefile=raxr_file+".png",color=['b','r'],marker=['o'])
 
     

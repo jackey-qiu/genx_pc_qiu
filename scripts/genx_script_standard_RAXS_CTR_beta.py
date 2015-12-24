@@ -60,7 +60,7 @@ RAXR_EL='Pb'
 NUMBER_SPECTRA=0
 RESONANT_EL_LIST=[1,0,0]
 E0=13035
-F1F2_FILE="C:\\Users\\jackey\\Google Drive\\data\\f1f2_temp.f1f2"
+F1F2_FILE="f1f2_temp.f1f2"
 F1F2=None
 
 BV_OFFSET_SORBATE=[[0.2]*8]*len(pickup_index)
@@ -570,31 +570,6 @@ scales=['scale_CTR']
 for scale in scales:
     rgh.new_var(scale,1.)
     
-rgh_raxs=None
-if NUMBER_SPECTRA!=0:
-    try:
-        F1F2=np.loadtxt(F1F2_FILE)
-    except first_Er:
-        F1F2_FILE="D:\\Google Drive\\data\\f1f2_temp.f1f2"
-        F1F2=np.loadtxt(F1F2_FILE)
-    except second_Er:
-        F1F2_FILE="C:\\Users\\jackey\\Google Drive\\data\\f1f2_temp.f1f2"
-        F1F2=np.loadtxt(F1F2_FILE)
-    except:
-        F1F2_FILE='/u1/uaf/cqiu/batchfile/f1f2_temp.f1f2'
-        F1F2=np.loadtxt(F1F2_FILE)
-        
-    rgh_raxr=UserVars()
-    for i in range(NUMBER_SPECTRA):
-        rgh_raxr.new_var('a'+str(i+1),0.0)
-        rgh_raxr.new_var('b'+str(i+1),0.0)
-        for j in range(len(RESONANT_EL_LIST)):
-            if RESONANT_EL_LIST[j]!=0:
-                rgh_raxr.new_var('A_D'+str(j+1)+'_'+str(i+1),2.0)
-                rgh_raxr.new_var('P_D'+str(j+1)+'_'+str(i+1),0.0)
-#Fourier component looks like A_Dn0_n1, where n0, n1 are used to specify the index for domain, and spectra, respectively
-#Each spectra will have its own set of A and P list, and each domain has its own set of P and A list
-
 ################################################build up ref domains############################################
 #add atoms for bulk and two ref domains (ref_domain1<half layer> and ref_domain2<full layer>)
 #In those two reference domains, the atoms are ordered according to first hight (z values), then y values
@@ -611,7 +586,21 @@ domain_creator.add_atom_in_slab(ref_L_domain1,batch_path_head+'half_layer2.str')
 domain_creator.add_atom_in_slab(ref_S_domain1,batch_path_head+'half_layer3.str')
 domain_creator.add_atom_in_slab(ref_L_domain2,batch_path_head+'full_layer2.str')
 domain_creator.add_atom_in_slab(ref_S_domain2,batch_path_head+'full_layer3.str')
-    
+
+##set up Fourier pars if there are RAXR datasets
+#Fourier component looks like A_Dn0_n1, where n0, n1 are used to specify the index for domain, and spectra, respectively
+#Each spectra will have its own set of A and P list, and each domain has its own set of P and A list
+rgh_raxs=None
+if NUMBER_SPECTRA!=0:
+    F1F2=np.loadtxt(batch_path_head+F1F2_FILE)
+    rgh_raxr=UserVars()
+    for i in range(NUMBER_SPECTRA):
+        rgh_raxr.new_var('a'+str(i+1),0.0)
+        rgh_raxr.new_var('b'+str(i+1),0.0)
+        for j in range(len(RESONANT_EL_LIST)):
+            if RESONANT_EL_LIST[j]!=0:
+                rgh_raxr.new_var('A_D'+str(j+1)+'_'+str(i+1),2.0)
+                rgh_raxr.new_var('P_D'+str(j+1)+'_'+str(i+1),0.0)
 ###################create domain classes and initiate the chemical equivalent domains####################
 #when change or create a new domain, make sure the terminated_layer (start from 0)set right
 
