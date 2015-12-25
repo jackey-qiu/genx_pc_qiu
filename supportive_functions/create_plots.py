@@ -156,7 +156,7 @@ def plot_many_experiment_data(data_files=['D:\\Google Drive\\data\\400uM_Sb_hema
 if __name__=="__main__":    
 
     #which plots do you want to create
-    plot_e,plot_ctr,plot_raxr=True,True,True
+    plot_e,plot_ctr,plot_raxr=True,0,0
     #specify file paths (files are dumped files when setting running_mode=False in GenX script)
     e_file="D:\\temp_plot_eden"#e density from model
     e_file_FS="D:\\temp_plot_eden_fourier_synthesis" #e density from Fourier synthesis

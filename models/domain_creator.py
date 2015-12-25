@@ -394,13 +394,14 @@ def make_cif_file(N_sorbate=4,domain='',z_shift=1,half_layer=False,half_layer_lo
     if half_layer:
         index.pop(2)
         index.pop(2)
+    c=(np.max(data[2])+0.3-z_shift)*7.3707
     f=open(save_file,'w')
     f.write('data_global\n')
     f.write("_chemical_name_mineral 'Hematite'\n")
     f.write("_chemical_formula_sum 'Fe2 O3'\n")
     f.write("_cell_length_a 5.038\n")
     f.write("_cell_length_b 5.434\n")
-    f.write("_cell_length_c 12\n")
+    f.write("_cell_length_c "+str(c)+"\n")
     f.write("_cell_angle_alpha 90\n")
     f.write("_cell_angle_beta 90\n")
     f.write("_cell_angle_gamma 90\n")
@@ -415,10 +416,10 @@ def make_cif_file(N_sorbate=4,domain='',z_shift=1,half_layer=False,half_layer_lo
         z_shift=1
     for i in index:
         if i==index[-1]:
-            s = '%-5s   %7.5e   %7.5e   %7.5e' % (data[3][i],data[0][i],(data[1][i]-0.1391),(data[2][i]-z_shift)*7.3707/12.)
+            s = '%-5s   %7.5e   %7.5e   %7.5e' % (data[3][i],data[0][i],(data[1][i]-0.1391),(data[2][i]-z_shift)*7.3707/c)
             f.write(s)
         else:
-            s = '%-5s   %7.5e   %7.5e   %7.5e\n' % (data[3][i],data[0][i],(data[1][i]-0.1391),(data[2][i]-z_shift)*7.3707/12)
+            s = '%-5s   %7.5e   %7.5e   %7.5e\n' % (data[3][i],data[0][i],(data[1][i]-0.1391),(data[2][i]-z_shift)*7.3707/c)
             f.write(s)
     f.close()
     
