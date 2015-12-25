@@ -156,7 +156,7 @@ def plot_many_experiment_data(data_files=['D:\\Google Drive\\data\\400uM_Sb_hema
 if __name__=="__main__":    
 
     #which plots do you want to create
-    plot_e,plot_ctr,plot_raxr=True,0,0
+    plot_e_model,plot_e_FS,plot_ctr,plot_raxr=True,0,0,0
     #specify file paths (files are dumped files when setting running_mode=False in GenX script)
     e_file="D:\\temp_plot_eden"#e density from model
     e_file_FS="D:\\temp_plot_eden_fourier_synthesis" #e density from Fourier synthesis
@@ -164,20 +164,22 @@ if __name__=="__main__":
     ctr_file_names=["temp_plot"]#you may want to overplot differnt ctr profiles based on differnt models
     raxr_file="D:\\temp_plot_raxr"
     #plot electron density profile
-    if plot_e: 
+    if plot_e_model: 
         data_eden=pickle.load(open(e_file,"rb"))
         edata,labels=data_eden[0],data_eden[1]
         N=len(labels)
         fig=pyplot.figure(figsize=(15,6))
-        data_eden_FS=pickle.load(open(e_file_FS,"rb"))
+        if plot_e_FS:
+            data_eden_FS=pickle.load(open(e_file_FS,"rb"))
         for i in range(N):
             ax=fig.add_subplot(N,1,i+1)
             ax.plot(np.array(edata[i][0,:]),edata[i][1,:],color='b',label="model dependent")
             pyplot.title(labels[i])
-            if i!=N-1:
-                ax.plot(data_eden_FS[0],list(np.array(data_eden_FS[2])[:,i]),color='r',label="RAXR imaging")
-            else:
-                ax.plot(data_eden_FS[0],data_eden_FS[1],color='r',label="RAXR imaging")
+            if plot_e_FS:
+                if i!=N-1:
+                    ax.plot(data_eden_FS[0],list(np.array(data_eden_FS[2])[:,i]),color='r',label="RAXR imaging")
+                else:
+                    ax.plot(data_eden_FS[0],data_eden_FS[1],color='r',label="RAXR imaging")
             if i==N-1:pyplot.xlabel('Z(Angstrom)',axes=ax,fontsize=12)
             pyplot.ylabel('E_density',axes=ax,fontsize=12)
             pyplot.ylim(ymin=0)
