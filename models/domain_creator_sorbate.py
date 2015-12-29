@@ -516,10 +516,11 @@ class domain_creator_sorbate():
         _add_sorbate(domain=domain,id_sorbate=sorbate_id,el=sorbate_el,sorbate_v=octahedra_case.center_point/basis)
 
         if sorbate_oxygen_ids!=[]:
-            _add_sorbate(domain=domain,id_sorbate=sorbate_oxygen_ids[0],el='O',sorbate_v=octahedra_case.p3/basis+dxdydz(domain,np.where(domain.id==sorbate_id)[0][0]))
-            _add_sorbate(domain=domain,id_sorbate=sorbate_oxygen_ids[1],el='O',sorbate_v=octahedra_case.p4/basis+dxdydz(domain,np.where(domain.id==sorbate_id)[0][0]))
-            _add_sorbate(domain=domain,id_sorbate=sorbate_oxygen_ids[2],el='O',sorbate_v=octahedra_case.p5/basis+dxdydz(domain,np.where(domain.id==sorbate_id)[0][0]))
-            return [octahedra_case.center_point/basis,octahedra_case.p3/basis,octahedra_case.p4/basis,octahedra_case.p5/basis]
+            dxdydz_mag=dxdydz(domain,np.where(domain.id==sorbate_id)[0][0])
+            _add_sorbate(domain=domain,id_sorbate=sorbate_oxygen_ids[0],el='O',sorbate_v=octahedra_case.p3/basis+dxdydz_mag)
+            _add_sorbate(domain=domain,id_sorbate=sorbate_oxygen_ids[1],el='O',sorbate_v=octahedra_case.p4/basis+dxdydz_mag)
+            _add_sorbate(domain=domain,id_sorbate=sorbate_oxygen_ids[2],el='O',sorbate_v=octahedra_case.p5/basis+dxdydz_mag)
+            return [octahedra_case.center_point/basis,octahedra_case.p3/basis+dxdydz_mag,octahedra_case.p4/basis+dxdydz_mag,octahedra_case.p5/basis+dxdydz_mag]
         else:
             return [octahedra_case.center_point/basis]
          
