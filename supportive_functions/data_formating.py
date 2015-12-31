@@ -217,7 +217,7 @@ def format_from_RAXS_to_RaxsCTR_loader2(individule_files,new_file):
     num.savetxt(new_file,full_set,fmt='%5.3f')    
 
 if __name__=="__main__":
-    CTR_file_original='D:\\Google Drive\\data\\200uM_As_CMP_rcut_reprocessed_Jul_2014.lst'
+    CTR_file_original='C:\\Users\\jackey\\Google Drive\\data\\Sb_400uM_rcut_Nov_2013.lst'
     #do you want to make dummy error for the data set
     dummy_error=True
     format_delete_spike_dummy_error_all_in_all(original_file=CTR_file_original,dummy_error=dummy_error)
