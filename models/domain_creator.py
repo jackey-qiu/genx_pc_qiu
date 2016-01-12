@@ -49,6 +49,20 @@ f2=lambda p1,p2:np.sqrt(np.sum((p1-p2)**2))
 #direction of the basis is pointing from p1 to p2
 f3=lambda p1,p2:(1./f2(p1,p2))*(p2-p1)+p1
 
+def extract_column(file_name,which_column=0,deepest_row=None,split=','):
+    items_container=[]
+    f=open(file_name,'r')
+    lines=f.readlines()
+    for line in lines:
+        items=line.rstrip().rsplit(split)
+        if items!=[]:
+            if items[0]!='#':
+                items_container.append(items[which_column])
+    if deepest_row==None:
+        return items_container
+    else:
+        return items_container[0:deepest_row]
+    
 def init_OS_auto(layer_index=[[0,6,6],[7],[10,14]],step_index=[2,3,1],OS_index=[6,14]):
     OS_X=[]
     OS_Y=[]
@@ -983,10 +997,11 @@ def rotate_along_one_axis(domain=None,pass_point_id='',rotation_ids=[],rotation_
         
     
 class domain_creator(domain_creator_water,domain_creator_sorbate,domain_creator_surface):
-    def __init__(self,ref_domain,id_list,terminated_layer=0,domain_tag='_D1',new_var_module=None):
+    def __init__(self,ref_domain,id_list,terminated_layer=0,domain_tag='_D1',new_var_module=None,N_layers=5):
         #id_list is a list of id in the order of ref_domain,terminated_layer is the index number of layer to be considered
         #for termination,domain_N is a index number for this specific domain, new_var_module is a UserVars module to be used in
         #function of set_new_vars
+        #N_layers is the layer offset between two symmetry related terminations, default value 5 is for rcut hematite specifically
         self.ref_domain=ref_domain
         self.id_list=id_list
         self.terminated_layer=terminated_layer
@@ -995,6 +1010,7 @@ class domain_creator(domain_creator_water,domain_creator_sorbate,domain_creator_
         #self.anchor_list=[]
         self.polyhedra_list=[]
         self.new_var_module=new_var_module
+        self.N_layers=N_layers
         self.domain_A,self.domain_B=self.create_equivalent_domains_2()
     
     def build_super_cell(self,ref_domain,rem_atom_ids=None):
@@ -1155,8 +1171,8 @@ class domain_creator(domain_creator_water,domain_creator_sorbate,domain_creator_
         for id in self.id_list[:self.terminated_layer*2]:
             if id!=[]:
                 new_domain_A.del_atom(id)
-        #number 5 here is crystal specific, here is the case for hematite
-        for id in self.id_list[:(self.terminated_layer+5)*2]:
+        #N_layers here is crystal specific, 5 for hematite(1-102) and 19 for muscovite(001)
+        for id in self.id_list[:(self.terminated_layer+self.N_layers)*2]:
             #print id in new_domain_B.id
             new_domain_B.del_atom(id)
         new_domain_A.id=map(lambda x:x+self.domain_tag+'A',new_domain_A.id)
