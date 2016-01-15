@@ -63,11 +63,11 @@ def plotting_modelB(object=[],fig=None,index=[2,3,1],color=['0.35','r','c','m','
     #settings for demo showing
     pyplot.title('('+title[0]+')',position=(0.5,0.86),weight=4,size=10,clip_on=True)
     if title[0]=='0 0 L':
-        pyplot.ylim((1,200000))
+        pyplot.ylim((1,20000))
     elif title[0]=='3 0 L':
         pyplot.ylim((1,10000))
-    else:pyplot.ylim((1,100000))
-    #pyplot.ylim((1,10000))
+    else:pyplot.ylim((1,10000))
+    pyplot.ylim((1,1000))
     #settings for publication
     #pyplot.title('('+title[0]+')',position=(0.5,1.001),weight=4,size=10,clip_on=True)
     """##add arrows to antidote the misfits 
@@ -156,7 +156,7 @@ def plot_many_experiment_data(data_files=['D:\\Google Drive\\data\\400uM_Sb_hema
 if __name__=="__main__":    
 
     #which plots do you want to create
-    plot_e_model,plot_e_FS,plot_ctr,plot_raxr=0,0,1,0
+    plot_e_model,plot_e_FS,plot_ctr,plot_raxr=1,0,1,0
     #specify file paths (files are dumped files when setting running_mode=False in GenX script)
     e_file="D:\\temp_plot_eden"#e density from model
     e_file_FS="D:\\temp_plot_eden_fourier_synthesis" #e density from Fourier synthesis

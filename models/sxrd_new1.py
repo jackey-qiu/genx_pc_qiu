@@ -731,7 +731,7 @@ class Sample:
             eden_domain_plot.append(eden_domains)
         return z_plot,eden_plot,eden_domain_plot
     
-    def plot_electron_density(self,slabs,el_lib={'O':8,'Fe':26,'As':33,'Pb':82,'Sb':51,'P':15,'Cr':24,'Cd':48,'Cu':29,'Zn':30},z_min=0.,z_max=28.,N_layered_water=10,resolution=1000,file_path="D:\\"):
+    def plot_electron_density(self,slabs,el_lib={'O':8,'Fe':26,'As':33,'Pb':82,'Sb':51,'P':15,'Cr':24,'Cd':48,'Cu':29,'Zn':30,'Al':13,'Si':14,'K':19},z_min=0.,z_max=28.,N_layered_water=10,resolution=1000,file_path="D:\\"):
         #print dinv
         e_data=[]
         labels=[]
@@ -1607,6 +1607,7 @@ class AtomGroup:
         '''
         if not id in slab:
             raise ValueError('The id %s is not a member of the slab'%id)
+
         self.ids.append(id)
             
         #print self.sym_file
