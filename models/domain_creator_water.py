@@ -240,6 +240,35 @@ class domain_creator_water():
             domain.x[O_index2],domain.y[O_index2],domain.z[O_index2]=point2[0],point2[1],point2[2]
         return np.append([point1],[point2],axis=0)
         
+    def add_oxygen_pair_muscovite(self,domain,ref_id,O_ids,v_shift,basis=np.array([5.038,5.434,7.3707])):
+    #v_shift and r are in unit of angstrom, and phi in degree
+    #use coordinates during fitting rather than freezing the ref to the bulk position
+        alpha=60.0605#specifically for muscovite
+        r=5.208335#specifically for muscovite
+        ref_point=None
+        if len(ref_id)==1:
+            ref_point=domain_creator.extract_coor(domain,ref_id)*basis+[0,0,v_shift]
+        if len(ref_id)==2:
+            ref_point1=domain_creator.extract_coor(domain,ref_id[0])*basis
+            ref_point2=domain_creator.extract_coor(domain,ref_id[1])*basis
+            ref_point=(ref_point1+ref_point2)/2+[0,0,v_shift]
+        x_shift=r*np.cos(alpha/180*np.pi)
+        y_shift=r*np.sin(alpha/180*np.pi)
+        point1=np.array([ref_point[0]-x_shift,ref_point[1]-y_shift,ref_point[2]])/basis
+        point2=np.array([ref_point[0]+x_shift,ref_point[1]+y_shift,ref_point[2]])/basis
+        O_index1=None
+        O_index2=None
+        try:
+            O_index1=np.where(domain.id==O_ids[0])[0][0]
+            O_index2=np.where(domain.id==O_ids[1])[0][0]
+        except:
+            domain.add_atom( O_ids[0], "O",  point1[0] ,point1[1], point1[2] ,4.,     1.00000e+00 ,     1.00000e+00 )
+            domain.add_atom( O_ids[1], "O",  point2[0] ,point2[1], point2[2] ,4.,     1.00000e+00 ,     1.00000e+00 )
+        if O_index1!=None:
+            domain.x[O_index1],domain.y[O_index1],domain.z[O_index1]=point1[0],point1[1],point1[2]
+            domain.x[O_index2],domain.y[O_index2],domain.z[O_index2]=point2[0],point2[1],point2[2]
+        return np.append([point1],[point2],axis=0)
+        
     def cal_geometry_pars_from_coors(self,domain,ref_ids,sorbate_ids):
         def _shift_in_unit_cell(coors):
             [x,y,z]=coors

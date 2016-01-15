@@ -101,7 +101,7 @@ class share_edge(share_face):
         diff=p1-p0
         c=np.sum(p1**2-p0**2)
         ref_point=0
-        if diff[2]==0:
+        if diff[2]==0 and ref_p==None:
             ref_point=origin+[0,0,1]
         elif ref_p!=None:
             ref_point=np.cross(p0-p1,np.cross(p0-p1,ref_p-p1))+origin

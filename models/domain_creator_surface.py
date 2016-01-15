@@ -187,7 +187,7 @@ class domain_creator_surface():
 
         return atm_gp_list
             
-    def grouping_sequence_layer_new2(self, domain=[], first_atom_id=[],layers_N=1):
+    def grouping_sequence_layer_new2(self, domain=[], first_atom_id=[],layers_N=1,matrix_list=[[[1,0,0,0,1,0,0,0,1],[-1,0,0,0,1,0,0,0,1]],[[-1,0,0,0,1,0,0,0,1],[1,0,0,0,1,0,0,0,1]]]):
         #looping the domain eg. domain=[[domain1A,domain1B],[domain2A,domain2B]]
         #group the atoms at the same layer in one domain and the associated atoms in its chemically equivalent domain
         #domain is list of domains
@@ -200,9 +200,9 @@ class domain_creator_surface():
             temp_atm_gp=model.AtomGroup()
             for j in range(len(domain)):
                 for k in range(len(domain[j])):
-                    matrix=[[1,0,0,0,1,0,0,0,1],[-1,0,0,0,1,0,0,0,1]]
-                    if k==1:#note the k can be either 0 for domainA or 1 for domainB
-                        matrix=[[-1,0,0,0,1,0,0,0,1],[1,0,0,0,1,0,0,0,1]]
+                    matrix=matrix_list[k]
+                    #if k==1:#note the k can be either 0 for domainA or 1 for domainB
+                    #matrix=matrix_list[::-1]
                     index=np.where(domain[j][k].id==first_atom_id[j][k])[0][0]+i*2
                     temp_atm_gp.add_atom(domain[j][k],str(domain[j][k].id[index]),matrix[0])
                     temp_atm_gp.add_atom(domain[j][k],str(domain[j][k].id[index+1]),matrix[1])
