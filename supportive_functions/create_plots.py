@@ -193,7 +193,7 @@ if __name__=="__main__":
         #plot raxr profiles
         data_raxr=pickle.load(open(raxr_file,"rb"))
         plotting_raxr_new(data_raxr,savefile=raxr_file+".png",color=['b','r'],marker=['o'])
-
+    pyplot.show()
     
     
     
