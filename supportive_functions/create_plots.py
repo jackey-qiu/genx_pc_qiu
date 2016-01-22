@@ -63,11 +63,12 @@ def plotting_modelB(object=[],fig=None,index=[2,3,1],color=['0.35','r','c','m','
     #settings for demo showing
     pyplot.title('('+title[0]+')',position=(0.5,0.86),weight=4,size=10,clip_on=True)
     if title[0]=='0 0 L':
-        pyplot.ylim((1,20000))
+        pyplot.ylim((10,10000))
+        pyplot.xlim((0,20))
     elif title[0]=='3 0 L':
         pyplot.ylim((1,10000))
     else:pyplot.ylim((1,10000))
-    pyplot.ylim((1,1000))
+    #pyplot.ylim((1,1000))
     #settings for publication
     #pyplot.title('('+title[0]+')',position=(0.5,1.001),weight=4,size=10,clip_on=True)
     """##add arrows to antidote the misfits 
@@ -119,6 +120,33 @@ def plotting_many_modelB(save_file='D://pic.png',head='C:\\Users\\jackey\\Google
     fig.savefig(save_file,dpi=300)
     return fig
     
+def plotting_single_rod(save_file='D://pic.png',head='C:\\Users\\jackey\\Google Drive\\useful codes\\plotting\\',object_files=['temp_plot_O1O2','temp_plot_O5O6','temp_plot_O1O3','temp_plot_O5O7','temp_plot_O1O4','temp_plot_O5O8'],index=[1,1],color=['0.6','b','b','g','g','r','r'],lw=1.5,l_dashes=[(2,2,2,2),(None,None),(2,2,2,2),(None,None),(2,2,2,2),(None,None)],label=['Experimental data','Model1 results','Model2 results','Model3','Model4','Model5','Model6'],marker=['p'],title=['0 0 L','0 2 L','1 0 L','1 1 L','2 0 L','2 2 L','3 0 L','2 -1 L','2 1 L'],legend=[False,False,False,False,False,False,False,False,False],fontsize=10,rod_index=0):
+    #plotting model results simultaneously, object_files=[file1,file2,file3] file is the path of a dumped data/model file
+    #setting for demo show
+    #fig=pyplot.figure(figsize=(10,9))
+    #settings for publication
+    #fig=pyplot.figure(figsize=(10,7))
+    fig=pyplot.figure(figsize=(8.5,7))
+    object_sets=[pickle.load(open(head+file)) for file in object_files]#each_item=[00L,02L,10L,11L,20L,22L,30L,2-1L,21L]
+    object=[]
+    for i in range(9):
+        object.append([])
+        for j in range(len(object_sets)):
+            if j==0:
+                object[-1].append(object_sets[j][i][0])
+            object[-1].append(object_sets[j][i][1])
+
+    for i in [rod_index]:
+    #for i in range(1):
+        order=i
+        #print 'abc'
+        ob=object[i]
+        plotting_modelB(object=ob,fig=fig,index=[index[0],index[1],i+1],color=color,l_dashes=l_dashes,lw=lw,label=label,title=[title[order]],marker=marker,legend=None,fontsize=fontsize)
+        #plotting_modelB(object=ob,fig=fig,index=[1,1,i+1],color=color,l_dashes=l_dashes,lw=lw,label=label,title=[title[order]],marker=marker,legend=legend[order],fontsize=fontsize)
+    fig.tight_layout()
+    fig.savefig(save_file,dpi=300)
+    return fig
+    
 #overplotting experimental datas formated with UAF_CTR_RAXS_2 loader in GenX            
 def plot_many_experiment_data(data_files=['D:\\Google Drive\\data\\400uM_Sb_hematite_rcut.datnew_formate','D:\\Google Drive\\data\\1000uM_Pb_hematite_rcut.datnew_formate'],labels=['Sb 400uM on hematite','Pb 1000uM on hematite'],HKs=[[0,0],[0,2],[1,0],[1,1],[2,0],[2,1],[2,-1],[2,2],[3,0]],index_subplot=[3,3],colors=['b','g','r','c','m','y','w'],markers=['.','*','o','v','^','<','>'],fontsize=10):
     data_container={}
@@ -156,7 +184,11 @@ def plot_many_experiment_data(data_files=['D:\\Google Drive\\data\\400uM_Sb_hema
 if __name__=="__main__":    
 
     #which plots do you want to create
+<<<<<<< HEAD
     plot_e_model,plot_e_FS,plot_ctr,plot_raxr=0,0,1,0
+=======
+    plot_e_model,plot_e_FS,plot_ctr,plot_raxr=1,1,0,1
+>>>>>>> 11c932d561c6daf9a68940f54682079a43f96648
     #specify file paths (files are dumped files when setting running_mode=False in GenX script)
     e_file="D:\\temp_plot_eden"#e density from model
     e_file_FS="D:\\temp_plot_eden_fourier_synthesis" #e density from Fourier synthesis
@@ -188,6 +220,7 @@ if __name__=="__main__":
         fig.savefig(e_file+".png",dpi=300)
     if plot_ctr:
         #plot ctr profiles
+        #plotting_single_rod(save_file=ctr_file_folder+"temp_plot_ctr.png",head=ctr_file_folder,object_files=ctr_file_names,color=['w','r'],l_dashes=[(None,None)],lw=2,rod_index=0)
         plotting_many_modelB(save_file=ctr_file_folder+"temp_plot_ctr.png",head=ctr_file_folder,object_files=ctr_file_names,color=['b','r'],l_dashes=[(None,None)],lw=2)
     if plot_raxr:
         #plot raxr profiles
