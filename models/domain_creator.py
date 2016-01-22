@@ -500,6 +500,10 @@ def make_cif_file(N_sorbate=4,domain='',z_shift=1,half_layer=False,half_layer_lo
     if half_layer:
         index.pop(2)
         index.pop(2)
+    if half_layer_long==2 or full_layer_long==0:
+        z_shift=0.5
+    else:
+        z_shift=1
     c=(np.max(data[2])+0.3-z_shift)*7.3707
     f=open(save_file,'w')
     f.write('data_global\n')
@@ -516,10 +520,6 @@ def make_cif_file(N_sorbate=4,domain='',z_shift=1,half_layer=False,half_layer_lo
     f.write("_atom_site_label\n_atom_site_fract_x\n_atom_site_fract_y\n_atom_site_fract_z\n")
     
     
-    if half_layer_long==2 or full_layer_long==0:
-        z_shift=0.5
-    else:
-        z_shift=1
     for i in index:
         if i==index[-1]:
             s = '%-5s   %7.5e   %7.5e   %7.5e' % (data[3][i],data[0][i],(data[1][i]-0.1391),(data[2][i]-z_shift)*7.3707/c)
