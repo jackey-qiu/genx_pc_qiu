@@ -64,7 +64,7 @@ def plotting_modelB(object=[],fig=None,index=[2,3,1],color=['0.35','r','c','m','
     pyplot.title('('+title[0]+')',position=(0.5,0.86),weight=4,size=10,clip_on=True)
     if title[0]=='0 0 L':
         pyplot.ylim((10,10000))
-        pyplot.xlim((0,20))
+        #pyplot.xlim((0,20))
     elif title[0]=='3 0 L':
         pyplot.ylim((1,10000))
     else:pyplot.ylim((1,10000))
