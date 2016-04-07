@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 #import models.sxrd_test5_sym_new_test_new66_2_3 as model
 from models.utils import UserVars
+import models.sxrd_new1 as model
 import numpy as np
 import scipy.spatial as spatial
 from operator import mul
@@ -49,6 +50,156 @@ f2=lambda p1,p2:np.sqrt(np.sum((p1-p2)**2))
 #direction of the basis is pointing from p1 to p2
 f3=lambda p1,p2:(1./f2(p1,p2))*(p2-p1)+p1
 
+def define_global_vars(rgh,domain_number=2):
+    rgh.new_var('beta',0)
+    for i in range(domain_number):
+        rgh.new_var('wt'+str(i+1),1)
+    return rgh
+    
+def define_raxs_vars(rgh,number_spectra=0,number_domain=2):
+    for i in range(number_spectra):
+        rgh.new_var('a'+str(i+1),1.0)
+        rgh.new_var('b'+str(i+1),0.0)
+        rgh.new_var('c'+str(i+1),1.0)
+        for j in range(number_domain):
+            rgh.new_var('A'+str(i+1)+'_D'+str(j+1),0.0)
+            rgh.new_var('P'+str(i+1)+'_D'+str(j+1),0.0)
+    return rgh
+    
+def define_diffused_layer_water_vars(rgh):
+    rgh.new_var('u0_w',0.4)
+    rgh.new_var('ubar_w',0.4)
+    rgh.new_var('first_layer_height_w',2.0)#relative height in A
+    rgh.new_var('d_w',1.9)#inter-layer water seperation in A
+    rgh.new_var('density_w',0.033)#number density in unit of # of waters per cubic A(0.033 is the typical value)
+    return rgh
+    
+def define_diffused_layer_sorbate_vars(rgh):
+    rgh.new_var('u0_s',0.4)
+    rgh.new_var('ubar_s',0.4)
+    rgh.new_var('first_layer_height_s',2.0)#relative height in A
+    rgh.new_var('d_s',1.9)#inter-layer water seperation in A
+    rgh.new_var('density_s',0.033)#number density in unit of # of waters per cubic A(0.033 is the typical value)
+    return rgh
+    
+def setup_atom_group(gp_info=[]):
+    groups,group_names=[],[]
+    for i in range(len(gp_info)):
+        domain=gp_info[i]['domain']
+        tag=gp_info[i]['domain_tag']
+        for j in range(len(gp_info[i]['ref_id_list'])):
+            temp_atom_group=model.AtomGroup()
+            for k in range(len(gp_info[i]['ref_id_list'][j])):
+                if gp_info[i]['ref_sym_list']!=[]:
+                    temp_atom_group.add_atom(slab=gp_info[i]['domain'],id=gp_info[i]['ref_id_list'][j][k]+tag, matrix=gp_info[i]['ref_sym_list'][j][k])
+                else:
+                    temp_atom_group.add_atom(slab=gp_info[i]['domain'],id=gp_info[i]['ref_id_list'][j][k]+tag, matrix=np.array([1,0,0,0,1,0,0,0,1]))
+            groups.append(temp_atom_group)
+            group_names.append(gp_info[i]['ref_group_names'][j]+tag)
+    return groups,group_names
+
+def add_sorbate(domain,anchored_atoms,func,geo_lib,info_lib,domain_tag,rgh,index_offset=[0,1]):
+    domain=func([0,0,2.0],domain,anchored_atoms,geo_lib,info_lib,domain_tag,index_offset=index_offset[0])
+    domain=func([0.5,0.5,2.0],domain,anchored_atoms,geo_lib,info_lib,domain_tag,index_offset=index_offset[1])
+    for key in geo_lib.keys():
+        rgh.new_var(key,geo_lib[key])
+    return domain,rgh
+    
+def update_sorbate(domain,anchored_atoms,func,info_lib,domain_tag,rgh,index_offset=[0,1]):
+    domain=func([0,0,2.0],domain,anchored_atoms,vars(rgh),info_lib,domain_tag,index_offset=index_offset[0])
+    domain=func([0.5,0.5,2.0],domain,anchored_atoms,vars(rgh),info_lib,domain_tag,index_offset=index_offset[1])
+    return domain
+
+def add_oxygen_pair_muscovite(domain,ids,coors):
+    domain.add_atom(id=ids[0],element='O', x=coors[0][0], y=coors[0][1], z=coors[0][2], oc=0.2,u = 1.)
+    domain.add_atom(id=ids[1],element='O', x=coors[1][0], y=coors[1][1], z=coors[1][2], oc=0.2,u = 1.)
+    atom_group=model.AtomGroup(domain,ids[0])
+    atom_group.add_atom(domain,ids[1])
+    return domain,atom_group
+#function to group the Fourier components (FC) from different domains in each RAXR spectra
+#domain_index=[0,1] means setting the FC for domain2 (1+1) same as domain1 (0+1)
+#domain_index=3 means setting the FC for domain2 and domain3 same as domain1, in this case the number indicate the number of total domains
+def set_RAXR(domain_index=[],number_spectra=0):
+    domains=None
+    if type(domain_index)!=type([]):
+        domains=range(domain_index)
+    else:
+        domains=domain_index
+    for i in range(number_spectra):
+        for j in domains[1:]:
+            eval('rgh_raxr'+'.setA_D'+str(j+1)+'_'+str(i+1)+'(rgh_raxr'+'.getA_D'+str(domains[0]+1)+'_'+str(i+1)+'())')
+            eval('rgh_raxr'+'.setP_D'+str(j+1)+'_'+str(i+1)+'(rgh_raxr'+'.getP_D'+str(domains[0]+1)+'_'+str(i+1)+'())')
+            
+#freeze A and B in the process of model fitting
+def set_RAXR_AB(number_spectra=0):
+    spectra=None
+    if type(number_spectra)!=type([]):
+        spectra=range(number_spectra)
+    else:
+        spectra=number_spectra
+    for i in spectra:
+        eval('rgh_raxr'+'.setA'+str(i+1)+'(1.)')
+        eval('rgh_raxr'+'.setB'+str(i+1)+'(0.)') 
+            
+#function to group outer-sphere pars from different domains (to be placed inside sim function)
+def set_OS(domain_names=['domain5','domain4']):
+    eval('rgh_'+domain_names[0]+'.setCt_offset_dx_OS(rgh_'+domain_names[1]+'.getCt_offset_dx_OS())')
+    eval('rgh_'+domain_names[0]+'.setCt_offset_dy_OS(rgh_'+domain_names[1]+'.getCt_offset_dy_OS())')
+    eval('rgh_'+domain_names[0]+'.setCt_offset_dz_OS(rgh_'+domain_names[1]+'.getCt_offset_dz_OS())')
+    eval('rgh_'+domain_names[0]+'.setTop_angle_OS(rgh_'+domain_names[1]+'.getTop_angle_OS())')
+    eval('rgh_'+domain_names[0]+'.setR0_OS(rgh_'+domain_names[1]+'.getR0_OS())')
+    eval('rgh_'+domain_names[0]+'.setPhi_OS(rgh_'+domain_names[1]+'.getPhi_OS())')
+
+#function to group bidentate pars from different domains (to be placed inside sim function)
+def set_BD(domain_names=[2,1],sorbate_sets=1,distal_oxygen_number=1,sorbate='Pb'):
+    for i in range(sorbate_sets):
+        eval('rgh_domain'+str(domain_names[0]+1)+'.setOffset_BD_'+str(i*2)+'(rgh_domain'+str(domain_names[1]+1)+'.getOffset_BD_'+str(i*2)+'())') 
+        eval('rgh_domain'+str(domain_names[0]+1)+'.setOffset2_BD_'+str(i*2)+'(rgh_domain'+str(domain_names[1]+1)+'.getOffset2_BD_'+str(i*2)+'())') 
+        eval('rgh_domain'+str(domain_names[0]+1)+'.setAngle_offset_BD_'+str(i*2)+'(rgh_domain'+str(domain_names[1]+1)+'.getAngle_offset_BD_'+str(i*2)+'())')
+        eval('rgh_domain'+str(domain_names[0]+1)+'.setR_BD_'+str(i*2)+'(rgh_domain'+str(domain_names[1]+1)+'.getR_BD_'+str(i*2)+'())') 
+        eval('rgh_domain'+str(domain_names[0]+1)+'.setPhi_BD_'+str(i*2)+'(rgh_domain'+str(domain_names[1]+1)+'.getPhi_BD_'+str(i*2)+'())')
+        eval('rgh_domain'+str(domain_names[0]+1)+'.setTop_angle_BD_'+str(i*2)+'(rgh_domain'+str(domain_names[1]+1)+'.getTop_angle_BD_'+str(i*2)+'())')
+        eval('gp_'+sorbate+'_set'+str(i+1)+'_D'+str(domain_names[0]+1)+'.setoc'+'(gp_'+sorbate+'_set'+str(i+1)+'_D'+str(domain_names[1]+1)+'.getoc())')
+        eval('gp_'+sorbate+'_set'+str(i+1)+'_D'+str(domain_names[0]+1)+'.setu'+'(gp_'+sorbate+'_set'+str(i+1)+'_D'+str(domain_names[1]+1)+'.getu())')
+        for j in range(distal_oxygen_number):
+            eval('gp_HO'+str(j+1)+'_set'+str(i+1)+'_D'+str(domain_names[0]+1)+'.setoc'+'(gp_HO'+str(j+1)+'_set'+str(i+1)+'_D'+str(domain_names[1]+1)+'.getoc())')
+            eval('gp_HO'+str(j+1)+'_set'+str(i+1)+'_D'+str(domain_names[0]+1)+'.setu'+'(gp_HO'+str(j+1)+'_set'+str(i+1)+'_D'+str(domain_names[1]+1)+'.getu())')
+
+#function to group water pairs togeter from different domains
+#domain_names is list of index of domains counting from 0 and number sets is the number of water pair counting from 1
+def set_water_pair(domain_names=[3,2],number_sets=2):
+    for i in range(number_sets):
+        eval('gp_waters_set'+str(i+1)+'_D'+str(domain_names[0]+1)+'.setoc(gp_waters_set'+str(i+1)+'_D'+str(domain_names[1]+1)+'.getoc())')
+        eval('gp_waters_set'+str(i+1)+'_D'+str(domain_names[0]+1)+'.setu(gp_waters_set'+str(i+1)+'_D'+str(domain_names[1]+1)+'.getu())')
+        eval('gp_waters_set'+str(i+1)+'_D'+str(domain_names[0]+1)+'.setdy(gp_waters_set'+str(i+1)+'_D'+str(domain_names[1]+1)+'.getdy())')
+        eval('rgh_domain'+str(domain_names[0]+1)+'.setV_shift_W_'+str(i+1)+'(rgh_domain'+str(domain_names[1]+1)+'.getV_shift_W_'+str(i+1)+'())')
+        eval('rgh_domain'+str(domain_names[0]+1)+'.setAlpha_W_'+str(i+1)+'(180-rgh_domain'+str(domain_names[1]+1)+'.getAlpha_W_'+str(i+1)+'())')
+
+#function to group tridentate pars specifically for distal oxygens from different domains (to be placed inside sim function)
+def set_TD(domain_names=['domain2','domain1']):
+    eval('rgh_'+domain_names[0]+'.setTheta1_1_TD(rgh_'+domain_names[1]+'.getTheta1_1_TD())')
+    eval('rgh_'+domain_names[0]+'.setTheta1_2_TD(rgh_'+domain_names[1]+'.getTheta1_2_TD())')
+    eval('rgh_'+domain_names[0]+'.setTheta1_3_TD(rgh_'+domain_names[1]+'.getTheta1_3_TD())')
+    eval('rgh_'+domain_names[0]+'.setPhi1_1_TD(rgh_'+domain_names[1]+'.getPhi1_1_TD())')
+    eval('rgh_'+domain_names[0]+'.setPhi1_2_TD(rgh_'+domain_names[1]+'.getPhi1_2_TD())')
+    eval('rgh_'+domain_names[0]+'.setPhi1_3_TD(rgh_'+domain_names[1]+'.getPhi1_3_TD())')
+    eval('rgh_'+domain_names[0]+'.setR1_1_TD(rgh_'+domain_names[1]+'.getR1_1_TD())')
+    eval('rgh_'+domain_names[0]+'.setR1_2_TD(rgh_'+domain_names[1]+'.getR1_2_TD())')
+    eval('rgh_'+domain_names[0]+'.setR1_3_TD(rgh_'+domain_names[1]+'.getR1_3_TD())')
+
+#function to group Hydrogen pars from the same domain (to be placed inside sim function)
+def set_H(domain_name='domain1',tag=['W_1_2_1','W_1_1_1']):
+    eval('rgh_'+domain_name+'.setPhi_H_'+tag[0]+'(180-rgh_'+domain_name+'.getPhi_H_'+tag[1]+'())')
+    eval('rgh_'+domain_name+'.setR_H_'+tag[0]+'(rgh_'+domain_name+'.getR_H_'+tag[1]+'())')
+    eval('rgh_'+domain_name+'.setTheta_H_'+tag[0]+'(rgh_'+domain_name+'.getTheta_H_'+tag[1]+'())')
+
+#function to group distal oxygens based on adding in wild, N is the number of distal oxygens (to be placed inside sim function)
+def set_distal_wild(domain_name=['domain2','domain1'],tag='BD',N=2):
+    for i in range(N):
+        eval('rgh_'+domain_name[0]+'.setPhi1_'+str(i)+'_'+tag+'(180-rgh_'+domain_name[1]+'.getPhi1_'+str(i)+'_'+tag+'())')
+        eval('rgh_'+domain_name[0]+'.setR1_'+str(i)+'_'+tag+'(rgh_'+domain_name[1]+'.getR1_'+str(i)+'_'+tag+'())')
+        eval('rgh_'+domain_name[0]+'.setTheta1_'+str(i)+'_'+tag+'(rgh_'+domain_name[1]+'.getTheta1_'+str(i)+'_'+tag+'())')  
+        
 def extract_column(file_name,which_column=0,deepest_row=None,split=','):
     items_container=[]
     f=open(file_name,'r')
@@ -529,37 +680,44 @@ def make_cif_file(N_sorbate=4,domain='',z_shift=1,half_layer=False,half_layer_lo
             f.write(s)
     f.close()
     
-def make_cif_file_muscovite(N_sorbate=4,domain='',z_shift=0.8,save_file='D://model.xyz'):
-    #extract only one set of sorbate       
-    data=domain._extract_values()
-    index_all=range(len(data[0]))
-    index=index_all[0:74]+index_all[132:132+N_sorbate]
-    #for i in range(len(sorbate_index_list)):
-    #    index=index+index_all[132+sorbate_index_list[i]:132+sorbate_index_list[i]+each_segment_length[i]]
-        
-    c=(np.max(data[2])+0.3-z_shift)*20.1058
-    f=open(save_file,'w')
-    f.write('data_global\n')
-    f.write("_chemical_name_mineral 'Muscovite'\n")
-    f.write("_chemical_formula_sum 'K Si3 Al3 O12 H2'\n")
-    f.write("_cell_length_a 5.1988\n")
-    f.write("_cell_length_b 9.0266\n")
-    f.write("_cell_length_c "+str(c)+"\n")
-    f.write("_cell_angle_alpha 90\n")
-    f.write("_cell_angle_beta 95.782\n")
-    f.write("_cell_angle_gamma 90\n")
-    f.write("_cell_volume 938.7\n")
-    f.write("_symmetry_space_group_name_H-M 'P 1'\nloop_\n_space_group_symop_operation_xyz\n  'x,y,z'\nloop_\n")
-    f.write("_atom_site_label\n_atom_site_fract_x\n_atom_site_fract_y\n_atom_site_fract_z\n")
+def print_structure_files_muscovite(domain_list='',z_shift=0.8,matrix_info=None,save_file='D://model'):
 
-    for i in index:
-        if i==index[-1]:
-            s = '%-5s   %7.5e   %7.5e   %7.5e' % (data[3][i],data[0][i],data[1][i],(data[2][i]-z_shift)*20.1058/c)
-            f.write(s)
-        else:
-            s = '%-5s   %7.5e   %7.5e   %7.5e\n' % (data[3][i],data[0][i],data[1][i],(data[2][i]-z_shift)*20.1058/c)
-            f.write(s)
-    f.close()
+    for domain_index in range(len(domain_list)):
+        domain=domain_list[domain_index]
+        data=domain._extract_values()
+        index_all=range(len(data[0]))
+        index=index_all[0:74]+index_all[132:]
+        c=(np.max(data[2])+0.3-z_shift)*20.1058
+        f=open(save_file+'Domain'+str(domain_index+1)+'.cif','w')
+        f2=open(save_file+'Domain'+str(domain_index+1)+'.xyz','w')
+        f.write('data_global\n')
+        f.write("_chemical_name_mineral 'Muscovite'\n")
+        f.write("_chemical_formula_sum 'K Si3 Al3 O12 H2'\n")
+        f.write("_cell_length_a 5.1988\n")
+        f.write("_cell_length_b 9.0266\n")
+        f.write("_cell_length_c "+str(c)+"\n")
+        f.write("_cell_angle_alpha 90\n")
+        f.write("_cell_angle_beta 95.782\n")
+        f.write("_cell_angle_gamma 90\n")
+        f.write("_cell_volume 938.7\n")
+        f.write("_symmetry_space_group_name_H-M 'P 1'\nloop_\n_space_group_symop_operation_xyz\n  'x,y,z'\nloop_\n")
+        f.write("_atom_site_label\n_atom_site_fract_x\n_atom_site_fract_y\n_atom_site_fract_z\n")
+        f2.write(str(len(index))+'\n#\n')
+        for i in index:
+            coors=np.dot(matrix_info['T'],np.array([data[0][i],data[1][i],(data[2][i]-z_shift)])*matrix_info['basis'])
+            if i==index[-1]:
+                s = '%-5s   %7.5e   %7.5e   %7.5e' % (data[3][i],data[0][i],data[1][i],(data[2][i]-z_shift)*20.1058/c)
+                s2 = '%-5s   %7.5e   %7.5e   %7.5e' % (data[3][i],coors[0],coors[1],coors[2])
+                f.write(s)
+                f2.write(s2)
+            else:
+                s = '%-5s   %7.5e   %7.5e   %7.5e\n' % (data[3][i],data[0][i],data[1][i],(data[2][i]-z_shift)*20.1058/c)
+                s2 = '%-5s   %7.5e   %7.5e   %7.5e\n' % (data[3][i],coors[0],coors[1],coors[2])
+                f.write(s)
+                f2.write(s2)
+        f.close()
+        f2.close()
+    
     
 def print_data2B(N_sorbate=4,domain='',z_shift=1,half_layer=False,half_layer_long=None,full_layer_long=0,save_file='D://model.xyz'):
     #moving slab down if z_shift is a negative number
@@ -819,13 +977,13 @@ def create_list(ids,off_set_begin,start_N):
             ids_processed[1].append(off_set[j])
     return ids_processed 
 #function to build reference bulk and surface slab  
-def add_atom_in_slab(slab,filename):
+def add_atom_in_slab(slab,filename,attach=''):
     f=open(filename)
     lines=f.readlines()
     for line in lines:
         if line[0]!='#':
             items=line.strip().rsplit(',')
-            slab.add_atom(str(items[0].strip()),str(items[1].strip()),float(items[2]),float(items[3]),float(items[4]),float(items[5]),float(items[6]),float(items[7]))
+            slab.add_atom(str(items[0].strip())+attach,str(items[1].strip()),float(items[2]),float(items[3]),float(items[4]),float(items[5]),float(items[6]),float(items[7]))
 
 #here only consider the match in the bulk,the offset should be maintained during fitting
 def create_match_lib_before_fitting(domain_class,domain,atm_list,search_range,basis=np.array([5.038,5.434,7.3707]),T=None):
@@ -893,6 +1051,27 @@ def create_sorbate_ids2(el=['Pb','Sb'],N=[1,1],tag='_D1A'):
                 id_list.append(el[i]+str(j+1+sum_front)+tag)
             else:
                 id_list.append(el[i]+str(j+1)+tag)
+    return id_list
+    
+def create_sorbate_ids3(el=['Pb','Sb'],N=[1,1],tag='_D1A'):
+    id_list=[]
+    for i in range(len(N)):
+        if N[i]<=2:
+            for j in range(N[i]):
+                if i!=0:
+                    sum_front=sum(N[0:i])
+                    id_list.append(el[i]+str(j+1+sum_front)+tag)
+                else:
+                    id_list.append(el[i]+str(j+1)+tag)
+        elif N[i]>2:
+            for j in range(2):
+                if i!=0:
+                    sum_front=sum(N[0:i])
+                    for k in range(N[i]/2):
+                        id_list.append(el[i]+str(j+1+sum_front)+chr(ord('a') + k)+tag)
+                else:
+                    for k in range(N[i]/2):
+                        id_list.append(el[i]+str(j+1)+chr(ord('a') + k)+tag)
     return id_list
     
 def create_sorbate_el_list(el=['Pb','Sb'],N=[[1,2],[1,0]]):

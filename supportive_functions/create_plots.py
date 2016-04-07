@@ -17,6 +17,97 @@ Formates for each kind of dumped files
     eden_plot is a list of [ed1,ed2,...,edn], which is the total e density for all domains
     eden_domains=[[ed_z1_D1,ed_z1_D2,...,ed_z1_Dm],[ed_z2_D1,ed_z2_D2,...,ed_z2_Dm],...,[ed_zn_D1,ed_zn_D2,...,ed_zn_Dm]] considering m domains
 """
+bl_dl_muscovite={'3_0':{'segment':[[0,1],[1,9]],'info':[[2,1],[6,1]]},'2_0':{'segment':[[0,9]],'info':[[2,2.0]]},'2_1':{'segment':[[0,9]],'info':[[4,0.8609]]},'2_2':{'segment':[[0,9]],'info':[[2,1.7218]]},\
+    '2_-1':{'segment':[[0,3.1391],[3.1391,9]],'info':[[4,3.1391],[2,3.1391]]},'1_1':{'segment':[[0,9]],'info':[[2,1.8609]]},'1_0':{'segment':[[0,3],[3,9]],'info':[[6,3],[2,3]]},'0_2':{'segment':[[0,9]],'info':[[2,1.7218]]},\
+    '0_0':{'segment':[[0,13]],'info':[[2,2]]},'-1_0':{'segment':[[0,3],[3,9]],'info':[[6,-3],[2,-3]]},'0_-2':{'segment':[[0,9]],'info':[[2,-6.2782]]},\
+    '-2_-2':{'segment':[[0,9]],'info':[[2,-6.2782]]},'-2_-1':{'segment':[[0,3.1391],[3.1391,9]],'info':[[4,-3.1391],[2,-3.1391]]},'-2_0':{'segment':[[0,9]],'info':[[2,-6]]},\
+    '-2_1':{'segment':[[0,4.8609],[4.8609,9]],'info':[[4,-4.8609],[2,-6.8609]]},'-1_-1':{'segment':[[0,9]],'info':[[2,-4.1391]]},'-3_0':{'segment':[[0,1],[1,9]],'info':[[2,-1],[6,-1]]}}
+
+def generate_plot_files(output_file_path,sample,rgh,data,fit_mode, z_min=0,z_max=29,RAXR_HKL=[0,0,20],bl_dl=bl_dl_muscovite):
+    plot_data_container_experiment={}
+    plot_data_container_model={}
+    plot_raxr_container_experiment={}
+    plot_raxr_container_model={}
+    A_list_Fourier_synthesis=[]
+    P_list_Fourier_synthesis=[]
+    HKL_list_raxr=[[],[],[]]
+    A_list_calculated,P_list_calculated,Q_list_calculated=sample.find_A_P_muscovite(h=RAXR_HKL[0],k=RAXR_HKL[1],l=RAXR_HKL[2])
+    i=0
+    for data_set in data:
+        f=np.array([])   
+        h = data_set.extra_data['h']
+        k = data_set.extra_data['k']
+        x = data_set.x
+        y = data_set.extra_data['Y']
+        LB = data_set.extra_data['LB']
+        dL = data_set.extra_data['dL']
+        I=data_set.y
+        eI=data_set.error
+        if x[0]>100:
+            i+=1
+            A_key_list,P_key_list=[key for key in sample.domain['raxs_vars'].keys() if 'A'+str(i)+'_D' in key and 'set' not in key and 'get' not in key],[key for key in sample.domain['raxs_vars'].keys() if 'P'+str(i)+'_D' in key and 'set' not in key and 'get' not in key]
+            A_key_list.sort(),P_key_list.sort()
+            A_list_Fourier_synthesis.append([sample.domain['raxs_vars'][each] for each in A_key_list])
+            P_list_Fourier_synthesis.append([sample.domain['raxs_vars'][each] for each in P_key_list])
+            rough = (1-rgh.beta)/((1-rgh.beta)**2 + 4*rgh.beta*np.sin(np.pi*(y-LB)/dL)**2)**0.5
+            f=rough*abs(sample.calculate_structure_factor(h,k,x,y,index=i,fit_mode=fit_mode))
+            label=str(int(h[0]))+'_'+str(int(k[0]))+'_'+str(y[0])
+            plot_raxr_container_experiment[label]=np.concatenate((x[:,np.newaxis],I[:,np.newaxis],eI[:,np.newaxis]),axis=1)
+            plot_raxr_container_model[label]=np.concatenate((x[:,np.newaxis],f[:,np.newaxis]),axis=1)
+            HKL_list_raxr[0].append(h[0])
+            HKL_list_raxr[1].append(k[0])
+            HKL_list_raxr[2].append(y[0])
+        else:
+            f=np.array([])   
+            h = data_set.extra_data['h']
+            k = data_set.extra_data['k']
+            l = data_set.x
+            LB = data_set.extra_data['LB']
+            dL = data_set.extra_data['dL']
+            I=data_set.y
+            eI=data_set.error
+            #make dumy hkl and f to make the plot look smoother
+            l_dumy=np.arange(l[0],l[-1]+0.1,0.1)
+            N=len(l_dumy)
+            h_dumy=np.array([h[0]]*N)
+            k_dumy=np.array([k[0]]*N)
+            LB_dumy=[]
+            dL_dumy=[]
+            f_dumy=[]
+            
+            for j in range(N):
+                key=None
+                if l_dumy[j]>=0:
+                    key=str(int(h[0]))+'_'+str(int(k[0]))
+                else:key=str(int(-h[0]))+'_'+str(int(-k[0]))
+                for ii in bl_dl[key]['segment']:
+                    if abs(l_dumy[j])>=ii[0] and abs(l_dumy[j])<ii[1]:
+                        n=bl_dl[key]['segment'].index(ii)
+                        LB_dumy.append(bl_dl[key]['info'][n][1])
+                        dL_dumy.append(bl_dl[key]['info'][n][0])
+            LB_dumy=np.array(LB_dumy)
+            dL_dumy=np.array(dL_dumy)
+            rough_dumy = (1-rgh.beta)/((1-rgh.beta)**2 + 4*rgh.beta*np.sin(np.pi*(l_dumy-LB_dumy)/dL_dumy)**2)**0.5
+            f_dumy=rough_dumy*abs(sample.calculate_structure_factor(h_dumy,k_dumy,l_dumy,None,index=0,fit_mode=fit_mode))
+            label=str(int(h[0]))+str(int(k[0]))+'L'
+            plot_data_container_experiment[label]=np.concatenate((l[:,np.newaxis],I[:,np.newaxis],eI[:,np.newaxis]),axis=1)
+            plot_data_container_model[label]=np.concatenate((l_dumy[:,np.newaxis],f_dumy[:,np.newaxis]),axis=1)
+    Q_list_Fourier_synthesis=sample.unit_cell.abs_hkl(np.array(HKL_list_raxr[0]),np.array(HKL_list_raxr[1]),np.array(HKL_list_raxr[2]))    
+    #dump CTR data and profiles
+    hkls=['00L','02L','10L','11L','20L','22L','30L','2-1L','21L']
+    plot_data_list=[]
+    for hkl in hkls:
+        plot_data_list.append([plot_data_container_experiment[hkl],plot_data_container_model[hkl]])
+    pickle.dump(plot_data_list,open(output_file_path+"temp_plot","wb"))
+    #dump raxr data and profiles
+    pickle.dump([plot_raxr_container_experiment,plot_raxr_container_model],open(output_file_path+"temp_plot_raxr","wb"))
+    pickle.dump([[A_list_calculated,P_list_calculated,Q_list_calculated],[A_list_Fourier_synthesis,P_list_Fourier_synthesis,Q_list_Fourier_synthesis]],open(output_file_path+"temp_plot_raxr_A_P_Q","wb"))
+    #dump electron density profiles
+    #e density based on model fitting
+    sample.plot_electron_density_muscovite(sample.domain,file_path=output_file_path,z_min=z_min,z_max=z_max)#dumpt file name is "temp_plot_eden" 
+    #e density based on Fourier synthesis
+    z_plot,eden_plot,eden_domains=sample.fourier_synthesis(np.array(HKL_list_raxr),np.array(P_list_Fourier_synthesis).transpose(),np.array(A_list_Fourier_synthesis).transpose(),z_min=z_min,z_max=z_max,resonant_el=sample.domain['el'],resolution=1000)
+    pickle.dump([z_plot,eden_plot,eden_domains],open(output_file_path+"temp_plot_eden_fourier_synthesis","wb"))  
 
 def plotting_raxr_new(data,savefile="D://raxr_temp.png",color=['b','r'],marker=['o']):
     experiment_data,model=data[0],data[1]
@@ -184,11 +275,8 @@ def plot_many_experiment_data(data_files=['D:\\Google Drive\\data\\400uM_Sb_hema
 if __name__=="__main__":    
 
     #which plots do you want to create
-<<<<<<< HEAD
-    plot_e_model,plot_e_FS,plot_ctr,plot_raxr=0,0,1,0
-=======
-    plot_e_model,plot_e_FS,plot_ctr,plot_raxr=1,1,0,1
->>>>>>> 11c932d561c6daf9a68940f54682079a43f96648
+    plot_e_model,plot_e_FS,plot_ctr,plot_raxr=1,0,1,0
+
     #specify file paths (files are dumped files when setting running_mode=False in GenX script)
     e_file="D:\\temp_plot_eden"#e density from model
     e_file_FS="D:\\temp_plot_eden_fourier_synthesis" #e density from Fourier synthesis

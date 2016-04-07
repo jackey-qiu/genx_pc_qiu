@@ -232,6 +232,8 @@ class Sample:
             unit_cell = UnitCell(1.0, 1,.0, 1.0)
         self.unit_cell = unit_cell
         
+      
+        
     def calc_f(self, h, k, l):
         '''Calculate the structure factors for the sample
         '''
@@ -389,6 +391,72 @@ class Sample:
             #ftot=ftot+ftot_A_C+ftot_A_IC+ftot_B_IC+ftot_B_C
         return abs(ftot)*self.inst.inten
         
+    def calculate_structure_factor(self,h,k,x,y,index=None,fit_mode='MD'):
+        if x[0]<100:#CTR data
+            return self.calc_f4_muscovite_CTR(h,k,x)
+        else:#RAXR data
+            if fit_mode=='MI':
+                return self.calc_f4_muscovite_RAXR_MI(h,k,x,y,index)
+            elif fit_mode=='MD':
+                return self.calc_f4_muscovite_RAXR_MD(h,k,x,y,index)
+        
+    def calc_f4_muscovite_CTR(self, h, k, l):
+        #now the coherence is either true or force corresponding to coherent and incoherent summation of structure factor
+        ftot=0
+        coherence=self.coherence
+        fb = self.calc_fb(h, k, l)
+        f_surface=self.calc_fs
+        f_layered_water=self.calc_f_layered_water_muscovite(h,k,l,self.domain['layered_water_pars'])
+        f_layered_sorbate=self.calc_f_layered_sorbate_muscovite(h,k,l,self.domain['layered_sorbate_pars'])
+        domains=self.domain['domains']
+        if coherence:
+            for i in range(len(domains)):
+                ftot=ftot+getattr(self.domain['global_vars'],'wt'+str(i+1))*(fb+f_surface(h,k,l,[domains[i]])+f_layered_water+f_layered_sorbate)
+        else:
+            for i in range(len(domains)):
+                ftot=ftot+getattr(self.domain['global_vars'],'wt'+str(i+1))*abs(fb+f_surface(h,k,l,[domains[i]])+f_layered_water+f_layered_sorbate)
+        return abs(ftot)*self.inst.inten
+        
+    def calc_f4_muscovite_RAXR_MI(self,h,k,x,y,index):
+        h, k, l, E, E0, f1f2, a, b, c, resonant_el=h,k,y,x,self.domain['E0'],self.domain['F1F2'],self.domain['raxs_vars']['a'+str(index)],self.domain['raxs_vars']['b'+str(index)],self.domain['raxs_vars']['c'+str(index)],self.domain['el']
+        ftot=0
+        coherence=self.coherence
+        fb = self.calc_fb(h, k, l)
+        f_surface=self.calc_fs
+        f_layered_water=self.calc_f_layered_water_muscovite(h,k,l,self.domain['layered_water_pars'])
+        f_layered_sorbate=self.calc_f_layered_sorbate_muscovite(h,k,l,self.domain['layered_sorbate_pars'])
+        domains=self.domain['domains']
+        A_list=[self.domain['raxs_vars']['A'+str(index)+'_D'+str(i+1)] for i in range(len(domains))]
+        P_list=[self.domain['raxs_vars']['P'+str(index)+'_D'+str(i+1)] for i in range(len(domains))]
+        
+        if coherence:
+            for i in range(len(domains)):
+                ftot=ftot+getattr(self.domain['global_vars'],'wt'+str(i+1))*(fb+f_surface(h,k,l,[domains[i]])+f_layered_water+f_layered_sorbate+(f1f2[:,0]+1.0J*f1f2[:,1])*A_list[i]*np.exp(1.0J*np.pi*2*P_list[i]))
+        else:
+            for i in range(len(domains)):
+                ftot=ftot+getattr(self.domain['global_vars'],'wt'+str(i+1))*abs(fb+f_surface(h,k,l,[domains[i]])+f_layered_water+f_layered_sorbate+(f1f2[:,0]+1.0J*f1f2[:,1])*A_list[i]*np.exp(1.0J*np.pi*2*P_list[i]))
+        ftot=np.exp(-a*(E-E0)**2/E0**2+b*(E-E0)/E0)*c*abs(ftot)
+        return ftot
+        
+    def calc_f4_muscovite_RAXR_MD(self,h,k,x,y,index):
+        h, k, l, E, E0, f1f2, a, b, c, resonant_el=h,k,y,x,self.domain['E0'],self.domain['F1F2'],self.domain['raxs_vars']['a'+str(index)],self.domain['raxs_vars']['b'+str(index)],self.domain['raxs_vars']['c'+str(index)],self.domain['el']
+        ftot=0
+        coherence=self.coherence
+        fb = self.calc_fb(h, k, l)
+        f_surface=self.calc_fs_RAXR
+        f_layered_water=self.calc_f_layered_water_muscovite(h,k,l,self.domain['layered_water_pars'])
+        f_layered_sorbate=self.calc_f_layered_sorbate_muscovite_RAXR(h,k,l,self.domain['layered_sorbate_pars'])
+        domains=self.domain['domains']
+        
+        if coherence:
+            for i in range(len(domains)):
+                ftot=ftot+getattr(self.domain['global_vars'],'wt'+str(i+1))*(fb+f_surface(h, k, l,[domains[i]],f1f2,resonant_el)+f_layered_water+f_layered_sorbate)
+        else:
+            for i in range(len(domains)):
+                ftot=ftot+getattr(self.domain['global_vars'],'wt'+str(i+1))*abs(fb+f_surface(h, k, l,[domains[i]],f1f2,resonant_el)+f_layered_water+f_layered_sorbate)
+        ftot=np.exp(-a*(E-E0)**2/E0**2+b*(E-E0)/E0)*c*abs(ftot)
+        return ftot
+        
     def calc_f4_specular_RAXR(self, h, k, l,E,E0,f1f2,a,b,A_list=[],P_list=[],resonant_els=[1,0,0]):
         #now the coherence looks like [{True:[0,1]},{False:[2,3]}] which means adding up first two domains coherently
         #and last two domains in-coherently. After calculation of structure factor for each item of the list, absolute 
@@ -464,6 +532,161 @@ class Sample:
             #ftot=ftot+ftot_A_C+ftot_A_IC+ftot_B_IC+ftot_B_C
         return abs(ftot)*self.inst.inten
         
+        
+    def calc_f4_specular_RAXR_MI(self, h, k, l,E,E0,f1f2,A_list=[],P_list=[],resonant_els=[1,0,0],**abc):
+        #calculate the structure factor in the process of model-independent RAXR fitting
+        #Use linear background function (abc.keys=['a','b']), or Victoreen background function (abc.keys=['a','b','c'])
+        #Linear func: slope{n} = (a(n)*(E{n}-Eo)+1)*b(n)*norm_offset*1/q(n)^2;
+        #Victoreen func: slope{n} = exp(-a(n)*(E{n}-Eo).^2/Eo^2 + b(n)*(E{n}-Eo)/Eo) * c(n);
+        #now the coherence looks like [{True:[0,1]},{False:[2,3]}] which means adding up first two domains coherently
+        #and last two domains in-coherently. After calculation of structure factor for each item of the list, absolute 
+        #value of SF will be calculated followed by being summed up
+        #so [{True:[0,1]},{True:[2,3]}] is different from [{True:[0,1,2,3]}]
+        #resonant_els:a list of True or False specifying whether or not considering the resonant scattering in each domain
+        #             so the len(resonant_els) is equal to the total domain numbers
+        #E is the energy scan list, and make sure items in E is one-to-one corresponding to those in f1f2
+        #E0 is the center of the range of energy scan
+        #f1f2 numpy array of anomalous correction items (n*2 shape) with the first column as f' and the second as f''
+        #a,b are fitting parameters for extrinsic factors
+        #P_list and A_list are two lists of Fourier components. Depending on the total domains, you can consider different Fourier
+        #                  components for chemically different domains.Note in P or A_list, the 0 item means no resonant element
+        #                  so len(P_list)==len(resonant_els)
+        #Resonant structure factor is calculated using equation (9) presented in paper of "Park, Changyong and Fenter, Paul A.(2007) J. Appl. Cryst.40, 290-301"
+        if len(abc.keys())==3:
+            a,b,c=abc['a'],abc['b'],abc['c']
+        elif len(abc.keys())==2:
+            a,b=abc['a'],abc['b']
+        ftot=0
+        coherence=self.coherence
+        fb = self.calc_fb(h, k, l)
+        f_surface=self.calc_fs
+        
+        for n in range(len(coherence)):
+            ftot_A_C, ftot_A_IC=0,0
+            ftot_B_C, ftot_B_IC=0,0
+            keys_domainA=[]
+            keys_domainB=[]
+            
+            for i in coherence[n].values()[0]:
+                keys_domainA.append('domain'+str(i+1)+'A')
+                keys_domainB.append('domain'+str(i+1)+'B')
+            for i in keys_domainA:
+                ii=int(i[6:-1])-1#extract the domain index from the domain key, eg for "domain10A" will have a 9 as the domain index
+                f_layered_water=0
+                f_layered_sorbate=0
+                if self.domain[i]['layered_water']!=[]:#consider layered water?
+                    f_layered_water=self.calc_f_layered_water(h,k,l,*self.domain[i]['layered_water'])
+                if 'layered_sorbate' in self.domain[i].keys():#consider layered sorbate?
+                    if self.domain[i]['layered_sorbate']!=[]:
+                        f_layered_sorbate=self.calc_f_layered_sorbate_RAXR(h,k,l,*self.domain[i]['layered_sorbate'])
+                if coherence[n].keys()[0]:
+                    if resonant_els[ii]:
+                        ftot_A_C=ftot_A_C+(fb+f_surface(h, k, l,[self.domain[i]['slab']])+f_layered_water+f_layered_sorbate+(f1f2[:,0]+1.0J*f1f2[:,1])*A_list[ii]*np.exp(1.0J*np.pi*2*P_list[ii]))*self.domain[i]['wt']
+                    else:
+                        ftot_A_C=ftot_A_C+(fb+f_surface(h, k, l,[self.domain[i]['slab']])+f_layered_water)*self.domain[i]['wt']
+                else:
+                    if resonant_els[ii]:
+                        ftot_A_IC=ftot_A_IC+abs(fb+f_surface(h, k, l,[self.domain[i]['slab']])+f_layered_water+f_layered_sorbate+(f1f2[:,0]+1.0J*f1f2[:,1])*A_list[ii]*np.exp(1.0J*np.pi*2*P_list[ii]))*self.domain[i]['wt']
+                    else:
+                        ftot_A_IC=ftot_A_IC+abs(fb+f_surface(h, k, l,[self.domain[i]['slab']])+f_layered_water)*self.domain[i]['wt']
+            for i in keys_domainB:
+                #in this specific case (rcut hematite, domainB is symmetricaly related to domainA with half unit cell step lower)
+                #in light of that, the Fourier component A(amplitude) is same as that for the associated domainA, but the other one (phase) should be 0.5 off
+                ii=int(i[6:-1])-1#extract the domain index from the domain key, eg for "domain10A" will have a 9 as the domain index
+                f_layered_water=0
+                f_layered_sorbate=0
+                if self.domain[i]['layered_water']!=[]:
+                    f_layered_water=self.calc_f_layered_water(h,k,l,*self.domain[i]['layered_water'])
+                if 'layered_sorbate' in self.domain[i].keys():
+                    if self.domain[i]['layered_sorbate']!=[]:
+                        f_layered_sorbate=self.calc_f_layered_sorbate_RAXR(h,k,l,*self.domain[i]['layered_sorbate'])
+                if coherence[n].keys()[0]:
+                    if resonant_els[ii]:
+                        ftot_B_C=ftot_B_C+(fb+f_surface(h, k, l,[self.domain[i]['slab']])+f_layered_water+f_layered_sorbate+(f1f2[:,0]+1.0J*f1f2[:,1])*A_list[ii]*np.exp(1.0J*np.pi*2*(P_list[ii]-0.5*l[0])))*self.domain[i]['wt']
+                    else:
+                        ftot_B_C=ftot_B_C+(fb+f_surface(h, k, l,[self.domain[i]['slab']])+f_layered_water)*self.domain[i]['wt']
+                else:
+                    if resonant_els[ii]:
+                        ftot_B_IC=ftot_B_IC+abs(fb+f_surface(h, k, l,[self.domain[i]['slab']])+f_layered_water+f_layered_sorbate+(f1f2[:,0]+1.0J*f1f2[:,1])*A_list[ii]*np.exp(1.0J*np.pi*2*(P_list[ii]-0.5*l[0])))*self.domain[i]['wt']
+                    else:
+                        ftot_B_IC=ftot_B_IC+abs(fb+f_surface(h, k, l,[self.domain[i]['slab']])+f_layered_water)*self.domain[i]['wt']
+
+            if len(abc.keys())==2:
+                ftot=(a*(E-E0)+1)*b*(ftot+abs(ftot_A_C)+ftot_A_IC+ftot_B_IC+abs(ftot_B_C))
+            else:
+                ftot=exp(-a*(E-E0)**2/E0**2+b*(E-E0)/E0)*c*(ftot+abs(ftot_A_C)+ftot_A_IC+ftot_B_IC+abs(ftot_B_C))
+        return abs(ftot)*self.inst.inten
+        
+    def calc_f4_offspecular_RAXR_MI(self, h, k, l,E,E0,f1f2,A_list=[],P_list=[],resonant_els=[1,0,0],**abc):
+        #calculate the structure factor in the process of model-independent RAXR fitting for offspecular rods (no influence from layered water and sorbates)
+        #Use linear background function (abc.keys=['a','b']), or Victoreen background function (abc.keys=['a','b','c'])
+        #Linear func: slope{n} = (a(n)*(E{n}-Eo)+1)*b(n)*norm_offset*1/q(n)^2;
+        #Victoreen func: slope{n} = exp(-a(n)*(E{n}-Eo).^2/Eo^2 + b(n)*(E{n}-Eo)/Eo) * c(n);
+        #now the coherence looks like [{True:[0,1]},{False:[2,3]}] which means adding up first two domains coherently
+        #and last two domains in-coherently. After calculation of structure factor for each item of the list, absolute 
+        #value of SF will be calculated followed by being summed up
+        #so [{True:[0,1]},{True:[2,3]}] is different from [{True:[0,1,2,3]}]
+        #resonant_els:a list of True or False specifying whether or not considering the resonant scattering in each domain
+        #             so the len(resonant_els) is equal to the total domain numbers
+        #E is the energy scan list, and make sure items in E is one-to-one corresponding to those in f1f2
+        #E0 is the center of the range of energy scan
+        #f1f2 numpy array of anomalous correction items (n*2 shape) with the first column as f' and the second as f''
+        #a,b are fitting parameters for extrinsic factors
+        #P_list and A_list are two lists of Fourier components. Depending on the total domains, you can consider different Fourier
+        #                  components for chemically different domains.Note in P or A_list, the 0 item means no resonant element
+        #                  so len(P_list)==len(resonant_els)
+        #Resonant structure factor is calculated using equation (9) presented in paper of "Park, Changyong and Fenter, Paul A.(2007) J. Appl. Cryst.40, 290-301"
+        if len(abc.keys())==3:
+            a,b,c=abc['a'],abc['b'],abc['c']
+        elif len(abc.keys())==2:
+            a,b=abc['a'],abc['b']
+        ftot=0
+        coherence=self.coherence
+        fb = self.calc_fb(h, k, l)
+        f_surface=self.calc_fs
+        
+        for n in range(len(coherence)):
+            ftot_A_C, ftot_A_IC=0,0
+            ftot_B_C, ftot_B_IC=0,0
+            keys_domainA=[]
+            keys_domainB=[]
+            
+            for i in coherence[n].values()[0]:
+                keys_domainA.append('domain'+str(i+1)+'A')
+                keys_domainB.append('domain'+str(i+1)+'B')
+            for i in keys_domainA:
+                ii=int(i[6:-1])-1#extract the domain index from the domain key, eg for "domain10A" will have a 9 as the domain index
+                if coherence[n].keys()[0]:
+                    if resonant_els[ii]:
+                        ftot_A_C=ftot_A_C+(fb+f_surface(h, k, l,[self.domain[i]['slab']])+(f1f2[:,0]+1.0J*f1f2[:,1])*A_list[ii]*np.exp(1.0J*np.pi*2*P_list[ii]))*self.domain[i]['wt']
+                    else:
+                        ftot_A_C=ftot_A_C+(fb+f_surface(h, k, l,[self.domain[i]['slab']]))*self.domain[i]['wt']
+                else:
+                    if resonant_els[ii]:
+                        ftot_A_IC=ftot_A_IC+abs(fb+f_surface(h, k, l,[self.domain[i]['slab']])+(f1f2[:,0]+1.0J*f1f2[:,1])*A_list[ii]*np.exp(1.0J*np.pi*2*P_list[ii]))*self.domain[i]['wt']
+                    else:
+                        ftot_A_IC=ftot_A_IC+abs(fb+f_surface(h, k, l,[self.domain[i]['slab']]))*self.domain[i]['wt']
+            for i in keys_domainB:
+                #in this specific case (rcut hematite, domainB is symmetricaly related to domainA with half unit cell step lower)
+                #in light of that, the Fourier component A(amplitude) is same as that for the associated domainA, but the other one (phase) should be 0.5 off
+                ii=int(i[6:-1])-1#extract the domain index from the domain key, eg for "domain10A" will have a 9 as the domain index
+                if coherence[n].keys()[0]:
+                    if resonant_els[ii]:
+                        ftot_B_C=ftot_B_C+(fb+f_surface(h, k, l,[self.domain[i]['slab']])+(f1f2[:,0]+1.0J*f1f2[:,1])*A_list[ii]*np.exp(1.0J*np.pi*2*(P_list[ii]-0.5*l[0])))*self.domain[i]['wt']
+                    else:
+                        ftot_B_C=ftot_B_C+(fb+f_surface(h, k, l,[self.domain[i]['slab']]))*self.domain[i]['wt']
+                else:
+                    if resonant_els[ii]:
+                        ftot_B_IC=ftot_B_IC+abs(fb+f_surface(h, k, l,[self.domain[i]['slab']])+(f1f2[:,0]+1.0J*f1f2[:,1])*A_list[ii]*np.exp(1.0J*np.pi*2*(P_list[ii]-0.5*l[0])))*self.domain[i]['wt']
+                    else:
+                        ftot_B_IC=ftot_B_IC+abs(fb+f_surface(h, k, l,[self.domain[i]['slab']]))*self.domain[i]['wt']
+
+            if len(abc.keys())==2:
+                ftot=(a*(E-E0)+1)*b*(ftot+abs(ftot_A_C)+ftot_A_IC+ftot_B_IC+abs(ftot_B_C))
+            else:
+                ftot=exp(-a*(E-E0)**2/E0**2+b*(E-E0)/E0)*c*(ftot+abs(ftot_A_C)+ftot_A_IC+ftot_B_IC+abs(ftot_B_C))
+        return abs(ftot)*self.inst.inten
+        
     def calc_f4_specular_RAXR_for_test_purpose(self, h, k, l,f1f2,res_el='Pb'):
         #this function is used to generate an arbitrary raxr dataset for testing purpose
         #hkl is a list of hkl values
@@ -520,11 +743,165 @@ class Sample:
                         ftot_B_C=ftot_B_C+(fb+f_surface(h, k, l,[self.domain[i]['slab']],each_f1f2,res_el)+f_layered_water)*self.domain[i]['wt']
                     else:
                         ftot_B_IC=ftot_B_IC+abs(fb+f_surface(h, k, l,[self.domain[i]['slab']],each_f1f2,res_el)+f_layered_water)*self.domain[i]['wt']
-
                 ftot=ftot+abs(ftot_A_C)+ftot_A_IC+ftot_B_IC+abs(ftot_B_C)
                 #ftot=ftot+ftot_A_C+ftot_A_IC+ftot_B_IC+ftot_B_C
             f_total_container.append(abs(ftot)*self.inst.inten)
         return f_total_container
+        
+    def calc_f4_specular_RAXR_MD(self, h, k, l,E,E0,f1f2,resonant_els=[1,0,0],res_el='Zr',**abc):
+        #calculate the structure factor in the process of model-dependent RAXR fitting
+        #Use linear background function (abc.keys=['a','b']), or Victoreen background function (abc.keys=['a','b','c'])
+        #Linear func: slope{n} = (a(n)*(E{n}-Eo)+1)*b(n)*norm_offset*1/q(n)^2;
+        #Victoreen func: slope{n} = exp(-a(n)*(E{n}-Eo).^2/Eo^2 + b(n)*(E{n}-Eo)/Eo) * c(n);
+        #now the coherence looks like [{True:[0,1]},{False:[2,3]}] which means adding up first two domains coherently
+        #and last two domains in-coherently. After calculation of structure factor for each item of the list, absolute 
+        #value of SF will be calculated followed by being summed up
+        #so [{True:[0,1]},{True:[2,3]}] is different from [{True:[0,1,2,3]}]
+        #resonant_els:a list of True or False specifying whether or not considering the resonant scattering in each domain
+        #             so the len(resonant_els) is equal to the total domain numbers
+        #E is the energy scan list, and make sure items in E is one-to-one corresponding to those in f1f2
+        #E0 is the center of the range of energy scan
+        #f1f2 numpy array of anomalous correction items (n*2 shape) with the first column as f' and the second as f''
+        #a,b are fitting parameters for extrinsic factors
+        #P_list and A_list are two lists of Fourier components. Depending on the total domains, you can consider different Fourier
+        #                  components for chemically different domains.Note in P or A_list, the 0 item means no resonant element
+        #                  so len(P_list)==len(resonant_els)
+        #Resonant structure factor is calculated using equation (9) presented in paper of "Park, Changyong and Fenter, Paul A.(2007) J. Appl. Cryst.40, 290-301"
+        if len(abc.keys())==3:
+            a,b,c=abc['a'],abc['b'],abc['c']
+        elif len(abc.keys())==2:
+            a,b=abc['a'],abc['b']
+        ftot=0
+        coherence=self.coherence
+        fb = self.calc_fb(h, k, l)
+        f_surface=self.calc_fs_RAXR
+        
+        for n in range(len(coherence)):
+            ftot_A_C, ftot_A_IC=0,0
+            ftot_B_C, ftot_B_IC=0,0
+            keys_domainA=[]
+            keys_domainB=[]
+            
+            for i in coherence[n].values()[0]:
+                keys_domainA.append('domain'+str(i+1)+'A')
+                keys_domainB.append('domain'+str(i+1)+'B')
+            for i in keys_domainA:
+                ii=int(i[6:-1])-1#extract the domain index from the domain key, eg for "domain10A" will have a 9 as the domain index
+                f_layered_water=0
+                f_layered_sorbate=0
+                if self.domain[i]['layered_water']!=[]:#consider layered water?
+                    f_layered_water=self.calc_f_layered_water(h,k,l,*self.domain[i]['layered_water'])
+                if 'layered_sorbate' in self.domain[i].keys():#consider layered sorbate?
+                    if self.domain[i]['layered_sorbate']!=[]:
+                        f_layered_sorbate=self.calc_f_layered_sorbate_RAXR(h,k,l,*self.domain[i]['layered_sorbate'])
+                if coherence[n].keys()[0]:
+                    if resonant_els[ii]:
+                        ftot_A_C=ftot_A_C+(fb+f_surface(h, k, l,[self.domain[i]['slab']],f1f2,res_el)+f_layered_water+f_layered_sorbate)*self.domain[i]['wt']
+                    else:
+                        ftot_A_C=ftot_A_C+(fb+self.calc_fs(h, k, l,[self.domain[i]['slab']])+f_layered_water)*self.domain[i]['wt']
+                else:
+                    if resonant_els[ii]:
+                        ftot_A_IC=ftot_A_IC+abs(fb+f_surface(h, k, l,[self.domain[i]['slab']],f1f2,res_el)+f_layered_water+f_layered_sorbate)*self.domain[i]['wt']
+                    else:
+                        ftot_A_IC=ftot_A_IC+abs(fb+self.calc_fs(h, k, l,[self.domain[i]['slab']])+f_layered_water)*self.domain[i]['wt']
+            for i in keys_domainB:
+                #in this specific case (rcut hematite, domainB is symmetricaly related to domainA with half unit cell step lower)
+                #in light of that, the Fourier component A(amplitude) is same as that for the associated domainA, but the other one (phase) should be 0.5 off
+                ii=int(i[6:-1])-1#extract the domain index from the domain key, eg for "domain10A" will have a 9 as the domain index
+                f_layered_water=0
+                f_layered_sorbate=0
+                if self.domain[i]['layered_water']!=[]:
+                    f_layered_water=self.calc_f_layered_water(h,k,l,*self.domain[i]['layered_water'])
+                if 'layered_sorbate' in self.domain[i].keys():
+                    if self.domain[i]['layered_sorbate']!=[]:
+                        f_layered_sorbate=self.calc_f_layered_sorbate_RAXR(h,k,l,*self.domain[i]['layered_sorbate'])
+                if coherence[n].keys()[0]:
+                    if resonant_els[ii]:
+                        ftot_B_C=ftot_B_C+(fb+f_surface(h, k, l,[self.domain[i]['slab']],f1f2,res_el)+f_layered_water+f_layered_sorbate)*self.domain[i]['wt']
+                    else:
+                        ftot_B_C=ftot_B_C+(fb+self.calc_fs(h, k, l,[self.domain[i]['slab']])+f_layered_water)*self.domain[i]['wt']
+                else:
+                    if resonant_els[ii]:
+                        ftot_B_IC=ftot_B_IC+abs(fb+f_surface(h, k, l,[self.domain[i]['slab']],f1f2,res_el)+f_layered_water+f_layered_sorbate)*self.domain[i]['wt']
+                    else:
+                        ftot_B_IC=ftot_B_IC+abs(fb+self.calc_fs(h, k, l,[self.domain[i]['slab']])+f_layered_water)*self.domain[i]['wt']
+
+            if len(abc.keys())==2:
+                ftot=(a*(E-E0)+1)*b*(ftot+abs(ftot_A_C)+ftot_A_IC+ftot_B_IC+abs(ftot_B_C))
+            else:
+                ftot=exp(-a*(E-E0)**2/E0**2+b*(E-E0)/E0)*c*(ftot+abs(ftot_A_C)+ftot_A_IC+ftot_B_IC+abs(ftot_B_C))
+        return abs(ftot)*self.inst.inten
+        
+        
+    def calc_f4_offspecular_RAXR_MD(self, h, k, l,E,E0,f1f2,resonant_els=[1,0,0],res_el='Zr',**abc):
+        #calculate the structure factor in the process of model-dependent RAXR fitting for offspecular rods (no influence from layered water and sorbates)
+        #Use linear background function (abc.keys=['a','b']), or Victoreen background function (abc.keys=['a','b','c'])
+        #Linear func: slope{n} = (a(n)*(E{n}-Eo)+1)*b(n)*norm_offset*1/q(n)^2;
+        #Victoreen func: slope{n} = exp(-a(n)*(E{n}-Eo).^2/Eo^2 + b(n)*(E{n}-Eo)/Eo) * c(n);
+        #now the coherence looks like [{True:[0,1]},{False:[2,3]}] which means adding up first two domains coherently
+        #and last two domains in-coherently. After calculation of structure factor for each item of the list, absolute 
+        #value of SF will be calculated followed by being summed up
+        #so [{True:[0,1]},{True:[2,3]}] is different from [{True:[0,1,2,3]}]
+        #resonant_els:a list of True or False specifying whether or not considering the resonant scattering in each domain
+        #             so the len(resonant_els) is equal to the total domain numbers
+        #E is the energy scan list, and make sure items in E is one-to-one corresponding to those in f1f2
+        #E0 is the center of the range of energy scan
+        #f1f2 numpy array of anomalous correction items (n*2 shape) with the first column as f' and the second as f''
+        #a,b are fitting parameters for extrinsic factors
+        #P_list and A_list are two lists of Fourier components. Depending on the total domains, you can consider different Fourier
+        #                  components for chemically different domains.Note in P or A_list, the 0 item means no resonant element
+        #                  so len(P_list)==len(resonant_els)
+        #Resonant structure factor is calculated using equation (9) presented in paper of "Park, Changyong and Fenter, Paul A.(2007) J. Appl. Cryst.40, 290-301"
+        if len(abc.keys())==3:
+            a,b,c=abc['a'],abc['b'],abc['c']
+        elif len(abc.keys())==2:
+            a,b=abc['a'],abc['b']
+        ftot=0
+        coherence=self.coherence
+        fb = self.calc_fb(h, k, l)
+        f_surface=self.calc_fs_RAXR
+        
+        for n in range(len(coherence)):
+            ftot_A_C, ftot_A_IC=0,0
+            ftot_B_C, ftot_B_IC=0,0
+            keys_domainA=[]
+            keys_domainB=[]
+            
+            for i in coherence[n].values()[0]:
+                keys_domainA.append('domain'+str(i+1)+'A')
+                keys_domainB.append('domain'+str(i+1)+'B')
+            for i in keys_domainA:
+                ii=int(i[6:-1])-1#extract the domain index from the domain key, eg for "domain10A" will have a 9 as the domain index
+                if coherence[n].keys()[0]:
+                    if resonant_els[ii]:
+                        ftot_A_C=ftot_A_C+(fb+f_surface(h, k, l,[self.domain[i]['slab']],f1f2,res_el))*self.domain[i]['wt']
+                    else:
+                        ftot_A_C=ftot_A_C+(fb+self.calc_fs(h, k, l,[self.domain[i]['slab']]))*self.domain[i]['wt']
+                else:
+                    if resonant_els[ii]:
+                        ftot_A_IC=ftot_A_IC+abs(fb+f_surface(h, k, l,[self.domain[i]['slab']],f1f2,res_el))*self.domain[i]['wt']
+                    else:
+                        ftot_A_IC=ftot_A_IC+abs(fb+self.calc_fs(h, k, l,[self.domain[i]['slab']]))*self.domain[i]['wt']
+            for i in keys_domainB:
+                #in this specific case (rcut hematite, domainB is symmetricaly related to domainA with half unit cell step lower)
+                #in light of that, the Fourier component A(amplitude) is same as that for the associated domainA, but the other one (phase) should be 0.5 off
+                ii=int(i[6:-1])-1#extract the domain index from the domain key, eg for "domain10A" will have a 9 as the domain index
+                if coherence[n].keys()[0]:
+                    if resonant_els[ii]:
+                        ftot_B_C=ftot_B_C+(fb+f_surface(h, k, l,[self.domain[i]['slab']],f1f2,res_el))*self.domain[i]['wt']
+                    else:
+                        ftot_B_C=ftot_B_C+(fb+self.calc_fs(h, k, l,[self.domain[i]['slab']]))*self.domain[i]['wt']
+                else:
+                    if resonant_els[ii]:
+                        ftot_B_IC=ftot_B_IC+abs(fb+f_surface(h, k, l,[self.domain[i]['slab']],f1f2,res_el))*self.domain[i]['wt']
+                    else:
+                        ftot_B_IC=ftot_B_IC+abs(fb+self.calc_fs(h, k, l,[self.domain[i]['slab']]))*self.domain[i]['wt']
+
+            if len(abc.keys())==2:
+                ftot=(a*(E-E0)+1)*b*(ftot+abs(ftot_A_C)+ftot_A_IC+ftot_B_IC+abs(ftot_B_C))
+            else:
+                ftot=exp(-a*(E-E0)**2/E0**2+b*(E-E0)/E0)*c*(ftot+abs(ftot_A_C)+ftot_A_IC+ftot_B_IC+abs(ftot_B_C))
+        return abs(ftot)*self.inst.inten
         
     def calc_fs_test_purpose(self, h, k, l,slabs,single_f1f2,res_el):
         '''Calculate the structure factors from the surface
@@ -599,6 +976,48 @@ class Sample:
                 print "P list=",['%.4f' % each_P for each_P in P[each_key]]
         return l,A,P
         
+    def find_A_P_muscovite(self,h,k,l):
+        A,P=[],[]
+        hs,ks,ls=np.array([h]*100),np.array([k]*100),np.arange(0,l,l/100.)
+        dinv = self.unit_cell.abs_hkl(hs, ks, ls)
+        Q=np.pi*2*dinv
+        for i in range(len(self.domain['domains'])):
+            single_domain=self.domain['domains'][i]
+            slabs=[single_domain]
+            domain_wt=getattr(self.domain['global_vars'],'wt'+str(i+1))
+            x, y, z, u, oc, el = self._surf_pars(slabs)
+            res_el=self.domain['el']
+            sorbate_index=[i for i in range(len(el)) if el[i]==res_el]
+            A_container,P_container=[],[]
+            
+            for q_index in range(len(Q)):
+                q=Q[q_index]
+                h_single,k_single,l_single=hs[q_index],ks[q_index],ls[q_index]
+                complex_sum=0.+1.0J*0. 
+                for i in sorbate_index:
+                    complex_sum+=oc[i]*np.exp(-q**2*u[i]**2/2)*np.exp(1.0J*2*np.pi*(h_single*x[i]+k_single*y[i]+l_single*(z[i]+1)))#z should be plus 1 to account for the fact that surface slab sitting on top of bulk slab
+                A_container.append(domain_wt*abs(complex_sum))
+                img_complex_sum, real_complex_sum=np.imag(complex_sum),np.real(complex_sum)
+                if img_complex_sum==0.:
+                    P_container.append(0)
+                elif real_complex_sum==0 and img_complex_sum==1:
+                    P_container.append(0.25)#1/2pi/2pi
+                elif real_complex_sum==0 and img_complex_sum==-1:  
+                    P_container.append(0.75)#3/2pi/2pi
+                else:#adjustment is needed since the return of np.arctan is ranging from -1/2pi to 1/2pi
+                    if real_complex_sum>0 and img_complex_sum>0:
+                        P_container.append(np.arctan(img_complex_sum/real_complex_sum)/np.pi/2.)
+                    elif real_complex_sum>0 and img_complex_sum<0:
+                        P_container.append(np.arctan(img_complex_sum/real_complex_sum)/np.pi/2.+1.)
+                    elif real_complex_sum<0 and img_complex_sum>0:
+                        P_container.append(np.arctan(img_complex_sum/real_complex_sum)/np.pi/2.+0.5)
+                    elif real_complex_sum<0 and img_complex_sum<0:
+                        P_container.append(np.arctan(img_complex_sum/real_complex_sum)/np.pi/2.+0.5)
+            A.append(A_container)
+            P.append(P_container)
+            
+        return np.transpose(A),np.transpose(P),Q
+        
     def calc_f4_nonspecular_RAXR(self, h, k, l,E,E0,f1f2,a,b,A_list=[],P_list=[],resonant_els=[1,1,0]):
         #now the coherence looks like [{True:[0,1]},{False:[2,3]}] which means adding up first two domains coherently
         #and last two domains in-coherently. After calculation of structure factor for each item of the list, absolute 
@@ -671,6 +1090,23 @@ class Sample:
                         /(1-np.exp(-0.5*q**2*ubar**2)*np.exp(q*d_w*1.0J))
         return F_layered_water
         
+    def calc_f_layered_water_muscovite(self,h,k,l,args):
+        #contribution of layered water calculated as equation(29) in Reviews in Mineralogy and Geochemistry v. 49 no. 1 p. 149-221
+        #note here the height of first atom layer is not at 0 as in that equation but is specified by the first_layer_height. and the corrections were done accordingly
+        #In addition, the occupancy of layered water molecules was correctly calculated here by Auc*d_w*density_w
+        #the u0 and ubar here are in A
+        if h[0]==0 and k[0]==0:#layered structure has effect only on specular rod
+            u0,ubar,d_w,first_layer_height,density_w=args['u0_w'],args['ubar_w'],args['d_w'],args['first_layer_height_w'],args['density_w']
+            dinv = self.unit_cell.abs_hkl(h, k, l)
+            f=self._get_f(np.array(['O']), dinv)[:,0]
+            Auc=self.unit_cell.a*self.unit_cell.b*np.sin(self.unit_cell.gamma)
+            q=2*np.pi*dinv
+            F_layered_water=f*(Auc*d_w*density_w)*np.exp(-0.5*q**2*u0**2)*np.exp(q*(first_layer_height+54.3)*1.0J)\
+                            /(1-np.exp(-0.5*q**2*ubar**2)*np.exp(q*d_w*1.0J))#54.3=20.1058*(1+1.6) offset height accouting for bulk and surface slab
+            return F_layered_water
+        else:
+            return 0
+        
     def calc_f_layered_sorbate(self,h,k,l,el,u0_s,ubar_s,d_s,first_layer_height_s,density_s,f1f2=None):
         #contribution of layered sorbate calculated based on a function modified from equation(29) in Reviews in Mineralogy and Geochemistry v. 49 no. 1 p. 149-221
         #note here the height of first atom layer is not at 0 as in that equation but is specified by the first_layer_height_s. and the corrections were done accordingly
@@ -683,7 +1119,26 @@ class Sample:
         q=2*np.pi*dinv
         F_layered_sorbate=f*(Auc*d_s*density_s)*np.exp(-0.5*q**2*u0_s**2)*np.exp(q*first_layer_height_s*1.0J)\
                         /(1-np.exp(-0.5*q**2*ubar_s**2)*np.exp(q*d_s*1.0J))
+
         return F_layered_sorbate
+        
+    def calc_f_layered_sorbate_muscovite(self,h,k,l,args):
+        #contribution of layered sorbate calculated based on a function modified from equation(29) in Reviews in Mineralogy and Geochemistry v. 49 no. 1 p. 149-221
+        #note here the height of first atom layer is not at 0 as in that equation but is specified by the first_layer_height_s. and the corrections were done accordingly
+        #In addition, the occupancy of layered sorbate molecules was correctly calculated here by Auc*d_s*density_s
+        #the u0_s and ubar_s here are in A
+        #note f1f2 is not used in the function, it serves as a purpose for easy pasting arguments in script
+        if h[0]==0 and k[0]==0:#layered structure has effect only on specular rod
+            el,u0_s,ubar_s,d_s,first_layer_height_s,density_s=self.domain['el'],args['u0_s'],args['ubar_s'],args['d_s'],args['first_layer_height_s'],args['density_s']
+            dinv = self.unit_cell.abs_hkl(h, k, l)
+            f=self._get_f(np.array([el]), dinv)[:,0]
+            Auc=self.unit_cell.a*self.unit_cell.b*np.sin(self.unit_cell.gamma)
+            q=2*np.pi*dinv
+            F_layered_sorbate=f*(Auc*d_s*density_s)*np.exp(-0.5*q**2*u0_s**2)*np.exp(q*(first_layer_height_s+54.3)*1.0J)\
+                            /(1-np.exp(-0.5*q**2*ubar_s**2)*np.exp(q*d_s*1.0J))
+            return F_layered_sorbate
+        else:
+            return 0
         
     def calc_f_layered_sorbate_RAXR(self,h,k,l,el,u0_s,ubar_s,d_s,first_layer_height_s,density_s,f1f2):
         #contribution of layered sorbate calculated based on a function modified from equation(29) in Reviews in Mineralogy and Geochemistry v. 49 no. 1 p. 149-221
@@ -698,6 +1153,24 @@ class Sample:
                         /(1-np.exp(-0.5*q**2*ubar_s**2)*np.exp(q*d_s*1.0J))
         return F_layered_sorbate
         
+    def calc_f_layered_sorbate_muscovite_RAXR(self,h,k,l,args):
+        #contribution of layered sorbate calculated based on a function modified from equation(29) in Reviews in Mineralogy and Geochemistry v. 49 no. 1 p. 149-221
+        #note here the height of first atom layer is not at 0 as in that equation but is specified by the first_layer_height_s. and the corrections were done accordingly
+        #In addition, the occupancy of layered sorbate molecules was correctly calculated here by Auc*d_s*density_s
+        #the u0_s and ubar here are in A
+        if h[0]==0 and k[0]==0:#layered structure has effect only on specular rod
+            el,u0_s,ubar_s,d_s,first_layer_height_s,density_s=self.domain['el'],args['u0_s'],args['ubar_s'],args['d_s'],args['first_layer_height_s'],args['density_s']
+            f1f2=self.domain['F1F2']
+            dinv = self.unit_cell.abs_hkl(h, k, l)
+            f=self._get_f(np.array([el]), dinv)[:,0]+(f1f2[:,0]+1.0J*f1f2[:,1])#atomic form factor corrected by the f1f2 correction items
+            Auc=self.unit_cell.a*self.unit_cell.b*np.sin(self.unit_cell.gamma)
+            q=2*np.pi*dinv
+            F_layered_sorbate=f*(Auc*d_s*density_s)*np.exp(-0.5*q**2*u0_s**2)*np.exp(q*(first_layer_height_s+54.3)*1.0J)\
+                            /(1-np.exp(-0.5*q**2*ubar_s**2)*np.exp(q*d_s*1.0J))
+            return F_layered_sorbate
+        else:
+            return 0
+        
     def turbo_calc_f(self, h, k, l):
         '''Calculate the structure factors for the sample with
         inline c code for the surface.
@@ -707,7 +1180,7 @@ class Sample:
         ftot = fs + fb
         return ftot*self.inst.inten
         
-    def fourier_synthesis(self,HKL_list,P_list,A_list,z_min=0.,z_max=20.,el_lib={'O':8,'Fe':26,'As':33,'Pb':82,'Sb':51},resonant_el='Pb',resolution=1000):
+    def fourier_synthesis(self,HKL_list,P_list,A_list,z_min=0.,z_max=20.,el_lib={'O':8,'Fe':26,'As':33,'Pb':82,'Sb':51,'Zr':40},resonant_el='Pb',resolution=1000):
         ZR=el_lib[resonant_el]
         q_list = self.unit_cell.abs_hkl(np.array(HKL_list[0]), np.array(HKL_list[1]), np.array(HKL_list[2]))#a list of 1/d for each hkl set
         q_list_sorted=copy.copy(q_list)
@@ -787,10 +1260,57 @@ class Sample:
         labels.append('Total electron density')
         e_data.append(np.array([list(e_data[0])[0],e_total]))
         pickle.dump([e_data,labels],open(file_path+"temp_plot_eden","wb"))
-        try:
-            pickle.dump([e_data,labels],open("D:\\Google Drive\\useful codes\\plotting\\temp_plot_eden","wb"))
-        except:
-            pickle.dump([e_data,labels],open("C:\\Users\\jackey\\Google Drive\\useful codes\\plotting\\temp_plot_eden","wb"))
+        
+    def plot_electron_density_muscovite(self,slabs,el_lib={'O':8,'Fe':26,'As':33,'Pb':82,'Sb':51,'P':15,'Cr':24,'Cd':48,'Cu':29,'Zn':30,'Al':13,'Si':14,'K':19,'Zr':40},z_min=0.,z_max=28.,N_layered_water=10,resolution=1000,file_path="D:\\"):
+        #print dinv
+        e_data=[]
+        labels=[]
+        e_total=np.zeros(resolution)
+
+        for domain_index in range(len(slabs['domains'])):
+            wt=getattr(slabs['global_vars'],'wt'+str(domain_index+1))
+            raxs_el=slabs['el']
+            slab=[slabs['domains'][domain_index]]
+            x, y, z, u, oc, el = self._surf_pars(slab)
+            z=(z+1.)*self.unit_cell.c#z is offseted by 1 unit since such offset is explicitly considered in the calculatino of structure factor
+            f=np.array([el_lib[each] for each in el])
+            Auc=self.unit_cell.a*self.unit_cell.b*np.sin(self.unit_cell.gamma)
+            z_min,z_max=z_min,z_max
+            eden=[]
+            z_plot=[]
+            layered_water,z_layered_water,sigma_layered_water,d_w,water_density=None,[],[],None,None
+            layered_water_keys=['u0_w','ubar_w','d_w','first_layer_height_w','density_w']
+            layered_water=[slabs['layered_water_pars'][each_key] for each_key in layered_water_keys]
+            d_w=layered_water[2]
+            water_density=layered_water[-1]
+            for i in range(N_layered_water):
+                z_layered_water.append(layered_water[3]+54.3+i*layered_water[2])#first layer is offseted by 1 accordingly
+                sigma_layered_water.append((layered_water[0]**2+i*layered_water[1]**2)**0.5)
+            #consider the e density of layered sorbate        
+            layered_sorbate,z_layered_sorbate,sigma_layered_sorbate,d_s,sorbate_density=None,[],[],None,None
+            layered_sorbate_keys=['u0_s','ubar_s','d_s','first_layer_height_s','density_s']
+            layered_sorbate=[slabs['layered_sorbate_pars'][each_key] for each_key in layered_sorbate_keys]
+            d_s=layered_sorbate[2]
+            sorbate_density=layered_sorbate[-1]
+            for i in range(N_layered_water):#assume the number of sorbate layer equal to that for water layers
+                z_layered_sorbate.append(layered_sorbate[3]+54.3+i*layered_sorbate[2])#first layer is offseted by 1 accordingly
+                sigma_layered_sorbate.append((layered_sorbate[0]**2+i*layered_sorbate[1]**2)**0.5)
+            #print u,f,z
+            for i in range(resolution):
+                z_each=float(z_max-z_min)/resolution*i+z_min
+                z_plot.append(z_each)
+                #normalized with occupancy and weight factor (manually scaled by a factor 2 to consider the half half of domainA and domainB)
+                #here considering the e density for each atom layer will be distributed within a volume of Auc*1, so the unit here is e/A3
+                eden.append(np.sum(wt*oc*f/Auc*(2*np.pi*u**2)**-0.5*np.exp(-0.5/u**2*(z_each-z)**2)))
+                eden[-1]=eden[-1]+np.sum(8*wt*water_density*(2*np.pi*np.array(sigma_layered_water)**2)**-0.5*np.exp(-0.5/np.array(sigma_layered_water)**2*(z_each-np.array(z_layered_water))**2))
+                eden[-1]=eden[-1]+np.sum(el_lib[raxs_el]*wt*sorbate_density*(2*np.pi*np.array(sigma_layered_sorbate)**2)**-0.5*np.exp(-0.5/np.array(sigma_layered_sorbate)**2*(z_each-np.array(z_layered_sorbate))**2))
+
+            labels.append('Domain'+str(domain_index+1))
+            e_data.append(np.array([z_plot,eden]))
+            e_total=e_total+np.array(eden)
+        labels.append('Total electron density')
+        e_data.append(np.array([list(e_data[0])[0],e_total]))
+        pickle.dump([e_data,labels],open(file_path+"temp_plot_eden","wb"))
 
     def calc_fs(self, h, k, l,slabs):
         '''Calculate the structure factors from the surface
@@ -799,6 +1319,47 @@ class Sample:
         x, y, z, u, oc, el = self._surf_pars(slabs)
         #Note that the u here has been recalculated to represent for the Gaussian distribution width of the thermal vibration (ie sigma in Angstrom)
         f=self._get_f(el, dinv)
+        #print x, y,z
+        # Create all the atomic structure factors
+        #print f.shape, h.shape, oc.shape, x.shape, y.shape, z.shape,el.shape
+        #change mark 3
+        #delta_l=1
+        #if self.delta1==[]:delta_l=0
+        fs = np.sum(oc*f*np.exp(-2*np.pi**2*u**2*dinv[:,np.newaxis]**2)\
+            *np.sum([np.exp(2.0*np.pi*1.0J*(
+                 h[:,np.newaxis]*(sym_op.trans_x(x, y)+self.delta1) +
+                 k[:,np.newaxis]*(sym_op.trans_y(x, y)+self.delta2) +
+                 l[:,np.newaxis]*(z[np.newaxis, :]+1)))
+              for sym_op in self.surface_sym], 0)
+                    ,1)
+        """
+        for id in slabs[0].id:
+            if "Pb" in str(id):
+                
+                print id, np.sum([np.exp(2.0*np.pi*1.0J*(\
+                    1*(sym_op.trans_x(x, y)+self.delta1) +\
+                    1*(sym_op.trans_y(x, y)+self.delta2) +\
+                    1.3*(z[np.newaxis, :]+1)))\
+                    for sym_op in self.surface_sym][0][0])#[np.where(slabs[0].id==id)[0][0]]
+        """
+        return fs
+        
+    def calc_fs_RAXR(self, h, k, l,slabs,f1f2,res_el='Zr'):
+        '''Calculate the structure factors from the surface with resonant element
+           In the normal case, hkl will be an array of same number (eg h=[1]*10,k=[1]*10,l=[1.3]*10,f1f2 has the same length as hkl, but it changes as a function of E)
+           Atomic form factor for the res_el will be corrected by those two correction items (f1 and f2)
+        '''
+        dinv = self.unit_cell.abs_hkl(h, k, l)
+        x, y, z, u, oc, el = self._surf_pars(slabs)
+        #Note that the u here has been recalculated to represent for the Gaussian distribution width of the thermal vibration (ie sigma in Angstrom)
+        f=self._get_f(el, dinv)
+        shape=f.shape
+        f_offset=np.zeros(shape=shape)+0J
+        for i in range(shape[0]):
+            for j in range(shape[1]):
+                if res_el==el[j]:
+                    f_offset[i][j]=f1f2[i][0]+1.0J*f1f2[i][1]
+        f=f+f_offset
         #print x, y,z
         # Create all the atomic structure factors
         #print f.shape, h.shape, oc.shape, x.shape, y.shape, z.shape,el.shape
@@ -1266,6 +1827,7 @@ class Slab:
             p = par
             setattr(self, 'set' + id + par, self._make_set_func(par, item))
             setattr(self, 'get' + id + par, self._make_get_func(par, item))
+
         return AtomGroup(self, id)
         
     def insert_atom(self,index,id,element, x, y, z, u = 0.0, oc = 1.0, m = 1.0):
@@ -1482,7 +2044,7 @@ class Slab:
                     self.el, (self.u/(8*np.pi**2))**0.5+self.du, (self.oc+self.doc)*self.m*self.slab_oc, self.c
         elif self.T_factor=='u':
             return  self.x + self.dx1+self.dx2+self.dx3+self.dx4, self.y + self.dy1+self.dy2+self.dy3+self.dy4, self.z + self.dz1+ self.dz2+ self.dz3+self.dz4,\
-                   self.el, self.u+self.du, (self.oc+self.doc)*self.m*self.slab_oc, self.c
+                   self.el, (self.u)**0.5+self.du, (self.oc+self.doc)*self.m*self.slab_oc, self.c
                    
     def _extract_values_offspecular(self):    
         ids=self.id
@@ -1605,6 +2167,7 @@ class AtomGroup:
     def add_atom(self, slab, id,matrix=[1,0,0,0,1,0,0,0,1]):
         '''Add an atom to the group.
         '''
+
         if not id in slab:
             raise ValueError('The id %s is not a member of the slab'%id)
 

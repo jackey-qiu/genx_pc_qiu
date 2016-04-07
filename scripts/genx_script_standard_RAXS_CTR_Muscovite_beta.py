@@ -54,6 +54,8 @@ TABLE_DOMAINS=[1]*len(pickup_index)
 
 RAXR_EL='Pb'
 NUMBER_SPECTRA=0
+FIT_MODE='MD'
+BACKGROUND_MODEL='Linear'
 RESONANT_EL_LIST=[1,0,0]
 E0=13035
 F1F2_FILE="f1f2_temp.f1f2"
@@ -322,7 +324,7 @@ if TABLE:
                 elif len(SORBATE_ATTACH_ATOM[i][j])==3:
                     temp_binding_mode.append('TD')   
         binding_mode.append(temp_binding_mode)
-    make_grid.make_structure(output_file_path,map(sum,SORBATE_NUMBER),O_N,WATER_NUMBER,DOMAIN,Metal=SORBATE,binding_mode=binding_mode,local_structure=LOCAL_STRUCTURE,add_distal_wild=ADD_DISTAL_LIGAND_WILD,use_domains=TABLE_DOMAINS,N_raxr=NUMBER_SPECTRA,domain_raxr_el=RESONANT_EL_LIST,layered_water=layered_water_pars['yes_OR_no'],layered_sorbate=layered_sorbate_pars['yes_OR_no'],dxdy_layer=3,dz_layer=10,u_layer=10,oc_layer=10)
+    make_grid.make_structure(output_file_path,map(sum,SORBATE_NUMBER),O_N,WATER_NUMBER,DOMAIN,Metal=SORBATE,binding_mode=binding_mode,local_structure=LOCAL_STRUCTURE,add_distal_wild=ADD_DISTAL_LIGAND_WILD,use_domains=TABLE_DOMAINS,N_raxr=NUMBER_SPECTRA,bk_model=BACKGROUND_MODEL,domain_raxr_el=RESONANT_EL_LIST,layered_water=layered_water_pars['yes_OR_no'],layered_sorbate=layered_sorbate_pars['yes_OR_no'],dxdy_layer=3,dz_layer=10,u_layer=10,oc_layer=10)
 
 #function to group the Fourier components (FC) from different domains in each RAXR spectra
 #domain_index=[0,1] means setting the FC for domain2 (1+1) same as domain1 (0+1)
@@ -1538,6 +1540,8 @@ def Sim(data,VARS=VARS):
         if data_set.x[0]>15:#doing RAXR calculation(x is energy column typically in magnitude of 10000 ev)
             a=getattr(VARS['rgh_raxr'],'a'+str(i+1))
             b=getattr(VARS['rgh_raxr'],'b'+str(i+1))
+            if BACKGROUND_MODEL=='Curved':
+                c=getattr(VARS['rgh_raxr'],'c'+str(i+1))
             A_list,P_list=[],[]
             for index_resonant_el in range(len(RESONANT_EL_LIST)):
                 A_list_domain=0
@@ -1557,9 +1561,27 @@ def Sim(data,VARS=VARS):
             sample = model.Sample(inst, bulk, domain, unitcell,coherence=COHERENCE,surface_parms={'delta1':0.,'delta2':0.})
             rough = (1-beta)/((1-beta)**2 + 4*beta*np.sin(np.pi*(y-LB)/dL)**2)**0.5#roughness model, double check LB and dL values are correctly set up in data file
             if h[0]==0 and k[0]==0:#consider layered water only for specular rod if existent
-                f = SCALES[0]*rough*sample.calc_f4_specular_RAXR(h, k, y, x, E0, F1F2, a, b, A_list, P_list, RESONANT_EL_LIST)
+                if FIT_MODE=='MI':
+                    try:
+                        f = SCALES[0]*rough*sample.calc_f4_specular_RAXR_MI(h, k, y, x, E0, F1F2, A_list, P_list, RESONANT_EL_LIST,a,b,c)
+                    except:
+                        f = SCALES[0]*rough*sample.calc_f4_specular_RAXR_MI(h, k, y, x, E0, F1F2, A_list, P_list, RESONANT_EL_LIST,a,b)
+                elif FIT_MODE=='MD':
+                    try:
+                        f = SCALES[0]*rough*sample.calc_f4_specular_RAXR_MD(h, k, y, x, E0, F1F2, RESONANT_EL_LIST,RAXR_EL,a,b,c)
+                    except:
+                        f = SCALES[0]*rough*sample.calc_f4_specular_RAXR_MD(h, k, y, x, E0, F1F2, RESONANT_EL_LIST,RAXR_EL,a,b)
             else:
-                f = SCALES[0]*rough*sample.calc_f4_nonspecular_RAXR(h, k, y, x, E0, F1F2, a, b, A_list, P_list, RESONANT_EL_LIST)
+                if FIT_MODE=='MI':
+                    try:
+                        f = SCALES[0]*rough*sample.calc_f4_nonspecular_RAXR_MI(h, k, y, x, E0, F1F2, A_list, P_list, RESONANT_EL_LIST,a,b,c)
+                    except:
+                        f = SCALES[0]*rough*sample.calc_f4_nonspecular_RAXR_MI(h, k, y, x, E0, F1F2, A_list, P_list, RESONANT_EL_LIST,a,b)
+                elif FIT_MODE=='MD':
+                    try:
+                        f = SCALES[0]*rough*sample.calc_f4_nonspecular_RAXR_MD(h, k, y, x, E0, F1F2, RESONANT_EL_LIST,RAXR_EL,a,b,c)
+                    except:
+                        f = SCALES[0]*rough*sample.calc_f4_nonspecular_RAXR_MD(h, k, y, x, E0, F1F2, RESONANT_EL_LIST,RAXR_EL,a,b)
             F.append(abs(f))
             fom_scaler.append(1)
             i+=1
@@ -1814,6 +1836,11 @@ F1F2_FILE="Pb.f1f2"
     Absolute file path for the f1f2 file containing anomalous correction items at each energy  
 F1F2=None
     Global variable to hold the f1f2 values after loading the f1f2 file
+FIT_MODE='MD'
+    Either 'MD' for model-dependent fitting or 'MI' for model-independent fitting.
+BACKGROUND_MODEL='Linear' or 'Curved'
+    Either 'Linear' for linear background model (corresponding to a and b parameters)
+    or 'Curved' for Victoreen background model (corresponding to a, b, and c parameters)
 COVALENT_HYDROGEN_RANDOM(bool)
     a switch to not explicitly specify the protonation of surface functional groups
     different protonation scheme (0,1 or 2 protons) will be tried and compared, the one with best bv result will be used

@@ -40,7 +40,7 @@ structure={'domain1':{'domain_type':'half_layer','domain_tag':1,'surface':surfac
            'domain2':{'domain_type':'half_layer','domain_tag':2,'surface':surface2,'sorbate':sorbate2,'water':water2},\
            'domain3':{'domain_type':'half_layer','domain_tag':3,'surface':surface3,'sorbate':None,'water':water2}}
 #make_structure will be used inside genx script to generate the parameter table           
-def make_structure(file_path,sorbate_N,O_N,water_N,Domains,Metal,binding_mode=['BD']*3,local_structure='tetrahedral',add_distal_wild=None,use_domains=[1]*10,N_raxr=0,domain_raxr_el=[1,1,0,0],layered_water=None,layered_sorbate=None,dxdy_layer=3,dz_layer=10,u_layer=10,oc_layer=10):
+def make_structure(file_path,sorbate_N,O_N,water_N,Domains,Metal,binding_mode=['BD']*3,local_structure='tetrahedral',add_distal_wild=None,use_domains=[1]*10,N_raxr=0,bk_model='Linear',domain_raxr_el=[1,1,0,0],layered_water=None,layered_sorbate=None,dxdy_layer=3,dz_layer=10,u_layer=10,oc_layer=10):
     structure={}
     for i in range(len(Domains)):
         if use_domains[i]==1:
@@ -273,8 +273,13 @@ def table_maker(table_file_path='D:\\table.tab',structure_info=structure,local_s
                 f.write(s_u)
             f.write('\t0\tFalse\t0\t0\t-\n')
     for i in range(N_raxr):
-        f.write('rgh_raxr.setA'+str(i+1)+'\t1\tFalse\t0\t5\t-\n')
-        f.write('rgh_raxr.setB'+str(i+1)+'\t0\tFalse\t0\t5\t-\n')
+        if bk_model=='Linear':
+            f.write('rgh_raxr.setA'+str(i+1)+'\t1\tFalse\t0\t5\t-\n')
+            f.write('rgh_raxr.setB'+str(i+1)+'\t0\tFalse\t0\t5\t-\n')
+        elif bk_model=='Curved':
+            f.write('rgh_raxr.setA'+str(i+1)+'\t1\tFalse\t0\t5\t-\n')
+            f.write('rgh_raxr.setB'+str(i+1)+'\t0\tFalse\t0\t5\t-\n')
+            f.write('rgh_raxr.setC'+str(i+1)+'\t0\tFalse\t0\t5\t-\n')
         for j in range(len(domain_raxr_el)):
             if domain_raxr_el[j]:
                 f.write('rgh_raxr.setA_D'+str(j+1)+'_'+str(i+1)+'\t1\tFalse\t0\t5\t-\n')
@@ -300,3 +305,63 @@ def table_maker(table_file_path='D:\\table.tab',structure_info=structure,local_s
                 f.write('rgh_domain'+str(i+1)+'.setDensity_s\t0.033\tFalse\t0\t0.033\t-\n')
                 f.write('\t0\tFalse\t0\t0\t-\n')
     f.close()
+    
+def set_table_input_raxs(container=[],rgh_group_instance=None,rgh_group_instance_name=None,par_range={'a':[],'b':[],'c':[],'A':[],'P':[]},number_spectra=0,number_domain=2):
+    for i in range(number_spectra):
+        container.append([rgh_group_instance_name+'.setA'+str(i+1),str(getattr(rgh_group_instance,'getA'+str(i+1))()),'False',str(par_range['a'][0]),str(par_range['a'][1]),'-'])
+        container.append([rgh_group_instance_name+'.setB'+str(i+1),str(getattr(rgh_group_instance,'getB'+str(i+1))()),'False',str(par_range['b'][0]),str(par_range['b'][1]),'-'])
+        container.append([rgh_group_instance_name+'.setC'+str(i+1),str(getattr(rgh_group_instance,'getC'+str(i+1))()),'False',str(par_range['c'][0]),str(par_range['c'][1]),'-'])
+        for j in range(number_domain):
+            container.append([rgh_group_instance_name+'.setA'+str(i+1)+'_D'+str(j+1),str(getattr(rgh_group_instance,'getA'+str(i+1)+'_D'+str(j+1))()),'False',str(par_range['A'][0]),str(par_range['A'][1]),'-'])
+            container.append([rgh_group_instance_name+'.setP'+str(i+1)+'_D'+str(j+1),str(getattr(rgh_group_instance,'getP'+str(i+1)+'_D'+str(j+1))()),'False',str(par_range['P'][0]),str(par_range['P'][1]),'-'])
+        container.append(['','0','False','0','0','-'])
+    container.append(['','0','False','0','0','-'])
+    return container
+    
+def set_table_input(container=[],rgh_group_instance=None,rgh_group_instance_name=None,par_range=None):
+    set_pars=np.sort([key for key in vars(rgh_group_instance).keys() if key[0:3]=='set'])
+    get_pars=np.sort([key for key in vars(rgh_group_instance).keys() if key[0:3]=='get'])
+    for i in range(len(set_pars)):
+        container.append([rgh_group_instance_name+'.'+set_pars[i],str(getattr(rgh_group_instance,get_pars[i])()),'False',str(par_range[set_pars[i]][0]),str(par_range[set_pars[i]][1]),'-'])
+    container.append(['','0','False','0','0','-'])
+    return container
+    
+def set_table_input_one_by_one(container=[],rgh_group_instance=None,rgh_group_instance_name=None,par_range=None):
+    key=par_range.keys()[0]
+    container.append([rgh_group_instance_name+'.'+key,str(par_range[key][0]),'False',str(str(par_range[key][1])),str(par_range[key][2]),'-'])
+    return container
+    
+def set_table_input_all(container=[],rgh_instance_list=[],rgh_instance_name_list=[],par_file='pars_ranges.txt'):
+    f=open(par_file)
+    lines=f.readlines()
+    par_range={}
+    par_list=[]
+    for line in lines:
+        items=line.rstrip().rsplit()
+        par_range[items[0]]=[float(items[1]),float(items[2]),float(items[3])]
+        par_list.append(items[0])
+    for i in range(len(rgh_instance_list)):
+        rgh,rgh_name=rgh_instance_list[i],rgh_instance_name_list[i]
+        for par in par_list:
+            if hasattr(rgh,par):
+                container=set_table_input_one_by_one(container,rgh,rgh_name,{par:par_range[par]})
+        container.append(['','0','False','0','0','-'])
+    return container
+    
+def make_table(container,file_path='D://tab.tab'):
+    f=open(file_path,'w')
+    f.write('#Parameter Value Fit Min Max Error\n')
+    f.write('inst.set_inten\t1\tTrue\t1\t10\t-\n')
+    for i in range(len(container)):
+        f.write('\t'.join(container[i])+'\n')
+    f.close()
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
