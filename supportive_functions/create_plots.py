@@ -92,7 +92,7 @@ def generate_plot_files(output_file_path,sample,rgh,data,fit_mode, z_min=0,z_max
             label=str(int(h[0]))+str(int(k[0]))+'L'
             plot_data_container_experiment[label]=np.concatenate((l[:,np.newaxis],I[:,np.newaxis],eI[:,np.newaxis]),axis=1)
             plot_data_container_model[label]=np.concatenate((l_dumy[:,np.newaxis],f_dumy[:,np.newaxis]),axis=1)
-    Q_list_Fourier_synthesis=sample.unit_cell.abs_hkl(np.array(HKL_list_raxr[0]),np.array(HKL_list_raxr[1]),np.array(HKL_list_raxr[2]))    
+    Q_list_Fourier_synthesis=np.pi*2*sample.unit_cell.abs_hkl(np.array(HKL_list_raxr[0]),np.array(HKL_list_raxr[1]),np.array(HKL_list_raxr[2]))    
     #dump CTR data and profiles
     hkls=['00L','02L','10L','11L','20L','22L','30L','2-1L','21L']
     plot_data_list=[]
@@ -275,7 +275,7 @@ def plot_many_experiment_data(data_files=['D:\\Google Drive\\data\\400uM_Sb_hema
 if __name__=="__main__":    
 
     #which plots do you want to create
-    plot_e_model,plot_e_FS,plot_ctr,plot_raxr=1,0,1,0
+    plot_e_model,plot_e_FS,plot_ctr,plot_raxr,plot_AP_Q=1,0,1,0,1
 
     #specify file paths (files are dumped files when setting running_mode=False in GenX script)
     e_file="D:\\temp_plot_eden"#e density from model
@@ -283,6 +283,7 @@ if __name__=="__main__":
     ctr_file_folder="D:\\"
     ctr_file_names=["temp_plot"]#you may want to overplot differnt ctr profiles based on differnt models
     raxr_file="D:\\temp_plot_raxr"
+    AP_Q_file="D:\\temp_plot_raxr_A_P_Q"
     #plot electron density profile
     if plot_e_model: 
         data_eden=pickle.load(open(e_file,"rb"))
@@ -314,6 +315,31 @@ if __name__=="__main__":
         #plot raxr profiles
         data_raxr=pickle.load(open(raxr_file,"rb"))
         plotting_raxr_new(data_raxr,savefile=raxr_file+".png",color=['b','r'],marker=['o'])
+    if plot_AP_Q:
+        #plot Q dependence of Foriour components A and P
+        colors=['black','r','blue','green','yellow']
+        labels=['Domain1','Domain2','Domain3','Domain4']
+        data_AP_Q=pickle.load(open(AP_Q_file,"rb"))
+        fig=pyplot.figure(figsize=(15,6))
+        ax=fig.add_subplot(1,1,1)
+        fig2=pyplot.figure(figsize=(15,6))
+        ax2=fig2.add_subplot(1,1,1)
+        #A over Q
+        shape=data_AP_Q[0][0].shape
+        for i in range(shape[1]):
+            
+            ax.plot(data_AP_Q[0][2],np.array(data_AP_Q[0][0])[:,i],color=colors[i])
+            ax.scatter(data_AP_Q[1][2],np.array(data_AP_Q[1][0])[:,i],color=colors[i])
+        pyplot.ylabel("A",axes=ax)
+        pyplot.xlabel("Q",axes=ax)
+        pyplot.legend()
+        #P over Q
+        for i in range(shape[1]):
+            ax2.plot(data_AP_Q[0][2],np.array(data_AP_Q[0][1])[:,i],color=colors[i])
+            ax2.scatter(data_AP_Q[1][2],np.array(data_AP_Q[1][1])[:,i],color=colors[i])
+        pyplot.ylabel("P",axes=ax2)
+        pyplot.xlabel("Q",axes=ax2)
+        pyplot.legend()
     pyplot.show()
     
     
