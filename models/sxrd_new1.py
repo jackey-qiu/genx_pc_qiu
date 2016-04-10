@@ -424,7 +424,7 @@ class Sample:
         fb = self.calc_fb(h, k, l)
         f_surface=self.calc_fs
         f_layered_water=self.calc_f_layered_water_muscovite(h,k,l,self.domain['layered_water_pars'])
-        f_layered_sorbate=self.calc_f_layered_sorbate_muscovite(h,k,l,self.domain['layered_sorbate_pars'])
+        f_layered_sorbate=self.calc_f_layered_sorbate_muscovite_RAXR(h,k,l,self.domain['layered_sorbate_pars'])
         domains=self.domain['domains']
         A_list=[self.domain['raxs_vars']['A'+str(index)+'_D'+str(i+1)] for i in range(len(domains))]
         P_list=[self.domain['raxs_vars']['P'+str(index)+'_D'+str(i+1)] for i in range(len(domains))]
@@ -984,7 +984,6 @@ class Sample:
         for i in range(len(self.domain['domains'])):
             single_domain=self.domain['domains'][i]
             slabs=[single_domain]
-            domain_wt=getattr(self.domain['global_vars'],'wt'+str(i+1))
             x, y, z, u, oc, el = self._surf_pars(slabs)
             res_el=self.domain['el']
             sorbate_index=[i for i in range(len(el)) if el[i]==res_el]
@@ -996,7 +995,7 @@ class Sample:
                 complex_sum=0.+1.0J*0. 
                 for i in sorbate_index:
                     complex_sum+=oc[i]*np.exp(-q**2*u[i]**2/2)*np.exp(1.0J*2*np.pi*(h_single*x[i]+k_single*y[i]+l_single*(z[i]+1)))#z should be plus 1 to account for the fact that surface slab sitting on top of bulk slab
-                A_container.append(domain_wt*abs(complex_sum))
+                A_container.append(abs(complex_sum))
                 img_complex_sum, real_complex_sum=np.imag(complex_sum),np.real(complex_sum)
                 if img_complex_sum==0.:
                     P_container.append(0)
