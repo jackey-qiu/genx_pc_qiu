@@ -39,37 +39,38 @@ NUMBER_DOMAIN=2##to be set##
 COHERENCE=True
 RAXR_EL='Zr'##to be set##
 RAXR_FIT_MODE='MD'##to be set##
+HEIGHT_OFFSET=-2.6685#if set to 0, the top atomic layer is at 2.6685 in fractional unit before relaxation
 INFO_LIB={'basis':BASIS,'sorbate_el':'Zr','coordinate_el':'O','T':T,'T_INV':T_INV,'oligomer_type':'tetramer'}##to be set##
 
 ##<setting slabs>##
 unitcell = model.UnitCell(5.1988, 9.0266, 20.1058, 90, 95.782, 90)
 inst = model.Instrument(wavel = .833, alpha = 2.0)
 bulk = model.Slab(T_factor='u')#bulk
-domain_creator.add_atom_in_slab(bulk,BATCH_PATH_HEAD+'muscovite_001_bulk.str')
+domain_creator.add_atom_in_slab(bulk,BATCH_PATH_HEAD+'muscovite_001_bulk.str',height_offset=HEIGHT_OFFSET)
 Domain1 =  model.Slab(c = 1.0,T_factor='u')#surface slabs-Domain1
-domain_creator.add_atom_in_slab(Domain1,BATCH_PATH_HEAD+'muscovite_001_surface_Al.str',attach='_D1')
+domain_creator.add_atom_in_slab(Domain1,BATCH_PATH_HEAD+'muscovite_001_surface_Al.str',attach='_D1',height_offset=HEIGHT_OFFSET)
 Domain2 =  model.Slab(c = 1.0,T_factor='u')#surface slabs-Domain2
-domain_creator.add_atom_in_slab(Domain2,BATCH_PATH_HEAD+'muscovite_001_surface_Si.str',attach='_D2')
+domain_creator.add_atom_in_slab(Domain2,BATCH_PATH_HEAD+'muscovite_001_surface_Si.str',attach='_D2',height_offset=HEIGHT_OFFSET)
 #You can add more domains
 
 ##<Adding sorbates>##to be set##
 #domain1
 rgh_domain1=UserVars()
 geo_lib_domain1={'cent_point_offset_x':0,'cent_point_offset_y':0,'cent_point_offset_z':0,'r':2.2,'theta':59.2641329,'rot_x':0,'rot_y':0,'rot_z':0}
-Domain1,rgh_domain1=domain_creator.add_sorbate(domain=Domain1,anchored_atoms=[],func=domain_creator_sorbate.OS_sqr_antiprism_oligomer,geo_lib=geo_lib_domain1,info_lib=INFO_LIB,domain_tag='_D1',rgh=rgh_domain1,index_offset=[0,1])
+Domain1,rgh_domain1=domain_creator.add_sorbate(domain=Domain1,anchored_atoms=[],func=domain_creator_sorbate.OS_sqr_antiprism_oligomer,geo_lib=geo_lib_domain1,info_lib=INFO_LIB,domain_tag='_D1',rgh=rgh_domain1,index_offset=[0,1],height_offset=HEIGHT_OFFSET)
 #domain2
 rgh_domain2=UserVars()
 geo_lib_domain2={'cent_point_offset_x':0,'cent_point_offset_y':0,'cent_point_offset_z':0,'r':2.2,'theta':59.2641329,'rot_x':0,'rot_y':0,'rot_z':0}
-Domain2,rgh_domain2=domain_creator.add_sorbate(domain=Domain2,anchored_atoms=[],func=domain_creator_sorbate.OS_sqr_antiprism_oligomer,geo_lib=geo_lib_domain2,info_lib=INFO_LIB,domain_tag='_D2',rgh=rgh_domain2,index_offset=[0,1])
+Domain2,rgh_domain2=domain_creator.add_sorbate(domain=Domain2,anchored_atoms=[],func=domain_creator_sorbate.OS_sqr_antiprism_oligomer,geo_lib=geo_lib_domain2,info_lib=INFO_LIB,domain_tag='_D2',rgh=rgh_domain2,index_offset=[0,1],height_offset=HEIGHT_OFFSET)
 #You can add more domains
 
 ##<Adding absorbed water>##to be set##
 #domain1
-Domain1,absorbed_water_pair1_D1=domain_creator.add_oxygen_pair_muscovite(domain=Domain1,ids=['O1a_W_D1','O1b_W_D1'],coors=np.array([[0,0,2.2],[0.5,0.5,2.2]]))
-Domain1,absorbed_water_pair2_D1=domain_creator.add_oxygen_pair_muscovite(domain=Domain1,ids=['O2a_W_D1','O2b_W_D1'],coors=np.array([[0,0,2.3],[0.5,0.5,2.3]]))
+Domain1,absorbed_water_pair1_D1=domain_creator.add_oxygen_pair_muscovite(domain=Domain1,ids=['O1a_W_D1','O1b_W_D1'],coors=np.array([[0,0,2.2+HEIGHT_OFFSET],[0.5,0.5,2.2+HEIGHT_OFFSET]]))
+Domain1,absorbed_water_pair2_D1=domain_creator.add_oxygen_pair_muscovite(domain=Domain1,ids=['O2a_W_D1','O2b_W_D1'],coors=np.array([[0,0,2.3+HEIGHT_OFFSET],[0.5,0.5,2.3+HEIGHT_OFFSET]]))
 #domain2
-Domain2,absorbed_water_pair1_D2=domain_creator.add_oxygen_pair_muscovite(domain=Domain2,ids=['O1a_W_D2','O1b_W_D2'],coors=np.array([[0,0,2.2],[0.5,0.5,2.2]]))
-Domain2,absorbed_water_pair2_D2=domain_creator.add_oxygen_pair_muscovite(domain=Domain2,ids=['O2a_W_D2','O2b_W_D2'],coors=np.array([[0,0,2.3],[0.5,0.5,2.3]]))
+Domain2,absorbed_water_pair1_D2=domain_creator.add_oxygen_pair_muscovite(domain=Domain2,ids=['O1a_W_D2','O1b_W_D2'],coors=np.array([[0,0,2.2+HEIGHT_OFFSET],[0.5,0.5,2.2+HEIGHT_OFFSET]]))
+Domain2,absorbed_water_pair2_D2=domain_creator.add_oxygen_pair_muscovite(domain=Domain2,ids=['O2a_W_D2','O2b_W_D2'],coors=np.array([[0,0,2.3+HEIGHT_OFFSET],[0.5,0.5,2.3+HEIGHT_OFFSET]]))
 
 ##<Define atom groups>##
 #surface atoms
@@ -87,7 +88,7 @@ groups,group_names=domain_creator.setup_atom_group(gp_info=atom_group_info)
 for i in range(len(groups)):
     vars()[group_names[i]]=groups[i]
     
-#sorbate_atoms(including sorbates and interfacial water)
+#sorbate_atoms
 sorbate_id_list_domain1=[[id for id in Domain1.id if INFO_LIB['sorbate_el'] in id],[id for id in Domain1.id if INFO_LIB['sorbate_el'] in id and 'O' not in id],[id for id in Domain1.id if INFO_LIB['sorbate_el'] in id and 'O' in id]]
 sorbate_id_list_domain2=[[id for id in Domain2.id if INFO_LIB['sorbate_el'] in id],[id for id in Domain2.id if INFO_LIB['sorbate_el'] in id and 'O' not in id],[id for id in Domain2.id if INFO_LIB['sorbate_el'] in id and 'O' in id]]
 
@@ -132,8 +133,8 @@ def Sim(data):
     raxs_vars=vars(rgh_raxs)
     
     ##<update sorbates>##
-    domain_creator.update_sorbate(domain=Domain1,anchored_atoms=[],func=domain_creator_sorbate.OS_sqr_antiprism_oligomer,info_lib=INFO_LIB,domain_tag='_D1',rgh=rgh_domain1,index_offset=[0,1])#domain1
-    domain_creator.update_sorbate(domain=Domain2,anchored_atoms=[],func=domain_creator_sorbate.OS_sqr_antiprism_oligomer,info_lib=INFO_LIB,domain_tag='_D2',rgh=rgh_domain2,index_offset=[0,1])#domain2
+    domain_creator.update_sorbate(domain=Domain1,anchored_atoms=[],func=domain_creator_sorbate.OS_sqr_antiprism_oligomer,info_lib=INFO_LIB,domain_tag='_D1',rgh=rgh_domain1,index_offset=[0,1],height_offset=HEIGHT_OFFSET)#domain1
+    domain_creator.update_sorbate(domain=Domain2,anchored_atoms=[],func=domain_creator_sorbate.OS_sqr_antiprism_oligomer,info_lib=INFO_LIB,domain_tag='_D2',rgh=rgh_domain2,index_offset=[0,1],height_offset=HEIGHT_OFFSET)#domain2
     #You can add more domains
     
     ##<format domains>##
@@ -157,7 +158,7 @@ def Sim(data):
             rough = (1-rgh.beta)/((1-rgh.beta)**2 + 4*rgh.beta*np.sin(np.pi*(y-LB)/dL)**2)**0.5
         else:
             rough = (1-rgh.beta)/((1-rgh.beta)**2 + 4*rgh.beta*np.sin(np.pi*(x-LB)/dL)**2)**0.5
-        f=rough*abs(sample.calculate_structure_factor(h,k,x,y,index=i,fit_mode=RAXR_FIT_MODE))
+        f=rough*abs(sample.calculate_structure_factor(h,k,x,y,index=i,fit_mode=RAXR_FIT_MODE,height_offset=HEIGHT_OFFSET*BASIS[2]))
         F.append(abs(f))
         fom_scaler.append(1)
         
@@ -166,8 +167,9 @@ def Sim(data):
 
     ##<print structure/plotting files>##
     if not RUN:
-        domain_creator.print_structure_files_muscovite(domain_list=[Domain1,Domain2],z_shift=0.8,matrix_info=INFO_LIB,save_file='D://')
-        create_plots.generate_plot_files(output_file_path=OUTPUT_FILE_PATH,sample=sample,rgh=rgh,data=data,fit_mode=RAXR_FIT_MODE,z_min=0,z_max=50,RAXR_HKL=[0,0,20])
+        domain_creator.print_structure_files_muscovite(domain_list=[Domain1,Domain2],z_shift=0.8+HEIGHT_OFFSET,matrix_info=INFO_LIB,save_file='D://')
+        create_plots.generate_plot_files(output_file_path=OUTPUT_FILE_PATH,sample=sample,rgh=rgh,data=data,fit_mode=RAXR_FIT_MODE,z_min=0,z_max=50,RAXR_HKL=[0,0,20],height_offset=HEIGHT_OFFSET*BASIS[2])
+        #then do this command inside shell to extract the errors for A and P: model.script_module.create_plots.append_errors_for_A_P(par_instance=model.parameters,dump_file='D://temp_plot_raxr_A_P_Q',raxs_rgh='rgh_raxs') 
   
     if COUNT_TIME:
         t_3=datetime.now()

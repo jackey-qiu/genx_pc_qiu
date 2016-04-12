@@ -23,7 +23,7 @@ bl_dl_muscovite={'3_0':{'segment':[[0,1],[1,9]],'info':[[2,1],[6,1]]},'2_0':{'se
     '-2_-2':{'segment':[[0,9]],'info':[[2,-6.2782]]},'-2_-1':{'segment':[[0,3.1391],[3.1391,9]],'info':[[4,-3.1391],[2,-3.1391]]},'-2_0':{'segment':[[0,9]],'info':[[2,-6]]},\
     '-2_1':{'segment':[[0,4.8609],[4.8609,9]],'info':[[4,-4.8609],[2,-6.8609]]},'-1_-1':{'segment':[[0,9]],'info':[[2,-4.1391]]},'-3_0':{'segment':[[0,1],[1,9]],'info':[[2,-1],[6,-1]]}}
 
-def generate_plot_files(output_file_path,sample,rgh,data,fit_mode, z_min=0,z_max=29,RAXR_HKL=[0,0,20],bl_dl=bl_dl_muscovite):
+def generate_plot_files(output_file_path,sample,rgh,data,fit_mode, z_min=0,z_max=29,RAXR_HKL=[0,0,20],bl_dl=bl_dl_muscovite,height_offset=0):
     plot_data_container_experiment={}
     plot_data_container_model={}
     plot_raxr_container_experiment={}
@@ -104,10 +104,47 @@ def generate_plot_files(output_file_path,sample,rgh,data,fit_mode, z_min=0,z_max
     pickle.dump([[A_list_calculated,P_list_calculated,Q_list_calculated],[A_list_Fourier_synthesis,P_list_Fourier_synthesis,Q_list_Fourier_synthesis]],open(output_file_path+"temp_plot_raxr_A_P_Q","wb"))
     #dump electron density profiles
     #e density based on model fitting
-    sample.plot_electron_density_muscovite(sample.domain,file_path=output_file_path,z_min=z_min,z_max=z_max,N_layered_water=20)#dumpt file name is "temp_plot_eden" 
+    sample.plot_electron_density_muscovite(sample.domain,file_path=output_file_path,z_min=z_min,z_max=z_max,N_layered_water=20,height_offset=height_offset)#dumpt file name is "temp_plot_eden" 
     #e density based on Fourier synthesis
     z_plot,eden_plot,eden_domains=sample.fourier_synthesis(np.array(HKL_list_raxr),np.array(P_list_Fourier_synthesis).transpose(),np.array(A_list_Fourier_synthesis).transpose(),z_min=z_min,z_max=z_max,resonant_el=sample.domain['el'],resolution=1000)
     pickle.dump([z_plot,eden_plot,eden_domains],open(output_file_path+"temp_plot_eden_fourier_synthesis","wb"))  
+
+#this function must be called within the shell of GenX gui and par_instance=model.parameters,dump_file='D://temp_plot_raxr_A_P_Q' by default
+#The purpose of this function is to append the errors of A and P extracted from the errors displaying inside the tab of GenX gui 
+#copy and past this command line to the shell for action:
+#model.script_module.create_plots.append_errors_for_A_P(par_instance=model.parameters,dump_file='D://temp_plot_raxr_A_P_Q',raxs_rgh='rgh_raxs')   
+def append_errors_for_A_P(par_instance,dump_file='D://temp_plot_raxr_A_P_Q',raxs_rgh='rgh_raxs'):
+    data_AP_Q=pickle.load(open(dump_file,"rb"))
+    AP_calculated=data_AP_Q[0]
+    A_model_fit,P_model_fit=data_AP_Q[1][0],data_AP_Q[1][1]
+    A_error_model_fit,P_error_model_fit=[],[]
+    table=np.array(par_instance.data)
+    for i in range(len(A_model_fit)):
+        A_error_model_fit_domain=[]
+        for j in range(len(A_model_fit[i])):
+            par_name=raxs_rgh+'.setA'+str(i+1)+'_D'+str(j+1)
+            for k in range(len(table)):
+                if table[k][0]==par_name:
+                    if table[k][5][0]=='(' and table[k][5][-1]==')':
+                        error=[abs(eval(table[k][5])[0]),abs(eval(table[k][5])[1])]
+                        A_error_model_fit_domain.append(error)
+                    else:
+                        A_error_model_fit_domain.append(np.array([0.1,0.1]))
+        A_error_model_fit.append(A_error_model_fit_domain)
+    for i in range(len(P_model_fit)):
+        P_error_model_fit_domain=[]
+        for j in range(len(P_model_fit[i])):
+            par_name=raxs_rgh+'.setP'+str(i+1)+'_D'+str(j+1)
+            for k in range(len(table)):
+                if table[k][0]==par_name:
+                    if table[k][5][0]=='(' and table[k][5][-1]==')':
+                        error=[abs(eval(table[k][5])[0]),abs(eval(table[k][5])[1])]
+                        P_error_model_fit_domain.append(error)
+                    else:
+                        P_error_model_fit_domain.append(np.array([0.1,0.1]))
+        P_error_model_fit.append(P_error_model_fit_domain)
+    dump_data=[[AP_calculated[0],AP_calculated[1],AP_calculated[2]],[data_AP_Q[1][0],data_AP_Q[1][1],data_AP_Q[1][2],A_error_model_fit,P_error_model_fit]]
+    pickle.dump(dump_data,open(dump_file,"wb"))
 
 def plotting_raxr_new(data,savefile="D://raxr_temp.png",color=['b','r'],marker=['o']):
     experiment_data,model=data[0],data[1]
@@ -275,7 +312,7 @@ def plot_many_experiment_data(data_files=['D:\\Google Drive\\data\\400uM_Sb_hema
 if __name__=="__main__":    
 
     #which plots do you want to create
-    plot_e_model,plot_e_FS,plot_ctr,plot_raxr,plot_AP_Q=1,0,0,0,0
+    plot_e_model,plot_e_FS,plot_ctr,plot_raxr,plot_AP_Q=1,0,0,0,1
 
     #specify file paths (files are dumped files when setting running_mode=False in GenX script)
     e_file="D:\\temp_plot_eden"#e density from model
@@ -320,23 +357,24 @@ if __name__=="__main__":
         colors=['black','r','blue','green','yellow']
         labels=['Domain1','Domain2','Domain3','Domain4']
         data_AP_Q=pickle.load(open(AP_Q_file,"rb"))
-        fig=pyplot.figure(figsize=(15,6))
-        ax=fig.add_subplot(1,1,1)
-        fig2=pyplot.figure(figsize=(15,6))
-        ax2=fig2.add_subplot(1,1,1)
-        #A over Q
+        fig1=pyplot.figure(figsize=(15,6))
+        ax1=fig1.add_subplot(1,1,1)
         shape=data_AP_Q[0][0].shape
+        #A over Q
         for i in range(shape[1]):
-            
-            ax.plot(data_AP_Q[0][2],np.array(data_AP_Q[0][0])[:,i],color=colors[i])
-            ax.scatter(data_AP_Q[1][2],np.array(data_AP_Q[1][0])[:,i],color=colors[i])
-        pyplot.ylabel("A",axes=ax)
-        pyplot.xlabel("Q",axes=ax)
+            ax1.plot(data_AP_Q[0][2],np.array(data_AP_Q[0][0])[:,i],color=colors[i])
+            #print shape
+            #print np.array(data_AP_Q[1][3])
+            ax1.errorbar(data_AP_Q[1][2],np.array(data_AP_Q[1][0])[:,i],yerr=[np.array(data_AP_Q[1][3])[:,i,:][:,0],np.array(data_AP_Q[1][3])[:,i,:][:,1]],color=colors[i],fmt='-o')
+        pyplot.ylabel("A",axes=ax1)
+        pyplot.xlabel("Q",axes=ax1)
         pyplot.legend()
         #P over Q
+        fig2=pyplot.figure(figsize=(15,6))
+        ax2=fig2.add_subplot(1,1,1)
         for i in range(shape[1]):
             ax2.plot(data_AP_Q[0][2],np.array(data_AP_Q[0][1])[:,i],color=colors[i])
-            ax2.scatter(data_AP_Q[1][2],np.array(data_AP_Q[1][1])[:,i],color=colors[i])
+            ax2.errorbar(data_AP_Q[1][2],np.array(data_AP_Q[1][1])[:,i],yerr=[np.array(data_AP_Q[1][4])[:,i,:][:,0],np.array(data_AP_Q[1][4])[:,i,:][:,1]],color=colors[i],fmt='-o')
         pyplot.ylabel("P",axes=ax2)
         pyplot.xlabel("Q",axes=ax2)
         pyplot.legend()

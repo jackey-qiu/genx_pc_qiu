@@ -391,23 +391,23 @@ class Sample:
             #ftot=ftot+ftot_A_C+ftot_A_IC+ftot_B_IC+ftot_B_C
         return abs(ftot)*self.inst.inten
         
-    def calculate_structure_factor(self,h,k,x,y,index=None,fit_mode='MD'):
+    def calculate_structure_factor(self,h,k,x,y,index=None,fit_mode='MD',height_offset=0):
         if x[0]<100:#CTR data
-            return self.calc_f4_muscovite_CTR(h,k,x)
+            return self.calc_f4_muscovite_CTR(h,k,x,height_offset)
         else:#RAXR data
             if fit_mode=='MI':
-                return self.calc_f4_muscovite_RAXR_MI(h,k,x,y,index)
+                return self.calc_f4_muscovite_RAXR_MI(h,k,x,y,index,height_offset)
             elif fit_mode=='MD':
-                return self.calc_f4_muscovite_RAXR_MD(h,k,x,y,index)
+                return self.calc_f4_muscovite_RAXR_MD(h,k,x,y,index,height_offset)
         
-    def calc_f4_muscovite_CTR(self, h, k, l):
+    def calc_f4_muscovite_CTR(self, h, k, l,height_offset=0):
         #now the coherence is either true or force corresponding to coherent and incoherent summation of structure factor
         ftot=0
         coherence=self.coherence
         fb = self.calc_fb(h, k, l)
         f_surface=self.calc_fs
-        f_layered_water=self.calc_f_layered_water_muscovite(h,k,l,self.domain['layered_water_pars'])
-        f_layered_sorbate=self.calc_f_layered_sorbate_muscovite(h,k,l,self.domain['layered_sorbate_pars'])
+        f_layered_water=self.calc_f_layered_water_muscovite(h,k,l,self.domain['layered_water_pars'],height_offset)
+        f_layered_sorbate=self.calc_f_layered_sorbate_muscovite(h,k,l,self.domain['layered_sorbate_pars'],height_offset)
         domains=self.domain['domains']
         if coherence:
             for i in range(len(domains)):
@@ -417,14 +417,14 @@ class Sample:
                 ftot=ftot+getattr(self.domain['global_vars'],'wt'+str(i+1))*abs(fb+f_surface(h,k,l,[domains[i]])+f_layered_water+f_layered_sorbate)
         return abs(ftot)*self.inst.inten
         
-    def calc_f4_muscovite_RAXR_MI(self,h,k,x,y,index):
+    def calc_f4_muscovite_RAXR_MI(self,h,k,x,y,index,height_offset=0):
         h, k, l, E, E0, f1f2, a, b, c, resonant_el=h,k,y,x,self.domain['E0'],self.domain['F1F2'],self.domain['raxs_vars']['a'+str(index)],self.domain['raxs_vars']['b'+str(index)],self.domain['raxs_vars']['c'+str(index)],self.domain['el']
         ftot=0
         coherence=self.coherence
         fb = self.calc_fb(h, k, l)
         f_surface=self.calc_fs
-        f_layered_water=self.calc_f_layered_water_muscovite(h,k,l,self.domain['layered_water_pars'])
-        f_layered_sorbate=self.calc_f_layered_sorbate_muscovite_RAXR(h,k,l,self.domain['layered_sorbate_pars'])
+        f_layered_water=self.calc_f_layered_water_muscovite(h,k,l,self.domain['layered_water_pars'],height_offset)
+        f_layered_sorbate=self.calc_f_layered_sorbate_muscovite_RAXR(h,k,l,self.domain['layered_sorbate_pars'],height_offset)
         domains=self.domain['domains']
         A_list=[self.domain['raxs_vars']['A'+str(index)+'_D'+str(i+1)] for i in range(len(domains))]
         P_list=[self.domain['raxs_vars']['P'+str(index)+'_D'+str(i+1)] for i in range(len(domains))]
@@ -438,14 +438,14 @@ class Sample:
         ftot=np.exp(-a*(E-E0)**2/E0**2+b*(E-E0)/E0)*c*abs(ftot)
         return ftot
         
-    def calc_f4_muscovite_RAXR_MD(self,h,k,x,y,index):
+    def calc_f4_muscovite_RAXR_MD(self,h,k,x,y,index,height_offset=0):
         h, k, l, E, E0, f1f2, a, b, c, resonant_el=h,k,y,x,self.domain['E0'],self.domain['F1F2'],self.domain['raxs_vars']['a'+str(index)],self.domain['raxs_vars']['b'+str(index)],self.domain['raxs_vars']['c'+str(index)],self.domain['el']
         ftot=0
         coherence=self.coherence
         fb = self.calc_fb(h, k, l)
         f_surface=self.calc_fs_RAXR
-        f_layered_water=self.calc_f_layered_water_muscovite(h,k,l,self.domain['layered_water_pars'])
-        f_layered_sorbate=self.calc_f_layered_sorbate_muscovite_RAXR(h,k,l,self.domain['layered_sorbate_pars'])
+        f_layered_water=self.calc_f_layered_water_muscovite(h,k,l,self.domain['layered_water_pars'],height_offset)
+        f_layered_sorbate=self.calc_f_layered_sorbate_muscovite_RAXR(h,k,l,self.domain['layered_sorbate_pars'],height_offset)
         domains=self.domain['domains']
         
         if coherence:
@@ -986,15 +986,15 @@ class Sample:
             slabs=[single_domain]
             x, y, z, u, oc, el = self._surf_pars(slabs)
             res_el=self.domain['el']
-            sorbate_index=[i for i in range(len(el)) if el[i]==res_el]
+            sorbate_index=[ii for ii in range(len(el)) if el[ii]==res_el]
             A_container,P_container=[],[]
             
             for q_index in range(len(Q)):
                 q=Q[q_index]
                 h_single,k_single,l_single=hs[q_index],ks[q_index],ls[q_index]
                 complex_sum=0.+1.0J*0. 
-                for i in sorbate_index:
-                    complex_sum+=oc[i]*np.exp(-q**2*u[i]**2/2)*np.exp(1.0J*2*np.pi*(h_single*x[i]+k_single*y[i]+l_single*(z[i]+1)))#z should be plus 1 to account for the fact that surface slab sitting on top of bulk slab
+                for j in sorbate_index:
+                    complex_sum+=oc[j]*np.exp(-q**2*u[j]**2/2)*np.exp(1.0J*2*np.pi*(h_single*x[j]+k_single*y[j]+l_single*(z[j]+1)))#z should be plus 1 to account for the fact that surface slab sitting on top of bulk slab
                 A_container.append(abs(complex_sum))
                 img_complex_sum, real_complex_sum=np.imag(complex_sum),np.real(complex_sum)
                 if img_complex_sum==0.:
@@ -1089,7 +1089,7 @@ class Sample:
                         /(1-np.exp(-0.5*q**2*ubar**2)*np.exp(q*d_w*1.0J))
         return F_layered_water
         
-    def calc_f_layered_water_muscovite(self,h,k,l,args):
+    def calc_f_layered_water_muscovite(self,h,k,l,args,height_offset=0):
         #contribution of layered water calculated as equation(29) in Reviews in Mineralogy and Geochemistry v. 49 no. 1 p. 149-221
         #note here the height of first atom layer is not at 0 as in that equation but is specified by the first_layer_height. and the corrections were done accordingly
         #In addition, the occupancy of layered water molecules was correctly calculated here by Auc*d_w*density_w
@@ -1100,7 +1100,7 @@ class Sample:
             f=self._get_f(np.array(['O']), dinv)[:,0]
             Auc=self.unit_cell.a*self.unit_cell.b*np.sin(self.unit_cell.gamma)
             q=2*np.pi*dinv
-            F_layered_water=f*(Auc*d_w*density_w)*np.exp(-0.5*q**2*u0**2)*np.exp(q*(first_layer_height+54.3)*1.0J)\
+            F_layered_water=f*(Auc*d_w*density_w)*np.exp(-0.5*q**2*u0**2)*np.exp(q*(first_layer_height+54.3+height_offset)*1.0J)\
                             /(1-np.exp(-0.5*q**2*ubar**2)*np.exp(q*d_w*1.0J))#54.3=20.1058*(1+1.6) offset height accouting for bulk and surface slab
             return F_layered_water
         else:
@@ -1121,7 +1121,7 @@ class Sample:
 
         return F_layered_sorbate
         
-    def calc_f_layered_sorbate_muscovite(self,h,k,l,args):
+    def calc_f_layered_sorbate_muscovite(self,h,k,l,args,height_offset=0):
         #contribution of layered sorbate calculated based on a function modified from equation(29) in Reviews in Mineralogy and Geochemistry v. 49 no. 1 p. 149-221
         #note here the height of first atom layer is not at 0 as in that equation but is specified by the first_layer_height_s. and the corrections were done accordingly
         #In addition, the occupancy of layered sorbate molecules was correctly calculated here by Auc*d_s*density_s
@@ -1133,7 +1133,7 @@ class Sample:
             f=self._get_f(np.array([el]), dinv)[:,0]
             Auc=self.unit_cell.a*self.unit_cell.b*np.sin(self.unit_cell.gamma)
             q=2*np.pi*dinv
-            F_layered_sorbate=f*(Auc*d_s*density_s)*np.exp(-0.5*q**2*u0_s**2)*np.exp(q*(first_layer_height_s+54.3)*1.0J)\
+            F_layered_sorbate=f*(Auc*d_s*density_s)*np.exp(-0.5*q**2*u0_s**2)*np.exp(q*(first_layer_height_s+54.3+height_offset)*1.0J)\
                             /(1-np.exp(-0.5*q**2*ubar_s**2)*np.exp(q*d_s*1.0J))
             return F_layered_sorbate
         else:
@@ -1152,7 +1152,7 @@ class Sample:
                         /(1-np.exp(-0.5*q**2*ubar_s**2)*np.exp(q*d_s*1.0J))
         return F_layered_sorbate
         
-    def calc_f_layered_sorbate_muscovite_RAXR(self,h,k,l,args):
+    def calc_f_layered_sorbate_muscovite_RAXR(self,h,k,l,args,height_offset=0):
         #contribution of layered sorbate calculated based on a function modified from equation(29) in Reviews in Mineralogy and Geochemistry v. 49 no. 1 p. 149-221
         #note here the height of first atom layer is not at 0 as in that equation but is specified by the first_layer_height_s. and the corrections were done accordingly
         #In addition, the occupancy of layered sorbate molecules was correctly calculated here by Auc*d_s*density_s
@@ -1164,7 +1164,7 @@ class Sample:
             f=self._get_f(np.array([el]), dinv)[:,0]+(f1f2[:,0]+1.0J*f1f2[:,1])#atomic form factor corrected by the f1f2 correction items
             Auc=self.unit_cell.a*self.unit_cell.b*np.sin(self.unit_cell.gamma)
             q=2*np.pi*dinv
-            F_layered_sorbate=f*(Auc*d_s*density_s)*np.exp(-0.5*q**2*u0_s**2)*np.exp(q*(first_layer_height_s+54.3)*1.0J)\
+            F_layered_sorbate=f*(Auc*d_s*density_s)*np.exp(-0.5*q**2*u0_s**2)*np.exp(q*(first_layer_height_s+54.3+height_offset)*1.0J)\
                             /(1-np.exp(-0.5*q**2*ubar_s**2)*np.exp(q*d_s*1.0J))
             return F_layered_sorbate
         else:
@@ -1260,7 +1260,7 @@ class Sample:
         e_data.append(np.array([list(e_data[0])[0],e_total]))
         pickle.dump([e_data,labels],open(file_path+"temp_plot_eden","wb"))
         
-    def plot_electron_density_muscovite(self,slabs,el_lib={'O':8,'Fe':26,'As':33,'Pb':82,'Sb':51,'P':15,'Cr':24,'Cd':48,'Cu':29,'Zn':30,'Al':13,'Si':14,'K':19,'Zr':40},z_min=0.,z_max=28.,N_layered_water=10,resolution=1000,file_path="D:\\"):
+    def plot_electron_density_muscovite(self,slabs,el_lib={'O':8,'Fe':26,'As':33,'Pb':82,'Sb':51,'P':15,'Cr':24,'Cd':48,'Cu':29,'Zn':30,'Al':13,'Si':14,'K':19,'Zr':40},z_min=0.,z_max=28.,N_layered_water=10,resolution=1000,file_path="D:\\",height_offset=0):
         #print dinv
         e_data=[]
         labels=[]
@@ -1283,7 +1283,7 @@ class Sample:
             d_w=layered_water[2]
             water_density=layered_water[-1]
             for i in range(N_layered_water):
-                z_layered_water.append(layered_water[3]+54.3+i*layered_water[2])#first layer is offseted by 1 accordingly
+                z_layered_water.append(layered_water[3]+54.3+height_offset+i*layered_water[2])#first layer is offseted by 1 accordingly
                 sigma_layered_water.append((layered_water[0]**2+i*layered_water[1]**2)**0.5)
             #consider the e density of layered sorbate        
             layered_sorbate,z_layered_sorbate,sigma_layered_sorbate,d_s,sorbate_density=None,[],[],None,None
@@ -1292,18 +1292,17 @@ class Sample:
             d_s=layered_sorbate[2]
             sorbate_density=layered_sorbate[-1]
             for i in range(N_layered_water):#assume the number of sorbate layer equal to that for water layers
-                z_layered_sorbate.append(layered_sorbate[3]+54.3+i*layered_sorbate[2])#first layer is offseted by 1 accordingly
+                z_layered_sorbate.append(layered_sorbate[3]+54.3+height_offset+i*layered_sorbate[2])#first layer is offseted by 1 accordingly
                 sigma_layered_sorbate.append((layered_sorbate[0]**2+i*layered_sorbate[1]**2)**0.5)
             #print u,f,z
             for i in range(resolution):
                 z_each=float(z_max-z_min)/resolution*i+z_min
                 z_plot.append(z_each)
-                #normalized with occupancy and weight factor (manually scaled by a factor 2 to consider the half half of domainA and domainB)
+                #normalized with occupancy and weight factor (thus normalized to the whole surface area containing multiple domains)
                 #here considering the e density for each atom layer will be distributed within a volume of Auc*1, so the unit here is e/A3
                 eden.append(np.sum(wt*oc*f/Auc*(2*np.pi*u**2)**-0.5*np.exp(-0.5/u**2*(z_each-z)**2)))
                 eden[-1]=eden[-1]+np.sum(8*wt*water_density*(2*np.pi*np.array(sigma_layered_water)**2)**-0.5*np.exp(-0.5/np.array(sigma_layered_water)**2*(z_each-np.array(z_layered_water))**2))
                 eden[-1]=eden[-1]+np.sum(el_lib[raxs_el]*wt*sorbate_density*(2*np.pi*np.array(sigma_layered_sorbate)**2)**-0.5*np.exp(-0.5/np.array(sigma_layered_sorbate)**2*(z_each-np.array(z_layered_sorbate))**2))
-
             labels.append('Domain'+str(domain_index+1))
             e_data.append(np.array([z_plot,eden]))
             e_total=e_total+np.array(eden)

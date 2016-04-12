@@ -98,16 +98,16 @@ def setup_atom_group(gp_info=[]):
             group_names.append(gp_info[i]['ref_group_names'][j]+tag)
     return groups,group_names
 
-def add_sorbate(domain,anchored_atoms,func,geo_lib,info_lib,domain_tag,rgh,index_offset=[0,1]):
-    domain=func([0,0,2.0],domain,anchored_atoms,geo_lib,info_lib,domain_tag,index_offset=index_offset[0])
-    domain=func([0.5,0.5,2.0],domain,anchored_atoms,geo_lib,info_lib,domain_tag,index_offset=index_offset[1])
+def add_sorbate(domain,anchored_atoms,func,geo_lib,info_lib,domain_tag,rgh,index_offset=[0,1],height_offset=0):
+    domain=func([0,0,2.0+height_offset],domain,anchored_atoms,geo_lib,info_lib,domain_tag,index_offset=index_offset[0])
+    domain=func([0.5,0.5,2.0+height_offset],domain,anchored_atoms,geo_lib,info_lib,domain_tag,index_offset=index_offset[1])
     for key in geo_lib.keys():
         rgh.new_var(key,geo_lib[key])
     return domain,rgh
     
-def update_sorbate(domain,anchored_atoms,func,info_lib,domain_tag,rgh,index_offset=[0,1]):
-    domain=func([0,0,2.0],domain,anchored_atoms,vars(rgh),info_lib,domain_tag,index_offset=index_offset[0])
-    domain=func([0.5,0.5,2.0],domain,anchored_atoms,vars(rgh),info_lib,domain_tag,index_offset=index_offset[1])
+def update_sorbate(domain,anchored_atoms,func,info_lib,domain_tag,rgh,index_offset=[0,1],height_offset=0):
+    domain=func([0,0,2.0+height_offset],domain,anchored_atoms,vars(rgh),info_lib,domain_tag,index_offset=index_offset[0])
+    domain=func([0.5,0.5,2.0+height_offset],domain,anchored_atoms,vars(rgh),info_lib,domain_tag,index_offset=index_offset[1])
     return domain
 
 def add_oxygen_pair_muscovite(domain,ids,coors):
@@ -977,13 +977,13 @@ def create_list(ids,off_set_begin,start_N):
             ids_processed[1].append(off_set[j])
     return ids_processed 
 #function to build reference bulk and surface slab  
-def add_atom_in_slab(slab,filename,attach=''):
+def add_atom_in_slab(slab,filename,attach='',height_offset=0):
     f=open(filename)
     lines=f.readlines()
     for line in lines:
         if line[0]!='#':
             items=line.strip().rsplit(',')
-            slab.add_atom(str(items[0].strip())+attach,str(items[1].strip()),float(items[2]),float(items[3]),float(items[4]),float(items[5]),float(items[6]),float(items[7]))
+            slab.add_atom(str(items[0].strip())+attach,str(items[1].strip()),float(items[2]),float(items[3]),float(items[4])+height_offset,float(items[5]),float(items[6]),float(items[7]))
 
 #here only consider the match in the bulk,the offset should be maintained during fitting
 def create_match_lib_before_fitting(domain_class,domain,atm_list,search_range,basis=np.array([5.038,5.434,7.3707]),T=None):
