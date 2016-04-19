@@ -60,7 +60,7 @@ def define_raxs_vars(rgh,number_spectra=0,number_domain=2):
     for i in range(number_spectra):
         rgh.new_var('a'+str(i+1),1.0)
         rgh.new_var('b'+str(i+1),0.0)
-        rgh.new_var('c'+str(i+1),1.0)
+        rgh.new_var('c'+str(i+1),0.01)
         for j in range(number_domain):
             rgh.new_var('A'+str(i+1)+'_D'+str(j+1),0.0)
             rgh.new_var('P'+str(i+1)+'_D'+str(j+1),0.0)

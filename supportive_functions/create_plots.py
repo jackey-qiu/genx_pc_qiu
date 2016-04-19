@@ -17,11 +17,12 @@ Formates for each kind of dumped files
     eden_plot is a list of [ed1,ed2,...,edn], which is the total e density for all domains
     eden_domains=[[ed_z1_D1,ed_z1_D2,...,ed_z1_Dm],[ed_z2_D1,ed_z2_D2,...,ed_z2_Dm],...,[ed_zn_D1,ed_zn_D2,...,ed_zn_Dm]] considering m domains
 """
-bl_dl_muscovite={'3_0':{'segment':[[0,1],[1,9]],'info':[[2,1],[6,1]]},'2_0':{'segment':[[0,9]],'info':[[2,2.0]]},'2_1':{'segment':[[0,9]],'info':[[4,0.8609]]},'2_2':{'segment':[[0,9]],'info':[[2,1.7218]]},\
+bl_dl_muscovite_old={'3_0':{'segment':[[0,1],[1,9]],'info':[[2,1],[6,1]]},'2_0':{'segment':[[0,9]],'info':[[2,2.0]]},'2_1':{'segment':[[0,9]],'info':[[4,0.8609]]},'2_2':{'segment':[[0,9]],'info':[[2,1.7218]]},\
     '2_-1':{'segment':[[0,3.1391],[3.1391,9]],'info':[[4,3.1391],[2,3.1391]]},'1_1':{'segment':[[0,9]],'info':[[2,1.8609]]},'1_0':{'segment':[[0,3],[3,9]],'info':[[6,3],[2,3]]},'0_2':{'segment':[[0,9]],'info':[[2,1.7218]]},\
-    '0_0':{'segment':[[0,13]],'info':[[2,2]]},'-1_0':{'segment':[[0,3],[3,9]],'info':[[6,-3],[2,-3]]},'0_-2':{'segment':[[0,9]],'info':[[2,-6.2782]]},\
+    '0_0':{'segment':[[0,20]],'info':[[2,2]]},'-1_0':{'segment':[[0,3],[3,9]],'info':[[6,-3],[2,-3]]},'0_-2':{'segment':[[0,9]],'info':[[2,-6.2782]]},\
     '-2_-2':{'segment':[[0,9]],'info':[[2,-6.2782]]},'-2_-1':{'segment':[[0,3.1391],[3.1391,9]],'info':[[4,-3.1391],[2,-3.1391]]},'-2_0':{'segment':[[0,9]],'info':[[2,-6]]},\
     '-2_1':{'segment':[[0,4.8609],[4.8609,9]],'info':[[4,-4.8609],[2,-6.8609]]},'-1_-1':{'segment':[[0,9]],'info':[[2,-4.1391]]},'-3_0':{'segment':[[0,1],[1,9]],'info':[[2,-1],[6,-1]]}}
+bl_dl_muscovite={'0_0':{'segment':[[0,20]],'info':[[2,2]]}}
 
 def generate_plot_files(output_file_path,sample,rgh,data,fit_mode, z_min=0,z_max=29,RAXR_HKL=[0,0,20],bl_dl=bl_dl_muscovite,height_offset=0):
     plot_data_container_experiment={}
@@ -67,7 +68,10 @@ def generate_plot_files(output_file_path,sample,rgh,data,fit_mode, z_min=0,z_max
             I=data_set.y
             eI=data_set.error
             #make dumy hkl and f to make the plot look smoother
-            l_dumy=np.arange(l[0],l[-1]+0.1,0.1)
+            if l[0]>0:
+                l_dumy=np.arange(0.05,l[-1]+0.1,0.1)
+            else:
+                l_dumy=np.arange(l[0],l[-1]+0.1,0.1)
             N=len(l_dumy)
             h_dumy=np.array([h[0]]*N)
             k_dumy=np.array([k[0]]*N)
@@ -94,7 +98,7 @@ def generate_plot_files(output_file_path,sample,rgh,data,fit_mode, z_min=0,z_max
             plot_data_container_model[label]=np.concatenate((l_dumy[:,np.newaxis],f_dumy[:,np.newaxis]),axis=1)
     Q_list_Fourier_synthesis=np.pi*2*sample.unit_cell.abs_hkl(np.array(HKL_list_raxr[0]),np.array(HKL_list_raxr[1]),np.array(HKL_list_raxr[2]))    
     #dump CTR data and profiles
-    hkls=['00L','02L','10L','11L','20L','22L','30L','2-1L','21L']
+    hkls=['00L']
     plot_data_list=[]
     for hkl in hkls:
         plot_data_list.append([plot_data_container_experiment[hkl],plot_data_container_model[hkl]])
@@ -312,7 +316,7 @@ def plot_many_experiment_data(data_files=['D:\\Google Drive\\data\\400uM_Sb_hema
 if __name__=="__main__":    
 
     #which plots do you want to create
-    plot_e_model,plot_e_FS,plot_ctr,plot_raxr,plot_AP_Q=1,0,0,0,1
+    plot_e_model,plot_e_FS,plot_ctr,plot_raxr,plot_AP_Q=1,0,1,0,1
 
     #specify file paths (files are dumped files when setting running_mode=False in GenX script)
     e_file="D:\\temp_plot_eden"#e density from model
@@ -373,9 +377,9 @@ if __name__=="__main__":
         fig2=pyplot.figure(figsize=(15,6))
         ax2=fig2.add_subplot(1,1,1)
         for i in range(shape[1]):
-            ax2.plot(data_AP_Q[0][2],np.array(data_AP_Q[0][1])[:,i],color=colors[i])
-            ax2.errorbar(data_AP_Q[1][2],np.array(data_AP_Q[1][1])[:,i],yerr=[np.array(data_AP_Q[1][4])[:,i,:][:,0],np.array(data_AP_Q[1][4])[:,i,:][:,1]],color=colors[i],fmt='-o')
-        pyplot.ylabel("P",axes=ax2)
+            ax2.plot(data_AP_Q[0][2],np.array(data_AP_Q[0][1])[:,i]/data_AP_Q[0][2]*np.pi*2,color=colors[i])
+            ax2.errorbar(data_AP_Q[1][2],np.array(data_AP_Q[1][1])[:,i]/data_AP_Q[1][2]*np.pi*2,yerr=[np.array(data_AP_Q[1][4])[:,i,:][:,0]/data_AP_Q[1][2]*np.pi*2,np.array(data_AP_Q[1][4])[:,i,:][:,1]/data_AP_Q[1][2]*np.pi*2],color=colors[i],fmt='-o')
+        pyplot.ylabel("P/Q(2pi)",axes=ax2)
         pyplot.xlabel("Q",axes=ax2)
         pyplot.legend()
     pyplot.show()

@@ -420,15 +420,30 @@ class Sample:
     def calc_f4_muscovite_RAXR_MI(self,h,k,x,y,index,height_offset=0):
         h, k, l, E, E0, f1f2, a, b, c, resonant_el=h,k,y,x,self.domain['E0'],self.domain['F1F2'],self.domain['raxs_vars']['a'+str(index)],self.domain['raxs_vars']['b'+str(index)],self.domain['raxs_vars']['c'+str(index)],self.domain['el']
         ftot=0
+        
+        def _extract_f1f2(f1f2,E):
+            E_f1f2=np.around(f1f2[:,2],0)#make sure E in eV
+            E=np.around(E,0)
+            index=[]
+            for each_E in E_f1f2:
+                if each_E in E:
+                    index.append(np.where(E_f1f2==each_E)[0][0])
+            return f1f2[index,:]
+            
+        if len(f1f2)!=len(E):
+            f1f2=_extract_f1f2(f1f2,E)
+            
         coherence=self.coherence
         fb = self.calc_fb(h, k, l)
         f_surface=self.calc_fs
         f_layered_water=self.calc_f_layered_water_muscovite(h,k,l,self.domain['layered_water_pars'],height_offset)
-        f_layered_sorbate=self.calc_f_layered_sorbate_muscovite_RAXR(h,k,l,self.domain['layered_sorbate_pars'],height_offset)
+        f_layered_sorbate=self.calc_f_layered_sorbate_muscovite_RAXR(h,k,l,self.domain['layered_sorbate_pars'],height_offset,f1f2)
         domains=self.domain['domains']
         A_list=[self.domain['raxs_vars']['A'+str(index)+'_D'+str(i+1)] for i in range(len(domains))]
         P_list=[self.domain['raxs_vars']['P'+str(index)+'_D'+str(i+1)] for i in range(len(domains))]
         
+
+            
         if coherence:
             for i in range(len(domains)):
                 ftot=ftot+getattr(self.domain['global_vars'],'wt'+str(i+1))*(fb+f_surface(h,k,l,[domains[i]])+f_layered_water+f_layered_sorbate+(f1f2[:,0]+1.0J*f1f2[:,1])*A_list[i]*np.exp(1.0J*np.pi*2*P_list[i]))
@@ -441,11 +456,24 @@ class Sample:
     def calc_f4_muscovite_RAXR_MD(self,h,k,x,y,index,height_offset=0):
         h, k, l, E, E0, f1f2, a, b, c, resonant_el=h,k,y,x,self.domain['E0'],self.domain['F1F2'],self.domain['raxs_vars']['a'+str(index)],self.domain['raxs_vars']['b'+str(index)],self.domain['raxs_vars']['c'+str(index)],self.domain['el']
         ftot=0
+        
+        def _extract_f1f2(f1f2,E):
+            E_f1f2=np.around(f1f2[:,2],0)#make sure E in eV
+            E=np.around(E,0)
+            index=[]
+            for each_E in E_f1f2:
+                if each_E in E:
+                    index.append(np.where(E_f1f2==each_E)[0][0])
+            return f1f2[index,:]
+            
+        if len(f1f2)!=len(E):
+            f1f2=_extract_f1f2(f1f2,E)
+            
         coherence=self.coherence
         fb = self.calc_fb(h, k, l)
         f_surface=self.calc_fs_RAXR
         f_layered_water=self.calc_f_layered_water_muscovite(h,k,l,self.domain['layered_water_pars'],height_offset)
-        f_layered_sorbate=self.calc_f_layered_sorbate_muscovite_RAXR(h,k,l,self.domain['layered_sorbate_pars'],height_offset)
+        f_layered_sorbate=self.calc_f_layered_sorbate_muscovite_RAXR(h,k,l,self.domain['layered_sorbate_pars'],height_offset,f1f2)
         domains=self.domain['domains']
         
         if coherence:
@@ -1152,15 +1180,19 @@ class Sample:
                         /(1-np.exp(-0.5*q**2*ubar_s**2)*np.exp(q*d_s*1.0J))
         return F_layered_sorbate
         
-    def calc_f_layered_sorbate_muscovite_RAXR(self,h,k,l,args,height_offset=0):
+    def calc_f_layered_sorbate_muscovite_RAXR(self,h,k,l,args,height_offset=0,f1f2=None):
         #contribution of layered sorbate calculated based on a function modified from equation(29) in Reviews in Mineralogy and Geochemistry v. 49 no. 1 p. 149-221
         #note here the height of first atom layer is not at 0 as in that equation but is specified by the first_layer_height_s. and the corrections were done accordingly
         #In addition, the occupancy of layered sorbate molecules was correctly calculated here by Auc*d_s*density_s
         #the u0_s and ubar here are in A
         if h[0]==0 and k[0]==0:#layered structure has effect only on specular rod
             el,u0_s,ubar_s,d_s,first_layer_height_s,density_s=self.domain['el'],args['u0_s'],args['ubar_s'],args['d_s'],args['first_layer_height_s'],args['density_s']
-            f1f2=self.domain['F1F2']
+            if f1f2==None:
+                f1f2=self.domain['F1F2']
+            else:
+                pass
             dinv = self.unit_cell.abs_hkl(h, k, l)
+                           
             f=self._get_f(np.array([el]), dinv)[:,0]+(f1f2[:,0]+1.0J*f1f2[:,1])#atomic form factor corrected by the f1f2 correction items
             Auc=self.unit_cell.a*self.unit_cell.b*np.sin(self.unit_cell.gamma)
             q=2*np.pi*dinv
