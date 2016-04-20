@@ -4,7 +4,8 @@ import numpy as np
 from numpy import *
 from datetime import datetime
 #genxpath = '/home/qiu05/genx_mpi_qiu/genx_test'
-genxpath=os.path.abspath('..')
+genxpath = '/home/qiu05/genx_pc_qiu'
+genxpath = '/home/qiu05/genx_pc_qiu'
 import sys
 import time
 sys.path.insert(0,genxpath)

@@ -3,41 +3,30 @@ for fitting.
 Programmed by: Matts Bjorck
 Last changed: 2008 11 23
 '''
-MPI_RUN=True
-try:
-    from mpi4py import MPI#cautions:this line could be buggy when you have mpi4py installed on your computer
-except:
-    MPI_RUN=False
+
 from numpy import *
 import thread
 import time
 import random as random_mod
 import sys, os, pickle
 
-if MPI_RUN:
-    comm=MPI.COMM_WORLD    
-    size=comm.Get_size()            
-    rank=comm.Get_rank()
-    __parallel_loaded__ = True
-    _cpu_count = size
-else:
-    __parallel_loaded__ = False
-    _cpu_count = 1
-    
-if not MPI_RUN:
-    try:
-        import multiprocessing as processing
-        __parallel_loaded__ = True
-        _cpu_count = processing.cpu_count
-    except:
-        try:
-            import processing
-            __parallel_loaded__ = True
-            _cpu_count = processing.cpuCount()
-        except:
-            #print 'processing not installed no parallel processing possible'
-            pass
 
+__parallel_loaded__ = False
+_cpu_count = 1
+
+try:
+    import multiprocessing as processing
+    __parallel_loaded__ = True
+    _cpu_count = processing.cpu_count
+except:
+    try:
+        import processing
+        __parallel_loaded__ = True
+        _cpu_count = processing.cpuCount()
+    except:
+        #print 'processing not installed no parallel processing possible'
+        pass
+    
 
 import model
 
@@ -61,10 +50,8 @@ class DiffEv:
         # Mutation schemes implemented
         self.mutation_schemes = [self.best_1_bin, self.rand_1_bin,\
             self.best_either_or, self.rand_either_or, self.jade_best, self.simplex_best_1_bin]
-        try:    
-            self.model = model.Model()
-        except:
-            pass
+            
+        self.model = model.Model()
         
         self.km = 0.7 # Mutation constant
         self.kr = 0.7 # Cross over constant
@@ -277,16 +264,16 @@ class DiffEv:
             self.max_gen = int(self.max_generations)
         else:
             self.max_gen = int(self.max_generation_mult*self.n_dim*self.n_pop)
-        if not MPI_RUN:
-            # Starting values setup
-            self.pop_vec = [self.par_min + random.rand(self.n_dim)*(self.par_max -\
-             self.par_min) for i in range(self.n_pop)]
+        
+        # Starting values setup
+        self.pop_vec = [self.par_min + random.rand(self.n_dim)*(self.par_max -\
+         self.par_min) for i in range(self.n_pop)]
+        
+        if self.use_start_guess:
+            self.pop_vec[0] = array(self.start_guess)
             
-            if self.use_start_guess:
-                self.pop_vec[0] = array(self.start_guess)
-                
-            self.trial_vec = [zeros(self.n_dim) for i in range(self.n_pop)]
-            self.best_vec = self.pop_vec[0]
+        self.trial_vec = [zeros(self.n_dim) for i in range(self.n_pop)]
+        self.best_vec = self.pop_vec[0]
         
         self.fom_vec = zeros(self.n_dim)
         self.best_fom = 1e20
@@ -307,10 +294,7 @@ class DiffEv:
         #self.par_evals.reset(array([self.par_min])[0:0])
         #self.fom_evals.reset()
         
-        if MPI_RUN:
-            if rank==0:self.text_output('DE initilized')
-        else:
-            self.text_output('DE initilized')
+        self.text_output('DE initilized')
         
         # Remeber that everything has been setup ok
         self.setup_ok = True
@@ -320,21 +304,14 @@ class DiffEv:
         
         Makes the eval_fom function
         '''
-        if not MPI_RUN:
-            # Setting up for parallel processing
-            if self.use_parallel_processing and __parallel_loaded__:
-                self.text_output('Setting up a pool of workers ...')
-                self.setup_parallel()
-                self.eval_fom = self.calc_trial_fom_parallel
-            else:
-                self.eval_fom = self.calc_trial_fom
+        # Setting up for parallel processing
+        if self.use_parallel_processing and __parallel_loaded__:
+            self.text_output('Setting up a pool of workers ...')
+            self.setup_parallel()
+            self.eval_fom = self.calc_trial_fom_parallel
         else:
-            if __parallel_loaded__:
-                self.setup_parallel_mpi()
-                self.eval_fom = self.calc_trial_fom_parallel_mpi
-            else:
-                self.eval_fom = self.calc_trial_fom
-                
+            self.eval_fom = self.calc_trial_fom
+        
     def start_fit(self, model):
         '''
         Starts fitting in a seperate thred.
@@ -390,8 +367,8 @@ class DiffEv:
         else:
             self.text_output('Fit is already running, stop and then start')
             return False
-            
-    def optimize_partial(self):    
+        
+    def optimize(self):
         '''
         Method implementing the main loop of the differential evolution
         algorithm. Note that this method does not run in a separate thread.
@@ -428,245 +405,87 @@ class DiffEv:
         self.text_output('Going into optimization ...')
         
         # Update the plot data for any gui or other output
-        #self.plot_output(self)
+        self.plot_output(self)
+        self.parameter_output(self)
         
-        #self.parameter_output(self)
-        
-    def optimize(self):
-        '''
-        Method implementing the main loop of the differential evolution
-        algorithm. Note that this method does not run in a separate thread.
-        For threading use start_fit, stop_fit and resume_fit instead.
-        '''
-        if not MPI_RUN:
-            self.text_output('Calculating start FOM ...')
-            self.running = True
-            self.error = False
-            self.n_fom = 0
-            #print self.pop_vec
-            #eval_fom()
-            #self.fom_vec = self.trial_fom[:]
-            # Old leftovers before going parallel
-            self.fom_vec = [self.calc_fom(vec) for vec in self.pop_vec]
-            [self.par_evals.append(vec, axis = 0)\
-                        for vec in self.pop_vec]
-            [self.fom_evals.append(vec) for vec in self.fom_vec]
-            #print self.fom_vec
-            best_index = argmin(self.fom_vec)
-            #print self.fom_vec
-            #print best_index
-            self.best_vec = copy(self.pop_vec[best_index])
-            #print self.best_vec
-            self.best_fom = self.fom_vec[best_index]
-            #print self.best_fom
-            if len(self.fom_log) == 0:
-                self.fom_log = r_[self.fom_log,\
-                                    [[len(self.fom_log),self.best_fom]]]
-            # Flag to keep track if there has been any improvemnts
-            # in the fit - used for updates
-            self.new_best = True
+        # Just making gen live in this scope as well...
+        gen = self.fom_log[-1,0] 
+        for gen in range(int(self.fom_log[-1,0]) + 1, self.max_gen\
+                                + int(self.fom_log[-1,0]) + 1):
+            if self.stop:
+                break
             
-            self.text_output('Going into optimization ...')
+            t_start = time.time()
+            
+            self.init_new_generation(gen)
+            
+            # Create the vectors who will be compared to the 
+            # population vectors
+            [self.create_trial(index) for index in range(self.n_pop)]
+            self.eval_fom()
+            # Calculate the fom of the trial vectors and update the population
+            [self.update_pop(index) for index in range(self.n_pop)]
+            
+            # Add the evaluation to the logging
+            #self.par_evals = append(self.par_evals, self.trial_vec, axis = 0)
+            [self.par_evals.append(vec, axis = 0)\
+                    for vec in self.trial_vec]
+            #self.fom_evals = append(self.fom_evals, self.trial_fom)
+            [self.fom_evals.append(vec) for vec in self.trial_fom]
+            
+            # Add the best value to the fom log
+            self.fom_log = r_[self.fom_log,\
+                                [[len(self.fom_log),self.best_fom]]]
+            
+            # Let the model calculate the simulation of the best.
+            sim_fom = self.calc_sim(self.best_vec)
+
+            # Sanity of the model does the simualtions fom agree with
+            # the best fom
+            if abs(sim_fom - self.best_fom) > self.fom_allowed_dis:
+                self.text_output('Disagrement between two different fom'
+                                 ' evaluations')
+                self.error = ('The disagreement between two subsequent '
+                              'evaluations is larger than %s. Check the '
+                              'model for circular assignments.'
+                              %self.fom_allowed_dis)
+                break
             
             # Update the plot data for any gui or other output
             self.plot_output(self)
             self.parameter_output(self)
             
-            # Just making gen live in this scope as well...
-            gen = self.fom_log[-1,0] 
-            for gen in range(int(self.fom_log[-1,0]) + 1, self.max_gen\
-                                    + int(self.fom_log[-1,0]) + 1):
-                if self.stop:
-                    break
-                
-                t_start = time.time()
-                
-                self.init_new_generation(gen)
-                
-                # Create the vectors who will be compared to the 
-                # population vectors
-                [self.create_trial(index) for index in range(self.n_pop)]
-                self.eval_fom()
-                # Calculate the fom of the trial vectors and update the population
-                [self.update_pop(index) for index in range(self.n_pop)]
-                
-                # Add the evaluation to the logging
-                #self.par_evals = append(self.par_evals, self.trial_vec, axis = 0)
-                [self.par_evals.append(vec, axis = 0)\
-                        for vec in self.trial_vec]
-                #self.fom_evals = append(self.fom_evals, self.trial_fom)
-                [self.fom_evals.append(vec) for vec in self.trial_fom]
-                
-                # Add the best value to the fom log
-                self.fom_log = r_[self.fom_log,\
-                                    [[len(self.fom_log),self.best_fom]]]
-                
-                # Let the model calculate the simulation of the best.
-                sim_fom = self.calc_sim(self.best_vec)
+            # Let the optimization sleep for a while
+            time.sleep(self.sleep_time)
+            
+            # Time measurent to track the speed
+            t = time.time() - t_start
+            if t > 0:
+                speed = self.n_pop/t
+            else:
+                speed = 999999
+            self.text_output('FOM: %.3f Generation: %d Speed: %.1f'%\
+                                (self.best_fom, gen, speed))
+            
+            self.new_best = False
+            # Do an autosave if activated and the interval is coorect
+            if gen%self.autosave_interval == 0 and self.use_autosave:
+                self.autosave()
 
-                # Sanity of the model does the simualtions fom agree with
-                # the best fom
-                if abs(sim_fom - self.best_fom) > self.fom_allowed_dis:
-                    self.text_output('Disagrement between two different fom'
-                                     ' evaluations')
-                    self.error = ('The disagreement between two subsequent '
-                                  'evaluations is larger than %s. Check the '
-                                  'model for circular assignments.'
-                                  %self.fom_allowed_dis)
-                    break
-                
-                # Update the plot data for any gui or other output
-                self.plot_output(self)
-                self.parameter_output(self)
-                
-                # Let the optimization sleep for a while
-                time.sleep(self.sleep_time)
-                
-                # Time measurent to track the speed
-                t = time.time() - t_start
-                if t > 0:
-                    speed = self.n_pop/t
-                else:
-                    speed = 999999
-                self.text_output('FOM: %.3f Generation: %d Speed: %.1f'%\
-                                    (self.best_fom, gen, speed))
-                
-                self.new_best = False
-                # Do an autosave if activated and the interval is coorect
-                if gen%self.autosave_interval == 0 and self.use_autosave:
-                    self.autosave()
-
-            if not self.error:
-                self.text_output('Stopped at Generation: %d after %d fom evaluations...'%(gen, self.n_fom))
-            
-            # Lets clean up and delete our pool of workers
-            if self.use_parallel_processing:
-                self.dismount_parallel()
-            self.eval_fom = None
-            
-            # Now the optimization has stopped
-            self.running = False
-            
-            # Run application specific clean-up actions
-            self.fitting_ended(self)
-        else:
-            self.text_output('Calculating start FOM ...')
-            self.running = True
-            self.error = False
-            self.n_fom = 0
-            #print self.pop_vec
-            #eval_fom()
-            #self.fom_vec = self.trial_fom[:]
-            # Old leftovers before going parallel
-            self.fom_vec = [self.calc_fom(vec) for vec in self.pop_vec]
-            [self.par_evals.append(vec, axis = 0)\
-                        for vec in self.pop_vec]
-            [self.fom_evals.append(vec) for vec in self.fom_vec]
-            #print self.fom_vec
-            best_index = argmin(self.fom_vec)
-            #print self.fom_vec
-            #print best_index
-            self.best_vec = copy(self.pop_vec[best_index])
-            #print self.best_vec
-            self.best_fom = self.fom_vec[best_index]
-            #print self.best_fom
-            if len(self.fom_log) == 0:
-                self.fom_log = r_[self.fom_log,\
-                                    [[len(self.fom_log),self.best_fom]]]
-            # Flag to keep track if there has been any improvemnts
-            # in the fit - used for updates
-            self.new_best = True
-            
-            self.text_output('Going into optimization ...')
-            
-            # Update the plot data for any gui or other output
-            self.plot_output(self)
-            self.parameter_output(self)
-            
-            # Just making gen live in this scope as well...
-            gen = self.fom_log[-1,0] 
-            for gen in range(int(self.fom_log[-1,0]) + 1, self.max_gen\
-                                    + int(self.fom_log[-1,0]) + 1):
-                if self.stop:
-                    break
-                if rank==0:
-                    t_start = time.time()
-                
-                self.init_new_generation(gen)
-                
-                # Create the vectors who will be compared to the 
-                # population vectors
-                if rank==0:
-                    [self.create_trial(index) for index in range(self.n_pop)]
-                    tmp_trial_vec=self.trial_vec
-                else:
-                    tmp_trial_vec=0
-                tmp_trial_vec=comm.bcast(tmp_trial_vec,root=0)
-                self.trial_vec=tmp_trial_vec
-                self.eval_fom()
-                # Calculate the fom of the trial vectors and update the population
-                if rank==0:
-                    [self.update_pop(index) for index in range(self.n_pop)]
-                    
-                    # Add the evaluation to the logging
-                    #self.par_evals = append(self.par_evals, self.trial_vec, axis = 0)
-                    [self.par_evals.append(vec, axis = 0)\
-                            for vec in self.trial_vec]
-                    #self.fom_evals = append(self.fom_evals, self.trial_fom)
-                    [self.fom_evals.append(vec) for vec in self.trial_fom]
-                    
-                    # Add the best value to the fom log
-                    self.fom_log = r_[self.fom_log,\
-                                        [[len(self.fom_log),self.best_fom]]]
-                    
-                    # Let the model calculate the simulation of the best.
-                    sim_fom = self.calc_sim(self.best_vec)
+        if not self.error:
+            self.text_output('Stopped at Generation: %d after %d fom evaluations...'%(gen, self.n_fom))
         
-                    # Sanity of the model does the simualtions fom agree with
-                    # the best fom
-                    if abs(sim_fom - self.best_fom) > self.fom_allowed_dis:
-                        self.text_output('Disagrement between two different fom'
-                                        ' evaluations')
-                        self.error = ('The disagreement between two subsequent '
-                                    'evaluations is larger than %s. Check the '
-                                    'model for circular assignments.'
-                                    %self.fom_allowed_dis)
-                        break
-                    
-                    # Update the plot data for any gui or other output
-                    self.plot_output(self)
-                    self.parameter_output(self)
-                    
-                    # Let the optimization sleep for a while
-                    time.sleep(self.sleep_time)
-                    
-                    # Time measurent to track the speed
-                    t = time.time() - t_start
-                    if t > 0:
-                        speed = self.n_pop/t
-                    else:
-                        speed = 999999
-                    self.text_output('FOM: %.3f Generation: %d Speed: %.1f'%\
-                                        (self.best_fom, gen, speed))
-                    
-                    self.new_best = False
-                    # Do an autosave if activated and the interval is coorect
-                    if gen%self.autosave_interval == 0 and self.use_autosave:
-                        self.autosave()
+        # Lets clean up and delete our pool of workers
+        if self.use_parallel_processing:
+            self.dismount_parallel()
+        self.eval_fom = None
         
-                if rank==0:
-                    if not self.error:
-                        self.text_output('Stopped at Generation: %d after %d fom evaluations...'%(gen, self.n_fom))
-                
-            # Lets clean up and delete our pool of workers
-
-            self.eval_fom = None
-            
-            # Now the optimization has stopped
-            self.running = False
-            
-            # Run application specific clean-up actions
-            self.fitting_ended(self)
+        # Now the optimization has stopped
+        self.running = False
+        
+        # Run application specific clean-up actions
+        self.fitting_ended(self)
+        
             
     def calc_fom(self, vec):
         '''
@@ -711,19 +530,6 @@ class DiffEv:
         time.sleep(1.0)
         #print "Starting a pool with ", self.processes, " workers ..."
         
-    def setup_parallel_mpi(self):
-        '''setup_parallel(self) --> None
-        
-        setup for parallel proccesing. Creates a pool of workers with
-        as many cpus there is available
-        '''
-
-        self.text_output("Starting a pool with %i workers ..."%\
-                            (size, ))
-        parallel_init(self.model.pickable_copy())
-        time.sleep(0.1)
-        #print "Starting a pool with ", self.processes, " workers ..."
-        
     def dismount_parallel(self):
         ''' dismount_parallel(self) --> None
         Used to close the pool and all its processes
@@ -732,25 +538,6 @@ class DiffEv:
         self.pool.join()
         
         #del self.pool
-        
-    def calc_trial_fom_parallel_mpi(self):
-        '''calc_trial_fom_parallel(self) --> None
-        
-        Function to calculate the fom in parallel using the pool
-        '''
-        step_len=int(len(self.trial_vec)/size)
-        remainder=int(len(self.trial_vec)%size)
-        left,right=0,0
-        if rank<=remainder-1:
-            left=rank*(step_len+1)
-            right=(rank+1)*(step_len+1)-1
-        elif rank>remainder-1:
-            left=remainder*(step_len+1)+(rank-remainder)*step_len
-            right=remainder*(step_len+1)+(rank-remainder+1)*step_len-1
-        fom_temp=[]
-        for i in range(left,right+1):
-            fom_temp.append(parallel_calc_fom(self.trial_vec[i]))
-        self.trial_fom=fom_temp
     
     def calc_trial_fom_parallel(self):
         '''calc_trial_fom_parallel(self) --> None

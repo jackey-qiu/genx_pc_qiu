@@ -3,8 +3,8 @@ from mpi4py import MPI
 import numpy as np
 from numpy import *
 from datetime import datetime
-#genxpath = '/u1/uaf/cqiu/genx_mpi_qiu/genx_test'
-genxpath=os.path.abspath('..')
+genxpath = '/home/qiu05/genx_pc_qiu'
+#genxpath=os.path.abspath('..')
 import sys
 import time
 sys.path.insert(0,genxpath)

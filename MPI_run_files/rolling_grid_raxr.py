@@ -9,6 +9,7 @@ import os,sys
 sys.path.append('C:\\Users\\jackey\\Documents\\GitHub\\genx_pc_qiu')
 sys.path.append('C:\\apps\\genx_pc_qiu')
 sys.path.append('/u1/uaf/cqiu/genx_pc_qiu')
+sys.path.append('/home/qiu05/genx_pc_qiu')
 
 import model,diffev,time,fom_funcs
 import filehandling as io
