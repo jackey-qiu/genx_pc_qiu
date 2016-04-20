@@ -41,6 +41,7 @@ RAXR_EL='Zr'##to be set##
 RAXR_FIT_MODE='MD'##to be set##
 HEIGHT_OFFSET=-2.6685#if set to 0, the top atomic layer is at 2.6685 in fractional unit before relaxation
 INFO_LIB={'basis':BASIS,'sorbate_el':'Zr','coordinate_el':'O','T':T,'T_INV':T_INV,'oligomer_type':'tetramer'}##to be set##
+GROUP_SCHEME=[[1,0]]#means group Domain1 and Domain2 for inplane and out of plane movement, set Domain2=Domain1 in side sim func
 
 ##<setting slabs>##
 unitcell = model.UnitCell(5.1988, 9.0266, 20.1058, 90, 95.782, 90)
@@ -136,6 +137,9 @@ def Sim(data):
     domain_creator.update_sorbate(domain=Domain1,anchored_atoms=[],func=domain_creator_sorbate.OS_sqr_antiprism_oligomer,info_lib=INFO_LIB,domain_tag='_D1',rgh=rgh_domain1,index_offset=[0,1],height_offset=HEIGHT_OFFSET)#domain1
     domain_creator.update_sorbate(domain=Domain2,anchored_atoms=[],func=domain_creator_sorbate.OS_sqr_antiprism_oligomer,info_lib=INFO_LIB,domain_tag='_D2',rgh=rgh_domain2,index_offset=[0,1],height_offset=HEIGHT_OFFSET)#domain2
     #You can add more domains
+    
+    ##<link groups if any>##
+    [eval(each_command) for each_command in domain_creator.link_atom_group(gp_info=atom_group_info,gp_scheme=GROUP_SCHEME)]
     
     ##<format domains>##
     domain={'domains':[Domain1,Domain2],'layered_water_pars':layered_water_pars,'layered_sorbate_pars':layered_sorbate_pars,\

@@ -97,6 +97,21 @@ def setup_atom_group(gp_info=[]):
             groups.append(temp_atom_group)
             group_names.append(gp_info[i]['ref_group_names'][j]+tag)
     return groups,group_names
+    
+def link_atom_group(gp_info=[],gp_scheme=[]):
+    command_list=[]
+    for each_link in gp_scheme:
+        group1=gp_info[each_link[0]]
+        group2=gp_info[each_link[1]]
+        ref_group_name1=map(lambda x:x+group1['domain_tag'],group1['ref_group_names'])
+        ref_group_name2=map(lambda x:x+group2['domain_tag'],group2['ref_group_names'])
+        for each_name in ref_group_name1:
+            command_list.append(each_name+('.setdx(%s'%ref_group_name2[ref_group_name1.index(each_name)])+'.getdx())')
+            command_list.append(each_name+('.setdy(%s'%ref_group_name2[ref_group_name1.index(each_name)])+'.getdy())')
+            command_list.append(each_name+('.setdz(%s'%ref_group_name2[ref_group_name1.index(each_name)])+'.getdz())')
+            command_list.append(each_name+('.setu(%s'%ref_group_name2[ref_group_name1.index(each_name)])+'.getu())')
+            command_list.append(each_name+('.setoc(%s'%ref_group_name2[ref_group_name1.index(each_name)])+'.getoc())')
+    return command_list
 
 def add_sorbate(domain,anchored_atoms,func,geo_lib,info_lib,domain_tag,rgh,index_offset=[0,1],height_offset=0):
     domain=func([0,0,2.0+height_offset],domain,anchored_atoms,geo_lib,info_lib,domain_tag,index_offset=index_offset[0])
