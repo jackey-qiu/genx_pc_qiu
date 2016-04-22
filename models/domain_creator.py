@@ -117,7 +117,7 @@ def generate_sorbate_ids(domain,sorbate_layers,sorbate_el):
     id_container=[]
     id_names=[]
     for i in range(sorbate_layers):
-        tag=[sorbate_el+str(i+1),sorbate_el+str(i+2)]
+        tag=[sorbate_el+str(i*2+1),sorbate_el+str(i*2+2)]
         id_container.append([id for id in domain.id if (tag[0] in id) or (tag[1] in id)])
         id_container.append([id for id in domain.id if ((tag[0] in id) or (tag[1] in id)) and ('O' not in id)])
         id_container.append([id for id in domain.id if ((tag[0] in id) or (tag[1] in id)) and ('O' in id)])
