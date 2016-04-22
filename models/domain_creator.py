@@ -113,14 +113,14 @@ def link_atom_group(gp_info=[],gp_scheme=[]):
             command_list.append(each_name+('.setoc(%s'%ref_group_name2[ref_group_name1.index(each_name)])+'.getoc())')
     return command_list
     
-def generate_sorbate_ids(domain,sorbate_layers,sorbate_el):
+def generate_sorbate_ids(domain,sorbate_layers,sorbate_el,number_sorbate_atom=1):#number_sorbate_atom=1 if monomer, 2 if dimmer and so on
     id_container=[]
     id_names=[]
     for i in range(sorbate_layers):
-        tag=[sorbate_el+str(i*2+1),sorbate_el+str(i*2+2)]
-        id_container.append([id for id in domain.id if (tag[0] in id) or (tag[1] in id)])
-        id_container.append([id for id in domain.id if ((tag[0] in id) or (tag[1] in id)) and ('O' not in id)])
-        id_container.append([id for id in domain.id if ((tag[0] in id) or (tag[1] in id)) and ('O' in id)])
+        tag=[sorbate_el+str(i*2*number_sorbate_atom+1+j) for j in range(number_sorbate_atom*2)]
+        id_container.append([id for id in domain.id if sum(map(lambda x:x in id,tag))])
+        id_container.append([id for id in domain.id if sum(map(lambda x:x in id,tag)) and ('O' not in id)])
+        id_container.append([id for id in domain.id if sum(map(lambda x:x in id,tag)) and ('O' in id)])
         id_names=id_names+['sorbate_set'+str(i+1)+'_D1',sorbate_el+'_set'+str(i+1)+'_D1','HO_set'+str(i+1)+'_D1']
     return id_container,id_names
 
