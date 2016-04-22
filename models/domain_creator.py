@@ -112,6 +112,17 @@ def link_atom_group(gp_info=[],gp_scheme=[]):
             command_list.append(each_name+('.setu(%s'%ref_group_name2[ref_group_name1.index(each_name)])+'.getu())')
             command_list.append(each_name+('.setoc(%s'%ref_group_name2[ref_group_name1.index(each_name)])+'.getoc())')
     return command_list
+    
+def generate_sorbate_ids(domain,sorbate_layers,sorbate_el):
+    id_container=[]
+    id_names=[]
+    for i in range(sorbate_layers):
+        tag=[sorbate_el+str(i+1),sorbate_el+str(i+2)]
+        id_container.append([id for id in domain.id if (tag[0] in id) or (tag[1] in id)])
+        id_container.append([id for id in domain.id if ((tag[0] in id) or (tag[1] in id)) and ('O' not in id)])
+        id_container.append([id for id in domain.id if ((tag[0] in id) or (tag[1] in id)) and ('O' in id)])
+        id_names=id_names+['sorbate_set'+str(i+1)+'_D1',sorbate_el+'_set'+str(i+1)+'_D1','HO_set'+str(i+1)+'_D1']
+    return id_container,id_names
 
 def add_sorbate(domain,anchored_atoms,func,geo_lib,info_lib,domain_tag,rgh,index_offset=[0,1],height_offset=0):
     domain=func([0,0,2.0+height_offset],domain,anchored_atoms,geo_lib,info_lib,domain_tag,index_offset=index_offset[0])
