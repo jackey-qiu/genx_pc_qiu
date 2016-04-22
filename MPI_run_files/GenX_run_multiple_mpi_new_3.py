@@ -5,13 +5,12 @@ from numpy import *
 from datetime import datetime
 #genxpath = '/home/qiu05/genx_mpi_qiu/genx_test'
 genxpath = '/home/qiu05/genx_pc_qiu'
-genxpath = '/home/qiu05/genx_pc_qiu'
 import sys
 import time
 sys.path.insert(0,genxpath)
 #sys.path.append(genxpath+'/geometry_modules')
 import model, time, fom_funcs
-import diffev_mpi as diffev
+import diffev
 import filehandling as io
 ##new in version 2##
 #errro bar for each par will be calculated before program being halted

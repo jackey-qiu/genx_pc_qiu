@@ -5,13 +5,13 @@
 ##PBS -l nodes=15:ppn=16
 ##PBS -j oe
 cd $HOME/temp_gx_files
-file=*_Feb_03.gx
+file=*_Apr20.gx
 while  [ `ls $file | wc -l` != 0 ]
 do
     for gx in $file;do
 	if [ `ls $file | wc -l` != 0 ] ;
 	then
-	mpirun --mca mpi_warn_on_fork 0 -np 160  python $HOME/genx_mpi_qiu/GenX_run_multiple_mpi_new_3.py $gx 160 2>&1 |tee job.$PBS_JOBID.out 
+	mpirun --mca mpi_warn_on_fork 0 -np 64  python $HOME/genx_pc_qiu/MPI_run_files/GenX_run_multiple_mpi_new_3.py $gx 64 2>&1 |tee job.$PBS_JOBID.out 
 	rm -f $gx;
 	else
 	sleep 1
