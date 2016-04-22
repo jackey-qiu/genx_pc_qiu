@@ -58,6 +58,7 @@ domain_creator.add_atom_in_slab(Domain2,BATCH_PATH_HEAD+'muscovite_001_surface_S
 ##<Adding sorbates>##to be set##
 #domain1
 NUMBER_SORBATE_LAYER=4
+NUMBER_SORBATE_EL_EACH_MOTIF=1#1 if monomer, 2 if dimmer and so on
 for i in range(NUMBER_SORBATE_LAYER):
     vars()['rgh_domain1_set'+str(i+1)]=UserVars() 
     geo_lib_domain1={'cent_point_offset_x':0,'cent_point_offset_y':0,'cent_point_offset_z':0,'r':2.2,'theta':59.2641329,'rot_x':0,'rot_y':0,'rot_z':0}
@@ -90,7 +91,7 @@ for i in range(len(groups)):
     vars()[group_names[i]]=groups[i]
     
 #sorbate_atoms
-sorbate_id_list_domain1,sorbate_group_names_domain1=domain_creator.generate_sorbate_ids(Domain1,NUMBER_SORBATE_LAYER,INFO_LIB['sorbate_el'])
+sorbate_id_list_domain1,sorbate_group_names_domain1=domain_creator.generate_sorbate_ids(Domain1,NUMBER_SORBATE_LAYER,INFO_LIB['sorbate_el'],NUMBER_SORBATE_EL_EACH_MOTIF)
 sorbate_sym_list_domain1=[]
 
 sorbate_atom_group_info=[{'domain':Domain1,'ref_id_list':sorbate_id_list_domain1,'ref_group_names':sorbate_group_names_domain1,'ref_sym_list':sorbate_sym_list_domain1,'domain_tag':''}]
@@ -128,7 +129,7 @@ def Sim(data,VARS=VARS):
     raxs_vars=vars(rgh_raxs)
     
     ##<update sorbates>##
-    [domain_creator.update_sorbate(domain=Domain1,anchored_atoms=[],func=domain_creator_sorbate.OS_sqr_antiprism_oligomer,info_lib=INFO_LIB,domain_tag='_D1',rgh=VARS['rgh_domain1_set'+str(i+1)],index_offset=[0+i*2,1+i*2],height_offset=HEIGHT_OFFSET) for i in range(NUMBER_SORBATE_LAYER)]#domain1
+    [domain_creator.update_sorbate(domain=Domain1,anchored_atoms=[],func=domain_creator_sorbate.OS_sqr_antiprism_oligomer,info_lib=INFO_LIB,domain_tag='_D1',rgh=VARS['rgh_domain1_set'+str(i+1)],index_offset=[i*2*NUMBER_SORBATE_EL_EACH_MOTIF,NUMBER_SORBATE_EL_EACH_MOTIF+i*2*NUMBER_SORBATE_EL_EACH_MOTIF],height_offset=HEIGHT_OFFSET) for i in range(NUMBER_SORBATE_LAYER)]#domain1
     #You can add more domains
     
     ##<link groups if any>##
