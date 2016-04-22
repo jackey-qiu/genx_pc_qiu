@@ -30,7 +30,8 @@ T_INV=inv(T)
 
 ##<global handles>##
 RUN=False##to be set##
-BATCH_PATH_HEAD='P:\\apps\\genx_pc_qiu\\batchfile\\'##to be set##
+SYSTEMS={'Hypnos':'/home/qiu05/genx_pc_qiu/batchfile/','Fujitsu':'P:\\apps\\genx_pc_qiu\\batchfile\\','Toshiba':'','HP':''}
+BATCH_PATH_HEAD=SYSTEMS['Hypnos']##to be set##
 OUTPUT_FILE_PATH='D:\\'
 F1F2=np.loadtxt(BATCH_PATH_HEAD+'Zr_K_edge.f1f2')
 E0=18007##to be set##(absorbtion edge in eV)
@@ -60,7 +61,7 @@ NUMBER_SORBATE_LAYER=4
 for i in range(NUMBER_SORBATE_LAYER):
     vars()['rgh_domain1_set'+str(i+1)]=UserVars() 
     geo_lib_domain1={'cent_point_offset_x':0,'cent_point_offset_y':0,'cent_point_offset_z':0,'r':2.2,'theta':59.2641329,'rot_x':0,'rot_y':0,'rot_z':0}
-    Domain1,vars()['rgh_domain1_set'+str(i+1)]=domain_creator.add_sorbate(domain=Domain1,anchored_atoms=[],func=domain_creator_sorbate.OS_sqr_antiprism_oligomer,geo_lib=geo_lib_domain1,info_lib=INFO_LIB,domain_tag='_D1',rgh=vars()['rgh_domain1_set'+str(i+1)],index_offset=[0+i,1+i],height_offset=HEIGHT_OFFSET)
+    Domain1,vars()['rgh_domain1_set'+str(i+1)]=domain_creator.add_sorbate(domain=Domain1,anchored_atoms=[],func=domain_creator_sorbate.OS_sqr_antiprism_oligomer,geo_lib=geo_lib_domain1,info_lib=INFO_LIB,domain_tag='_D1',rgh=vars()['rgh_domain1_set'+str(i+1)],index_offset=[0+i*2,1+i*2],height_offset=HEIGHT_OFFSET)
 
 ##<Adding absorbed water>##to be set## (no adsorbed water at the moment)
 '''
@@ -127,7 +128,7 @@ def Sim(data,VARS=VARS):
     raxs_vars=vars(rgh_raxs)
     
     ##<update sorbates>##
-    [domain_creator.update_sorbate(domain=Domain1,anchored_atoms=[],func=domain_creator_sorbate.OS_sqr_antiprism_oligomer,info_lib=INFO_LIB,domain_tag='_D1',rgh=VARS['rgh_domain1_set'+str(i+1)],index_offset=[0+i,1+i],height_offset=HEIGHT_OFFSET) for i in range(NUMBER_SORBATE_LAYER)]#domain1
+    [domain_creator.update_sorbate(domain=Domain1,anchored_atoms=[],func=domain_creator_sorbate.OS_sqr_antiprism_oligomer,info_lib=INFO_LIB,domain_tag='_D1',rgh=VARS['rgh_domain1_set'+str(i+1)],index_offset=[0+i*2,1+i*2],height_offset=HEIGHT_OFFSET) for i in range(NUMBER_SORBATE_LAYER)]#domain1
     #You can add more domains
     
     ##<link groups if any>##
