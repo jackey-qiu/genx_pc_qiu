@@ -162,8 +162,8 @@ def Sim(data):
             rough = (1-rgh.beta)/((1-rgh.beta)**2 + 4*rgh.beta*np.sin(np.pi*(y-LB)/dL)**2)**0.5
         else:
             rough = (1-rgh.beta)/((1-rgh.beta)**2 + 4*rgh.beta*np.sin(np.pi*(x-LB)/dL)**2)**0.5
-        f=rough*abs(sample.calculate_structure_factor(h,k,x,y,index=i,fit_mode=RAXR_FIT_MODE,height_offset=HEIGHT_OFFSET*BASIS[2]))
-        F.append(abs(f))
+        f=abs(sample.calculate_structure_factor(h,k,x,y,index=i,fit_mode=RAXR_FIT_MODE,height_offset=HEIGHT_OFFSET*BASIS[2]))
+        F.append(rough*f*f)
         fom_scaler.append(1)
         
     if COUNT_TIME:
