@@ -82,6 +82,32 @@ def define_diffused_layer_sorbate_vars(rgh):
     rgh.new_var('density_s',0.033)#number density in unit of # of waters per cubic A(0.033 is the typical value)
     return rgh
     
+def setup_atom_group_muscovite(domain=[],group_number=5):
+    ref_id_list_Al=[['O4_3_0','O4_4_0'],['O3_3_0','O3_4_0'],['O5_3_0','O5_4_0'],['Al1_3_0','Al1_4_0'],['Al2_3_0','Al2_4_0'],['O1_3_0','O1_4_0'],['O2_3_0','O2_4_0'],['O6_3_0','O6_4_0'],\
+                 ['Al3_3_0','Al3_4_0'],['Al3_5_0','Al3_6_0'],['O6_5_0','O6_6_0'],['O2_5_0','O2_6_0'],['O1_5_0','O1_6_0'],['Al2_5_0','Al2_6_0'],['Al1_5_0','Al1_6_0'],['O5_5_0','O5_6_0'],['O4_5_0','O4_6_0'],['O3_5_0','O3_6_0']]
+    ref_id_list_Si=[['O4_3_0','O4_4_0'],['O3_3_0','O3_4_0'],['O5_3_0','O5_4_0'],['Si1_3_0','Si1_4_0'],['Si2_3_0','Si2_4_0'],['O1_3_0','O1_4_0'],['O2_3_0','O2_4_0'],['O6_3_0','O6_4_0'],\
+                 ['Al3_3_0','Al3_4_0'],['Al3_5_0','Al3_6_0'],['O6_5_0','O6_6_0'],['O2_5_0','O2_6_0'],['O1_5_0','O1_6_0'],['Si2_5_0','Si2_6_0'],['Si1_5_0','Si1_6_0'],['O5_5_0','O5_6_0'],['O4_5_0','O4_6_0'],['O3_5_0','O3_6_0']]
+    ref_sym_list=[[[1,0,0,0,1,0,0,0,1]]*2]*18
+    ref_group_names_Al=['gp_O4_O4O3','gp_O3_O4O3','gp_O5_O3O4','gp_Al1_Al4Al3','gp_Al2_Al3Al4','gp_O1_O4O3','gp_O2_O3O4','gp_O6_O3O4','gp_Al3_Al4Al3','gp_Al3_Al6Al5','gp_O6_O5O6','gp_O2_O5O6','gp_O1_O6O5','gp_Al2_Al5Al6','gp_Al1_Al6Al5','gp_O5_O5O6','gp_O4_O6O5','gp_O3_O6O5']
+    ref_group_names_Si=['gp_O4_O4O3','gp_O3_O4O3','gp_O5_O3O4','gp_Si1_Al4Al3','gp_Si2_Al3Al4','gp_O1_O4O3','gp_O2_O3O4','gp_O6_O3O4','gp_Al3_Al4Al3','gp_Al3_Al6Al5','gp_O6_O5O6','gp_O2_O5O6','gp_O1_O6O5','gp_Si2_Al5Al6','gp_Si1_Al6Al5','gp_O5_O5O6','gp_O4_O6O5','gp_O3_O6O5']
+    Domain1,Domain2=domain
+    gp_info=[{'domain':Domain1,'ref_id_list':ref_id_list_Al[0:group_number],'ref_group_names':ref_group_names_Al[0:group_number],'ref_sym_list':ref_sym_list[0:group_number],'domain_tag':'_D1'},
+                     {'domain':Domain2,'ref_id_list':ref_id_list_Si[0:group_number],'ref_group_names':ref_group_names_Si[0:group_number],'ref_sym_list':ref_sym_list[0:group_number],'domain_tag':'_D2'}]
+    groups,group_names=[],[]
+    for i in range(len(gp_info)):
+        domain=gp_info[i]['domain']
+        tag=gp_info[i]['domain_tag']
+        for j in range(len(gp_info[i]['ref_id_list'])):
+            temp_atom_group=model.AtomGroup()
+            for k in range(len(gp_info[i]['ref_id_list'][j])):
+                if gp_info[i]['ref_sym_list']!=[]:
+                    temp_atom_group.add_atom(slab=gp_info[i]['domain'],id=gp_info[i]['ref_id_list'][j][k]+tag, matrix=gp_info[i]['ref_sym_list'][j][k])
+                else:
+                    temp_atom_group.add_atom(slab=gp_info[i]['domain'],id=gp_info[i]['ref_id_list'][j][k]+tag, matrix=np.array([1,0,0,0,1,0,0,0,1]))
+            groups.append(temp_atom_group)
+            group_names.append(gp_info[i]['ref_group_names'][j]+tag)
+    return groups,group_names,gp_info
+    
 def setup_atom_group(gp_info=[]):
     groups,group_names=[],[]
     for i in range(len(gp_info)):
