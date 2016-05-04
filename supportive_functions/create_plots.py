@@ -92,7 +92,8 @@ def generate_plot_files(output_file_path,sample,rgh,data,fit_mode, z_min=0,z_max
             LB_dumy=np.array(LB_dumy)
             dL_dumy=np.array(dL_dumy)
             rough_dumy = (1-rgh.beta)/((1-rgh.beta)**2 + 4*rgh.beta*np.sin(np.pi*(l_dumy-LB_dumy)/dL_dumy)**2)**0.5
-            f_dumy=rough_dumy*abs(sample.calculate_structure_factor(h_dumy,k_dumy,l_dumy,None,index=0,fit_mode=fit_mode))
+            f_dumy=rough_dumy*abs(sample.calculate_structure_factor(h_dumy,k_dumy,l_dumy,None,index=0,fit_mode=fit_mode,height_offset=height_offset))
+            f_dumy=f_dumy*f_dumy
             label=str(int(h[0]))+str(int(k[0]))+'L'
             plot_data_container_experiment[label]=np.concatenate((l[:,np.newaxis],I[:,np.newaxis],eI[:,np.newaxis]),axis=1)
             plot_data_container_model[label]=np.concatenate((l_dumy[:,np.newaxis],f_dumy[:,np.newaxis]),axis=1)
@@ -195,7 +196,7 @@ def plotting_modelB(object=[],fig=None,index=[2,3,1],color=['0.35','r','c','m','
     #settings for demo showing
     pyplot.title('('+title[0]+')',position=(0.5,0.86),weight=4,size=10,clip_on=True)
     if title[0]=='0 0 L':
-        pyplot.ylim((10,10000))
+        pyplot.ylim((0,1000))
         #pyplot.xlim((0,20))
     elif title[0]=='3 0 L':
         pyplot.ylim((1,10000))
@@ -234,12 +235,14 @@ def plotting_many_modelB(save_file='D://pic.png',head='C:\\Users\\jackey\\Google
     fig=pyplot.figure(figsize=(8.5,7))
     object_sets=[pickle.load(open(head+file)) for file in object_files]#each_item=[00L,02L,10L,11L,20L,22L,30L,2-1L,21L]
     object=[]
-    for i in range(9):
+    for i in range(len(object_sets[0])):
         object.append([])
         for j in range(len(object_sets)):
             if j==0:
                 object[-1].append(object_sets[j][i][0])
             object[-1].append(object_sets[j][i][1])
+    if len(object_sets[0])==1:
+        index=[2,1]
 
     for i in range(len(object)):
     #for i in range(1):
