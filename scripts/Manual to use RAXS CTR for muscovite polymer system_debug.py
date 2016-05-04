@@ -76,10 +76,8 @@ rgh_dls=domain_creator.define_diffused_layer_sorbate_vars(rgh=UserVars())#Diffus
 ##<make fit table file>##
 if not RUN:
     table_container=[]
-    rgh_instance_list=[rgh]+groups+\
-                      sorbate_groups+[vars()['rgh_domain1_set'+str(i+1)] for i in range(NUMBER_SORBATE_LAYER)]+[rgh_dlw,rgh_dls]
-    rgh_instance_name_list=['rgh']+group_names+\
-                           sorbate_group_names+['rgh_domain1_set'+str(i+1) for i in range(NUMBER_SORBATE_LAYER)]+['rgh_dlw','rgh_dls']
+    rgh_instance_list=[rgh]+groups+sorbate_groups+[vars()['rgh_domain1_set'+str(i+1)] for i in range(NUMBER_SORBATE_LAYER)]+[rgh_dlw,rgh_dls]
+    rgh_instance_name_list=['rgh']+group_names+sorbate_group_names+['rgh_domain1_set'+str(i+1) for i in range(NUMBER_SORBATE_LAYER)]+['rgh_dlw','rgh_dls']
     table_container=make_grid.set_table_input_all(container=table_container,rgh_instance_list=rgh_instance_list,rgh_instance_name_list=rgh_instance_name_list,par_file=BATCH_PATH_HEAD+'pars_ranges.txt')
     #raxs pars
     table_container=make_grid.set_table_input_raxs(container=table_container,rgh_group_instance=rgh_raxs,rgh_group_instance_name='rgh_raxs',par_range={'a':[0,1],'b':[0,1],'c':[0,1],'A':[0,1],'P':[0,1]},number_spectra=NUMBER_RAXS_SPECTRA,number_domain=NUMBER_DOMAIN)
