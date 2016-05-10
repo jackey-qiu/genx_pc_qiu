@@ -260,6 +260,7 @@ class heptamer():
     def __init__(self,origin=np.array([0.,0.,0.]),r=2.2,theta=59.2641329,center_el='Zr',coor_el='O',domain_tag='_D1',index_offset=0):
         self.r=r
         self.offset=index_offset*7
+        #self.offset=index_offset
         self.theta=np.deg2rad(theta)
         self.phi=np.deg2rad(45)
         self.center_point={}
@@ -330,11 +331,11 @@ class heptamer():
                         i+=1
         #extra rotation for center5 to center7
         for key in self.center_point.keys():
-            if self.center_el+str(5) in key or self.center_el+str(6) in key or self.center_el+str(7) in key:
+            if self.center_el+str(5+self.offset) in key or self.center_el+str(6+self.offset) in key or self.center_el+str(7+self.offset) in key:
                 self.center_point[key]=_rotate(self.center_point[key],np.array([1,0,0]),np.array([1,0,0]),45)
                 
         for key in self.coordinative_members.keys():
-            if self.center_el+str(5) in key or self.center_el+str(6) in key or self.center_el+str(7) in key:
+            if self.center_el+str(5+self.offset) in key or self.center_el+str(6+self.offset) in key or self.center_el+str(7+self.offset) in key:
                 self.coordinative_members[key]=_rotate(self.coordinative_members[key],np.array([1,0,0]),np.array([1,0,0]),45)
         #translation operation
         for key in self.center_point.keys():
@@ -430,11 +431,11 @@ class decamer():
                         i+=1
         #extra rotation for center5 to center7
         for key in self.center_point.keys():
-            if self.center_el+str(5) in key or self.center_el+str(6) in key or self.center_el+str(7) in key:
+            if self.center_el+str(5+self.offset) in key or self.center_el+str(6+self.offset) in key or self.center_el+str(7+self.offset) in key:
                 self.center_point[key]=_rotate(self.center_point[key],np.array([1,0,0]),np.array([1,0,0]),45)
                 
         for key in self.coordinative_members.keys():
-            if self.center_el+str(5) in key or self.center_el+str(6) in key or self.center_el+str(7) in key:
+            if self.center_el+str(5+self.offset) in key or self.center_el+str(6+self.offset) in key or self.center_el+str(7+self.offset) in key:
                 self.coordinative_members[key]=_rotate(self.coordinative_members[key],np.array([1,0,0]),np.array([1,0,0]),45)
         #translation operation
         for key in self.center_point.keys():
