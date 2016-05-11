@@ -228,7 +228,7 @@ def R1_weighted(simulations, data):
     '''
     denom = np.sum([np.sum(np.sqrt(np.abs(dataset.y))) for dataset in data\
         if dataset.use])
-    return [1.0/denom*(np.sqrt(np.abs(dataset.y)) - np.sqrt(np.abs(sim)))/dataset.error**2\
+    return [1.0/denom*(np.sqrt(np.abs(dataset.y)) - np.sqrt(np.abs(sim)))/dataset.error\
         for (dataset, sim) in zip(data,simulations)]
 
 def logR1(simulations, data):
