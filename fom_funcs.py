@@ -222,6 +222,14 @@ def R1(simulations, data):
         if dataset.use])
     return [1.0/denom*(np.sqrt(np.abs(dataset.y)) - np.sqrt(np.abs(sim)))\
         for (dataset, sim) in zip(data,simulations)]
+        
+def R1_weighted(simulations, data):
+    ''' Crystallographic R-factor (R1)
+    '''
+    denom = np.sum([np.sum(np.sqrt(np.abs(dataset.y))) for dataset in data\
+        if dataset.use])
+    return [1.0/denom*(np.sqrt(np.abs(dataset.y)) - np.sqrt(np.abs(sim)))/dataset.error\
+        for (dataset, sim) in zip(data,simulations)]
 
 def logR1(simulations, data):
     ''' logarithmic crystallographic R-factor (R1)
@@ -239,6 +247,15 @@ def R2(simulations, data):
         if dataset.use])
     return [1.0/denom*np.sign(dataset.y - sim)*(dataset.y - sim)**2\
         for (dataset, sim) in zip(data,simulations)]
+        
+def R2_weighted(simulations, data):
+    ''' Crystallographic R2 factor
+    '''
+    denom = np.sum([np.sum(dataset.y**2) for dataset in data\
+        if dataset.use])
+    return [1.0/denom*np.sign(dataset.y - sim)*(dataset.y - sim)**2/dataset.error**2\
+        for (dataset, sim) in zip(data,simulations)]        
+        
 
 def logR2(simulations, data):
     ''' logarithmic crystallographic R2 factor
