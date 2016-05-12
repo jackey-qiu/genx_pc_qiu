@@ -67,7 +67,7 @@ for i in range(len(sorbate_groups)):vars()[sorbate_group_names[i]]=sorbate_group
     
 ##<Define other pars>##
 rgh=domain_creator.define_global_vars(rgh=UserVars(),domain_number=NUMBER_DOMAIN)#global vars
-rgh_raxs=domain_creator.define_raxs_vars(rgh=UserVars(),number_spectra=NUMBER_RAXS_SPECTRA,number_domain=NUMBER_DOMAIN)#RAXR spectra pars
+rgh_raxs=domain_creator.define_raxs_vars(rgh=UserVars(),number_spectra=NUMBER_RAXS_SPECTRA,number_domain=1)#RAXR spectra pars
 rgh_dlw=domain_creator.define_diffused_layer_water_vars(rgh=UserVars())#Diffused Layered water pars
 rgh_dls=domain_creator.define_diffused_layer_sorbate_vars(rgh=UserVars())#Diffused Layered sorbate pars
 
@@ -78,7 +78,7 @@ if not RUN:
     rgh_instance_name_list=['rgh']+group_names+sorbate_group_names+['rgh_domain1_set'+str(i+1) for i in range(NUMBER_SORBATE_LAYER)]+['rgh_dlw','rgh_dls']
     table_container=make_grid.set_table_input_all(container=table_container,rgh_instance_list=rgh_instance_list,rgh_instance_name_list=rgh_instance_name_list,par_file=os.path.join(BATCH_PATH_HEAD,'pars_ranges.txt'))
     #raxs pars
-    table_container=make_grid.set_table_input_raxs(container=table_container,rgh_group_instance=rgh_raxs,rgh_group_instance_name='rgh_raxs',par_range={'a':[0,1],'b':[0,1],'c':[0,1],'A':[0,1],'P':[0,1]},number_spectra=NUMBER_RAXS_SPECTRA,number_domain=NUMBER_DOMAIN)
+    table_container=make_grid.set_table_input_raxs(container=table_container,rgh_group_instance=rgh_raxs,rgh_group_instance_name='rgh_raxs',par_range={'a':[0,2],'b':[0,2],'c':[0,1],'A':[0,2],'P':[0,1]},number_spectra=NUMBER_RAXS_SPECTRA,number_domain=NUMBER_DOMAIN)
     #build up the tab file
     make_grid.make_table(container=table_container,file_path=OUTPUT_FILE_PATH+'par_table.tab')
 
