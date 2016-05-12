@@ -438,18 +438,18 @@ class Sample:
         f_surface=self.calc_fs
         f_layered_water=self.calc_f_layered_water_muscovite(h,k,l,self.domain['layered_water_pars'],height_offset)
         f_layered_sorbate=self.calc_f_layered_sorbate_muscovite_RAXR(h,k,l,self.domain['layered_sorbate_pars'],height_offset,f1f2)
-        domains=self.domain['domains']
-        A_list=[self.domain['raxs_vars']['A'+str(index)+'_D'+str(i+1)] for i in range(len(domains))]
-        P_list=[self.domain['raxs_vars']['P'+str(index)+'_D'+str(i+1)] for i in range(len(domains))]
+        #only consider one set of Fourier components in the whole strucutre
+        A_list=[self.domain['raxs_vars']['A'+str(index)+'_D'+str(i+1)] for i in range(1)]
+        P_list=[self.domain['raxs_vars']['P'+str(index)+'_D'+str(i+1)] for i in range(1)]
         
 
-            
+        domains=self.domain['domains']    
         if coherence:
             for i in range(len(domains)):
-                ftot=ftot+getattr(self.domain['global_vars'],'wt'+str(i+1))*(fb+f_surface(h,k,l,[domains[i]])+f_layered_water+f_layered_sorbate+(f1f2[:,0]+1.0J*f1f2[:,1])*A_list[i]*np.exp(1.0J*np.pi*2*P_list[i]))
+                ftot=ftot+getattr(self.domain['global_vars'],'wt'+str(i+1))*(fb+f_surface(h,k,l,[domains[i]])+f_layered_water+f_layered_sorbate+(f1f2[:,0]+1.0J*f1f2[:,1])*A_list[0]*np.exp(1.0J*np.pi*2*P_list[0]))
         else:
             for i in range(len(domains)):
-                ftot=ftot+getattr(self.domain['global_vars'],'wt'+str(i+1))*abs(fb+f_surface(h,k,l,[domains[i]])+f_layered_water+f_layered_sorbate+(f1f2[:,0]+1.0J*f1f2[:,1])*A_list[i]*np.exp(1.0J*np.pi*2*P_list[i]))
+                ftot=ftot+getattr(self.domain['global_vars'],'wt'+str(i+1))*abs(fb+f_surface(h,k,l,[domains[i]])+f_layered_water+f_layered_sorbate+(f1f2[:,0]+1.0J*f1f2[:,1])*A_list[0]*np.exp(1.0J*np.pi*2*P_list[0]))
         ftot=np.exp(-a*(E-E0)**2/E0**2+b*(E-E0)/E0)*c*abs(ftot)
         return ftot
         

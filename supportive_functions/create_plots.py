@@ -51,7 +51,8 @@ def generate_plot_files(output_file_path,sample,rgh,data,fit_mode, z_min=0,z_max
             A_list_Fourier_synthesis.append([sample.domain['raxs_vars'][each] for each in A_key_list])
             P_list_Fourier_synthesis.append([sample.domain['raxs_vars'][each] for each in P_key_list])
             rough = (1-rgh.beta)/((1-rgh.beta)**2 + 4*rgh.beta*np.sin(np.pi*(y-LB)/dL)**2)**0.5
-            f=rough*abs(sample.calculate_structure_factor(h,k,x,y,index=i,fit_mode=fit_mode))
+            f=rough*abs(sample.calculate_structure_factor(h,k,x,y,index=i,fit_mode=fit_mode,height_offset=height_offset))
+            f=f*f
             label=str(int(h[0]))+'_'+str(int(k[0]))+'_'+str(y[0])
             plot_raxr_container_experiment[label]=np.concatenate((x[:,np.newaxis],I[:,np.newaxis],eI[:,np.newaxis]),axis=1)
             plot_raxr_container_model[label]=np.concatenate((x[:,np.newaxis],f[:,np.newaxis]),axis=1)
@@ -154,7 +155,10 @@ def append_errors_for_A_P(par_instance,dump_file='D://temp_plot_raxr_A_P_Q',raxs
 def plotting_raxr_new(data,savefile="D://raxr_temp.png",color=['b','r'],marker=['o']):
     experiment_data,model=data[0],data[1]
     labels=model.keys()
-    labels.sort()
+    label_tag=map(lambda x:float(x.split("_")[-1]),labels)
+    label_tag.sort()
+    labels=map(lambda x:"0_0_"+str(x),label_tag)
+    #labels.sort()
     fig=pyplot.figure(figsize=(15,len(labels)/3))
     for i in range(len(labels)):
         rows=None
@@ -319,7 +323,7 @@ def plot_many_experiment_data(data_files=['D:\\Google Drive\\data\\400uM_Sb_hema
 if __name__=="__main__":    
 
     #which plots do you want to create
-    plot_e_model,plot_e_FS,plot_ctr,plot_raxr,plot_AP_Q=1,0,1,0,0
+    plot_e_model,plot_e_FS,plot_ctr,plot_raxr,plot_AP_Q=1,1,1,1,0
 
     #specify file paths (files are dumped files when setting running_mode=False in GenX script)
     e_file="D:\\temp_plot_eden"#e density from model
@@ -341,9 +345,9 @@ if __name__=="__main__":
             ax.plot(np.array(edata[i][0,:]),edata[i][1,:],color='b',label="model dependent")
             pyplot.title(labels[i])
             if plot_e_FS:
-                if i!=N-1:
+                if i==0:
                     ax.plot(data_eden_FS[0],list(np.array(data_eden_FS[2])[:,i]),color='r',label="RAXR imaging")
-                else:
+                elif i==N-1:
                     ax.plot(data_eden_FS[0],data_eden_FS[1],color='r',label="RAXR imaging")
             if i==N-1:pyplot.xlabel('Z(Angstrom)',axes=ax,fontsize=12)
             pyplot.ylabel('E_density',axes=ax,fontsize=12)
