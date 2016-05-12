@@ -1004,7 +1004,7 @@ class Sample:
                 print "P list=",['%.4f' % each_P for each_P in P[each_key]]
         return l,A,P
         
-    def find_A_P_muscovite(self,h,k,l):
+    def find_A_P_muscovite_original(self,h,k,l):
         A,P=[],[]
         hs,ks,ls=np.array([h]*100),np.array([k]*100),np.arange(0,l,l/100.)
         dinv = self.unit_cell.abs_hkl(hs, ks, ls)
@@ -1044,6 +1044,43 @@ class Sample:
             P.append(P_container)
             
         return np.transpose(A),np.transpose(P),Q
+        
+    def find_A_P_muscovite(self,h,k,l):
+        hs,ks,ls=np.array([h]*100),np.array([k]*100),np.arange(0,l,l/100.)
+        dinv = self.unit_cell.abs_hkl(hs, ks, ls)
+        Q=np.pi*2*dinv
+        A_container,P_container=[],[]
+        for q_index in range(len(Q)):
+            q=Q[q_index]
+            h_single,k_single,l_single=hs[q_index],ks[q_index],ls[q_index]
+            complex_sum=0.+1.0J*0.
+            for i in range(len(self.domain['domains'])):
+                single_domain=self.domain['domains'][i]
+                slabs=[single_domain]
+                x, y, z, u, oc, el = self._surf_pars(slabs)
+                res_el=self.domain['el']
+                sorbate_index=[ii for ii in range(len(el)) if el[ii]==res_el]           
+                for j in sorbate_index:
+                    complex_sum+=getattr(self.domain['global_vars'],'wt'+str(i+1))*oc[j]*np.exp(-q**2*u[j]**2/2)*np.exp(1.0J*2*np.pi*(h_single*x[j]+k_single*y[j]+l_single*(z[j]+1)))#z should be plus 1 to account for the fact that surface slab sitting on top of bulk slab
+            A_container.append(abs(complex_sum))
+            img_complex_sum, real_complex_sum=np.imag(complex_sum),np.real(complex_sum)
+            if img_complex_sum==0.:
+                P_container.append(0)
+            elif real_complex_sum==0 and img_complex_sum==1:
+                P_container.append(0.25)#1/2pi/2pi
+            elif real_complex_sum==0 and img_complex_sum==-1:  
+                P_container.append(0.75)#3/2pi/2pi
+            else:#adjustment is needed since the return of np.arctan is ranging from -1/2pi to 1/2pi
+                if real_complex_sum>0 and img_complex_sum>0:
+                    P_container.append(np.arctan(img_complex_sum/real_complex_sum)/np.pi/2.)
+                elif real_complex_sum>0 and img_complex_sum<0:
+                    P_container.append(np.arctan(img_complex_sum/real_complex_sum)/np.pi/2.+1.)
+                elif real_complex_sum<0 and img_complex_sum>0:
+                    P_container.append(np.arctan(img_complex_sum/real_complex_sum)/np.pi/2.+0.5)
+                elif real_complex_sum<0 and img_complex_sum<0:
+                    P_container.append(np.arctan(img_complex_sum/real_complex_sum)/np.pi/2.+0.5)
+            
+        return np.array(A_container),np.array(P_container),Q
         
     def calc_f4_nonspecular_RAXR(self, h, k, l,E,E0,f1f2,a,b,A_list=[],P_list=[],resonant_els=[1,1,0]):
         #now the coherence looks like [{True:[0,1]},{False:[2,3]}] which means adding up first two domains coherently
@@ -1212,6 +1249,29 @@ class Sample:
         return ftot*self.inst.inten
         
     def fourier_synthesis(self,HKL_list,P_list,A_list,z_min=0.,z_max=20.,el_lib={'O':8,'Fe':26,'As':33,'Pb':82,'Sb':51,'Zr':40},resonant_el='Pb',resolution=1000):
+        ZR=el_lib[resonant_el]
+        q_list = self.unit_cell.abs_hkl(np.array(HKL_list[0]), np.array(HKL_list[1]), np.array(HKL_list[2]))#a list of 1/d for each hkl set
+        q_list_sorted=copy.copy(q_list)
+        q_list_sorted.sort()
+        q_list_sorted=np.array(q_list_sorted)*np.pi*2#note that q=2pi/d
+        delta_q=np.average([q_list_sorted[i+1]-q_list_sorted[i] for i in range(len(q_list_sorted)-1)])
+        Auc=self.unit_cell.a*self.unit_cell.b*np.sin(self.unit_cell.gamma)
+        z_plot=[]
+        eden_plot=[]
+        eden_domain_plot=[]
+        for i in range(resolution):
+            z_each=float(z_max-z_min)/resolution*i+z_min
+            z_plot.append(z_each)
+            eden=0
+            eden_domains=[]
+            eden_each_domain=ZR/Auc/np.pi*np.sum(A_list*np.cos(2*np.pi*P_list-np.array(q_list_sorted)*z_each)*delta_q)
+            eden_domains.append(eden_each_domain)
+            eden+=eden_each_domain
+            eden_plot.append(eden)
+            eden_domain_plot.append(eden_domains)
+        return z_plot,eden_plot,eden_domain_plot
+        
+    def fourier_synthesis_original(self,HKL_list,P_list,A_list,z_min=0.,z_max=20.,el_lib={'O':8,'Fe':26,'As':33,'Pb':82,'Sb':51,'Zr':40},resonant_el='Pb',resolution=1000):
         ZR=el_lib[resonant_el]
         q_list = self.unit_cell.abs_hkl(np.array(HKL_list[0]), np.array(HKL_list[1]), np.array(HKL_list[2]))#a list of 1/d for each hkl set
         q_list_sorted=copy.copy(q_list)
