@@ -48,8 +48,8 @@ def generate_plot_files(output_file_path,sample,rgh,data,fit_mode, z_min=0,z_max
             i+=1
             A_key_list,P_key_list=[key for key in sample.domain['raxs_vars'].keys() if 'A'+str(i)+'_D' in key and 'set' not in key and 'get' not in key],[key for key in sample.domain['raxs_vars'].keys() if 'P'+str(i)+'_D' in key and 'set' not in key and 'get' not in key]
             A_key_list.sort(),P_key_list.sort()
-            A_list_Fourier_synthesis.append([sample.domain['raxs_vars'][each] for each in A_key_list])
-            P_list_Fourier_synthesis.append([sample.domain['raxs_vars'][each] for each in P_key_list])
+            A_list_Fourier_synthesis.append(sample.domain['raxs_vars'][A_key_list[0]])
+            P_list_Fourier_synthesis.append(sample.domain['raxs_vars'][P_key_list[0]])
             rough = (1-rgh.beta)/((1-rgh.beta)**2 + 4*rgh.beta*np.sin(np.pi*(y-LB)/dL)**2)**0.5
             f=rough*abs(sample.calculate_structure_factor(h,k,x,y,index=i,fit_mode=fit_mode,height_offset=height_offset))
             f=f*f
@@ -119,7 +119,7 @@ def generate_plot_files(output_file_path,sample,rgh,data,fit_mode, z_min=0,z_max
 #The purpose of this function is to append the errors of A and P extracted from the errors displaying inside the tab of GenX gui 
 #copy and past this command line to the shell for action:
 #model.script_module.create_plots.append_errors_for_A_P(par_instance=model.parameters,dump_file='D://temp_plot_raxr_A_P_Q',raxs_rgh='rgh_raxs')   
-def append_errors_for_A_P(par_instance,dump_file='D://temp_plot_raxr_A_P_Q',raxs_rgh='rgh_raxs'):
+def append_errors_for_A_P_original(par_instance,dump_file='D://temp_plot_raxr_A_P_Q',raxs_rgh='rgh_raxs'):
     data_AP_Q=pickle.load(open(dump_file,"rb"))
     AP_calculated=data_AP_Q[0]
     A_model_fit,P_model_fit=data_AP_Q[1][0],data_AP_Q[1][1]
@@ -149,6 +149,33 @@ def append_errors_for_A_P(par_instance,dump_file='D://temp_plot_raxr_A_P_Q',raxs
                     else:
                         P_error_model_fit_domain.append(np.array([0.1,0.1]))
         P_error_model_fit.append(P_error_model_fit_domain)
+    dump_data=[[AP_calculated[0],AP_calculated[1],AP_calculated[2]],[data_AP_Q[1][0],data_AP_Q[1][1],data_AP_Q[1][2],A_error_model_fit,P_error_model_fit]]
+    pickle.dump(dump_data,open(dump_file,"wb"))
+    
+def append_errors_for_A_P(par_instance,dump_file='D://temp_plot_raxr_A_P_Q',raxs_rgh='rgh_raxs'):
+    data_AP_Q=pickle.load(open(dump_file,"rb"))
+    AP_calculated=data_AP_Q[0]
+    A_model_fit,P_model_fit=data_AP_Q[1][0],data_AP_Q[1][1]
+    A_error_model_fit,P_error_model_fit=[],[]
+    table=np.array(par_instance.data)
+    for i in range(len(A_model_fit)):
+        par_name=raxs_rgh+'.setA'+str(i+1)+'_D'+str(1)
+        for k in range(len(table)):
+            if table[k][0]==par_name:
+                if table[k][5][0]=='(' and table[k][5][-1]==')':
+                    error=[abs(eval(table[k][5])[0]),abs(eval(table[k][5])[1])]
+                    A_error_model_fit.append(error)
+                else:
+                    A_error_model_fit.append(np.array([0.1,0.1]))
+    for i in range(len(P_model_fit)):
+        par_name=raxs_rgh+'.setP'+str(i+1)+'_D'+str(1)
+        for k in range(len(table)):
+            if table[k][0]==par_name:
+                if table[k][5][0]=='(' and table[k][5][-1]==')':
+                    error=[abs(eval(table[k][5])[0]),abs(eval(table[k][5])[1])]
+                    P_error_model_fit.append(error)
+                else:
+                    P_error_model_fit.append(np.array([0.1,0.1]))
     dump_data=[[AP_calculated[0],AP_calculated[1],AP_calculated[2]],[data_AP_Q[1][0],data_AP_Q[1][1],data_AP_Q[1][2],A_error_model_fit,P_error_model_fit]]
     pickle.dump(dump_data,open(dump_file,"wb"))
 
@@ -323,7 +350,7 @@ def plot_many_experiment_data(data_files=['D:\\Google Drive\\data\\400uM_Sb_hema
 if __name__=="__main__":    
 
     #which plots do you want to create
-    plot_e_model,plot_e_FS,plot_ctr,plot_raxr,plot_AP_Q=1,1,1,1,0
+    plot_e_model,plot_e_FS,plot_ctr,plot_raxr,plot_AP_Q=1,1,1,1,1
 
     #specify file paths (files are dumped files when setting running_mode=False in GenX script)
     e_file="D:\\temp_plot_eden"#e density from model
@@ -370,22 +397,17 @@ if __name__=="__main__":
         data_AP_Q=pickle.load(open(AP_Q_file,"rb"))
         fig1=pyplot.figure(figsize=(15,6))
         ax1=fig1.add_subplot(1,1,1)
-        shape=data_AP_Q[0][0].shape
         #A over Q
-        for i in range(shape[1]):
-            ax1.plot(data_AP_Q[0][2],np.array(data_AP_Q[0][0])[:,i],color=colors[i])
-            #print shape
-            #print np.array(data_AP_Q[1][3])
-            ax1.errorbar(data_AP_Q[1][2],np.array(data_AP_Q[1][0])[:,i],yerr=[np.array(data_AP_Q[1][3])[:,i,:][:,0],np.array(data_AP_Q[1][3])[:,i,:][:,1]],color=colors[i],fmt='-o')
+        ax1.plot(data_AP_Q[0][2],data_AP_Q[0][0],color='r')
+        ax1.errorbar(data_AP_Q[1][2],data_AP_Q[1][0],yerr=np.transpose(data_AP_Q[1][3]),color='g',fmt='-o')
         pyplot.ylabel("A",axes=ax1)
         pyplot.xlabel("Q",axes=ax1)
         pyplot.legend()
         #P over Q
         fig2=pyplot.figure(figsize=(15,6))
         ax2=fig2.add_subplot(1,1,1)
-        for i in range(shape[1]):
-            ax2.plot(data_AP_Q[0][2],np.array(data_AP_Q[0][1])[:,i]/data_AP_Q[0][2]*np.pi*2,color=colors[i])
-            ax2.errorbar(data_AP_Q[1][2],np.array(data_AP_Q[1][1])[:,i]/data_AP_Q[1][2]*np.pi*2,yerr=[np.array(data_AP_Q[1][4])[:,i,:][:,0]/data_AP_Q[1][2]*np.pi*2,np.array(data_AP_Q[1][4])[:,i,:][:,1]/data_AP_Q[1][2]*np.pi*2],color=colors[i],fmt='-o')
+        ax2.plot(data_AP_Q[0][2],np.array(data_AP_Q[0][1])/np.array(data_AP_Q[0][2])*np.pi*2,color='r')
+        ax2.errorbar(data_AP_Q[1][2],np.array(data_AP_Q[1][1])/np.array(data_AP_Q[1][2])*np.pi*2,yerr=np.transpose(data_AP_Q[1][4])*np.pi*2/[data_AP_Q[1][2],data_AP_Q[1][2]],color='g',fmt='-o')
         pyplot.ylabel("P/Q(2pi)",axes=ax2)
         pyplot.xlabel("Q",axes=ax2)
         pyplot.legend()
