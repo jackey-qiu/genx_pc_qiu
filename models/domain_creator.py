@@ -74,12 +74,21 @@ def define_diffused_layer_water_vars(rgh):
     rgh.new_var('density_w',0.033)#number density in unit of # of waters per cubic A(0.033 is the typical value)
     return rgh
     
+def define_diffused_layer_sorbate_vars_original(rgh):
+    rgh.new_var('u0_s',0.4)
+    rgh.new_var('ubar_s',0.4)
+    rgh.new_var('first_layer_height_s',2.0)#relative height in A
+    rgh.new_var('d_s',1.9)#inter-layer water seperation in A
+    rgh.new_var('density_s',0.033)#number density in unit of # of waters per cubic A(0.033 is the typical value)
+    return rgh
+    
 def define_diffused_layer_sorbate_vars(rgh):
     rgh.new_var('u0_s',0.4)
     rgh.new_var('ubar_s',0.4)
     rgh.new_var('first_layer_height_s',2.0)#relative height in A
     rgh.new_var('d_s',1.9)#inter-layer water seperation in A
     rgh.new_var('density_s',0.033)#number density in unit of # of waters per cubic A(0.033 is the typical value)
+    rgh.new_var('oc_damping_factor',1.0)#high value the occupancy damping quickly
     return rgh
     
 def setup_atom_group_muscovite(domain=[],group_number=5):
