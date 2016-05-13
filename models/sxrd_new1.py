@@ -1194,12 +1194,16 @@ class Sample:
         #note f1f2 is not used in the function, it serves as a purpose for easy pasting arguments in script
         if h[0]==0 and k[0]==0:#layered structure has effect only on specular rod
             el,u0_s,ubar_s,d_s,first_layer_height_s,density_s=self.domain['el'],args['u0_s'],args['ubar_s'],args['d_s'],args['first_layer_height_s'],args['density_s']
+            try:
+                oc_bar=args['oc_damping_factor']
+            except:
+                oc_bar=0
             dinv = self.unit_cell.abs_hkl(h, k, l)
             f=self._get_f(np.array([el]), dinv)[:,0]
             Auc=self.unit_cell.a*self.unit_cell.b*np.sin(self.unit_cell.gamma)
             q=2*np.pi*dinv
             F_layered_sorbate=f*(Auc*d_s*density_s)*np.exp(-0.5*q**2*u0_s**2)*np.exp(q*(first_layer_height_s+54.3+height_offset)*1.0J)\
-                            /(1-np.exp(-0.5*q**2*ubar_s**2)*np.exp(q*d_s*1.0J))
+                            /(1-np.exp(-oc_bar)*np.exp(-0.5*q**2*ubar_s**2)*np.exp(q*d_s*1.0J))
             return F_layered_sorbate
         else:
             return 0
@@ -1224,6 +1228,10 @@ class Sample:
         #the u0_s and ubar here are in A
         if h[0]==0 and k[0]==0:#layered structure has effect only on specular rod
             el,u0_s,ubar_s,d_s,first_layer_height_s,density_s=self.domain['el'],args['u0_s'],args['ubar_s'],args['d_s'],args['first_layer_height_s'],args['density_s']
+            try:
+                oc_bar=args['oc_damping_factor']
+            except:
+                oc_bar=0
             if f1f2==None:
                 f1f2=self.domain['F1F2']
             else:
@@ -1234,7 +1242,7 @@ class Sample:
             Auc=self.unit_cell.a*self.unit_cell.b*np.sin(self.unit_cell.gamma)
             q=2*np.pi*dinv
             F_layered_sorbate=f*(Auc*d_s*density_s)*np.exp(-0.5*q**2*u0_s**2)*np.exp(q*(first_layer_height_s+54.3+height_offset)*1.0J)\
-                            /(1-np.exp(-0.5*q**2*ubar_s**2)*np.exp(q*d_s*1.0J))
+                            /(1-np.exp(-oc_bar)*np.exp(-0.5*q**2*ubar_s**2)*np.exp(q*d_s*1.0J))
             return F_layered_sorbate
         else:
             return 0
@@ -1264,7 +1272,7 @@ class Sample:
             z_plot.append(z_each)
             eden=0
             eden_domains=[]
-            eden_each_domain=ZR/Auc/np.pi*np.sum(A_list*np.cos(2*np.pi*P_list-np.array(q_list_sorted)*z_each)*delta_q)
+            eden_each_domain=ZR/Auc/np.pi/2*np.sum(A_list*np.cos(2*np.pi*P_list-np.array(q_list_sorted)*z_each)*delta_q)
             eden_domains.append(eden_each_domain)
             eden+=eden_each_domain
             eden_plot.append(eden)
@@ -1378,14 +1386,16 @@ class Sample:
                 z_layered_water.append(layered_water[3]+54.3+height_offset+i*layered_water[2])#first layer is offseted by 1 accordingly
                 sigma_layered_water.append((layered_water[0]**2+i*layered_water[1]**2)**0.5)
             #consider the e density of layered sorbate        
-            layered_sorbate,z_layered_sorbate,sigma_layered_sorbate,d_s,sorbate_density=None,[],[],None,None
-            layered_sorbate_keys=['u0_s','ubar_s','d_s','first_layer_height_s','density_s']
+            layered_sorbate,z_layered_sorbate,sigma_layered_sorbate,sorbate_damping_factors,d_s,sorbate_density=None,[],[],[],None,None
+            layered_sorbate_keys=['u0_s','ubar_s','d_s','first_layer_height_s','density_s','oc_damping_factor']
             layered_sorbate=[slabs['layered_sorbate_pars'][each_key] for each_key in layered_sorbate_keys]
             d_s=layered_sorbate[2]
-            sorbate_density=layered_sorbate[-1]
+            sorbate_density=layered_sorbate[-2]
+            damping_factor=layered_sorbate[-1]
             for i in range(N_layered_water):#assume the number of sorbate layer equal to that for water layers
                 z_layered_sorbate.append(layered_sorbate[3]+54.3+height_offset+i*layered_sorbate[2])#first layer is offseted by 1 accordingly
                 sigma_layered_sorbate.append((layered_sorbate[0]**2+i*layered_sorbate[1]**2)**0.5)
+                sorbate_damping_factors.append(damping_factor*i)#first layer no damping, second will be damped with a factor of exp(-damping_factor), third will exp(-2*damping_factor) and so on.
             #print u,f,z
             for i in range(resolution):
                 z_each=float(z_max-z_min)/resolution*i+z_min
@@ -1393,8 +1403,12 @@ class Sample:
                 #normalized with occupancy and weight factor (thus normalized to the whole surface area containing multiple domains)
                 #here considering the e density for each atom layer will be distributed within a volume of Auc*1, so the unit here is e/A3
                 eden.append(np.sum(wt*oc*f/Auc*(2*np.pi*u**2)**-0.5*np.exp(-0.5/u**2*(z_each-z)**2)))
-                eden[-1]=eden[-1]+np.sum(8*wt*water_density*(2*np.pi*np.array(sigma_layered_water)**2)**-0.5*np.exp(-0.5/np.array(sigma_layered_water)**2*(z_each-np.array(z_layered_water))**2))
-                eden[-1]=eden[-1]+np.sum(el_lib[raxs_el]*wt*sorbate_density*(2*np.pi*np.array(sigma_layered_sorbate)**2)**-0.5*np.exp(-0.5/np.array(sigma_layered_sorbate)**2*(z_each-np.array(z_layered_sorbate))**2))
+                bulk_water=0
+                if z_each>(54.3+height_offset):
+                    bulk_water=1
+                eden[-1]=eden[-1]+np.sum(10*wt*water_density*(2*np.pi*np.array(sigma_layered_water)**2)**-0.5*np.exp(-0.5/np.array(sigma_layered_water)**2*(z_each-np.array(z_layered_water))**2))+.33*wt*bulk_water
+                #eden[-1]=eden[-1]+np.sum(10*wt*water_density*(np.exp(-0.5/np.array(sigma_layered_water)**2*(z_each-np.array(z_layered_water))**2)))
+                eden[-1]=eden[-1]+np.sum(el_lib[raxs_el]*wt*sorbate_density*np.exp(-np.array(sorbate_damping_factors))*(2*np.pi*np.array(sigma_layered_sorbate)**2)**-0.5*np.exp(-0.5/np.array(sigma_layered_sorbate)**2*(z_each-np.array(z_layered_sorbate))**2))
             labels.append('Domain'+str(domain_index+1))
             e_data.append(np.array([z_plot,eden]))
             e_total=e_total+np.array(eden)

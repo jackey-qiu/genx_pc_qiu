@@ -23,4 +23,5 @@ setU0_s		0.3	0.1 0.5
 setUbar_s	0.3	0.1	1
 setFirst_layer_height_s	2	2	3
 setD_s	1.9	1	2.5
-setDensity_s	0.0	0	0.033
+setDensity_s	0.0	0	0.25
+setOc_damping_factor	1.0	0.2	2
