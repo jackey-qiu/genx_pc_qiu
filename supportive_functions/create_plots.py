@@ -368,7 +368,10 @@ if __name__=="__main__":
         if plot_e_FS:
             data_eden_FS=pickle.load(open(e_file_FS,"rb"))
         for i in range(N):
-            ax=fig.add_subplot(N/2+1,2,i+1)
+            if i==N-1:
+                ax=fig.add_subplot(1,2,2)
+            else:
+                ax=fig.add_subplot(N/2+1,2,i*2+1)
             ax.plot(np.array(edata[i][0,:]),edata[i][1,:],color='b',label="Total e density")
             try:#some domain may have no raxr element
                 ax.plot(np.array(edata[i][0,:]),edata[i][2,:],color='g',label="RAXS element e profile (MD)")
