@@ -378,12 +378,14 @@ if __name__=="__main__":
             if plot_e_FS:
                 if i==0:
                     ax.plot(data_eden_FS[0],list(np.array(data_eden_FS[2])[:,i]),color='r',label="RAXR imaging (MI)")
+                    ax.fill_between(data_eden_FS[0],list(np.array(data_eden_FS[2])[:,i]),color='m',alpha=0.6)
                 elif i==N-1:
                     ax.plot(data_eden_FS[0],data_eden_FS[1],color='r',label="RAXR imaging (MI)")
+                    ax.fill_between(data_eden_FS[0],data_eden_FS[1],color='m',alpha=0.6)
             if i==N-1:pyplot.xlabel('Z(Angstrom)',axes=ax,fontsize=12)
             pyplot.ylabel('E_density',axes=ax,fontsize=12)
             pyplot.ylim(ymin=0)
-            pyplot.legend(fontsize=11)
+            pyplot.legend(fontsize=11,ncol=3)
         fig.tight_layout()
         fig.savefig(e_file+".png",dpi=300)
     if plot_ctr:
@@ -403,7 +405,7 @@ if __name__=="__main__":
         ax1=fig1.add_subplot(1,1,1)
         #A over Q
         ax1.plot(data_AP_Q[0][2],data_AP_Q[0][0],color='r')
-        ax1.errorbar(data_AP_Q[1][2],data_AP_Q[1][0],yerr=np.transpose(data_AP_Q[1][3]),color='g',fmt='-o')
+        ax1.errorbar(data_AP_Q[1][2],data_AP_Q[1][0],yerr=np.transpose(data_AP_Q[1][3]),color='g',fmt='o')
         pyplot.ylabel("A",axes=ax1)
         pyplot.xlabel("Q",axes=ax1)
         pyplot.legend()
@@ -411,7 +413,7 @@ if __name__=="__main__":
         fig2=pyplot.figure(figsize=(15,6))
         ax2=fig2.add_subplot(1,1,1)
         ax2.plot(data_AP_Q[0][2],np.array(data_AP_Q[0][1])/np.array(data_AP_Q[0][2])*np.pi*2,color='r')
-        ax2.errorbar(data_AP_Q[1][2],np.array(data_AP_Q[1][1])/np.array(data_AP_Q[1][2])*np.pi*2,yerr=np.transpose(data_AP_Q[1][4])*np.pi*2/[data_AP_Q[1][2],data_AP_Q[1][2]],color='g',fmt='-o')
+        ax2.errorbar(data_AP_Q[1][2],np.array(data_AP_Q[1][1])/np.array(data_AP_Q[1][2])*np.pi*2,yerr=np.transpose(data_AP_Q[1][4])*np.pi*2/[data_AP_Q[1][2],data_AP_Q[1][2]],color='g',fmt='o')
         pyplot.ylabel("P/Q(2pi)",axes=ax2)
         pyplot.xlabel("Q",axes=ax2)
         pyplot.legend()
