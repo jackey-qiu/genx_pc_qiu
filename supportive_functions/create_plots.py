@@ -368,7 +368,7 @@ if __name__=="__main__":
         if plot_e_FS:
             data_eden_FS=pickle.load(open(e_file_FS,"rb"))
         for i in range(N):
-            ax=fig.add_subplot(N,1,i+1)
+            ax=fig.add_subplot(N/2+1,2,i+1)
             ax.plot(np.array(edata[i][0,:]),edata[i][1,:],color='b',label="Total e density")
             try:#some domain may have no raxr element
                 ax.plot(np.array(edata[i][0,:]),edata[i][2,:],color='g',label="RAXS element e profile (MD)")
@@ -385,7 +385,7 @@ if __name__=="__main__":
             if i==N-1:pyplot.xlabel('Z(Angstrom)',axes=ax,fontsize=12)
             pyplot.ylabel('E_density',axes=ax,fontsize=12)
             pyplot.ylim(ymin=0)
-            pyplot.legend(fontsize=11,ncol=3)
+            pyplot.legend(fontsize=11,ncol=1)
         fig.tight_layout()
         fig.savefig(e_file+".png",dpi=300)
     if plot_ctr:
