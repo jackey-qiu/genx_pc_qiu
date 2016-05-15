@@ -1046,8 +1046,11 @@ class Sample:
         return np.transpose(A),np.transpose(P),Q
         
     def find_A_P_muscovite(self,h,k,l):
-        hs,ks,ls=np.array([h]*100),np.array([k]*100),np.arange(0,l,l/100.)
-        dinv = self.unit_cell.abs_hkl(hs, ks, ls)
+        if type(h)==type([]):
+            hs,ks,ls=h,k,l
+        else:
+            hs,ks,ls=np.array([h]*100),np.array([k]*100),np.arange(0,l,l/100.)
+        dinv = self.unit_cell.abs_hkl(np.array(hs), np.array(ks), np.array(ls))
         Q=np.pi*2*dinv
         A_container,P_container=[],[]
         for q_index in range(len(Q)):

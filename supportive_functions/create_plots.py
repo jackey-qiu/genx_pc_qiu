@@ -99,6 +99,9 @@ def generate_plot_files(output_file_path,sample,rgh,data,fit_mode, z_min=0,z_max
             plot_data_container_experiment[label]=np.concatenate((l[:,np.newaxis],I[:,np.newaxis],eI[:,np.newaxis]),axis=1)
             plot_data_container_model[label]=np.concatenate((l_dumy[:,np.newaxis],f_dumy[:,np.newaxis]),axis=1)
     Q_list_Fourier_synthesis=np.pi*2*sample.unit_cell.abs_hkl(np.array(HKL_list_raxr[0]),np.array(HKL_list_raxr[1]),np.array(HKL_list_raxr[2]))    
+    
+    A_list_calculated_sub,P_list_calculated_sub,Q_list_calculated_sub=sample.find_A_P_muscovite(h=list(HKL_list_raxr[0]),k=list(HKL_list_raxr[1]),l=list(HKL_list_raxr[2]))
+    
     #dump CTR data and profiles
     hkls=['00L']
     plot_data_list=[]
@@ -113,7 +116,10 @@ def generate_plot_files(output_file_path,sample,rgh,data,fit_mode, z_min=0,z_max
     sample.plot_electron_density_muscovite(sample.domain,file_path=output_file_path,z_min=z_min,z_max=z_max,N_layered_water=100,height_offset=height_offset)#dumpt file name is "temp_plot_eden" 
     #e density based on Fourier synthesis
     z_plot,eden_plot,eden_domains=sample.fourier_synthesis(np.array(HKL_list_raxr),np.array(P_list_Fourier_synthesis).transpose(),np.array(A_list_Fourier_synthesis).transpose(),z_min=z_min,z_max=z_max,resonant_el=sample.domain['el'],resolution=1000)
-    pickle.dump([z_plot,eden_plot,eden_domains],open(output_file_path+"temp_plot_eden_fourier_synthesis","wb"))  
+    z_plot_sub,eden_plot_sub,eden_domains_sub=sample.fourier_synthesis(np.array(HKL_list_raxr),np.array(P_list_calculated_sub).transpose(),np.array(A_list_calculated_sub).transpose(),z_min=z_min,z_max=z_max,resonant_el=sample.domain['el'],resolution=1000)
+
+    pickle.dump([z_plot,eden_plot,eden_domains],open(output_file_path+"temp_plot_eden_fourier_synthesis","wb"))
+    pickle.dump([z_plot_sub,eden_plot_sub,eden_domains_sub],open(output_file_path+"temp_plot_eden_fourier_synthesis_sub","wb"))    
 
 #this function must be called within the shell of GenX gui and par_instance=model.parameters,dump_file='D://temp_plot_raxr_A_P_Q' by default
 #The purpose of this function is to append the errors of A and P extracted from the errors displaying inside the tab of GenX gui 
@@ -350,7 +356,7 @@ def plot_many_experiment_data(data_files=['D:\\Google Drive\\data\\400uM_Sb_hema
 if __name__=="__main__":    
 
     #which plots do you want to create
-    plot_e_model,plot_e_FS,plot_ctr,plot_raxr,plot_AP_Q=1,1,0,0,0
+    plot_e_model,plot_e_FS,plot_ctr,plot_raxr,plot_AP_Q=1,1,0,0,1
 
     #specify file paths (files are dumped files when setting running_mode=False in GenX script)
     e_file="D:\\temp_plot_eden"#e density from model
@@ -367,6 +373,7 @@ if __name__=="__main__":
         fig=pyplot.figure(figsize=(15,6))
         if plot_e_FS:
             data_eden_FS=pickle.load(open(e_file_FS,"rb"))
+            data_eden_FS_sub=pickle.load(open(e_file_FS+"_sub","rb"))
         for i in range(N):
             if i==N-1:
                 ax=fig.add_subplot(1,2,2)
@@ -382,9 +389,15 @@ if __name__=="__main__":
                 if i==0:
                     ax.plot(data_eden_FS[0],list(np.array(data_eden_FS[2])[:,i]),color='r',label="RAXR imaging (MI)")
                     ax.fill_between(data_eden_FS[0],list(np.array(data_eden_FS[2])[:,i]),color='m',alpha=0.6)
+                    
+                    ax.plot(data_eden_FS_sub[0],list(np.array(data_eden_FS_sub[2])[:,i]),color='black',label="RAXR imaging (MD)")
+                    ax.fill_between(data_eden_FS_sub[0],list(np.array(data_eden_FS_sub[2])[:,i]),color='c',alpha=0.6)
                 elif i==N-1:
                     ax.plot(data_eden_FS[0],data_eden_FS[1],color='r',label="RAXR imaging (MI)")
                     ax.fill_between(data_eden_FS[0],data_eden_FS[1],color='m',alpha=0.6)
+                    
+                    ax.plot(data_eden_FS_sub[0],data_eden_FS_sub[1],color='black',label="RAXR imaging (MD)")
+                    ax.fill_between(data_eden_FS_sub[0],data_eden_FS_sub[1],color='c',alpha=0.6)
             if i==N-1:pyplot.xlabel('Z(Angstrom)',axes=ax,fontsize=12)
             pyplot.ylabel('E_density',axes=ax,fontsize=12)
             pyplot.ylim(ymin=0)
