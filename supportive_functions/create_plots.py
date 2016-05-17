@@ -189,11 +189,11 @@ def plotting_raxr_new(data,savefile="D://raxr_temp.png",color=['b','r'],marker=[
     fig=pyplot.figure(figsize=(15,len(labels)/3))
     for i in range(len(labels)):
         rows=None
-        if len(labels)%4==0:
-            rows=len(labels)/4
+        if len(labels)%3==0:
+            rows=len(labels)/3
         else:
-            rows=len(labels)/4+1
-        ax=fig.add_subplot(rows,4,i+1)
+            rows=len(labels)/3+1
+        ax=fig.add_subplot(rows,3,i+1)
         ax_pre=ax
         ax.scatter(experiment_data[labels[i]][:,0],experiment_data[labels[i]][:,1],marker=marker[0],s=15,c=color[0],edgecolors=color[0],label="data points")
         ax.errorbar(experiment_data[labels[i]][:,0],experiment_data[labels[i]][:,1],yerr=experiment_data[labels[i]][:,2],fmt=None,color=color[0])
@@ -273,7 +273,7 @@ def plotting_many_modelB(save_file='D://pic.png',head='C:\\Users\\jackey\\Google
                 object[-1].append(object_sets[j][i][0])
             object[-1].append(object_sets[j][i][1])
     if len(object_sets[0])==1:
-        index=[2,1]
+        index=[1,1]
 
     for i in range(len(object)):
     #for i in range(1):
@@ -350,7 +350,7 @@ def plot_many_experiment_data(data_files=['D:\\Google Drive\\data\\400uM_Sb_hema
 if __name__=="__main__":    
 
     #which plots do you want to create
-    plot_e_model,plot_e_FS,plot_ctr,plot_raxr,plot_AP_Q=1,1,1,0,0
+    plot_e_model,plot_e_FS,plot_ctr,plot_raxr,plot_AP_Q=1,1,1,1,1
 
     #specify file paths (files are dumped files when setting running_mode=False in GenX script)
     e_file="D:\\temp_plot_eden"#e density from model
