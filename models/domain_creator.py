@@ -751,6 +751,8 @@ def print_structure_files_muscovite(domain_list='',z_shift=0.8,matrix_info=None,
         c=(np.max(data[2])+0.3-z_shift)*20.1058
         f=open(save_file+'Domain'+str(domain_index+1)+'.cif','w')
         f2=open(save_file+'Domain'+str(domain_index+1)+'.xyz','w')
+        f3=open(save_file+'Domain'+str(domain_index+1)+'_id.xyz','w')
+
         f.write('data_global\n')
         f.write("_chemical_name_mineral 'Muscovite'\n")
         f.write("_chemical_formula_sum 'K Si3 Al3 O12 H2'\n")
@@ -764,20 +766,27 @@ def print_structure_files_muscovite(domain_list='',z_shift=0.8,matrix_info=None,
         f.write("_symmetry_space_group_name_H-M 'P 1'\nloop_\n_space_group_symop_operation_xyz\n  'x,y,z'\nloop_\n")
         f.write("_atom_site_label\n_atom_site_fract_x\n_atom_site_fract_y\n_atom_site_fract_z\n")
         f2.write(str(len(index))+'\n#\n')
+        f3.write(str(len(index))+'\n#\n')
         for i in index:
             coors=np.dot(matrix_info['T'],np.array([data[0][i],data[1][i],(data[2][i]-z_shift)])*matrix_info['basis'])
             if i==index[-1]:
                 s = '%-5s   %7.5e   %7.5e   %7.5e' % (data[3][i],data[0][i],data[1][i],(data[2][i]-z_shift)*20.1058/c)
                 s2 = '%-5s   %7.5e   %7.5e   %7.5e' % (data[3][i],coors[0],coors[1],coors[2])
+                s3 = '%-5s   %7.5e   %7.5e   %7.5e' % (domain.id[i],coors[0],coors[1],coors[2])
                 f.write(s)
                 f2.write(s2)
+                f3.write(s3)
             else:
                 s = '%-5s   %7.5e   %7.5e   %7.5e\n' % (data[3][i],data[0][i],data[1][i],(data[2][i]-z_shift)*20.1058/c)
                 s2 = '%-5s   %7.5e   %7.5e   %7.5e\n' % (data[3][i],coors[0],coors[1],coors[2])
+                s3 = '%-5s   %7.5e   %7.5e   %7.5e\n' % (domain.id[i],coors[0],coors[1],coors[2])
+
                 f.write(s)
                 f2.write(s2)
+                f3.write(s3)
         f.close()
         f2.close()
+        f3.close()
     
     
 def print_data2B(N_sorbate=4,domain='',z_shift=1,half_layer=False,half_layer_long=None,full_layer_long=0,save_file='D://model.xyz'):

@@ -1046,8 +1046,11 @@ class Sample:
         return np.transpose(A),np.transpose(P),Q
         
     def find_A_P_muscovite(self,h,k,l):
-        hs,ks,ls=np.array([h]*100),np.array([k]*100),np.arange(0,l,l/100.)
-        dinv = self.unit_cell.abs_hkl(hs, ks, ls)
+        if type(h)==type([]):
+            hs,ks,ls=h,k,l
+        else:
+            hs,ks,ls=np.array([h]*100),np.array([k]*100),np.arange(0,l,l/100.)
+        dinv = self.unit_cell.abs_hkl(np.array(hs), np.array(ks), np.array(ls))
         Q=np.pi*2*dinv
         A_container,P_container=[],[]
         for q_index in range(len(Q)):
@@ -1365,12 +1368,22 @@ class Sample:
         e_data=[]
         labels=[]
         e_total=np.zeros(resolution)
+        e_total_raxs=np.zeros(resolution)
 
         for domain_index in range(len(slabs['domains'])):
             wt=getattr(slabs['global_vars'],'wt'+str(domain_index+1))
             raxs_el=slabs['el']
             slab=[slabs['domains'][domain_index]]
             x, y, z, u, oc, el = self._surf_pars(slab)
+            
+            index_raxs=np.where(np.array(el)==raxs_el)[0]
+            z_raxs=np.array([(z[i]+1.)*self.unit_cell.c for i in index_raxs])
+            u_raxs=np.array([u[i] for i in index_raxs])
+            oc_raxs=np.array([oc[i] for i in index_raxs])
+            f_raxs=el_lib[raxs_el]
+            eden_raxs=[]
+            
+            
             z=(z+1.)*self.unit_cell.c#z is offseted by 1 unit since such offset is explicitly considered in the calculatino of structure factor
             f=np.array([el_lib[each] for each in el])
             Auc=self.unit_cell.a*self.unit_cell.b*np.sin(self.unit_cell.gamma)
@@ -1403,17 +1416,22 @@ class Sample:
                 #normalized with occupancy and weight factor (thus normalized to the whole surface area containing multiple domains)
                 #here considering the e density for each atom layer will be distributed within a volume of Auc*1, so the unit here is e/A3
                 eden.append(np.sum(wt*oc*f/Auc*(2*np.pi*u**2)**-0.5*np.exp(-0.5/u**2*(z_each-z)**2)))
+                eden_raxs.append(np.sum(wt*oc_raxs*f_raxs/Auc*(2*np.pi*u_raxs**2)**-0.5*np.exp(-0.5/u_raxs**2*(z_each-z_raxs)**2)))
                 bulk_water=0
                 if z_each>(54.3+height_offset):
                     bulk_water=1
-                eden[-1]=eden[-1]+np.sum(10*wt*water_density*(2*np.pi*np.array(sigma_layered_water)**2)**-0.5*np.exp(-0.5/np.array(sigma_layered_water)**2*(z_each-np.array(z_layered_water))**2))+.33*wt*bulk_water
+                eden[-1]=eden[-1]+np.sum(10*wt*water_density*(2*np.pi*np.array(sigma_layered_water)**2)**-0.5*np.exp(-0.5/np.array(sigma_layered_water)**2*(z_each-np.array(z_layered_water))**2))+(.33-0.16233394)*wt*bulk_water
                 #eden[-1]=eden[-1]+np.sum(10*wt*water_density*(np.exp(-0.5/np.array(sigma_layered_water)**2*(z_each-np.array(z_layered_water))**2)))
                 eden[-1]=eden[-1]+np.sum(el_lib[raxs_el]*wt*sorbate_density*np.exp(-np.array(sorbate_damping_factors))*(2*np.pi*np.array(sigma_layered_sorbate)**2)**-0.5*np.exp(-0.5/np.array(sigma_layered_sorbate)**2*(z_each-np.array(z_layered_sorbate))**2))
+                
+                eden_raxs[-1]=eden_raxs[-1]+np.sum(el_lib[raxs_el]*wt*sorbate_density*np.exp(-np.array(sorbate_damping_factors))*(2*np.pi*np.array(sigma_layered_sorbate)**2)**-0.5*np.exp(-0.5/np.array(sigma_layered_sorbate)**2*(z_each-np.array(z_layered_sorbate))**2))
+
             labels.append('Domain'+str(domain_index+1))
-            e_data.append(np.array([z_plot,eden]))
+            e_data.append(np.array([z_plot,eden,eden_raxs]))
             e_total=e_total+np.array(eden)
+            e_total_raxs=e_total_raxs+np.array(eden_raxs)
         labels.append('Total electron density')
-        e_data.append(np.array([list(e_data[0])[0],e_total]))
+        e_data.append(np.array([list(e_data[0])[0],e_total,e_total_raxs]))
         pickle.dump([e_data,labels],open(file_path+"temp_plot_eden","wb"))
 
     def calc_fs(self, h, k, l,slabs):
