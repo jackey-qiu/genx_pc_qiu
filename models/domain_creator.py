@@ -170,7 +170,15 @@ def update_sorbate(domain,anchored_atoms,func,info_lib,domain_tag,rgh,index_offs
     domain=func([0,0,2.0+height_offset],domain,anchored_atoms,vars(rgh),info_lib,domain_tag,index_offset=index_offset[0])
     domain=func([0.5,0.5,2.0+height_offset],domain,anchored_atoms,vars(rgh),info_lib,domain_tag,index_offset=index_offset[1])
     return domain
-
+    
+def add_gaussian(domain,el='O',number=3,spacing=2,u_init=0.008,occ_init=1,height_offset=0,c=20.1058,domain_tag='_D1'):
+    height_list=1.6685+height_offset+np.array([spacing/c*(i+1) for i in range(number)])
+    group_names=['Gaussian_'+el+'_'+str(i+1)+domain_tag for i in range(number)]
+    groups=[]
+    for i in range(number):
+        groups.append(domain.add_atom(id='Gaussian_'+el+'_'+str(i+1)+domain_tag, element=el, x=0.5, y=0.5, z=height_list[i], u = u_init, oc = occ_init, m = 1.0))
+    return domain,groups,group_names
+    
 def add_oxygen_pair_muscovite(domain,ids,coors):
     domain.add_atom(id=ids[0],element='O', x=coors[0][0], y=coors[0][1], z=coors[0][2], oc=0.2,u = 1.)
     domain.add_atom(id=ids[1],element='O', x=coors[1][0], y=coors[1][1], z=coors[1][2], oc=0.2,u = 1.)
