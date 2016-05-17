@@ -171,8 +171,8 @@ def update_sorbate(domain,anchored_atoms,func,info_lib,domain_tag,rgh,index_offs
     domain=func([0.5,0.5,2.0+height_offset],domain,anchored_atoms,vars(rgh),info_lib,domain_tag,index_offset=index_offset[1])
     return domain
     
-def add_gaussian(domain,el='O',number=3,spacing=2,u_init=0.008,occ_init=1,height_offset=0,c=20.1058,domain_tag='_D1'):
-    height_list=1.6685+height_offset+np.array([spacing/c*(i+1) for i in range(number)])
+def add_gaussian(domain,el='O',number=3,first_peak_height=2,spacing=2,u_init=0.008,occ_init=1,height_offset=0,c=20.1058,domain_tag='_D1'):
+    height_list=1.6685+height_offset+np.array([spacing/c*i+first_peak_height/c for i in range(number)])
     group_names=['Gaussian_'+el+'_'+str(i+1)+domain_tag for i in range(number)]
     groups=[]
     for i in range(number):
