@@ -454,6 +454,111 @@ class decamer():
             f.write(s)
         f.close()
         
+class polymer():
+    def __init__(self,origin=np.array([0.,0.,0.]),r=2.2,theta=59.2641329,center_el='Zr',coor_el='O',domain_tag='_D1',index_offset=0,level=10):
+        self.r=r
+        self.offset=index_offset*level
+        self.theta=np.deg2rad(theta)
+        self.phi=np.deg2rad(45)
+        self.center_point={}
+        self.coordinative_members={}
+        self.level=level
+        self.level_top=[2]+range(6,level,3)
+        self.level_bottom=range(4,level,3)+[level]
+        self.level_middle=[3,1]+range(5,level-1,3)
+        self.level_extra_rotation=range(5,self.level,6)+range(6,self.level,6)+range(7,self.level+1,6)
+        self.center_el=center_el
+        self.coor_el=coor_el
+        self.domain_tag=domain_tag
+        self.origin=origin
+        self.find_centers()
+        self.build()
+        
+        
+    def find_centers(self):
+        h=self.r*np.cos(self.theta)
+        square_edge_len=2*self.r*np.sin(self.theta)*np.sin(np.deg2rad(45))
+        r=h+0.5*square_edge_len
+        level_top_values=[np.array([r*2*i,r,0]) for i in range(len(self.level_top))]
+        level_bottom_values=[np.array([r*2*i,-r,0]) for i in range(len(self.level_bottom))]
+        level_middle_values=[np.array([-r+r*2*i,0,0]) for i in range(len(self.level_middle))]
+        for i in range(len(self.level_top)):
+            self.center_point[self.center_el+str(self.level_top[i]+self.offset)+self.domain_tag]=level_top_values[i]            
+        for i in range(len(self.level_middle)):
+            self.center_point[self.center_el+str(self.level_middle[i]+self.offset)+self.domain_tag]=level_middle_values[i]            
+        for i in range(len(self.level_bottom)):
+            self.center_point[self.center_el+str(self.level_bottom[i]+self.offset)+self.domain_tag]=level_bottom_values[i]
+        
+    def build(self,**arg):
+        def _rotate(original_point,rot_axis,rot_point,rot_angle):
+            #rotating original_point about the line through rot_point with direction vector defined by rot_axis by angle rot_angle
+            x,y,z=original_point
+            u,v,w=rot_axis
+            a,b,c=rot_point
+            theta=np.deg2rad(rot_angle)
+            L=u**2+v**2+w**2
+            x_after_rot=((a*(v**2+w**2)-u*(b*v+c*w-u*x-v*y-w*z))*(1-np.cos(theta))+L*x*np.cos(theta)+L**0.5*(-c*v+b*w-w*y+v*z)*np.sin(theta))/L
+            y_after_rot=((b*(u**2+w**2)-v*(a*u+c*w-u*x-v*y-w*z))*(1-np.cos(theta))+L*y*np.cos(theta)+L**0.5*(c*u-a*w+w*x-u*z)*np.sin(theta))/L
+            z_after_rot=((c*(v**2+w**2)-w*(a*u+b*v-u*x-v*y-w*z))*(1-np.cos(theta))+L*z*np.cos(theta)+L**0.5*(-b*u+a*v-v*x+u*y)*np.sin(theta))/L
+            return np.array([x_after_rot,y_after_rot,z_after_rot])
+        if arg.keys()!=[]:
+            r,theta,phi=arg['r'],np.deg2rad(arg['theta']),np.deg2rad(arg['phi'])
+        else:
+            r,theta,phi=self.r,self.theta,self.phi
+        for key in np.sort(self.center_point.keys()):
+            rot_point=self.center_point[key]
+            rot_angle=0
+            if key==self.center_el+str(3+self.offset)+self.domain_tag:
+                rot_angle=90
+                rot_axis=np.array([0,-1,0])
+            elif key in map(lambda x:self.center_el+str(x+self.offset)+self.domain_tag,self.level_middle):
+                rot_angle=90
+                rot_axis=np.array([0,1,0])
+            elif key in map(lambda x:self.center_el+str(x+self.offset)+self.domain_tag,self.level_top):
+                rot_angle=-90
+                rot_axis=np.array([1,0,0])
+            elif key in map(lambda x:self.center_el+str(x+self.offset)+self.domain_tag,self.level_bottom):
+                rot_angle=-90
+                rot_axis=np.array([-1,0,0])
+            i=1
+            for each_theta in [theta]:
+                for each_phi in np.arange(0,np.pi*2,phi*2):
+                    self.coordinative_members[self.coor_el+str(i)+'_'+key]=_rotate(np.array([r*np.sin(each_theta)*np.cos(each_phi),r*np.sin(each_theta)*np.sin(each_phi),r*np.cos(each_theta)])+self.center_point[key],rot_axis,rot_point,rot_angle)
+                    #self.coordinative_members[key+'_'+self.coor_el+str(i)]=_rotate(self.coordinative_members[key+'_'+self.coor_el+str(i)],rot_axis,rot_point,rot_angle)
+                    i+=1
+            if key in map(lambda x:self.center_el+str(x+self.offset)+self.domain_tag,self.level_middle):
+                for each_theta in [np.pi-theta]:
+                    for each_phi in np.arange(phi,np.pi*2+phi,phi*2):
+                        self.coordinative_members[self.coor_el+str(i)+'_'+key]=_rotate(np.array([r*np.sin(each_theta)*np.cos(each_phi),r*np.sin(each_theta)*np.sin(each_phi),r*np.cos(each_theta)])+self.center_point[key],rot_axis,rot_point,rot_angle)
+                        #self.coordinative_members[key+'_'+self.coor_el+str(i)]=_rotate(self.coordinative_members[key+'_'+self.coor_el+str(i)],rot_axis,rot_point,rot_angle)
+                        i+=1
+        #extra rotation for center5 to center7
+        for key in self.center_point.keys():
+            if key in map(lambda x:self.center_el+str(x+self.offset)+self.domain_tag,self.level_extra_rotation):
+                self.center_point[key]=_rotate(self.center_point[key],np.array([1,0,0]),np.array([1,0,0]),45)
+                
+        for key in self.coordinative_members.keys():
+            keys_center_point_extra_rotation=map(lambda x:self.center_el+str(x+self.offset)+self.domain_tag,self.level_extra_rotation)
+            for each_key in keys_center_point_extra_rotation:
+                if each_key in key:
+                    self.coordinative_members[key]=_rotate(self.coordinative_members[key],np.array([1,0,0]),np.array([1,0,0]),45)
+        #translation operation
+        for key in self.center_point.keys():
+            self.center_point[key]=self.center_point[key]+self.origin
+        for key in self.coordinative_members.keys():
+            self.coordinative_members[key]=self.coordinative_members[key]+self.origin
+            
+    def print_xyz_file(self,file_name='D:\\test.xyz'):
+        f=open(file_name,"w")
+        f.write(str(len(self.center_point.keys())+len(self.coordinative_members.keys()))+'\n#\n')
+        for key in self.center_point.keys():
+            s = '%-5s   %7.5e   %7.5e   %7.5e\n' % (self.center_el, self.center_point[key][0],self.center_point[key][1],self.center_point[key][2])
+            f.write(s)
+        for key in self.coordinative_members.keys():
+            s = '%-5s   %7.5e   %7.5e   %7.5e\n' % (self.coor_el, self.coordinative_members[key][0],self.coordinative_members[key][1],self.coordinative_members[key][2])
+            f.write(s)
+        f.close()
+        
 class oligomer(monomer,tetramer):
     def __init__(self,grid_matrix=[1,1,1],seperation=3,r=2.2,theta=59.2641329,center_el='Zr',coor_el='O',building_block='Monermer'):
         self.grid_matrix=grid_matrix

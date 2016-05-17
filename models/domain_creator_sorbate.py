@@ -153,7 +153,7 @@ def OS_sqr_antiprism_tetramer(ref_point=[0,0,3.0],domain=None,anchor_atoms=None,
         _add_sorbate(domain=domain,id_sorbate=id,el='O',sorbate_v=center_original)
     return domain
     
-def OS_sqr_antiprism_oligomer(ref_point=[0,0,3.0],domain=None,anchor_atoms=None,geo_lib={},info_lib={},domain_tag='_D1',index_offset=0):
+def OS_sqr_antiprism_oligomer(ref_point=[0,0,3.0],domain=None,anchor_atoms=None,geo_lib={},info_lib={},domain_tag='_D1',index_offset=0,level=13):
     #add a regular trigonal pyramid motiff above the surface representing the outer sphere complexation
     #the pyramid is oriented either Oxygen base top (when r1 is negative) or apex top (when r1 is positive)
     #cent_point in frational coordinate is the center point of the tetrahedral (body center)
@@ -165,7 +165,11 @@ def OS_sqr_antiprism_oligomer(ref_point=[0,0,3.0],domain=None,anchor_atoms=None,
         info_lib['coordinate_el'],domain_tag,geo_lib['rot_x'],geo_lib['rot_y'],geo_lib['rot_z'],info_lib['basis'],info_lib['T'],info_lib['T_INV']
     cent_point=np.dot(T,cent_point*basis)
     oligomer_function=getattr(square_antiprism,info_lib['oligomer_type'])
-    antiprism=oligomer_function(origin=cent_point,r=r_sorbate_O,theta=theta,center_el=sorbate_el,coor_el=coordinate_el,domain_tag=domain_tag,index_offset=index_offset)
+    if info_lib['oligomer_type']=='polymer':
+        antiprism=oligomer_function(origin=cent_point,r=r_sorbate_O,theta=theta,center_el=sorbate_el,coor_el=coordinate_el,domain_tag=domain_tag,index_offset=index_offset,level=level)
+    else:
+        antiprism=oligomer_function(origin=cent_point,r=r_sorbate_O,theta=theta,center_el=sorbate_el,coor_el=coordinate_el,domain_tag=domain_tag,index_offset=index_offset)
+
     rot_x,rot_y,rot_z=rotation_x/180*np.pi,rotation_y/180*np.pi,rotation_z/180*np.pi
     T_rot=f4(rot_x,rot_y,rot_z)
     origin=cent_point
