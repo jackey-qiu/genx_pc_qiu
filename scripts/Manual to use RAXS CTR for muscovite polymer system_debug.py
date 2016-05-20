@@ -43,14 +43,14 @@ T_INV=inv(T)
 
 ##<Adding sorbates>##to be set##
 #domain1
-NUMBER_SORBATE_LAYER,NUMBER_EL_MOTIF=4,1#1 if monomer, 2 if dimmer and so on
+LEVEL,CAP,SYMMETRY=13,[],False
+NUMBER_SORBATE_LAYER,NUMBER_EL_MOTIF=4,1+len(CAP)*2#1 if monomer, 2 if dimmer and so on
 INFO_LIB={'basis':BASIS,'sorbate_el':'Zr','coordinate_el':'O','T':T,'T_INV':T_INV,'oligomer_type':'monomer'}
-LEVEL,SYMMETRY=13,False
 
 for i in range(NUMBER_SORBATE_LAYER):
     vars()['rgh_domain1_set'+str(i+1)]=UserVars() 
     geo_lib_domain1={'cent_point_offset_x':0,'cent_point_offset_y':0,'cent_point_offset_z':0,'r':2.2,'theta':59.2641329,'rot_x':0,'rot_y':0,'rot_z':0}
-    Domain1,vars()['rgh_domain1_set'+str(i+1)]=domain_creator.add_sorbate(domain=Domain1,anchored_atoms=[],func=domain_creator_sorbate.OS_sqr_antiprism_oligomer,geo_lib=geo_lib_domain1,info_lib=INFO_LIB,domain_tag='_D1',rgh=vars()['rgh_domain1_set'+str(i+1)],index_offset=[i*2*NUMBER_EL_MOTIF,NUMBER_EL_MOTIF+i*2*NUMBER_EL_MOTIF],height_offset=HEIGHT_OFFSET,level=LEVEL,symmetry_couple=SYMMETRY)
+    Domain1,vars()['rgh_domain1_set'+str(i+1)]=domain_creator.add_sorbate(domain=Domain1,anchored_atoms=[],func=domain_creator_sorbate.OS_sqr_antiprism_oligomer,geo_lib=geo_lib_domain1,info_lib=INFO_LIB,domain_tag='_D1',rgh=vars()['rgh_domain1_set'+str(i+1)],index_offset=[i*2*NUMBER_EL_MOTIF,NUMBER_EL_MOTIF+i*2*NUMBER_EL_MOTIF],height_offset=HEIGHT_OFFSET,level=LEVEL,symmetry_couple=SYMMETRY,cap=CAP)
 
 ##<Adding Gaussian peaks>##
 NUMBER_GAUSSIAN_PEAK, EL_GAUSSIAN_PEAK, FIRST_PEAK_HEIGHT=0,'O',4
@@ -67,7 +67,7 @@ group_number=5##to be set##(number of groups to be considered for model fit)
 groups,group_names,atom_group_info=domain_creator.setup_atom_group_muscovite(domain=[Domain1,Domain2],group_number=group_number)
 for i in range(len(groups)):vars()[group_names[i]]=groups[i]
 #sorbate_atoms
-sorbate_id_list_domain1,sorbate_group_names_domain1=domain_creator.generate_sorbate_ids(Domain1,NUMBER_SORBATE_LAYER,INFO_LIB['sorbate_el'],NUMBER_EL_MOTIF)
+sorbate_id_list_domain1,sorbate_group_names_domain1=domain_creator.generate_sorbate_ids(Domain1,NUMBER_SORBATE_LAYER,INFO_LIB['sorbate_el'],NUMBER_EL_MOTIF,symmetry=SYMMETRY,level=CAP)
 sorbate_atom_group_info=[{'domain':Domain1,'ref_id_list':sorbate_id_list_domain1,'ref_group_names':sorbate_group_names_domain1,'ref_sym_list':[],'domain_tag':''}]
 sorbate_groups,sorbate_group_names=domain_creator.setup_atom_group(gp_info=sorbate_atom_group_info)
 for i in range(len(sorbate_groups)):vars()[sorbate_group_names[i]]=sorbate_groups[i]
@@ -100,7 +100,7 @@ def Sim(data,VARS=VARS):
     raxs_vars=vars(rgh_raxs)
     
     ##<update sorbates>##
-    [domain_creator.update_sorbate(domain=Domain1,anchored_atoms=[],func=domain_creator_sorbate.OS_sqr_antiprism_oligomer,info_lib=INFO_LIB,domain_tag='_D1',rgh=VARS['rgh_domain1_set'+str(i+1)],index_offset=[i*2*NUMBER_EL_MOTIF,NUMBER_EL_MOTIF+i*2*NUMBER_EL_MOTIF],height_offset=HEIGHT_OFFSET,level=LEVEL,symmetry_couple=SYMMETRY) for i in range(NUMBER_SORBATE_LAYER)]#domain1
+    [domain_creator.update_sorbate(domain=Domain1,anchored_atoms=[],func=domain_creator_sorbate.OS_sqr_antiprism_oligomer,info_lib=INFO_LIB,domain_tag='_D1',rgh=VARS['rgh_domain1_set'+str(i+1)],index_offset=[i*2*NUMBER_EL_MOTIF,NUMBER_EL_MOTIF+i*2*NUMBER_EL_MOTIF],height_offset=HEIGHT_OFFSET,level=LEVEL,symmetry_couple=SYMMETRY,cap=CAP) for i in range(NUMBER_SORBATE_LAYER)]#domain1
     
     ##<link groups>##
     [eval(each_command) for each_command in domain_creator.link_atom_group(gp_info=atom_group_info,gp_scheme=GROUP_SCHEME)]
