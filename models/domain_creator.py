@@ -148,7 +148,7 @@ def link_atom_group(gp_info=[],gp_scheme=[]):
             command_list.append(each_name+('.setoc(%s'%ref_group_name2[ref_group_name1.index(each_name)])+'.getoc())')
     return command_list
     
-def generate_sorbate_ids(domain,sorbate_layers,sorbate_el,number_sorbate_atom=1):#number_sorbate_atom=1 if monomer, 2 if dimmer and so on
+def generate_sorbate_ids_original(domain,sorbate_layers,sorbate_el,number_sorbate_atom=1):#number_sorbate_atom=1 if monomer, 2 if dimmer and so on
     id_container=[]
     id_names=[]
     for i in range(sorbate_layers):
@@ -158,19 +158,34 @@ def generate_sorbate_ids(domain,sorbate_layers,sorbate_el,number_sorbate_atom=1)
         id_container.append([id for id in domain.id if sum(map(lambda x:x in id,tag)) and ('O' in id)])
         id_names=id_names+['sorbate_set'+str(i+1)+'_D1',sorbate_el+'_set'+str(i+1)+'_D1','HO_set'+str(i+1)+'_D1']
     return id_container,id_names
+    
+def generate_sorbate_ids(domain,sorbate_layers,sorbate_el,number_sorbate_atom=1,symmetry=True,level=[]):#number_sorbate_atom=1 if monomer, 2 if dimmer and so on
+    id_container=[]
+    id_names=[]
+    sym_scale=2
+    if not symmetry:
+        sym_scale=1
+    for i in range(sorbate_layers):
+        tag=[sorbate_el+str(i*sym_scale*number_sorbate_atom+1+j) for j in range((number_sorbate_atom-len(level)*2)*sym_scale)]+map(lambda x:sorbate_el+str(x)+'rA',level)+map(lambda x:sorbate_el+str(x)+'rB',level)
+        
+        id_container.append([id for id in domain.id if sum(map(lambda x:x in id,tag))])
+        id_container.append([id for id in domain.id if sum(map(lambda x:x in id,tag)) and ('O' not in id)])
+        id_container.append([id for id in domain.id if sum(map(lambda x:x in id,tag)) and ('O' in id)])
+        id_names=id_names+['sorbate_set'+str(i+1)+'_D1',sorbate_el+'_set'+str(i+1)+'_D1','HO_set'+str(i+1)+'_D1']
+    return id_container,id_names
 
-def add_sorbate(domain,anchored_atoms,func,geo_lib,info_lib,domain_tag,rgh,index_offset=[0,1],height_offset=0,level=None,symmetry_couple=True):
-    domain=func([0,0,2.0+height_offset],domain,anchored_atoms,geo_lib,info_lib,domain_tag,index_offset=index_offset[0],level=level)
+def add_sorbate(domain,anchored_atoms,func,geo_lib,info_lib,domain_tag,rgh,index_offset=[0,1],height_offset=0,level=None,symmetry_couple=True,cap=[]):
+    domain=func([0,0,2.0+height_offset],domain,anchored_atoms,geo_lib,info_lib,domain_tag,index_offset=index_offset[0],level=level,cap=cap)
     if symmetry_couple:
-        domain=func([0.5,0.5,2.0+height_offset],domain,anchored_atoms,geo_lib,info_lib,domain_tag,index_offset=index_offset[1],level=level)
+        domain=func([0.5,0.5,2.0+height_offset],domain,anchored_atoms,geo_lib,info_lib,domain_tag,index_offset=index_offset[1],level=level,cap=cap)
     for key in geo_lib.keys():
         rgh.new_var(key,geo_lib[key])
     return domain,rgh
     
-def update_sorbate(domain,anchored_atoms,func,info_lib,domain_tag,rgh,index_offset=[0,1],height_offset=0,level=None,symmetry_couple=True):
-    domain=func([0,0,2.0+height_offset],domain,anchored_atoms,vars(rgh),info_lib,domain_tag,index_offset=index_offset[0],level=level)
+def update_sorbate(domain,anchored_atoms,func,info_lib,domain_tag,rgh,index_offset=[0,1],height_offset=0,level=None,symmetry_couple=True,cap=[]):
+    domain=func([0,0,2.0+height_offset],domain,anchored_atoms,vars(rgh),info_lib,domain_tag,index_offset=index_offset[0],level=level,cap=cap)
     if symmetry_couple:
-        domain=func([0.5,0.5,2.0+height_offset],domain,anchored_atoms,vars(rgh),info_lib,domain_tag,index_offset=index_offset[1],level=level)
+        domain=func([0.5,0.5,2.0+height_offset],domain,anchored_atoms,vars(rgh),info_lib,domain_tag,index_offset=index_offset[1],level=level,cap=cap)
     return domain
     
 def add_gaussian(domain,el='O',number=3,first_peak_height=2,spacing=2,u_init=0.008,occ_init=1,height_offset=0,c=20.1058,domain_tag='_D1'):
