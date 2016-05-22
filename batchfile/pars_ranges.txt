@@ -14,6 +14,9 @@ setTheta	59.2641329	59.2641329	59.2641329
 setRot_x	0	0	360
 setRot_y	0	0	360	
 setRot_z	0	0	360
+setShift_btop	0	-1	1
+setShift_mid	0	-1	1
+setShift_cap	0	-1	1
 setU0_w		0.3	0.1 0.5
 setUbar_w	0.3	0.1	1
 setFirst_layer_height_w	2	2	3
