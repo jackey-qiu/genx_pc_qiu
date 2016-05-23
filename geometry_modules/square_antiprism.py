@@ -559,7 +559,7 @@ class polymer_old_version():
             f.write(s)
         f.close()
         
-#level is a number in the list of [7,10,13,...,n-3,n], cap is a list of [0,2,4,...,m-2,m], and m must <= (n-1)/3.
+#level is a number in the list of [7,10,13,...,n-3,n], cap is a list of [0,2,4,...,m-2,m], and len(cap) must <= (n-1)/3.
 #level is used to specify how long is the polymer, m is used to specify the occupied sites surrounding the central axis of the polymer
 #the total number of center element is n+len(cap) *2
 class polymer():
