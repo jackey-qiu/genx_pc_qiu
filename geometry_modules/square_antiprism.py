@@ -563,9 +563,12 @@ class polymer_old_version():
 #level is used to specify how long is the polymer, m is used to specify the occupied sites surrounding the central axis of the polymer
 #the total number of center element is n+len(cap) *2
 class polymer():
-    def __init__(self,origin=np.array([0.,0.,0.]),r=2.2,theta=59.2641329,center_el='Zr',coor_el='O',domain_tag='_D1',index_offset=0,level=10,cap=[]):
+    def __init__(self,origin=np.array([0.,0.,0.]),r=2.2,theta=59.2641329,center_el='Zr',coor_el='O',domain_tag='_D1',index_offset=0,level=10,cap=[],shift=[0,0,0]):
         self.r=r
         self.offset=index_offset*level
+        self.shift_bottom_top=shift[0]
+        self.shift_middle=shift[1]
+        self.shift_cap=shift[2]
         self.theta=np.deg2rad(theta)
         self.phi=np.deg2rad(45)
         self.center_point={}
@@ -588,9 +591,9 @@ class polymer():
         h=self.r*np.cos(self.theta)
         square_edge_len=2*self.r*np.sin(self.theta)*np.sin(np.deg2rad(45))
         r=h+0.5*square_edge_len
-        level_top_values=[np.array([r*2*i,r,0]) for i in range(len(self.level_top))]
-        level_bottom_values=[np.array([r*2*i,-r,0]) for i in range(len(self.level_bottom))]
-        level_middle_values=[np.array([-r+r*2*i,0,0]) for i in range(len(self.level_middle))]
+        level_top_values=[np.array([r*2*i,r+self.shift_bottom_top,0]) for i in range(len(self.level_top))]
+        level_bottom_values=[np.array([r*2*i,-r-self.shift_bottom_top,0]) for i in range(len(self.level_bottom))]
+        level_middle_values=[np.array([-r+r*2*i+self.shift_middle*(-1)**i,0,0]) for i in range(len(self.level_middle))]
         for i in range(len(self.level_top)):
             self.center_point[self.center_el+str(self.level_top[i]+self.offset)+self.domain_tag]=level_top_values[i]            
         for i in range(len(self.level_middle)):
@@ -599,11 +602,11 @@ class polymer():
             self.center_point[self.center_el+str(self.level_bottom[i]+self.offset)+self.domain_tag]=level_bottom_values[i]
         for i in self.cap_level:
             if i%4==0:
-                self.center_point[self.center_el+str(i+self.offset)+'rA'+self.domain_tag]=np.array([r*i,0,r])
-                self.center_point[self.center_el+str(i+self.offset)+'rB'+self.domain_tag]=np.array([r*i,0,-r])
+                self.center_point[self.center_el+str(i+self.offset)+'rA'+self.domain_tag]=np.array([r*i,0,r+self.shift_cap])
+                self.center_point[self.center_el+str(i+self.offset)+'rB'+self.domain_tag]=np.array([r*i,0,-r-self.shift_cap])
             else:
-                self.center_point[self.center_el+str(i+self.offset)+'rAR'+self.domain_tag]=np.array([r*i,0,r])
-                self.center_point[self.center_el+str(i+self.offset)+'rBR'+self.domain_tag]=np.array([r*i,0,-r])
+                self.center_point[self.center_el+str(i+self.offset)+'rAR'+self.domain_tag]=np.array([r*i,0,r+self.shift_cap])
+                self.center_point[self.center_el+str(i+self.offset)+'rBR'+self.domain_tag]=np.array([r*i,0,-r-self.shift_cap])
         
     def build(self,**arg):
         def _rotate(original_point,rot_axis,rot_point,rot_angle):

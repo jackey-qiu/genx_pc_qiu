@@ -165,8 +165,11 @@ def OS_sqr_antiprism_oligomer(ref_point=[0,0,3.0],domain=None,anchor_atoms=None,
         info_lib['coordinate_el'],domain_tag,geo_lib['rot_x'],geo_lib['rot_y'],geo_lib['rot_z'],info_lib['basis'],info_lib['T'],info_lib['T_INV']
     cent_point=np.dot(T,cent_point*basis)
     oligomer_function=getattr(square_antiprism,info_lib['oligomer_type'])
+    shift=[0,0,0]
+    if 'shift_btop' in geo_lib.keys():
+        shift=[geo_lib['shift_btop'],geo_lib['shift_mid'],geo_lib['shift_cap']]
     if info_lib['oligomer_type']=='polymer':
-        antiprism=oligomer_function(origin=cent_point,r=r_sorbate_O,theta=theta,center_el=sorbate_el,coor_el=coordinate_el,domain_tag=domain_tag,index_offset=index_offset,level=level,cap=cap)
+        antiprism=oligomer_function(origin=cent_point,r=r_sorbate_O,theta=theta,center_el=sorbate_el,coor_el=coordinate_el,domain_tag=domain_tag,index_offset=index_offset,level=level,cap=cap,shift=shift)
     else:
         antiprism=oligomer_function(origin=cent_point,r=r_sorbate_O,theta=theta,center_el=sorbate_el,coor_el=coordinate_el,domain_tag=domain_tag,index_offset=index_offset)
 
