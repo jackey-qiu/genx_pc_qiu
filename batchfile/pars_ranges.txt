@@ -17,6 +17,17 @@ setRot_z	0	0	360
 setShift_btop	0	-1	1
 setShift_mid	0	-1	1
 setShift_cap	0	-1	1
+Gaussian_z_offset1	0	0	0.2
+Gaussian_z_offset2	0	0	0.2
+Gaussian_z_offset3	0	0	0.2
+Gaussian_z_offset4	0	0	0.2
+Gaussian_z_offset5	0	0	0.2
+Gaussian_z_offset6	0	0	0.2
+Gaussian_z_offset7	0	0	0.2
+Gaussian_z_offset8	0	0	0.2
+Gaussian_z_offset9	0	0	0.2
+Gaussian_z_offset10	0	0	0.2
+Gaussian_z_offset11	0	0	0.2
 setU0_w		0.3	0.1 0.5
 setUbar_w	0.3	0.1	1
 setFirst_layer_height_w	2	2	3

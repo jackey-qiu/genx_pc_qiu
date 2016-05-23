@@ -196,6 +196,20 @@ def add_gaussian(domain,el='O',number=3,first_peak_height=2,spacing=2,u_init=0.0
         groups.append(domain.add_atom(id='Gaussian_'+el+'_'+str(i+1)+domain_tag, element=el, x=0.5, y=0.5, z=height_list[i], u = u_init, oc = occ_init, m = 1.0))
     return domain,groups,group_names
     
+def define_gaussian_vars(rgh,domain):
+    ids=[id for id in domain.id if 'Gaussian' in id]
+    for i in range(len(ids)):
+        rgh.new_var('Gaussian_z_offset'+str(i+1),0)
+    return rgh
+    
+def update_gaussian(domain,rgh,groups):
+    items=map(lambda y:getattr(rgh,y)(),map(lambda x:'getGaussian_z_offset'+str(x+1), range(len(groups))))
+    items=np.cumsum(items)
+    for i in range(len(groups)):
+        getattr(groups[i],'setdz')(items[i])
+    return None
+        
+    
 def add_oxygen_pair_muscovite(domain,ids,coors):
     domain.add_atom(id=ids[0],element='O', x=coors[0][0], y=coors[0][1], z=coors[0][2], oc=0.2,u = 1.)
     domain.add_atom(id=ids[1],element='O', x=coors[1][0], y=coors[1][1], z=coors[1][2], oc=0.2,u = 1.)
