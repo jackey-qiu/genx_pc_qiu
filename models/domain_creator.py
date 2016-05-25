@@ -188,7 +188,7 @@ def update_sorbate(domain,anchored_atoms,func,info_lib,domain_tag,rgh,index_offs
         domain=func([0.5,0.5,2.0+height_offset],domain,anchored_atoms,vars(rgh),info_lib,domain_tag,index_offset=index_offset[1],level=level,cap=cap)
     return domain
     
-def add_gaussian(domain,el='O',number=3,first_peak_height=2,spacing=2,u_init=0.008,occ_init=1,height_offset=0,c=20.1058,domain_tag='_D1'):
+def add_gaussian_old(domain,el='O',number=3,first_peak_height=2,spacing=2,u_init=0.008,occ_init=1,height_offset=0,c=20.1058,domain_tag='_D1'):
     height_list=1.6685+height_offset+np.array([spacing/c*i+first_peak_height/c for i in range(number)])
     group_names=['Gaussian_'+el+'_'+str(i+1)+domain_tag for i in range(number)]
     groups=[]
@@ -196,17 +196,63 @@ def add_gaussian(domain,el='O',number=3,first_peak_height=2,spacing=2,u_init=0.0
         groups.append(domain.add_atom(id='Gaussian_'+el+'_'+str(i+1)+domain_tag, element=el, x=0.5, y=0.5, z=height_list[i], u = u_init, oc = occ_init, m = 1.0))
     return domain,groups,group_names
     
-def define_gaussian_vars(rgh,domain):
-    ids=[id for id in domain.id if 'Gaussian' in id]
-    for i in range(len(ids)):
-        rgh.new_var('Gaussian_z_offset'+str(i+1),0)
+def add_gaussian(domain,el='O',number=3,first_peak_height=2,spacing=10,u_init=0.008,occ_init=1,height_offset=0,c=20.1058,domain_tag='_D1',shape='Flat',gaussian_rms=[2]):
+    height_list=[]
+    oc_list=[]
+    if shape=='Flat':
+        height_list=1.6685+height_offset+np.array([spacing/c*i+first_peak_height/c for i in range(number)])
+        oc_list=[occ_init]*number
+    elif shape=='Single_Gaussian':
+        center=1.6685+height_offset+first_peak_height/c+spacing/c/2
+        delta_z=spacing/c/float(number-1)
+        peaks_left=[center]+[center-(i+1)*delta_z for i in range((number-1)/2)]
+        peaks_right=[center+(i+1)*delta_z for i in range((number-1)/2)]
+        height_list=peaks_left+peaks_right
+        height_list.sort()
+        oc_list=occ_init*np.exp(-0.5*gaussian_rms[0]**-2*(np.array(height_list)*c-center*c)**2)
+        #print spacing,number,delta_z
+        #print height_list
+    elif shape=='Double_Gaussian':#to be completed when it is in need
+        pass
+    group_names=['Gaussian_'+el+'_'+str(i+1)+domain_tag for i in range(number)]
+    groups=[]
+    for i in range(number):
+        try:
+            groups.append(domain.add_atom(id='Gaussian_'+el+'_'+str(i+1)+domain_tag, element=el, x=0.5, y=0.5, z=height_list[i], u = u_init, oc = oc_list[i], m = 1.0))
+        except:
+            id='Gaussian_'+el+'_'+str(i+1)+domain_tag
+            index=list(domain.id).index(id)
+            domain.z[index]=height_list[i]
+            domain.oc[index]=oc_list[i]
+            
+    return domain,groups,group_names
+    
+def define_gaussian_vars(rgh,domain,shape='Flat'):
+    if shape=='Flat':
+        ids=[id for id in domain.id if 'Gaussian' in id]
+        for i in range(len(ids)):
+            rgh.new_var('Gaussian_z_offset'+str(i+1),0)
+    elif shape=='Single_Gaussian':
+        rgh.new_var('Gaussian_RMS',2)
+        rgh.new_var('Gaussian_OCC',1)
+        rgh.new_var('Gaussian_U',0.004)
+        rgh.new_var('Gaussian_Height',0)
+        rgh.new_var('Gaussian_Spacing',10)
     return rgh
     
-def update_gaussian(domain,rgh,groups):
-    items=map(lambda y:getattr(rgh,y)(),map(lambda x:'getGaussian_z_offset'+str(x+1), range(len(groups))))
-    items=np.cumsum(items)
-    for i in range(len(groups)):
-        getattr(groups[i],'setdz')(items[i])
+def update_gaussian(domain,rgh,groups,el='O',number=3,height_offset=0,c=20.1058,domain_tag='_D1',shape='Flat'):
+    if shape=='Flat':
+        items=map(lambda y:getattr(rgh,y)(),map(lambda x:'getGaussian_z_offset'+str(x+1), range(len(groups))))
+        items=np.cumsum(items)
+        for i in range(len(groups)):
+            getattr(groups[i],'setdz')(items[i])
+    elif shape=='Single_Gaussian':
+        gaussian_rms=getattr(rgh,'getGaussian_RMS')()
+        gaussian_occ=getattr(rgh,'getGaussian_OCC')()
+        gaussian_u=getattr(rgh,'getGaussian_U')()
+        gaussian_spacing=getattr(rgh,'getGaussian_Spacing')()
+        gaussian_height=getattr(rgh,'getGaussian_Height')()
+        add_gaussian(domain=domain,el=el,number=number,first_peak_height=gaussian_height,spacing=gaussian_spacing,u_init=gaussian_u,occ_init=gaussian_occ,height_offset=height_offset,c=c,domain_tag=domain_tag,shape=shape,gaussian_rms=[gaussian_rms])
     return None
         
     
