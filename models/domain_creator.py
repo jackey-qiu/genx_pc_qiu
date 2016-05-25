@@ -196,9 +196,14 @@ def add_gaussian_old(domain,el='O',number=3,first_peak_height=2,spacing=2,u_init
         groups.append(domain.add_atom(id='Gaussian_'+el+'_'+str(i+1)+domain_tag, element=el, x=0.5, y=0.5, z=height_list[i], u = u_init, oc = occ_init, m = 1.0))
     return domain,groups,group_names
     
-def add_gaussian(domain,el='O',number=3,first_peak_height=2,spacing=10,u_init=0.008,occ_init=1,height_offset=0,c=20.1058,domain_tag='_D1',shape='Flat',gaussian_rms=[2]):
-    height_list=[]
-    oc_list=[]
+def add_gaussian(domain,el='O',number=3,first_peak_height=2,spacing=10,u_init=0.008,occ_init=1,height_offset=0,c=20.1058,domain_tag='_D1',shape='Flat',gaussian_rms=2):
+    '''
+    If shape is Flat then those gaussian peaks are evenly spaced with equivalent occ,
+    If shape is Single_Gaussian then those gaussian peaks are evenly spaced with occs in a Gaussian distribution, determined by the spacing and gaussian_rms
+    Note all those items about length are in unit of A
+    '''
+    #height_list=[]
+    #oc_list=[]
     if shape=='Flat':
         height_list=1.6685+height_offset+np.array([spacing/c*i+first_peak_height/c for i in range(number)])
         oc_list=[occ_init]*number
@@ -209,23 +214,61 @@ def add_gaussian(domain,el='O',number=3,first_peak_height=2,spacing=10,u_init=0.
         peaks_right=[center+(i+1)*delta_z for i in range((number-1)/2)]
         height_list=peaks_left+peaks_right
         height_list.sort()
-        oc_list=occ_init*np.exp(-0.5*gaussian_rms[0]**-2*(np.array(height_list)*c-center*c)**2)
+        oc_list=occ_init*np.exp(-0.5*gaussian_rms**-2*(np.array(height_list)*c-center*c)**2)
         #print spacing,number,delta_z
         #print height_list
-    elif shape=='Double_Gaussian':#to be completed when it is in need
-        pass
-    group_names=['Gaussian_'+el+'_'+str(i+1)+domain_tag for i in range(number)]
-    groups=[]
-    for i in range(number):
-        try:
-            groups.append(domain.add_atom(id='Gaussian_'+el+'_'+str(i+1)+domain_tag, element=el, x=0.5, y=0.5, z=height_list[i], u = u_init, oc = oc_list[i], m = 1.0))
-        except:
-            id='Gaussian_'+el+'_'+str(i+1)+domain_tag
-            index=list(domain.id).index(id)
-            domain.z[index]=height_list[i]
-            domain.oc[index]=oc_list[i]
-            
-    return domain,groups,group_names
+    elif shape=='Double_Gaussian':
+        #peak one
+        center=1.6685+height_offset+first_peak_height[0]/c+spacing[0]/c/2
+        delta_z=spacing[0]/c/float(number[0]-1)
+        peaks_left=[center]+[center-(i+1)*delta_z for i in range((number[0]-1)/2)]
+        peaks_right=[center+(i+1)*delta_z for i in range((number[0]-1)/2)]
+        height_list=peaks_left+peaks_right
+        height_list.sort()
+        oc_list=occ_init[0]*np.exp(-0.5*gaussian_rms[0]**-2*(np.array(height_list)*c-center*c)**2)
+        #peak two
+        center2=1.6685+height_offset+first_peak_height[0]/c+spacing[0]/c+first_peak_height[1]/c+spacing[1]/c/2
+        delta_z2=spacing[1]/c/float(number[1]-1)
+        peaks_left2=[center2]+[center2-(i+1)*delta_z2 for i in range((number[1]-1)/2)]
+        peaks_right2=[center2+(i+1)*delta_z2 for i in range((number[1]-1)/2)]
+        height_list2=peaks_left2+peaks_right2
+        height_list2.sort()
+        oc_list2=occ_init[1]*np.exp(-0.5*gaussian_rms[1]**-2*(np.array(height_list2)*c-center2*c)**2)
+    group_names1=[]
+    groups1=[]
+    group_names2=[]
+    groups2=[]
+    if shape=='Single_Gaussian':
+        group_names1=['Gaussian_set1_'+el+'_'+str(i+1)+domain_tag for i in range(number)]
+        for i in range(number):
+            try:
+                groups1.append(domain.add_atom(id='Gaussian_set1_'+el+'_'+str(i+1)+domain_tag, element=el, x=0.5, y=0.5, z=height_list[i], u = u_init, oc = oc_list[i], m = 1.0))
+            except:
+                id='Gaussian_set1_'+el+'_'+str(i+1)+domain_tag
+                index=list(domain.id).index(id)
+                domain.z[index]=height_list[i]
+                domain.oc[index]=oc_list[i]
+    elif shape=='Double_Gaussian':
+        group_names1=['Gaussian_set1_'+el+'_'+str(i+1)+domain_tag for i in range(number[0])] 
+        group_names2=['Gaussian_set2_'+el+'_'+str(i+1)+domain_tag for i in range(number[1])]         
+        for i in range(number[0]):
+            try:
+                groups1.append(domain.add_atom(id='Gaussian_set1_'+el+'_'+str(i+1)+domain_tag, element=el, x=0.5, y=0.5, z=height_list[i], u = u_init[0], oc = oc_list[i], m = 1.0))
+            except:
+                id='Gaussian_set1_'+el+'_'+str(i+1)+domain_tag
+                index=list(domain.id).index(id)
+                domain.z[index]=height_list[i]
+                domain.oc[index]=oc_list[i]
+        for i in range(number[1]):
+            try:
+                groups2.append(domain.add_atom(id='Gaussian_set2_'+el+'_'+str(i+1)+domain_tag, element=el, x=0.5, y=0.5, z=height_list2[i], u = u_init[1], oc = oc_list2[i], m = 1.0))
+            except:
+                id='Gaussian_set2_'+el+'_'+str(i+1)+domain_tag
+                index=list(domain.id).index(id)
+                domain.z[index]=height_list2[i]
+                domain.oc[index]=oc_list2[i]
+
+    return domain,groups1+groups2,group_names1+group_names2
     
 def define_gaussian_vars(rgh,domain,shape='Flat'):
     if shape=='Flat':
@@ -238,6 +281,17 @@ def define_gaussian_vars(rgh,domain,shape='Flat'):
         rgh.new_var('Gaussian_U',0.004)
         rgh.new_var('Gaussian_Height',0)
         rgh.new_var('Gaussian_Spacing',10)
+    elif shape=='Double_Gaussian':
+        rgh.new_var('Gaussian_RMS',2)
+        rgh.new_var('Gaussian_OCC',1)
+        rgh.new_var('Gaussian_U',0.004)
+        rgh.new_var('Gaussian_Height',0)
+        rgh.new_var('Gaussian_Spacing',10)
+        rgh.new_var('Gaussian_RMS_2',2)
+        rgh.new_var('Gaussian_OCC_2',1)
+        rgh.new_var('Gaussian_U_2',0.004)
+        rgh.new_var('Gaussian_Height_2',0)
+        rgh.new_var('Gaussian_Spacing_2',10)
     return rgh
     
 def update_gaussian(domain,rgh,groups,el='O',number=3,height_offset=0,c=20.1058,domain_tag='_D1',shape='Flat'):
@@ -252,7 +306,15 @@ def update_gaussian(domain,rgh,groups,el='O',number=3,height_offset=0,c=20.1058,
         gaussian_u=getattr(rgh,'getGaussian_U')()
         gaussian_spacing=getattr(rgh,'getGaussian_Spacing')()
         gaussian_height=getattr(rgh,'getGaussian_Height')()
-        add_gaussian(domain=domain,el=el,number=number,first_peak_height=gaussian_height,spacing=gaussian_spacing,u_init=gaussian_u,occ_init=gaussian_occ,height_offset=height_offset,c=c,domain_tag=domain_tag,shape=shape,gaussian_rms=[gaussian_rms])
+        add_gaussian(domain=domain,el=el,number=number,first_peak_height=gaussian_height,spacing=gaussian_spacing,u_init=gaussian_u,occ_init=gaussian_occ,height_offset=height_offset,c=c,domain_tag=domain_tag,shape=shape,gaussian_rms=gaussian_rms)
+    elif shape=='Double_Gaussian':
+        
+        gaussian_rms=[getattr(rgh,'getGaussian_RMS')(),getattr(rgh,'getGaussian_RMS_2')()]
+        gaussian_occ=[getattr(rgh,'getGaussian_OCC')(),getattr(rgh,'getGaussian_OCC_2')()]
+        gaussian_u=[getattr(rgh,'getGaussian_U')(),getattr(rgh,'getGaussian_U_2')()]
+        gaussian_spacing=[getattr(rgh,'getGaussian_Spacing')(),getattr(rgh,'getGaussian_Spacing_2')()]
+        gaussian_height=[getattr(rgh,'getGaussian_Height')(),getattr(rgh,'getGaussian_Height_2')()]
+        add_gaussian(domain=domain,el=el,number=number,first_peak_height=gaussian_height,spacing=gaussian_spacing,u_init=gaussian_u,occ_init=gaussian_occ,height_offset=height_offset,c=c,domain_tag=domain_tag,shape=shape,gaussian_rms=gaussian_rms)
     return None
         
     

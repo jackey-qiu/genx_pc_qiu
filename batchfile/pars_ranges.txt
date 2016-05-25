@@ -33,6 +33,11 @@ Gaussian_OCC	5	1	20
 Gaussian_U		0.5	0.2	1
 Gaussian_Spacing	4	2	15
 Gaussian_Height	3	2	10
+Gaussian_RMS_2	4	2	10
+Gaussian_OCC_2	5	1	20
+Gaussian_U_2		0.5	0.2	1
+Gaussian_Spacing_2	4	2	15
+Gaussian_Height_2	3	2	10
 setU0_w		0.3	0.1 0.5
 setUbar_w	0.3	0.1	1
 setFirst_layer_height_w	2	2	3
