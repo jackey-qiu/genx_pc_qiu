@@ -101,6 +101,8 @@ def generate_plot_files(output_file_path,sample,rgh,data,fit_mode, z_min=0,z_max
     Q_list_Fourier_synthesis=np.pi*2*sample.unit_cell.abs_hkl(np.array(HKL_list_raxr[0]),np.array(HKL_list_raxr[1]),np.array(HKL_list_raxr[2]))    
     
     A_list_calculated_sub,P_list_calculated_sub,Q_list_calculated_sub=sample.find_A_P_muscovite(h=list(HKL_list_raxr[0]),k=list(HKL_list_raxr[1]),l=list(HKL_list_raxr[2]))
+    #A_list_calculated_sub,P_list_calculated_sub,Q_list_calculated_sub=sample.find_A_P_muscovite(h=HKL_list_raxr[0][0],k=HKL_list_raxr[1][0],l=HKL_list_raxr[2][-1])
+
     
     #dump CTR data and profiles
     hkls=['00L']
@@ -117,6 +119,7 @@ def generate_plot_files(output_file_path,sample,rgh,data,fit_mode, z_min=0,z_max
     #e density based on Fourier synthesis
     z_plot,eden_plot,eden_domains=sample.fourier_synthesis(np.array(HKL_list_raxr),np.array(P_list_Fourier_synthesis).transpose(),np.array(A_list_Fourier_synthesis).transpose(),z_min=z_min,z_max=z_max,resonant_el=sample.domain['el'],resolution=1000)
     z_plot_sub,eden_plot_sub,eden_domains_sub=sample.fourier_synthesis(np.array(HKL_list_raxr),np.array(P_list_calculated_sub).transpose(),np.array(A_list_calculated_sub).transpose(),z_min=z_min,z_max=z_max,resonant_el=sample.domain['el'],resolution=1000)
+    #z_plot_sub,eden_plot_sub,eden_domains_sub=sample.fourier_synthesis(np.array([[HKL_list_raxr[0][0]]*100,[HKL_list_raxr[1][0]]*100,np.arange(0,HKL_list_raxr[2][-1],HKL_list_raxr[2][-1]/100.)]),np.array(P_list_calculated_sub).transpose(),np.array(A_list_calculated_sub).transpose(),z_min=z_min,z_max=z_max,resonant_el=sample.domain['el'],resolution=1000)
 
     pickle.dump([z_plot,eden_plot,eden_domains],open(output_file_path+"temp_plot_eden_fourier_synthesis","wb"))
     pickle.dump([z_plot_sub,eden_plot_sub,eden_domains_sub],open(output_file_path+"temp_plot_eden_fourier_synthesis_sub","wb"))    
@@ -356,7 +359,7 @@ def plot_many_experiment_data(data_files=['D:\\Google Drive\\data\\400uM_Sb_hema
 if __name__=="__main__":    
 
     #which plots do you want to create
-    plot_e_model,plot_e_FS,plot_ctr,plot_raxr,plot_AP_Q=1,1,1,1,0
+    plot_e_model,plot_e_FS,plot_ctr,plot_raxr,plot_AP_Q=1,1,0,0,0
 
     #specify file paths (files are dumped files when setting running_mode=False in GenX script)
     e_file="D:\\temp_plot_eden"#e density from model

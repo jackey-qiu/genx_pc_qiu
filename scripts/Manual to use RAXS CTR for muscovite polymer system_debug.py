@@ -53,11 +53,12 @@ for i in range(NUMBER_SORBATE_LAYER):
     Domain1,vars()['rgh_domain1_set'+str(i+1)]=domain_creator.add_sorbate(domain=Domain1,anchored_atoms=[],func=domain_creator_sorbate.OS_sqr_antiprism_oligomer,geo_lib=geo_lib_domain1,info_lib=INFO_LIB,domain_tag='_D1',rgh=vars()['rgh_domain1_set'+str(i+1)],index_offset=[i*2*NUMBER_EL_MOTIF,NUMBER_EL_MOTIF+i*2*NUMBER_EL_MOTIF],height_offset=HEIGHT_OFFSET,level=LEVEL,symmetry_couple=SYMMETRY,cap=CAP)
 
 ##<Adding Gaussian peaks>##
-NUMBER_GAUSSIAN_PEAK, EL_GAUSSIAN_PEAK, FIRST_PEAK_HEIGHT=0,'O',4
+NUMBER_GAUSSIAN_PEAK, EL_GAUSSIAN_PEAK, FIRST_PEAK_HEIGHT=0,'O',5
 GAUSSIAN_OCC_INIT, GAUSSIAN_LAYER_SPACING, GAUSSIAN_U_INIT=1,2,0.1
-Domain1, Gaussian_groups,Gaussian_group_names=domain_creator.add_gaussian(domain=Domain1,el=EL_GAUSSIAN_PEAK,number=NUMBER_GAUSSIAN_PEAK,first_peak_height=FIRST_PEAK_HEIGHT,spacing=GAUSSIAN_LAYER_SPACING,u_init=GAUSSIAN_U_INIT,occ_init=GAUSSIAN_OCC_INIT,height_offset=HEIGHT_OFFSET,c=unitcell.c,domain_tag='_D1')
+GAUSSIAN_SHAPE, GAUSSIAN_RMS='Flat',2
+Domain1, Gaussian_groups,Gaussian_group_names=domain_creator.add_gaussian(domain=Domain1,el=EL_GAUSSIAN_PEAK,number=NUMBER_GAUSSIAN_PEAK,first_peak_height=FIRST_PEAK_HEIGHT,spacing=GAUSSIAN_LAYER_SPACING,u_init=GAUSSIAN_U_INIT,occ_init=GAUSSIAN_OCC_INIT,height_offset=HEIGHT_OFFSET,c=unitcell.c,domain_tag='_D1',shape=GAUSSIAN_SHAPE,gaussian_rms=[GAUSSIAN_RMS])
 for i in range(len(Gaussian_groups)):vars()[Gaussian_group_names[i]]=Gaussian_groups[i]
-rgh_gaussian=domain_creator.define_gaussian_vars(rgh=UserVars(),domain=Domain1)
+rgh_gaussian=domain_creator.define_gaussian_vars(rgh=UserVars(),domain=Domain1,shape=GAUSSIAN_SHAPE)
 
 ##<Adding absorbed water>##to be set## (no adsorbed water at the moment)
 #Domain1,absorbed_water_pair1_D1=domain_creator.add_oxygen_pair_muscovite(domain=Domain1,ids=['O1a_W_D1','O1b_W_D1'],coors=np.array([[0,0,2.2+HEIGHT_OFFSET],[0.5,0.5,2.2+HEIGHT_OFFSET]]))
@@ -104,7 +105,7 @@ def Sim(data,VARS=VARS):
     [domain_creator.update_sorbate(domain=Domain1,anchored_atoms=[],func=domain_creator_sorbate.OS_sqr_antiprism_oligomer,info_lib=INFO_LIB,domain_tag='_D1',rgh=VARS['rgh_domain1_set'+str(i+1)],index_offset=[i*2*NUMBER_EL_MOTIF,NUMBER_EL_MOTIF+i*2*NUMBER_EL_MOTIF],height_offset=HEIGHT_OFFSET,level=LEVEL,symmetry_couple=SYMMETRY,cap=CAP) for i in range(NUMBER_SORBATE_LAYER)]#domain1
     
     ##<update gaussian peaks>##
-    domain_creator.update_gaussian(domain=Domain1,rgh=rgh_gaussian,groups=Gaussian_groups)
+    domain_creator.update_gaussian(domain=Domain1,rgh=rgh_gaussian,groups=Gaussian_groups,el=EL_GAUSSIAN_PEAK,number=NUMBER_GAUSSIAN_PEAK,height_offset=HEIGHT_OFFSET,c=unitcell.c,domain_tag='_D1',shape=GAUSSIAN_SHAPE)
     
     ##<link groups>##
     [eval(each_command) for each_command in domain_creator.link_atom_group(gp_info=atom_group_info,gp_scheme=GROUP_SCHEME)]
