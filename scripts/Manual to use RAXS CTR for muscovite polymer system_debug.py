@@ -27,9 +27,9 @@ GROUP_SCHEME=[[1,0]]#means group Domain1 and Domain2 for inplane and out of plan
 unitcell = model.UnitCell(5.1988, 9.0266, 20.1058, 90, 95.782, 90)
 inst = model.Instrument(wavel = .833, alpha = 2.0)
 bulk, Domain1, Domain2 = model.Slab(T_factor='u'), model.Slab(c = 1.0,T_factor='u'), model.Slab(c = 1.0,T_factor='u')
-domain_creator.add_atom_in_slab(bulk,os.path.join(BATCH_PATH_HEAD,'muscovite_001_bulk.str'),height_offset=HEIGHT_OFFSET)
-domain_creator.add_atom_in_slab(Domain1,os.path.join(BATCH_PATH_HEAD,'muscovite_001_surface_Al.str'),attach='_D1',height_offset=HEIGHT_OFFSET)
-domain_creator.add_atom_in_slab(Domain2,os.path.join(BATCH_PATH_HEAD,'muscovite_001_surface_Si.str'),attach='_D2',height_offset=HEIGHT_OFFSET)
+domain_creator.add_atom_in_slab(bulk,os.path.join(BATCH_PATH_HEAD,'muscovite_001_bulk_u_corrected.str'),height_offset=HEIGHT_OFFSET)
+domain_creator.add_atom_in_slab(Domain1,os.path.join(BATCH_PATH_HEAD,'muscovite_001_surface_Al_u_corrected.str'),attach='_D1',height_offset=HEIGHT_OFFSET)
+domain_creator.add_atom_in_slab(Domain2,os.path.join(BATCH_PATH_HEAD,'muscovite_001_surface_Si_u_corrected.str'),attach='_D2',height_offset=HEIGHT_OFFSET)
 
 ##<coordination system definition>##
 x0_v,y0_v,z0_v=np.array([1.,0.,0.]),np.array([0.,1.,0.]),np.array([0.,0.,1.])
@@ -56,7 +56,7 @@ for i in range(NUMBER_SORBATE_LAYER):
 NUMBER_GAUSSIAN_PEAK, EL_GAUSSIAN_PEAK, FIRST_PEAK_HEIGHT=0,'O',5
 GAUSSIAN_OCC_INIT, GAUSSIAN_LAYER_SPACING, GAUSSIAN_U_INIT=1,2,0.1
 GAUSSIAN_SHAPE, GAUSSIAN_RMS='Flat',2
-Domain1, Gaussian_groups,Gaussian_group_names=domain_creator.add_gaussian(domain=Domain1,el=EL_GAUSSIAN_PEAK,number=NUMBER_GAUSSIAN_PEAK,first_peak_height=FIRST_PEAK_HEIGHT,spacing=GAUSSIAN_LAYER_SPACING,u_init=GAUSSIAN_U_INIT,occ_init=GAUSSIAN_OCC_INIT,height_offset=HEIGHT_OFFSET,c=unitcell.c,domain_tag='_D1',shape=GAUSSIAN_SHAPE,gaussian_rms=[GAUSSIAN_RMS])
+Domain1, Gaussian_groups,Gaussian_group_names=domain_creator.add_gaussian(domain=Domain1,el=EL_GAUSSIAN_PEAK,number=NUMBER_GAUSSIAN_PEAK,first_peak_height=FIRST_PEAK_HEIGHT,spacing=GAUSSIAN_LAYER_SPACING,u_init=GAUSSIAN_U_INIT,occ_init=GAUSSIAN_OCC_INIT,height_offset=HEIGHT_OFFSET,c=unitcell.c,domain_tag='_D1',shape=GAUSSIAN_SHAPE,gaussian_rms=GAUSSIAN_RMS)
 for i in range(len(Gaussian_groups)):vars()[Gaussian_group_names[i]]=Gaussian_groups[i]
 rgh_gaussian=domain_creator.define_gaussian_vars(rgh=UserVars(),domain=Domain1,shape=GAUSSIAN_SHAPE)
 
@@ -87,7 +87,7 @@ if not RUN:
     rgh_instance_name_list=['rgh']+group_names+sorbate_group_names+Gaussian_group_names+['rgh_gaussian']+['rgh_domain1_set'+str(i+1) for i in range(NUMBER_SORBATE_LAYER)]+['rgh_dlw','rgh_dls']
     table_container=make_grid.set_table_input_all(container=table_container,rgh_instance_list=rgh_instance_list,rgh_instance_name_list=rgh_instance_name_list,par_file=os.path.join(BATCH_PATH_HEAD,'pars_ranges.txt'))
     #raxs pars
-    table_container=make_grid.set_table_input_raxs(container=table_container,rgh_group_instance=rgh_raxs,rgh_group_instance_name='rgh_raxs',par_range={'a':[0,2],'b':[0,2],'c':[0,1],'A':[0,2],'P':[0,1]},number_spectra=NUMBER_RAXS_SPECTRA,number_domain=1)
+    table_container=make_grid.set_table_input_raxs(container=table_container,rgh_group_instance=rgh_raxs,rgh_group_instance_name='rgh_raxs',par_range={'a':[0,20],'b':[-5,5],'c':[0,1],'A':[0,2],'P':[0,1]},number_spectra=NUMBER_RAXS_SPECTRA,number_domain=1)
     #build up the tab file
     make_grid.make_table(container=table_container,file_path=OUTPUT_FILE_PATH+'par_table.tab')
 
