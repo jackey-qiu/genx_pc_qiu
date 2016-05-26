@@ -237,9 +237,15 @@ def R1_weighted_2(simulations, data):
     denom = np.sum([np.sum(np.sqrt(np.abs(dataset.y))) for dataset in data\
         if dataset.use])
     #denom=1
-    return [1.0/denom*(np.sqrt(np.abs(dataset.y)) - np.sqrt(np.abs(sim)))/np.abs(dataset.y)\
-        for (dataset, sim) in zip(data,simulations)]
-        
+    return_list=[]
+    for (dataset, sim) in zip(data,simulations):
+        if dataset.x[0]>100:
+            scaler=np.sqrt(sim[20]/dataset.y[20])
+            return_list.append((np.sqrt(np.abs(dataset.y)) - np.sqrt(np.abs(sim))/scaler)/np.sqrt(np.abs(dataset.y)))
+        else:
+            return_list.append(1.0/denom*(np.sqrt(np.abs(dataset.y)) - np.sqrt(np.abs(sim)))/dataset.error)
+    return return_list
+    
 def logR1(simulations, data):
     ''' logarithmic crystallographic R-factor (R1)
     '''
