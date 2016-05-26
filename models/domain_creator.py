@@ -267,6 +267,11 @@ def add_gaussian(domain,el='O',number=3,first_peak_height=2,spacing=10,u_init=0.
                 index=list(domain.id).index(id)
                 domain.z[index]=height_list2[i]
                 domain.oc[index]=oc_list2[i]
+    elif shape=='Flat':
+        group_names1=['Gaussian_'+el+'_'+str(i+1)+domain_tag for i in range(number)]
+        for i in range(number):
+            groups1.append(domain.add_atom(id='Gaussian_'+el+'_'+str(i+1)+domain_tag, element=el, x=0.5, y=0.5, z=height_list[i], u = u_init, oc = occ_init, m = 1.0))
+
 
     return domain,groups1+groups2,group_names1+group_names2
     
