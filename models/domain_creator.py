@@ -204,6 +204,9 @@ def add_gaussian(domain,el='O',number=3,first_peak_height=2,spacing=10,u_init=0.
     '''
     #height_list=[]
     #oc_list=[]
+    if type(el)!=type([]):
+        el=[el]*number
+
     if shape=='Flat':
         height_list=1.6685+height_offset+np.array([spacing/c*i+first_peak_height/c for i in range(number)])
         oc_list=[occ_init]*number
@@ -239,38 +242,38 @@ def add_gaussian(domain,el='O',number=3,first_peak_height=2,spacing=10,u_init=0.
     group_names2=[]
     groups2=[]
     if shape=='Single_Gaussian':
-        group_names1=['Gaussian_set1_'+el+'_'+str(i+1)+domain_tag for i in range(number)]
+        group_names1=['Gaussian_set1_'+el[i]+'_'+str(i+1)+domain_tag for i in range(number)]
         for i in range(number):
             try:
-                groups1.append(domain.add_atom(id='Gaussian_set1_'+el+'_'+str(i+1)+domain_tag, element=el, x=0.5, y=0.5, z=height_list[i], u = u_init, oc = oc_list[i], m = 1.0))
+                groups1.append(domain.add_atom(id='Gaussian_set1_'+el[i]+'_'+str(i+1)+domain_tag, element=el[i], x=0.5, y=0.5, z=height_list[i], u = u_init, oc = oc_list[i], m = 1.0))
             except:
-                id='Gaussian_set1_'+el+'_'+str(i+1)+domain_tag
+                id='Gaussian_set1_'+el[i]+'_'+str(i+1)+domain_tag
                 index=list(domain.id).index(id)
                 domain.z[index]=height_list[i]
                 domain.oc[index]=oc_list[i]
     elif shape=='Double_Gaussian':
-        group_names1=['Gaussian_set1_'+el+'_'+str(i+1)+domain_tag for i in range(number[0])] 
-        group_names2=['Gaussian_set2_'+el+'_'+str(i+1)+domain_tag for i in range(number[1])]         
+        group_names1=['Gaussian_set1_'+el[i]+'_'+str(i+1)+domain_tag for i in range(number[0])] 
+        group_names2=['Gaussian_set2_'+el[i]+'_'+str(i+1)+domain_tag for i in range(number[1])]         
         for i in range(number[0]):
             try:
-                groups1.append(domain.add_atom(id='Gaussian_set1_'+el+'_'+str(i+1)+domain_tag, element=el, x=0.5, y=0.5, z=height_list[i], u = u_init[0], oc = oc_list[i], m = 1.0))
+                groups1.append(domain.add_atom(id='Gaussian_set1_'+el[i]+'_'+str(i+1)+domain_tag, element=el[i], x=0.5, y=0.5, z=height_list[i], u = u_init[0], oc = oc_list[i], m = 1.0))
             except:
-                id='Gaussian_set1_'+el+'_'+str(i+1)+domain_tag
+                id='Gaussian_set1_'+el[i]+'_'+str(i+1)+domain_tag
                 index=list(domain.id).index(id)
                 domain.z[index]=height_list[i]
                 domain.oc[index]=oc_list[i]
         for i in range(number[1]):
             try:
-                groups2.append(domain.add_atom(id='Gaussian_set2_'+el+'_'+str(i+1)+domain_tag, element=el, x=0.5, y=0.5, z=height_list2[i], u = u_init[1], oc = oc_list2[i], m = 1.0))
+                groups2.append(domain.add_atom(id='Gaussian_set2_'+el[i]+'_'+str(i+1)+domain_tag, element=el[i], x=0.5, y=0.5, z=height_list2[i], u = u_init[1], oc = oc_list2[i], m = 1.0))
             except:
-                id='Gaussian_set2_'+el+'_'+str(i+1)+domain_tag
+                id='Gaussian_set2_'+el[i]+'_'+str(i+1)+domain_tag
                 index=list(domain.id).index(id)
                 domain.z[index]=height_list2[i]
                 domain.oc[index]=oc_list2[i]
     elif shape=='Flat':
-        group_names1=['Gaussian_'+el+'_'+str(i+1)+domain_tag for i in range(number)]
+        group_names1=['Gaussian_'+el[i]+'_'+str(i+1)+domain_tag for i in range(number)]
         for i in range(number):
-            groups1.append(domain.add_atom(id='Gaussian_'+el+'_'+str(i+1)+domain_tag, element=el, x=0.5, y=0.5, z=height_list[i], u = u_init, oc = occ_init, m = 1.0))
+            groups1.append(domain.add_atom(id='Gaussian_'+el[i]+'_'+str(i+1)+domain_tag, element=el[i], x=0.5, y=0.5, z=height_list[i], u = u_init, oc = occ_init, m = 1.0))
 
 
     return domain,groups1+groups2,group_names1+group_names2
