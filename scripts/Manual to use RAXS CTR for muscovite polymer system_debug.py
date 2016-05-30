@@ -60,6 +60,14 @@ Domain1, Gaussian_groups,Gaussian_group_names=domain_creator.add_gaussian(domain
 for i in range(len(Gaussian_groups)):vars()[Gaussian_group_names[i]]=Gaussian_groups[i]
 rgh_gaussian=domain_creator.define_gaussian_vars(rgh=UserVars(),domain=Domain1,shape=GAUSSIAN_SHAPE)
 
+##<Freeze Elements>##
+U_RAXS_LIST=[]
+OC_RAXS_LIST=[]
+X_RAXS_LIST=[]
+Y_RAXS_LIST=[]
+Z_RAXS_LIST=[]
+el_freezed=RAXR_EL
+Domain1=domain_creator.add_freezed_els(domain=Domain1,el=el_freezed,u=U_RAXS_LIST,oc=OC_RAXS_LIST,x=X_RAXS_LIST,y=Y_RAXS_LIST,z=Z_RAXS_LIST)
 ##<Adding absorbed water>##to be set## (no adsorbed water at the moment)
 #Domain1,absorbed_water_pair1_D1=domain_creator.add_oxygen_pair_muscovite(domain=Domain1,ids=['O1a_W_D1','O1b_W_D1'],coors=np.array([[0,0,2.2+HEIGHT_OFFSET],[0.5,0.5,2.2+HEIGHT_OFFSET]]))
 

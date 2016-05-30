@@ -278,6 +278,38 @@ def add_gaussian(domain,el='O',number=3,first_peak_height=2,spacing=10,u_init=0.
 
     return domain,groups1+groups2,group_names1+group_names2
     
+def print_gaussian_vars(domain,el=None):
+    el_list=[]
+    x_list=[]
+    y_list=[]
+    z_list=[]
+    oc_list=[]
+    u_list=[]
+    for i in range(len(domain.id)):
+        if 'Gaussian_' in domain.id[i]:
+            if el==None:
+                el_list.append(domain.el[i])
+                x_list.append(domain.x[i]+domain.dx1[i]+domain.dx2[i]+domain.dx3[i]+domain.dx4[i])
+                y_list.append(domain.y[i]+domain.dy1[i]+domain.dy2[i]+domain.dy3[i]+domain.dy4[i])
+                z_list.append(domain.z[i]+domain.dz1[i]+domain.dz2[i]+domain.dz3[i]+domain.dz4[i])
+                u_list.append(domain.u[i])
+                oc_list.append(domain.oc[i])
+            else:
+                if el==domain.el[i]:
+                    el_list.append(domain.el[i])
+                    x_list.append(domain.x[i]+domain.dx1[i]+domain.dx2[i]+domain.dx3[i]+domain.dx4[i])
+                    y_list.append(domain.y[i]+domain.dy1[i]+domain.dy2[i]+domain.dy3[i]+domain.dy4[i])
+                    z_list.append(domain.z[i]+domain.dz1[i]+domain.dz2[i]+domain.dz3[i]+domain.dz4[i])
+                    u_list.append(domain.u[i])
+                    oc_list.append(domain.oc[i])
+    print 'U_RAXS_LIST=',list(np.around(u_list,decimals=3))
+    print 'OC_RAXS_LIST=',list(np.around(oc_list,decimals=3))
+    print 'X_RAXS_LIST=',list(np.around(x_list,decimals=3))
+    print 'Y_RAXS_LIST=',list(np.around(y_list,decimals=3))
+    print 'Z_RAXS_LIST=',list(np.around(z_list,decimals=3))
+    print 'el_freezed=',el_list
+    return None
+
 def define_gaussian_vars(rgh,domain,shape='Flat'):
     if shape=='Flat':
         ids=[id for id in domain.id if 'Gaussian' in id]
@@ -302,12 +334,14 @@ def define_gaussian_vars(rgh,domain,shape='Flat'):
         rgh.new_var('Gaussian_Spacing_2',10)
     return rgh
     
-def update_gaussian(domain,rgh,groups,el='O',number=3,height_offset=0,c=20.1058,domain_tag='_D1',shape='Flat'):
+def update_gaussian(domain,rgh,groups,el='O',number=3,height_offset=0,c=20.1058,domain_tag='_D1',shape='Flat',print_items=False):
     if shape=='Flat':
         items=map(lambda y:getattr(rgh,y)(),map(lambda x:'getGaussian_z_offset'+str(x+1), range(len(groups))))
         items=np.cumsum(items)
         for i in range(len(groups)):
             getattr(groups[i],'setdz')(items[i])
+        if print_items:
+            print items
     elif shape=='Single_Gaussian':
         gaussian_rms=getattr(rgh,'getGaussian_RMS')()
         gaussian_occ=getattr(rgh,'getGaussian_OCC')()
@@ -325,6 +359,16 @@ def update_gaussian(domain,rgh,groups,el='O',number=3,height_offset=0,c=20.1058,
         add_gaussian(domain=domain,el=el,number=number,first_peak_height=gaussian_height,spacing=gaussian_spacing,u_init=gaussian_u,occ_init=gaussian_occ,height_offset=height_offset,c=c,domain_tag=domain_tag,shape=shape,gaussian_rms=gaussian_rms)
     return None
         
+def add_freezed_els(domain,el,u,oc,x,y,z,domain_tag='_D1'):
+    if type(el)!=type([]):
+        el=[el]*len(z)
+    if x==[]:
+        x=[0.5]*len(z)
+    if y==[]:
+        y=[0.5]*len(z)
+    for i in range(len(z)):  
+        domain.add_atom(id='Freezed_el_'+str(i+1)+'_'+el[i]+domain_tag, element=el[i], x=x[i], y=[i], z=z[i], u = u[i], oc = oc[i], m = 1.0)
+    return domain
     
 def add_oxygen_pair_muscovite(domain,ids,coors):
     domain.add_atom(id=ids[0],element='O', x=coors[0][0], y=coors[0][1], z=coors[0][2], oc=0.2,u = 1.)
