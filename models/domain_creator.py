@@ -337,10 +337,11 @@ def define_gaussian_vars(rgh,domain,shape='Flat'):
         rgh.new_var('Gaussian_Spacing_2',10)
     return rgh
     
-def update_gaussian(domain,rgh,groups,el='O',number=3,height_offset=0,c=20.1058,domain_tag='_D1',shape='Flat',print_items=False):
+def update_gaussian(domain,rgh,groups,el='O',number=3,height_offset=0,c=20.1058,domain_tag='_D1',shape='Flat',print_items=False,use_cumsum=True):
     if shape=='Flat':
         items=map(lambda y:getattr(rgh,y)(),map(lambda x:'getGaussian_z_offset'+str(x+1), range(len(groups))))
-        items=np.cumsum(items)
+        if use_cumsum:
+            items=np.cumsum(items)
         for i in range(len(groups)):
             getattr(groups[i],'setdz')(items[i])
         if print_items:
