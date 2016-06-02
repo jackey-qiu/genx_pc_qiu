@@ -43,14 +43,15 @@ T_INV=inv(T)
 
 ##<Adding sorbates>##to be set##
 #domain1
-LEVEL,CAP,SYMMETRY=13,[],False
-NUMBER_SORBATE_LAYER,NUMBER_EL_MOTIF=4,1+len(CAP)*2#1 if monomer, 2 if dimmer and so on
-INFO_LIB={'basis':BASIS,'sorbate_el':'Zr','coordinate_el':'O','T':T,'T_INV':T_INV,'oligomer_type':'monomer'}
+LEVEL,CAP,EXTRA_SORBATE=13,[],[]
+SYMMETRY,SWITCH_EXTRA_SORBATE=False,[True]*10
+NUMBER_SORBATE_LAYER,NUMBER_EL_MOTIF=1,LEVEL+len(CAP)*2+len(EXTRA_SORBATE)#1 if monomer, 2 if dimmer and so on
+INFO_LIB={'basis':BASIS,'sorbate_el':'Zr','coordinate_el':'O','T':T,'T_INV':T_INV,'oligomer_type':'polymer_new'}
 
 for i in range(NUMBER_SORBATE_LAYER):
     vars()['rgh_domain1_set'+str(i+1)]=UserVars() 
     geo_lib_domain1={'cent_point_offset_x':0,'cent_point_offset_y':0,'cent_point_offset_z':0,'r':2.2,'theta':59.2641329,'rot_x':0,'rot_y':0,'rot_z':0,'shift_btop':0,'shift_mid':0,'shift_cap':0}
-    Domain1,vars()['rgh_domain1_set'+str(i+1)]=domain_creator.add_sorbate(domain=Domain1,anchored_atoms=[],func=domain_creator_sorbate.OS_sqr_antiprism_oligomer,geo_lib=geo_lib_domain1,info_lib=INFO_LIB,domain_tag='_D1',rgh=vars()['rgh_domain1_set'+str(i+1)],index_offset=[i*2*NUMBER_EL_MOTIF,NUMBER_EL_MOTIF+i*2*NUMBER_EL_MOTIF],height_offset=HEIGHT_OFFSET,level=LEVEL,symmetry_couple=SYMMETRY,cap=CAP)
+    Domain1,vars()['rgh_domain1_set'+str(i+1)]=domain_creator.add_sorbate(domain=Domain1,anchored_atoms=[],func=domain_creator_sorbate.OS_sqr_antiprism_oligomer,geo_lib=geo_lib_domain1,info_lib=INFO_LIB,domain_tag='_D1',rgh=vars()['rgh_domain1_set'+str(i+1)],index_offset=[i*2*NUMBER_EL_MOTIF,NUMBER_EL_MOTIF+i*2*NUMBER_EL_MOTIF],height_offset=HEIGHT_OFFSET,level=LEVEL,symmetry_couple=SYMMETRY,cap=CAP,attach_sorbate_number=EXTRA_SORBATE,first_or_second=SWITCH_EXTRA_SORBATE)
 
 ##<Adding Gaussian peaks>##
 NUMBER_GAUSSIAN_PEAK, EL_GAUSSIAN_PEAK, FIRST_PEAK_HEIGHT=0,'O',5
@@ -110,7 +111,7 @@ def Sim(data,VARS=VARS):
     raxs_vars=vars(rgh_raxs)
     
     ##<update sorbates>##
-    [domain_creator.update_sorbate(domain=Domain1,anchored_atoms=[],func=domain_creator_sorbate.OS_sqr_antiprism_oligomer,info_lib=INFO_LIB,domain_tag='_D1',rgh=VARS['rgh_domain1_set'+str(i+1)],index_offset=[i*2*NUMBER_EL_MOTIF,NUMBER_EL_MOTIF+i*2*NUMBER_EL_MOTIF],height_offset=HEIGHT_OFFSET,level=LEVEL,symmetry_couple=SYMMETRY,cap=CAP) for i in range(NUMBER_SORBATE_LAYER)]#domain1
+    [domain_creator.update_sorbate(domain=Domain1,anchored_atoms=[],func=domain_creator_sorbate.OS_sqr_antiprism_oligomer,info_lib=INFO_LIB,domain_tag='_D1',rgh=VARS['rgh_domain1_set'+str(i+1)],index_offset=[i*2*NUMBER_EL_MOTIF,NUMBER_EL_MOTIF+i*2*NUMBER_EL_MOTIF],height_offset=HEIGHT_OFFSET,level=LEVEL,symmetry_couple=SYMMETRY,cap=CAP,attach_sorbate_number=EXTRA_SORBATE,first_or_second=SWITCH_EXTRA_SORBATE) for i in range(NUMBER_SORBATE_LAYER)]#domain1
     
     ##<update gaussian peaks>##
     domain_creator.update_gaussian(domain=Domain1,rgh=rgh_gaussian,groups=Gaussian_groups,el=EL_GAUSSIAN_PEAK,number=NUMBER_GAUSSIAN_PEAK,height_offset=HEIGHT_OFFSET,c=unitcell.c,domain_tag='_D1',shape=GAUSSIAN_SHAPE,print_items=False,use_cumsum=True)

@@ -272,7 +272,7 @@ def plotting_many_modelB(save_file='D://pic.png',head='C:\\Users\\jackey\\Google
     #fig=pyplot.figure(figsize=(10,9))
     #settings for publication
     #fig=pyplot.figure(figsize=(10,7))
-    fig=pyplot.figure(figsize=(8.5,7))
+    fig=pyplot.figure(figsize=(8,4))
     object_sets=[pickle.load(open(head+file)) for file in object_files]#each_item=[00L,02L,10L,11L,20L,22L,30L,2-1L,21L]
     object=[]
     for i in range(len(object_sets[0])):
@@ -359,7 +359,7 @@ def plot_many_experiment_data(data_files=['D:\\Google Drive\\data\\400uM_Sb_hema
 if __name__=="__main__":    
 
     #which plots do you want to create
-    plot_e_model,plot_e_FS,plot_ctr,plot_raxr,plot_AP_Q=1,1,1,1,0
+    plot_e_model,plot_e_FS,plot_ctr,plot_raxr,plot_AP_Q=1,1,1,1,1
 
     #specify file paths (files are dumped files when setting running_mode=False in GenX script)
     e_file="D:\\temp_plot_eden"#e density from model
@@ -435,6 +435,7 @@ if __name__=="__main__":
         pyplot.ylabel("P/Q(2pi)",axes=ax2)
         pyplot.xlabel("Q",axes=ax2)
         pyplot.legend()
+        fig1.savefig('D://temp_APQ_profile.png',dpi=300)
     pyplot.show()
     
     
