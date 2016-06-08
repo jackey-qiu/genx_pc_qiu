@@ -276,8 +276,13 @@ def add_gaussian(domain,el='O',number=3,first_peak_height=2,spacing=10,u_init=0.
     elif shape=='Flat':
         group_names1=['Gaussian_'+el[i]+'_'+str(i+1)+domain_tag for i in range(number)]
         for i in range(number):
-            groups1.append(domain.add_atom(id='Gaussian_'+el[i]+'_'+str(i+1)+domain_tag, element=el[i], x=0.5, y=0.5, z=height_list[i], u = u_init, oc = occ_init, m = 1.0))
-
+            try:
+                groups1.append(domain.add_atom(id='Gaussian_'+el[i]+'_'+str(i+1)+domain_tag, element=el[i], x=0.5, y=0.5, z=height_list[i], u = u_init, oc = occ_init, m = 1.0))
+            except:
+                id='Gaussian_'+el[i]+'_'+str(i+1)+domain_tag
+                index=list(domain.id).index(id)
+                domain.z[index]=height_list[i]
+                #domain.oc[index]=oc_list2[i]
 
     return domain,groups1+groups2,group_names1+group_names2
     
@@ -318,6 +323,8 @@ def define_gaussian_vars(rgh,domain,shape='Flat'):
         ids=[id for id in domain.id if 'Gaussian' in id]
         for i in range(len(ids)):
             rgh.new_var('Gaussian_z_offset'+str(i+1),0)
+            rgh.new_var('Gaussian_Spacing',2)
+            rgh.new_var('Gaussian_Height',1)
     elif shape=='Single_Gaussian':
         rgh.new_var('Gaussian_RMS',2)
         rgh.new_var('Gaussian_OCC',1)
@@ -340,6 +347,9 @@ def define_gaussian_vars(rgh,domain,shape='Flat'):
 def update_gaussian(domain,rgh,groups,el='O',number=3,height_offset=0,c=20.1058,domain_tag='_D1',shape='Flat',print_items=False,use_cumsum=True):
     if shape=='Flat':
         items=map(lambda y:getattr(rgh,y)(),map(lambda x:'getGaussian_z_offset'+str(x+1), range(len(groups))))
+        gaussian_spacing=getattr(rgh,'getGaussian_Spacing')()
+        gaussian_height=getattr(rgh,'getGaussian_Height')()
+        add_gaussian(domain=domain,el=el,number=number,first_peak_height=gaussian_height,spacing=gaussian_spacing,height_offset=height_offset,c=c,domain_tag=domain_tag,shape=shape)
         if use_cumsum:
             items=np.cumsum(items)
         for i in range(len(groups)):
