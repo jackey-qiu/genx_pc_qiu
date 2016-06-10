@@ -1104,6 +1104,7 @@ def _post_sim_plot_event(parent, model, desc = ''):
         # Process the event!
         parent.GetEventHandler().ProcessEvent(evt)
         
+        
 
 #==============================================================================
 ## Functions for showing error dialogs

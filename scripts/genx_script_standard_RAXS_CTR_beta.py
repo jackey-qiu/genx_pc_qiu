@@ -4,6 +4,7 @@ from models.utils import UserVars
 from datetime import datetime
 import numpy as np
 import sys,pickle,__main__
+import batchfile.locate_path as batch_path
 import models.domain_creator as domain_creator
 import supportive_functions.make_parameter_table_GenX_beta4 as make_grid
 import supportive_functions.formate_xyz_to_vtk as xyz
@@ -576,7 +577,7 @@ for scale in scales:
 #it is a super surface structure by stacking the surface slab on bulk slab, the repeat vector was counted 
 
 #only two possible path(one for runing in pacman, the other in local laptop)
-batch_path_head='\\'.join(__main__.__file__.rsplit('\\')[:-1])+'\\batchfile\\'
+batch_path_head='//'.join(batch_path.module_path_locator().rsplit('/'))+'//'
 try:
     domain_creator.add_atom_in_slab(bulk,batch_path_head+'bulk.str')
 except:

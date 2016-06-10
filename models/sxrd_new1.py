@@ -1396,7 +1396,8 @@ class Sample:
             d_w=layered_water[2]
             water_density=layered_water[-1]
             for i in range(N_layered_water):
-                z_layered_water.append(layered_water[3]+54.3+height_offset+i*layered_water[2])#first layer is offseted by 1 accordingly
+                #z_layered_water.append(layered_water[3]+54.3+height_offset+i*layered_water[2])#first layer is offseted by 1 accordingly
+                z_layered_water.append(layered_water[3]+53.6523273+height_offset+i*layered_water[2])
                 sigma_layered_water.append((layered_water[0]**2+i*layered_water[1]**2)**0.5)
             #consider the e density of layered sorbate        
             layered_sorbate,z_layered_sorbate,sigma_layered_sorbate,sorbate_damping_factors,d_s,sorbate_density=None,[],[],[],None,None
@@ -1406,7 +1407,7 @@ class Sample:
             sorbate_density=layered_sorbate[-2]
             damping_factor=layered_sorbate[-1]
             for i in range(N_layered_water):#assume the number of sorbate layer equal to that for water layers
-                z_layered_sorbate.append(layered_sorbate[3]+54.3+height_offset+i*layered_sorbate[2])#first layer is offseted by 1 accordingly
+                z_layered_sorbate.append(layered_sorbate[3]+53.6523273+height_offset+i*layered_sorbate[2])#first layer is offseted by 1 accordingly
                 sigma_layered_sorbate.append((layered_sorbate[0]**2+i*layered_sorbate[1]**2)**0.5)
                 sorbate_damping_factors.append(damping_factor*i)#first layer no damping, second will be damped with a factor of exp(-damping_factor), third will exp(-2*damping_factor) and so on.
             #print u,f,z
@@ -1418,7 +1419,7 @@ class Sample:
                 eden.append(np.sum(wt*oc*f/Auc*(2*np.pi*u**2)**-0.5*np.exp(-0.5/u**2*(z_each-z)**2)))
                 eden_raxs.append(np.sum(wt*oc_raxs*f_raxs/Auc*(2*np.pi*u_raxs**2)**-0.5*np.exp(-0.5/u_raxs**2*(z_each-z_raxs)**2)))
                 bulk_water=0
-                if z_each>(54.3+height_offset):
+                if z_each>(53.6523273+height_offset):
                     bulk_water=1
                 eden[-1]=eden[-1]+np.sum(10*wt*water_density*(2*np.pi*np.array(sigma_layered_water)**2)**-0.5*np.exp(-0.5/np.array(sigma_layered_water)**2*(z_each-np.array(z_layered_water))**2))+(.33-0.16233394)*wt*bulk_water
                 #eden[-1]=eden[-1]+np.sum(10*wt*water_density*(np.exp(-0.5/np.array(sigma_layered_water)**2*(z_each-np.array(z_layered_water))**2)))
