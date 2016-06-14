@@ -174,18 +174,18 @@ def generate_sorbate_ids(domain,sorbate_layers,sorbate_el,number_sorbate_atom=1,
         id_names=id_names+['sorbate_set'+str(i+1)+'_D1',sorbate_el+'_set'+str(i+1)+'_D1','HO_set'+str(i+1)+'_D1']
     return id_container,id_names
 
-def add_sorbate(domain,anchored_atoms,func,geo_lib,info_lib,domain_tag,rgh,index_offset=[0,1],height_offset=0,level=None,symmetry_couple=True,cap=[],attach_sorbate_number=[],first_or_second=[]):
-    domain=func([0,0,2.0+height_offset],domain,anchored_atoms,geo_lib,info_lib,domain_tag,index_offset=index_offset[0],level=level,cap=cap,attach_sorbate_number=attach_sorbate_number,first_or_second=first_or_second)
+def add_sorbate(domain,anchored_atoms,func,geo_lib,info_lib,domain_tag,rgh,index_offset=[0,1],height_offset=0,level=None,symmetry_couple=True,cap=[],attach_sorbate_number=[],first_or_second=[],mirror=[]):
+    domain=func([0,0,2.0+height_offset],domain,anchored_atoms,geo_lib,info_lib,domain_tag,index_offset=index_offset[0],level=level,cap=cap,attach_sorbate_number=attach_sorbate_number,first_or_second=first_or_second,mirror=mirror)
     if symmetry_couple:
-        domain=func([0.5,0.5,2.0+height_offset],domain,anchored_atoms,geo_lib,info_lib,domain_tag,index_offset=index_offset[1],level=level,cap=cap,attach_sorbate_number=attach_sorbate_number,first_or_second=first_or_second)
+        domain=func([0.5,0.5,2.0+height_offset],domain,anchored_atoms,geo_lib,info_lib,domain_tag,index_offset=index_offset[1],level=level,cap=cap,attach_sorbate_number=attach_sorbate_number,first_or_second=first_or_second,mirror=mirror)
     for key in geo_lib.keys():
         rgh.new_var(key,geo_lib[key])
     return domain,rgh
     
-def update_sorbate(domain,anchored_atoms,func,info_lib,domain_tag,rgh,index_offset=[0,1],height_offset=0,level=None,symmetry_couple=True,cap=[],attach_sorbate_number=[],first_or_second=[]):
-    domain=func([0,0,2.0+height_offset],domain,anchored_atoms,vars(rgh),info_lib,domain_tag,index_offset=index_offset[0],level=level,cap=cap,attach_sorbate_number=attach_sorbate_number,first_or_second=first_or_second)
+def update_sorbate(domain,anchored_atoms,func,info_lib,domain_tag,rgh,index_offset=[0,1],height_offset=0,level=None,symmetry_couple=True,cap=[],attach_sorbate_number=[],first_or_second=[],mirror=[]):
+    domain=func([0,0,2.0+height_offset],domain,anchored_atoms,vars(rgh),info_lib,domain_tag,index_offset=index_offset[0],level=level,cap=cap,attach_sorbate_number=attach_sorbate_number,first_or_second=first_or_second,mirror=mirror)
     if symmetry_couple:
-        domain=func([0.5,0.5,2.0+height_offset],domain,anchored_atoms,vars(rgh),info_lib,domain_tag,index_offset=index_offset[1],level=level,cap=cap,attach_sorbate_number=attach_sorbate_number,first_or_second=first_or_second)
+        domain=func([0.5,0.5,2.0+height_offset],domain,anchored_atoms,vars(rgh),info_lib,domain_tag,index_offset=index_offset[1],level=level,cap=cap,attach_sorbate_number=attach_sorbate_number,first_or_second=first_or_second,mirror=mirror)
     return domain
     
 def add_gaussian_old(domain,el='O',number=3,first_peak_height=2,spacing=2,u_init=0.008,occ_init=1,height_offset=0,c=20.1058,domain_tag='_D1'):

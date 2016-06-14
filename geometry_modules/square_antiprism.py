@@ -60,7 +60,7 @@ class monomer():
             L=u**2+v**2+w**2
             x_after_rot=((a*(v**2+w**2)-u*(b*v+c*w-u*x-v*y-w*z))*(1-np.cos(theta))+L*x*np.cos(theta)+L**0.5*(-c*v+b*w-w*y+v*z)*np.sin(theta))/L
             y_after_rot=((b*(u**2+w**2)-v*(a*u+c*w-u*x-v*y-w*z))*(1-np.cos(theta))+L*y*np.cos(theta)+L**0.5*(c*u-a*w+w*x-u*z)*np.sin(theta))/L
-            z_after_rot=((c*(v**2+w**2)-w*(a*u+b*v-u*x-v*y-w*z))*(1-np.cos(theta))+L*z*np.cos(theta)+L**0.5*(-b*u+a*v-v*x+u*y)*np.sin(theta))/L
+            z_after_rot=((c*(v**2+u**2)-w*(a*u+b*v-u*x-v*y-w*z))*(1-np.cos(theta))+L*z*np.cos(theta)+L**0.5*(-b*u+a*v-v*x+u*y)*np.sin(theta))/L
             return np.array([x_after_rot,y_after_rot,z_after_rot])
         self.center_point[self.center_el+str(1+self.offset)+self.domain_tag]=_rotate(self.center_point[self.center_el+str(1+self.offset)+self.domain_tag],rot_axis,rot_point,rot_angle)+translate_mag
         for key in self.coordinative_members.keys():
@@ -113,7 +113,7 @@ class tetramer():
             L=u**2+v**2+w**2
             x_after_rot=((a*(v**2+w**2)-u*(b*v+c*w-u*x-v*y-w*z))*(1-np.cos(theta))+L*x*np.cos(theta)+L**0.5*(-c*v+b*w-w*y+v*z)*np.sin(theta))/L
             y_after_rot=((b*(u**2+w**2)-v*(a*u+c*w-u*x-v*y-w*z))*(1-np.cos(theta))+L*y*np.cos(theta)+L**0.5*(c*u-a*w+w*x-u*z)*np.sin(theta))/L
-            z_after_rot=((c*(v**2+w**2)-w*(a*u+b*v-u*x-v*y-w*z))*(1-np.cos(theta))+L*z*np.cos(theta)+L**0.5*(-b*u+a*v-v*x+u*y)*np.sin(theta))/L
+            z_after_rot=((c*(v**2+u**2)-w*(a*u+b*v-u*x-v*y-w*z))*(1-np.cos(theta))+L*z*np.cos(theta)+L**0.5*(-b*u+a*v-v*x+u*y)*np.sin(theta))/L
             return np.array([x_after_rot,y_after_rot,z_after_rot])
         if arg.keys()!=[]:
             r,theta,phi=arg['r'],np.deg2rad(arg['theta']),np.deg2rad(arg['phi'])
@@ -201,7 +201,7 @@ class hexamer():
             L=u**2+v**2+w**2
             x_after_rot=((a*(v**2+w**2)-u*(b*v+c*w-u*x-v*y-w*z))*(1-np.cos(theta))+L*x*np.cos(theta)+L**0.5*(-c*v+b*w-w*y+v*z)*np.sin(theta))/L
             y_after_rot=((b*(u**2+w**2)-v*(a*u+c*w-u*x-v*y-w*z))*(1-np.cos(theta))+L*y*np.cos(theta)+L**0.5*(c*u-a*w+w*x-u*z)*np.sin(theta))/L
-            z_after_rot=((c*(v**2+w**2)-w*(a*u+b*v-u*x-v*y-w*z))*(1-np.cos(theta))+L*z*np.cos(theta)+L**0.5*(-b*u+a*v-v*x+u*y)*np.sin(theta))/L
+            z_after_rot=((c*(v**2+u**2)-w*(a*u+b*v-u*x-v*y-w*z))*(1-np.cos(theta))+L*z*np.cos(theta)+L**0.5*(-b*u+a*v-v*x+u*y)*np.sin(theta))/L
             return np.array([x_after_rot,y_after_rot,z_after_rot])
         if arg.keys()!=[]:
             r,theta,phi=arg['r'],np.deg2rad(arg['theta']),np.deg2rad(arg['phi'])
@@ -296,7 +296,7 @@ class heptamer():
             L=u**2+v**2+w**2
             x_after_rot=((a*(v**2+w**2)-u*(b*v+c*w-u*x-v*y-w*z))*(1-np.cos(theta))+L*x*np.cos(theta)+L**0.5*(-c*v+b*w-w*y+v*z)*np.sin(theta))/L
             y_after_rot=((b*(u**2+w**2)-v*(a*u+c*w-u*x-v*y-w*z))*(1-np.cos(theta))+L*y*np.cos(theta)+L**0.5*(c*u-a*w+w*x-u*z)*np.sin(theta))/L
-            z_after_rot=((c*(v**2+w**2)-w*(a*u+b*v-u*x-v*y-w*z))*(1-np.cos(theta))+L*z*np.cos(theta)+L**0.5*(-b*u+a*v-v*x+u*y)*np.sin(theta))/L
+            z_after_rot=((c*(v**2+u**2)-w*(a*u+b*v-u*x-v*y-w*z))*(1-np.cos(theta))+L*z*np.cos(theta)+L**0.5*(-b*u+a*v-v*x+u*y)*np.sin(theta))/L
             return np.array([x_after_rot,y_after_rot,z_after_rot])
         if arg.keys()!=[]:
             r,theta,phi=arg['r'],np.deg2rad(arg['theta']),np.deg2rad(arg['phi'])
@@ -396,7 +396,7 @@ class decamer():
             L=u**2+v**2+w**2
             x_after_rot=((a*(v**2+w**2)-u*(b*v+c*w-u*x-v*y-w*z))*(1-np.cos(theta))+L*x*np.cos(theta)+L**0.5*(-c*v+b*w-w*y+v*z)*np.sin(theta))/L
             y_after_rot=((b*(u**2+w**2)-v*(a*u+c*w-u*x-v*y-w*z))*(1-np.cos(theta))+L*y*np.cos(theta)+L**0.5*(c*u-a*w+w*x-u*z)*np.sin(theta))/L
-            z_after_rot=((c*(v**2+w**2)-w*(a*u+b*v-u*x-v*y-w*z))*(1-np.cos(theta))+L*z*np.cos(theta)+L**0.5*(-b*u+a*v-v*x+u*y)*np.sin(theta))/L
+            z_after_rot=((c*(v**2+u**2)-w*(a*u+b*v-u*x-v*y-w*z))*(1-np.cos(theta))+L*z*np.cos(theta)+L**0.5*(-b*u+a*v-v*x+u*y)*np.sin(theta))/L
             return np.array([x_after_rot,y_after_rot,z_after_rot])
         if arg.keys()!=[]:
             r,theta,phi=arg['r'],np.deg2rad(arg['theta']),np.deg2rad(arg['phi'])
@@ -499,7 +499,7 @@ class polymer_old_version():
             L=u**2+v**2+w**2
             x_after_rot=((a*(v**2+w**2)-u*(b*v+c*w-u*x-v*y-w*z))*(1-np.cos(theta))+L*x*np.cos(theta)+L**0.5*(-c*v+b*w-w*y+v*z)*np.sin(theta))/L
             y_after_rot=((b*(u**2+w**2)-v*(a*u+c*w-u*x-v*y-w*z))*(1-np.cos(theta))+L*y*np.cos(theta)+L**0.5*(c*u-a*w+w*x-u*z)*np.sin(theta))/L
-            z_after_rot=((c*(v**2+w**2)-w*(a*u+b*v-u*x-v*y-w*z))*(1-np.cos(theta))+L*z*np.cos(theta)+L**0.5*(-b*u+a*v-v*x+u*y)*np.sin(theta))/L
+            z_after_rot=((c*(v**2+u**2)-w*(a*u+b*v-u*x-v*y-w*z))*(1-np.cos(theta))+L*z*np.cos(theta)+L**0.5*(-b*u+a*v-v*x+u*y)*np.sin(theta))/L
             return np.array([x_after_rot,y_after_rot,z_after_rot])
         if arg.keys()!=[]:
             r,theta,phi=arg['r'],np.deg2rad(arg['theta']),np.deg2rad(arg['phi'])
@@ -618,7 +618,7 @@ class polymer():
             L=u**2+v**2+w**2
             x_after_rot=((a*(v**2+w**2)-u*(b*v+c*w-u*x-v*y-w*z))*(1-np.cos(theta))+L*x*np.cos(theta)+L**0.5*(-c*v+b*w-w*y+v*z)*np.sin(theta))/L
             y_after_rot=((b*(u**2+w**2)-v*(a*u+c*w-u*x-v*y-w*z))*(1-np.cos(theta))+L*y*np.cos(theta)+L**0.5*(c*u-a*w+w*x-u*z)*np.sin(theta))/L
-            z_after_rot=((c*(v**2+w**2)-w*(a*u+b*v-u*x-v*y-w*z))*(1-np.cos(theta))+L*z*np.cos(theta)+L**0.5*(-b*u+a*v-v*x+u*y)*np.sin(theta))/L
+            z_after_rot=((c*(v**2+u**2)-w*(a*u+b*v-u*x-v*y-w*z))*(1-np.cos(theta))+L*z*np.cos(theta)+L**0.5*(-b*u+a*v-v*x+u*y)*np.sin(theta))/L
             return np.array([x_after_rot,y_after_rot,z_after_rot])
         if arg.keys()!=[]:
             r,theta,phi=arg['r'],np.deg2rad(arg['theta']),np.deg2rad(arg['phi'])
@@ -697,6 +697,77 @@ class polymer():
             f.write(s)
         f.close()
         
+class polymer_new_rot(polymer):
+    def __init__(self,origin=np.array([0.,0.,0.]),r=2.2,theta=59.2641329,center_el='Zr',coor_el='O',domain_tag='_D1',index_offset=0,level=10,cap=[],shift=[0,0,0],attach_sorbate_number=[],first_or_second=[True]*10,rotation_angle=[0]*10,mirror=[True]*10):
+        #rotation_angle is the angle the attached sorbated will rotate about the sharing edge in unit of degree
+        polymer.__init__(self,origin=origin,r=r,theta=theta,center_el=center_el,coor_el=coor_el,domain_tag=domain_tag,index_offset=index_offset,level=level,cap=cap,shift=shift)
+        self.attach_sorbates=map(lambda x:center_el+str(x)+domain_tag,attach_sorbate_number)
+        self.find_extra_sorbates(switch=first_or_second,rotation_angle=rotation_angle,mirror=mirror)
+        
+    def find_extra_sorbates(self,switch,rotation_angle,mirror):
+        def _rotate(original_point,rot_axis,rot_point,rot_angle):
+            #rotating original_point about the line through rot_point with direction vector defined by rot_axis by angle rot_angle
+            x,y,z=original_point
+            u,v,w=rot_axis
+            a,b,c=rot_point
+            theta=np.deg2rad(rot_angle)
+            L=u**2+v**2+w**2
+            x_after_rot=((a*(v**2+w**2)-u*(b*v+c*w-u*x-v*y-w*z))*(1-np.cos(theta))+L*x*np.cos(theta)+L**0.5*(-c*v+b*w-w*y+v*z)*np.sin(theta))/L
+            y_after_rot=((b*(u**2+w**2)-v*(a*u+c*w-u*x-v*y-w*z))*(1-np.cos(theta))+L*y*np.cos(theta)+L**0.5*(c*u-a*w+w*x-u*z)*np.sin(theta))/L
+            z_after_rot=((c*(v**2+u**2)-w*(a*u+b*v-u*x-v*y-w*z))*(1-np.cos(theta))+L*z*np.cos(theta)+L**0.5*(-b*u+a*v-v*x+u*y)*np.sin(theta))/L
+            return np.array([x_after_rot,y_after_rot,z_after_rot])
+            
+        for i in range(len(self.attach_sorbates)):
+            sorbate=self.attach_sorbates[i]
+            if switch[i]:
+                shared_members=['O1_'+sorbate,'O2_'+sorbate]
+            else:
+                shared_members=['O2_'+sorbate,'O3_'+sorbate]
+            Zr1=self.center_point[sorbate]
+            O1,O2=[self.coordinative_members[each] for each in shared_members]
+            Zr_attach=_rotate(((O1+O2)/2-Zr1)*2+Zr1,O1-O2,O1,rotation_angle[i])
+            self.center_point[sorbate.replace(self.domain_tag,'_attach'+self.domain_tag)]=Zr_attach
+            #find face center coords on top basal plane
+            origin=(O1+O2)/2
+            r=self.r
+            edge=f2(O1,O2)
+            Zr_origin_len=(r**2-edge**2/4)**0.5
+            FC_origin_len=edge/2.
+            FC_origin_Zr_angle=np.arccos(FC_origin_len/Zr_origin_len)
+            z_v=f3(np.zeros(3),(Zr_attach-origin))
+            x_v=f3(np.zeros(3),(O2-origin))
+            y_v=np.cross(z_v,x_v)
+            T=f1(x0_v,y0_v,z0_v,x_v,y_v,z_v)
+            r0=FC_origin_len
+            theta=FC_origin_Zr_angle
+            phi=np.pi/2+np.pi*mirror[i]#or 3*np.pi/2
+            FC=np.dot(inv(T),np.array([r0*np.cos(phi)*np.sin(theta),r0*np.sin(phi)*np.sin(theta),r0*np.cos(theta)]))+origin#face center coords on top basal plane
+            #find coordinative memebers
+            origin=Zr_attach
+            z_v=f3(np.zeros(3),(FC-origin))
+            x_v=f3(np.zeros(3),(O2-FC))
+            y_v=np.cross(z_v,x_v)
+            T=f1(x0_v,y0_v,z0_v,x_v,y_v,z_v)
+            r0=self.r
+            theta_top=np.arcsin(edge/(2**0.5)/r0)
+            theta_bottom=np.pi-theta_top
+            phi_top_list=[0,np.pi/2,np.pi,np.pi*1.5]
+            #phi_top_list=[]
+            phi_bottom_list=[np.pi/4,3.*np.pi/4,5.*np.pi/4,7.*np.pi/4]
+            for i in range(len(phi_top_list)):
+                phi=phi_top_list[i]
+                temp_coord=np.dot(inv(T),np.array([r0*np.cos(phi)*np.sin(theta_top),r0*np.sin(phi)*np.sin(theta_top),r0*np.cos(theta_top)]))+origin
+                if np.sum(abs(temp_coord-O1))>0.01 and np.sum(abs(temp_coord-O2))>0.001:#if not that means it is either O1 or O2
+                    name='O'+str(i+1)+'_top_'+sorbate.replace(self.domain_tag,'_attach'+self.domain_tag)
+                    self.coordinative_members[name]=temp_coord
+            for i in range(len(phi_bottom_list)):
+                phi=phi_bottom_list[i]
+                name='O'+str(i+1)+'_bottom_'+sorbate.replace(self.domain_tag,'_attach'+self.domain_tag)
+                self.coordinative_members[name]=np.dot(inv(T),np.array([r0*np.cos(phi)*np.sin(theta_bottom),r0*np.sin(phi)*np.sin(theta_bottom),r0*np.cos(theta_bottom)]))+origin
+                    
+            
+
+        
 class polymer_new(polymer):
     def __init__(self,origin=np.array([0.,0.,0.]),r=2.2,theta=59.2641329,center_el='Zr',coor_el='O',domain_tag='_D1',index_offset=0,level=10,cap=[],shift=[0,0,0],attach_sorbate_number=[],first_or_second=[True]*10):
         polymer.__init__(self,origin=origin,r=r,theta=theta,center_el=center_el,coor_el=coor_el,domain_tag=domain_tag,index_offset=index_offset,level=level,cap=cap,shift=shift)
@@ -713,7 +784,7 @@ class polymer_new(polymer):
             L=u**2+v**2+w**2
             x_after_rot=((a*(v**2+w**2)-u*(b*v+c*w-u*x-v*y-w*z))*(1-np.cos(theta))+L*x*np.cos(theta)+L**0.5*(-c*v+b*w-w*y+v*z)*np.sin(theta))/L
             y_after_rot=((b*(u**2+w**2)-v*(a*u+c*w-u*x-v*y-w*z))*(1-np.cos(theta))+L*y*np.cos(theta)+L**0.5*(c*u-a*w+w*x-u*z)*np.sin(theta))/L
-            z_after_rot=((c*(v**2+w**2)-w*(a*u+b*v-u*x-v*y-w*z))*(1-np.cos(theta))+L*z*np.cos(theta)+L**0.5*(-b*u+a*v-v*x+u*y)*np.sin(theta))/L
+            z_after_rot=((c*(v**2+u**2)-w*(a*u+b*v-u*x-v*y-w*z))*(1-np.cos(theta))+L*z*np.cos(theta)+L**0.5*(-b*u+a*v-v*x+u*y)*np.sin(theta))/L
             return np.array([x_after_rot,y_after_rot,z_after_rot])
             
         for i in range(len(self.attach_sorbates)):
@@ -732,7 +803,9 @@ class polymer_new(polymer):
             non_shared_members=[each for each in self.coordinative_members.keys() if ((sorbate in each) and (each not in shared_members))]
             coords_attach_members=[]
             attach_members=[]
-            self.center_point[sorbate.replace(self.domain_tag,'_attach'+self.domain_tag)]=np.dot(inv(T),np.dot(T,coords_sorbate_original-origin)*[1,-1,1])+origin
+            #self.center_point[sorbate.replace(self.domain_tag,'_attach'+self.domain_tag)]=np.dot(inv(T),np.dot(T,coords_sorbate_original-origin)*[1,-1,1])+origin
+            self.center_point[sorbate.replace(self.domain_tag,'_attach'+self.domain_tag)]=self.center_point[sorbate]+(origin-self.center_point[sorbate])*2
+
             if len(non_shared_members)==6:
                 for each in non_shared_members:
                     self.coordinative_members[each.replace(self.domain_tag,'_attach'+self.domain_tag)]=np.dot(inv(T),np.dot(T,self.coordinative_members[each]-origin)*[1,-1,1])+origin
@@ -748,12 +821,6 @@ class polymer_new(polymer):
                     temp_coord=_rotate(self.coordinative_members[each]+vector,vector,self.center_point[sorbate.replace(self.domain_tag,'_attach'+self.domain_tag)],45)
                     self.coordinative_members[name]=temp_coord
                     
-                
-                
-                
-                
-        
-   
             
     def print_xyz_file(self,file_name='D:\\test.xyz'):
         f=open(file_name,"w")

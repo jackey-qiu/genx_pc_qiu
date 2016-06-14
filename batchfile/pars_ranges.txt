@@ -17,6 +17,9 @@ setRot_z	0	0	360
 setShift_btop	0	-1	1
 setShift_mid	0	-1	1
 setShift_cap	0	-1	1
+rot_ang_attach1	0	-30	30
+rot_ang_attach2	0	-30	30
+rot_ang_attach3	0	-30	30
 Gaussian_z_offset1	0	0	0.2
 Gaussian_z_offset2	0	0	0.2
 Gaussian_z_offset3	0	0	0.2
