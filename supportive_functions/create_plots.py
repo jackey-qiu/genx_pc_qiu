@@ -76,6 +76,8 @@ def generate_plot_files(output_file_path,sample,rgh,data,fit_mode, z_min=0,z_max
             N=len(l_dumy)
             h_dumy=np.array([h[0]]*N)
             k_dumy=np.array([k[0]]*N)
+            q_dumy=np.pi*2*sample.unit_cell.abs_hkl(h_dumy,k_dumy,l_dumy)
+            q_data=np.pi*2*sample.unit_cell.abs_hkl(h,k,l)
             LB_dumy=[]
             dL_dumy=[]
             f_dumy=[]
@@ -95,9 +97,11 @@ def generate_plot_files(output_file_path,sample,rgh,data,fit_mode, z_min=0,z_max
             rough_dumy = (1-rgh.beta)/((1-rgh.beta)**2 + 4*rgh.beta*np.sin(np.pi*(l_dumy-LB_dumy)/dL_dumy)**2)**0.5
             f_dumy=rough_dumy*abs(sample.calculate_structure_factor(h_dumy,k_dumy,l_dumy,None,index=0,fit_mode=fit_mode,height_offset=height_offset))
             f_dumy=f_dumy*f_dumy
+            f_ctr=lambda q:(np.sin(q*19.96/4))**2
+            f_dumy_norm=f_dumy*f_ctr(q_dumy)
             label=str(int(h[0]))+str(int(k[0]))+'L'
-            plot_data_container_experiment[label]=np.concatenate((l[:,np.newaxis],I[:,np.newaxis],eI[:,np.newaxis]),axis=1)
-            plot_data_container_model[label]=np.concatenate((l_dumy[:,np.newaxis],f_dumy[:,np.newaxis]),axis=1)
+            plot_data_container_experiment[label]=np.concatenate((l[:,np.newaxis],I[:,np.newaxis],eI[:,np.newaxis],(I*f_ctr(q_data))[:,np.newaxis],(eI*f_ctr(q_data))[:,np.newaxis]),axis=1)
+            plot_data_container_model[label]=np.concatenate((l_dumy[:,np.newaxis],f_dumy[:,np.newaxis],f_dumy_norm[:,np.newaxis]),axis=1)
     Q_list_Fourier_synthesis=np.pi*2*sample.unit_cell.abs_hkl(np.array(HKL_list_raxr[0]),np.array(HKL_list_raxr[1]),np.array(HKL_list_raxr[2]))    
     
     A_list_calculated_sub,P_list_calculated_sub,Q_list_calculated_sub=sample.find_A_P_muscovite(h=list(HKL_list_raxr[0]),k=list(HKL_list_raxr[1]),l=list(HKL_list_raxr[2]))
@@ -263,6 +267,49 @@ def plotting_modelB(object=[],fig=None,index=[2,3,1],color=['0.35','r','c','m','
     for l in ax.get_xticklines() + ax.get_yticklines(): 
         l.set_markersize(5) 
         l.set_markeredgewidth(2)
+    #plot normalized data now    
+    ax=fig.add_subplot(index[0],index[1],index[2]+1)
+    ax.set_yscale('log')
+    ax.scatter(object[0][:,0],object[0][:,3],marker='o',s=20,facecolors='none',edgecolors=color[0],label=label[0])
+    ax.errorbar(object[0][:,0],object[0][:,3],yerr=object[0][:,4],fmt=None,ecolor=color[0])
+    for i in range(len(object)-1):#first item is experiment data (L, I, err) while the second one is simulated result (L, I_s)
+        l,=ax.plot(object[i+1][:,0],object[i+1][:,2],color=color[i+1],lw=lw,label=label[i+1])
+        l.set_dashes(l_dashes[i])
+    if index[2] in [7,8,9]:
+        pyplot.xlabel('L(r.l.u)',axes=ax,fontsize=12)
+    if index[2] in [1,4,7]:
+        pyplot.ylabel(r'$|normalized F_{HKL}|$',axes=ax,fontsize=12)
+    #settings for demo showing
+    pyplot.title('('+title[0]+')',position=(0.5,0.86),weight=4,size=10,clip_on=True)
+    if title[0]=='0 0 L':
+        pass
+        #pyplot.ylim((0,1000))
+        #pyplot.xlim((0,20))
+    elif title[0]=='3 0 L':
+        pyplot.ylim((1,10000))
+    else:pyplot.ylim((1,10000))
+    #pyplot.ylim((1,1000))
+    #settings for publication
+    #pyplot.title('('+title[0]+')',position=(0.5,1.001),weight=4,size=10,clip_on=True)
+    """##add arrows to antidote the misfits 
+    if title[0]=='0 0 L':
+        ax.add_patch(mpt.patches.FancyArrow(0.25,0.6,0,-0.15,width=0.015,head_width=0.045,head_length=0.045,overhang=0,color='k',length_includes_head=True,transform=ax.transAxes))
+        ax.add_patch(mpt.patches.FancyArrow(0.83,0.5,0,-0.15,width=0.015,head_width=0.045,head_length=0.045,overhang=0,color='k',length_includes_head=True,transform=ax.transAxes))
+    if title[0]=='1 0 L':
+        ax.add_patch(mpt.patches.FancyArrow(0.68,0.6,0,-0.15,width=0.015,head_width=0.045,head_length=0.045,overhang=0,color='k',length_includes_head=True,transform=ax.transAxes))
+    if title[0]=='3 0 L':
+        ax.add_patch(mpt.patches.FancyArrow(0.375,0.8,0,-0.15,width=0.015,head_width=0.045,head_length=0.045,overhang=0,color='k',length_includes_head=True,transform=ax.transAxes))
+    """    
+    if legend==True:
+        #ax.legend()
+        ax.legend(bbox_to_anchor=(0.2,1.03,3.,1.202),mode='expand',loc=3,ncol=5,borderaxespad=0.,prop={'size':9})
+    for xtick in ax.xaxis.get_major_ticks():
+        xtick.label.set_fontsize(fontsize)
+    for ytick in ax.yaxis.get_major_ticks():
+        ytick.label.set_fontsize(fontsize)
+    for l in ax.get_xticklines() + ax.get_yticklines(): 
+        l.set_markersize(5) 
+        l.set_markeredgewidth(2)
 
     #ax.set_ylim([1,10000])
 #object files are returned from genx when switch the plot on
@@ -272,7 +319,7 @@ def plotting_many_modelB(save_file='D://pic.png',head='C:\\Users\\jackey\\Google
     #fig=pyplot.figure(figsize=(10,9))
     #settings for publication
     #fig=pyplot.figure(figsize=(10,7))
-    fig=pyplot.figure(figsize=(8,4))
+    fig=pyplot.figure(figsize=(8,8))
     object_sets=[pickle.load(open(head+file)) for file in object_files]#each_item=[00L,02L,10L,11L,20L,22L,30L,2-1L,21L]
     object=[]
     for i in range(len(object_sets[0])):
@@ -282,7 +329,7 @@ def plotting_many_modelB(save_file='D://pic.png',head='C:\\Users\\jackey\\Google
                 object[-1].append(object_sets[j][i][0])
             object[-1].append(object_sets[j][i][1])
     if len(object_sets[0])==1:
-        index=[1,1]
+        index=[2,1]
 
     for i in range(len(object)):
     #for i in range(1):
