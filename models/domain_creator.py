@@ -49,7 +49,25 @@ f2=lambda p1,p2:np.sqrt(np.sum((p1-p2)**2))
 #anonymous function f3 is to calculate the coordinates of basis with magnitude of 1.,p1 and p2 are coordinates for two known points, the 
 #direction of the basis is pointing from p1 to p2
 f3=lambda p1,p2:(1./f2(p1,p2))*(p2-p1)+p1
-
+#make dummy data set for test purpose, this function should be inside sim function
+#data is data I is the F (list of calculated structure factors)
+def make_dummy_data(file='D://temp_dummy_data.dat',data=None,I=None):
+    data_full=np.zeros((0,8))
+    for i in range(len(data)):
+        data_set=data[i]
+        x = data_set.x[:,np.newaxis]
+        h = data_set.extra_data['h'][:,np.newaxis]
+        k = data_set.extra_data['k'][:,np.newaxis]
+        intensity = np.array(I[i])[:,np.newaxis]
+        eI= data_set.error[:,np.newaxis]
+        y = data_set.extra_data['Y'][:,np.newaxis]
+        LB = data_set.extra_data['LB'][:,np.newaxis]
+        dL = data_set.extra_data['dL'][:,np.newaxis]
+        temp_set=np.concatenate((x,h,k,y,intensity,eI,LB,dL),axis=1)
+        data_full=np.concatenate((data_full,temp_set),axis=0)
+    np.savetxt(file,data_full,fmt='%.5e')
+    return None
+        
 def define_global_vars(rgh,domain_number=2):
     rgh.new_var('beta',0)
     for i in range(domain_number):
