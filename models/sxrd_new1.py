@@ -451,7 +451,7 @@ class Sample:
             for i in range(len(domains)):
                 ftot=ftot+getattr(self.domain['global_vars'],'wt'+str(i+1))*abs(fb+f_surface(h,k,l,[domains[i]])+f_layered_water+f_layered_sorbate+(f1f2[:,0]+1.0J*f1f2[:,1])*A_list[0]*np.exp(1.0J*np.pi*2*P_list[0]))
         ftot=np.exp(-a*(E-E0)**2/E0**2+b*(E-E0)/E0)*c*abs(ftot)
-        return ftot
+        return ftot*self.inst.inten
         
     def calc_f4_muscovite_RAXR_MD(self,h,k,x,y,index,height_offset=0):
         h, k, l, E, E0, f1f2, a, b, c, resonant_el=h,k,y,x,self.domain['E0'],self.domain['F1F2'],self.domain['raxs_vars']['a'+str(index)],self.domain['raxs_vars']['b'+str(index)],self.domain['raxs_vars']['c'+str(index)],self.domain['el']
@@ -483,7 +483,7 @@ class Sample:
             for i in range(len(domains)):
                 ftot=ftot+getattr(self.domain['global_vars'],'wt'+str(i+1))*abs(fb+f_surface(h, k, l,[domains[i]],f1f2,resonant_el)+f_layered_water+f_layered_sorbate)
         ftot=np.exp(-a*(E-E0)**2/E0**2+b*(E-E0)/E0)*c*abs(ftot)
-        return ftot
+        return ftot*self.inst.inten
         
     def calc_f4_specular_RAXR(self, h, k, l,E,E0,f1f2,a,b,A_list=[],P_list=[],resonant_els=[1,0,0]):
         #now the coherence looks like [{True:[0,1]},{False:[2,3]}] which means adding up first two domains coherently

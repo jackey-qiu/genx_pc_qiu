@@ -154,7 +154,9 @@ def Sim(data,VARS=VARS):
         domain_creator.print_structure_files_muscovite(domain_list=[Domain1,Domain2],z_shift=0.8+HEIGHT_OFFSET,matrix_info=INFO_LIB,save_file='D://')
         create_plots.generate_plot_files(output_file_path=OUTPUT_FILE_PATH,sample=sample,rgh=rgh,data=data,fit_mode=RAXR_FIT_MODE,z_min=0,z_max=50,RAXR_HKL=[0,0,20],height_offset=HEIGHT_OFFSET*BASIS[2])
         #then do this command inside shell to extract the errors for A and P: model.script_module.create_plots.append_errors_for_A_P(par_instance=model.parameters,dump_file='D://temp_plot_raxr_A_P_Q',raxs_rgh='rgh_raxs') 
-  
+        make_dummy_data=False
+        if make_dummy_data:
+            domain_creator.make_dummy_data(file='D://temp_dummy_data.dat',data=data,I=F)
     if COUNT_TIME:
         t_3=datetime.now()
         print "It took "+str(t_1-t_0)+" seconds to setup"
