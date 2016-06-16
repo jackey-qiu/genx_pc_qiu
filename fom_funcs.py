@@ -240,8 +240,8 @@ def R1_weighted_2(simulations, data):
     return_list=[]
     for (dataset, sim) in zip(data,simulations):
         if dataset.x[0]>100:
-            scaler=np.sqrt(sim[20]/dataset.y[20])
-            return_list.append((np.sqrt(np.abs(dataset.y)) - np.sqrt(np.abs(sim))/scaler)/np.sqrt(np.abs(dataset.y)))
+            scaler=np.exp(np.std(abs(np.sqrt(sim[5:-7])-np.sqrt(dataset.y[5:-7]))))
+            return_list.append(((np.sqrt(np.abs(dataset.y)) - np.sqrt(np.abs(sim)))*scaler))
         else:
             return_list.append(1.0/denom*(np.sqrt(np.abs(dataset.y)) - np.sqrt(np.abs(sim)))/dataset.error)
     return return_list
