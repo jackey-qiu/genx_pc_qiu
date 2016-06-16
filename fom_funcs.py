@@ -228,7 +228,7 @@ def R1_weighted(simulations, data):
     '''
     denom = np.sum([np.sum(np.sqrt(np.abs(dataset.y))) for dataset in data\
         if dataset.use])
-    return [1.0/denom*(np.sqrt(np.abs(dataset.y)) - np.sqrt(np.abs(sim)))/np.sqrt(np.abs(dataset.y))\
+    return [1.0/denom*abs(np.sqrt(np.abs(dataset.y)) - np.sqrt(np.abs(sim)))/np.sqrt(np.abs(dataset.y))\
         for (dataset, sim) in zip(data,simulations)]
         
 def R1_weighted_2(simulations, data):
@@ -240,10 +240,10 @@ def R1_weighted_2(simulations, data):
     return_list=[]
     for (dataset, sim) in zip(data,simulations):
         if dataset.x[0]>100:
-            scaler=np.exp(np.std(abs(np.sqrt(sim[5:-7])-np.sqrt(dataset.y[5:-7]))))
-            return_list.append(1.0/denom*((np.sqrt(np.abs(dataset.y)) - np.sqrt(np.abs(sim)))*scaler))
+            scaler=np.average(dataset.y[[6,19,32]]/sim[[6,19,32]])
+            return_list.append(1.0/denom*abs(np.sqrt(np.abs(dataset.y[6:-6])) - np.sqrt(np.abs(sim[6:-6]*scaler)))/np.abs(dataset.y[6:-6]))
         else:
-            return_list.append(1.0/denom*(np.sqrt(np.abs(dataset.y)) - np.sqrt(np.abs(sim))))
+            return_list.append(1.0/denom*abs(np.sqrt(np.abs(dataset.y)) - np.sqrt(np.abs(sim)))/np.sqrt(np.abs(dataset.y)))
     return return_list
     
 def logR1(simulations, data):
