@@ -5,6 +5,7 @@ from datetime import datetime
 import models.sxrd_new1 as model
 from models.utils import UserVars
 import batchfile.locate_path as batch_path
+import dump_files.locate_path as output_path
 import models.domain_creator as domain_creator
 import supportive_functions.create_plots as create_plots
 import models.domain_creator_sorbate as domain_creator_sorbate
@@ -16,7 +17,7 @@ if COUNT_TIME:t_0=datetime.now()
 
 ##<global handles>##
 RUN=False
-BATCH_PATH_HEAD,OUTPUT_FILE_PATH=batch_path.module_path_locator(),'D:\\'
+BATCH_PATH_HEAD,OUTPUT_FILE_PATH=batch_path.module_path_locator(),output_path.module_path_locator()
 F1F2=np.loadtxt(os.path.join(BATCH_PATH_HEAD,'Zr_K_edge.f1f2'))
 RAXR_EL,E0,NUMBER_RAXS_SPECTRA,RAXR_FIT_MODE='Zr',18007,21,'MD'
 NUMBER_DOMAIN,COHERENCE=2,True
@@ -99,7 +100,7 @@ if not RUN:
     #raxs pars
     table_container=make_grid.set_table_input_raxs(container=table_container,rgh_group_instance=rgh_raxs,rgh_group_instance_name='rgh_raxs',par_range={'a':[0,20],'b':[-5,5],'c':[0,1],'A':[0,2],'P':[0,1]},number_spectra=NUMBER_RAXS_SPECTRA,number_domain=1)
     #build up the tab file
-    make_grid.make_table(container=table_container,file_path=OUTPUT_FILE_PATH+'par_table.tab')
+    make_grid.make_table(container=table_container,file_path=os.path.join(OUTPUT_FILE_PATH,'par_table.tab'))
 
 ##<fitting function part>##
 if COUNT_TIME:t_1=datetime.now()
@@ -151,12 +152,14 @@ def Sim(data,VARS=VARS):
 
     ##<print structure/plotting files>##
     if not RUN:
-        domain_creator.print_structure_files_muscovite(domain_list=[Domain1,Domain2],z_shift=0.8+HEIGHT_OFFSET,matrix_info=INFO_LIB,save_file='D://')
+        domain_creator.print_structure_files_muscovite(domain_list=[Domain1,Domain2],z_shift=0.8+HEIGHT_OFFSET,matrix_info=INFO_LIB,save_file=OUTPUT_FILE_PATH)
         create_plots.generate_plot_files(output_file_path=OUTPUT_FILE_PATH,sample=sample,rgh=rgh,data=data,fit_mode=RAXR_FIT_MODE,z_min=0,z_max=50,RAXR_HKL=[0,0,20],height_offset=HEIGHT_OFFSET*BASIS[2])
-        #then do this command inside shell to extract the errors for A and P: model.script_module.create_plots.append_errors_for_A_P(par_instance=model.parameters,dump_file='D://temp_plot_raxr_A_P_Q',raxs_rgh='rgh_raxs') 
-        make_dummy_data=False
+        #then do this command inside shell to extract the errors for A and P: model.script_module.create_plots.append_errors_for_A_P(par_instance=model.parameters,dump_file=os.path.join(model.script_module.OUTPUT_FILE_PATH,'temp_plot_raxr_A_P_Q'),raxs_rgh='rgh_raxs') 
+        make_dummy_data,combine_data_sets=False,False
         if make_dummy_data:
-            domain_creator.make_dummy_data(file='D://temp_dummy_data.dat',data=data,I=F)
+            domain_creator.make_dummy_data(file=os.path.join(OUTPUT_FILE_PATH,'temp_dummy_data.dat'),data=data,I=F)
+        if combine_data_sets:
+            domain_creator.combine_all_datasets(file=os.path.join(OUTPUT_FILE_PATH,'temp_full_dataset.dat'),data=data)
     if COUNT_TIME:
         t_3=datetime.now()
         print "It took "+str(t_1-t_0)+" seconds to setup"

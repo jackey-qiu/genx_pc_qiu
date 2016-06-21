@@ -143,7 +143,7 @@ AtomGroup was changed to consider moving atoms on symmetrical basis
 
 import numpy as np
 from utils import f, rho
-import time
+import time,os
 import pickle,copy
 
 try:
@@ -1433,7 +1433,7 @@ class Sample:
             e_total_raxs=e_total_raxs+np.array(eden_raxs)
         labels.append('Total electron density')
         e_data.append(np.array([list(e_data[0])[0],e_total,e_total_raxs]))
-        pickle.dump([e_data,labels],open(file_path+"temp_plot_eden","wb"))
+        pickle.dump([e_data,labels],open(os.path.join(file_path,"temp_plot_eden"),"wb"))
 
     def calc_fs(self, h, k, l,slabs):
         '''Calculate the structure factors from the surface
