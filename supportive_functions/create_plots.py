@@ -97,7 +97,8 @@ def generate_plot_files(output_file_path,sample,rgh,data,fit_mode, z_min=0,z_max
             rough_dumy = (1-rgh.beta)/((1-rgh.beta)**2 + 4*rgh.beta*np.sin(np.pi*(l_dumy-LB_dumy)/dL_dumy)**2)**0.5
             f_dumy=rough_dumy*abs(sample.calculate_structure_factor(h_dumy,k_dumy,l_dumy,None,index=0,fit_mode=fit_mode,height_offset=height_offset))
             f_dumy=f_dumy*f_dumy
-            f_ctr=lambda q:(np.sin(q*19.96/4))**2
+            f_ctr=lambda q:(np.sin(q*20.003509882813105/4))**2
+            #f_ctr=lambda q:(np.sin(q*19.96/4))**2
             f_dumy_norm=f_dumy*f_ctr(q_dumy)
             label=str(int(h[0]))+str(int(k[0]))+'L'
             plot_data_container_experiment[label]=np.concatenate((l[:,np.newaxis],I[:,np.newaxis],eI[:,np.newaxis],(I*f_ctr(q_data))[:,np.newaxis],(eI*f_ctr(q_data))[:,np.newaxis]),axis=1)
