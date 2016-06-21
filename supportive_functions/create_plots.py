@@ -3,8 +3,14 @@ import numpy as np
 from matplotlib import pyplot
 import matplotlib as mpt
 import pickle
-import sys,os
+import sys,os,inspect
 from matplotlib import pyplot
+
+def local_func():
+    return None
+    
+def module_path_locator(func=local_func):
+    return os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(inspect.getsourcefile(func)))),'dump_files')  
 
 """
 functions to make plots of CTR, RAXR, Electron Density using the dumped files created in GenX script (running_mode=False)
@@ -17,6 +23,7 @@ Formates for each kind of dumped files
     eden_plot is a list of [ed1,ed2,...,edn], which is the total e density for all domains
     eden_domains=[[ed_z1_D1,ed_z1_D2,...,ed_z1_Dm],[ed_z2_D1,ed_z2_D2,...,ed_z2_Dm],...,[ed_zn_D1,ed_zn_D2,...,ed_zn_Dm]] considering m domains
 """
+
 bl_dl_muscovite_old={'3_0':{'segment':[[0,1],[1,9]],'info':[[2,1],[6,1]]},'2_0':{'segment':[[0,9]],'info':[[2,2.0]]},'2_1':{'segment':[[0,9]],'info':[[4,0.8609]]},'2_2':{'segment':[[0,9]],'info':[[2,1.7218]]},\
     '2_-1':{'segment':[[0,3.1391],[3.1391,9]],'info':[[4,3.1391],[2,3.1391]]},'1_1':{'segment':[[0,9]],'info':[[2,1.8609]]},'1_0':{'segment':[[0,3],[3,9]],'info':[[6,3],[2,3]]},'0_2':{'segment':[[0,9]],'info':[[2,1.7218]]},\
     '0_0':{'segment':[[0,20]],'info':[[2,2]]},'-1_0':{'segment':[[0,3],[3,9]],'info':[[6,-3],[2,-3]]},'0_-2':{'segment':[[0,9]],'info':[[2,-6.2782]]},\
@@ -114,10 +121,10 @@ def generate_plot_files(output_file_path,sample,rgh,data,fit_mode, z_min=0,z_max
     plot_data_list=[]
     for hkl in hkls:
         plot_data_list.append([plot_data_container_experiment[hkl],plot_data_container_model[hkl]])
-    pickle.dump(plot_data_list,open(output_file_path+"temp_plot","wb"))
+    pickle.dump(plot_data_list,open(os.path.join(output_file_path,"temp_plot"),"wb"))
     #dump raxr data and profiles
-    pickle.dump([plot_raxr_container_experiment,plot_raxr_container_model],open(output_file_path+"temp_plot_raxr","wb"))
-    pickle.dump([[A_list_calculated,P_list_calculated,Q_list_calculated],[A_list_Fourier_synthesis,P_list_Fourier_synthesis,Q_list_Fourier_synthesis]],open(output_file_path+"temp_plot_raxr_A_P_Q","wb"))
+    pickle.dump([plot_raxr_container_experiment,plot_raxr_container_model],open(os.path.join(output_file_path,"temp_plot_raxr"),"wb"))
+    pickle.dump([[A_list_calculated,P_list_calculated,Q_list_calculated],[A_list_Fourier_synthesis,P_list_Fourier_synthesis,Q_list_Fourier_synthesis]],open(os.path.join(output_file_path,"temp_plot_raxr_A_P_Q"),"wb"))
     #dump electron density profiles
     #e density based on model fitting
     sample.plot_electron_density_muscovite(sample.domain,file_path=output_file_path,z_min=z_min,z_max=z_max,N_layered_water=100,height_offset=height_offset)#dumpt file name is "temp_plot_eden" 
@@ -126,8 +133,8 @@ def generate_plot_files(output_file_path,sample,rgh,data,fit_mode, z_min=0,z_max
     z_plot_sub,eden_plot_sub,eden_domains_sub=sample.fourier_synthesis(np.array(HKL_list_raxr),np.array(P_list_calculated_sub).transpose(),np.array(A_list_calculated_sub).transpose(),z_min=z_min,z_max=z_max,resonant_el=sample.domain['el'],resolution=1000)
     #z_plot_sub,eden_plot_sub,eden_domains_sub=sample.fourier_synthesis(np.array([[HKL_list_raxr[0][0]]*100,[HKL_list_raxr[1][0]]*100,np.arange(0,HKL_list_raxr[2][-1],HKL_list_raxr[2][-1]/100.)]),np.array(P_list_calculated_sub).transpose(),np.array(A_list_calculated_sub).transpose(),z_min=z_min,z_max=z_max,resonant_el=sample.domain['el'],resolution=1000)
 
-    pickle.dump([z_plot,eden_plot,eden_domains],open(output_file_path+"temp_plot_eden_fourier_synthesis","wb"))
-    pickle.dump([z_plot_sub,eden_plot_sub,eden_domains_sub],open(output_file_path+"temp_plot_eden_fourier_synthesis_sub","wb"))    
+    pickle.dump([z_plot,eden_plot,eden_domains],open(os.path.join(output_file_path,"temp_plot_eden_fourier_synthesis"),"wb"))
+    pickle.dump([z_plot_sub,eden_plot_sub,eden_domains_sub],open(os.path.join(output_file_path,"temp_plot_eden_fourier_synthesis_sub"),"wb"))    
 
 #this function must be called within the shell of GenX gui and par_instance=model.parameters,dump_file='D://temp_plot_raxr_A_P_Q' by default
 #The purpose of this function is to append the errors of A and P extracted from the errors displaying inside the tab of GenX gui 
@@ -321,7 +328,7 @@ def plotting_many_modelB(save_file='D://pic.png',head='C:\\Users\\jackey\\Google
     #settings for publication
     #fig=pyplot.figure(figsize=(10,7))
     fig=pyplot.figure(figsize=(8,8))
-    object_sets=[pickle.load(open(head+file)) for file in object_files]#each_item=[00L,02L,10L,11L,20L,22L,30L,2-1L,21L]
+    object_sets=[pickle.load(open(os.path.join(head,file))) for file in object_files]#each_item=[00L,02L,10L,11L,20L,22L,30L,2-1L,21L]
     object=[]
     for i in range(len(object_sets[0])):
         object.append([])
@@ -404,18 +411,18 @@ def plot_many_experiment_data(data_files=['D:\\Google Drive\\data\\400uM_Sb_hema
             pyplot.ylabel('|F|',axes=ax,fontsize=fontsize)
     return True
     
-if __name__=="__main__":    
-
+def plot_all(path=module_path_locator()):
+    PATH=path
     #which plots do you want to create
     plot_e_model,plot_e_FS,plot_ctr,plot_raxr,plot_AP_Q=1,1,1,1,1
 
     #specify file paths (files are dumped files when setting running_mode=False in GenX script)
-    e_file="D:\\temp_plot_eden"#e density from model
-    e_file_FS="D:\\temp_plot_eden_fourier_synthesis" #e density from Fourier synthesis
-    ctr_file_folder="D:\\"
+    e_file=os.path.join(PATH,"temp_plot_eden")#e density from model
+    e_file_FS=os.path.join(PATH,"temp_plot_eden_fourier_synthesis") #e density from Fourier synthesis
+    ctr_file_folder=PATH
     ctr_file_names=["temp_plot"]#you may want to overplot differnt ctr profiles based on differnt models
-    raxr_file="D:\\temp_plot_raxr"
-    AP_Q_file="D:\\temp_plot_raxr_A_P_Q"
+    raxr_file=os.path.join(PATH,"temp_plot_raxr")
+    AP_Q_file=os.path.join(PATH,"temp_plot_raxr_A_P_Q")
     #plot electron density profile
     if plot_e_model: 
         data_eden=pickle.load(open(e_file,"rb"))
@@ -458,7 +465,7 @@ if __name__=="__main__":
     if plot_ctr:
         #plot ctr profiles
         #plotting_single_rod(save_file=ctr_file_folder+"temp_plot_ctr.png",head=ctr_file_folder,object_files=ctr_file_names,color=['w','r'],l_dashes=[(None,None)],lw=2,rod_index=0)
-        plotting_many_modelB(save_file=ctr_file_folder+"temp_plot_ctr.png",head=ctr_file_folder,object_files=ctr_file_names,color=['b','r'],l_dashes=[(None,None)],lw=2)
+        plotting_many_modelB(save_file=os.path.join(ctr_file_folder,"temp_plot_ctr.png"),head=ctr_file_folder,object_files=ctr_file_names,color=['b','r'],l_dashes=[(None,None)],lw=2)
     if plot_raxr:
         #plot raxr profiles
         data_raxr=pickle.load(open(raxr_file,"rb"))
@@ -483,9 +490,10 @@ if __name__=="__main__":
         pyplot.ylabel("P/Q(2pi)",axes=ax2)
         pyplot.xlabel("Q",axes=ax2)
         pyplot.legend()
-        fig1.savefig('D://temp_APQ_profile.png',dpi=300)
+        fig1.savefig(os.path.join(PATH,'temp_APQ_profile.png'),dpi=300)
     pyplot.show()
-    
+if __name__=="__main__":    
+    plot_all()
     
     
     
