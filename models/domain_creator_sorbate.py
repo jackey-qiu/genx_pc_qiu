@@ -153,12 +153,71 @@ def OS_sqr_antiprism_tetramer(ref_point=[0,0,3.0],domain=None,anchor_atoms=None,
         _add_sorbate(domain=domain,id_sorbate=id,el='O',sorbate_v=center_original)
     return domain
     
-def OS_sqr_antiprism_oligomer(ref_point=[0,0,3.0],domain=None,anchor_atoms=None,geo_lib={},info_lib={},domain_tag='_D1',index_offset=0,level=13,cap=[],attach_sorbate_number=[],first_or_second=[],mirror=[]):
+def OS_sqr_antiprism_oligomer(ref_point=[0,0,3.0],domain=None,anchor_atoms=None,geo_lib={},info_lib={},domain_tag='_D1',index_offset=0,level=0,cap=[],attach_sorbate_number=[],first_or_second=[],mirror=[]):
     #add a regular trigonal pyramid motiff above the surface representing the outer sphere complexation
     #the pyramid is oriented either Oxygen base top (when r1 is negative) or apex top (when r1 is positive)
     #cent_point in frational coordinate is the center point of the tetrahedral (body center)
     #r_Pb_O in ansgtrom is the Pb-O bond length
     #O_Pb_O_ang in degree is the O_Pb_O bond angle
+    cent_point=ref_point+np.array([geo_lib['cent_point_offset_x'],geo_lib['cent_point_offset_y'],geo_lib['cent_point_offset_z']])
+    theta,r_sorbate_O,sorbate_el,coordinate_el,domain_tag,rotation_x,rotation_y,rotation_z,basis,T,T_INV=geo_lib['theta'],geo_lib['r'],info_lib['sorbate_el'],\
+        info_lib['coordinate_el'],domain_tag,geo_lib['rot_x'],geo_lib['rot_y'],geo_lib['rot_z'],info_lib['basis'],info_lib['T'],info_lib['T_INV']
+    cent_point=np.dot(T,cent_point*basis)
+    oligomer_function=getattr(square_antiprism,info_lib['oligomer_type'])
+    shift=[0,0,0]
+    rot_angle_attach=[0,0,0]
+    if 'shift_btop' in geo_lib.keys():
+        shift=[geo_lib['shift_btop'],geo_lib['shift_mid'],geo_lib['shift_cap']]
+    if 'rot_ang_attach1' in geo_lib.keys():
+        rot_angle_attach=[geo_lib['rot_ang_attach1'],geo_lib['rot_ang_attach2'],geo_lib['rot_ang_attach3']]
+    if info_lib['oligomer_type']=='polymer':
+        antiprism=oligomer_function(origin=cent_point,r=r_sorbate_O,theta=theta,center_el=sorbate_el,coor_el=coordinate_el,domain_tag=domain_tag,index_offset=index_offset,level=level,cap=cap,shift=shift)
+    elif info_lib['oligomer_type']=='polymer_new':
+        antiprism=oligomer_function(origin=cent_point,r=r_sorbate_O,theta=theta,center_el=sorbate_el,coor_el=coordinate_el,domain_tag=domain_tag,index_offset=index_offset,level=level,cap=cap,shift=shift,attach_sorbate_number=attach_sorbate_number,first_or_second=first_or_second)
+    elif info_lib['oligomer_type']=='polymer_new_rot':
+        antiprism=oligomer_function(origin=cent_point,r=r_sorbate_O,theta=theta,center_el=sorbate_el,coor_el=coordinate_el,domain_tag=domain_tag,index_offset=index_offset,level=level,cap=cap,shift=shift,attach_sorbate_number=attach_sorbate_number,first_or_second=first_or_second,rotation_angle=rot_angle_attach,mirror=mirror)
+    else:
+        antiprism=oligomer_function(origin=cent_point,r=r_sorbate_O,theta=theta,center_el=sorbate_el,coor_el=coordinate_el,domain_tag=domain_tag,index_offset=index_offset)
+
+    rot_x,rot_y,rot_z=rotation_x/180*np.pi,rotation_y/180*np.pi,rotation_z/180*np.pi
+    T_rot=f4(rot_x,rot_y,rot_z)
+    origin=cent_point
+    #return_coors_list_sorbate=[]
+    #return_coors_list_oxygen=[]
+    
+    def _add_sorbate(domain=None,id_sorbate=None,el='Pb',sorbate_v=[]):
+        sorbate_index=None
+        try:
+            sorbate_index=np.where(domain.id==id_sorbate)[0][0]
+        except:
+            domain.add_atom( id_sorbate, el,  sorbate_v[0] ,sorbate_v[1], sorbate_v[2] ,0.5,     0.2 ,     1.00000e+00 )
+        if sorbate_index!=None:
+            domain.x[sorbate_index]=sorbate_v[0]
+            domain.y[sorbate_index]=sorbate_v[1]
+            domain.z[sorbate_index]=sorbate_v[2]
+    center_point_keys=np.sort(antiprism.center_point.keys())
+    coordinative_member_keys=np.sort(antiprism.coordinative_members.keys())
+    for i in range(len(center_point_keys)):
+        id=str(center_point_keys[i])
+        center=antiprism.center_point[center_point_keys[i]]
+        center_original=np.dot(T_INV,(np.dot(T_rot,center-origin)+origin))/basis
+        #return_coors_list_sorbate.append(center_original)
+        _add_sorbate(domain=domain,id_sorbate=id,el=sorbate_el,sorbate_v=center_original)
+    for i in range(len(coordinative_member_keys)):
+        id=str(coordinative_member_keys[i])
+        center=antiprism.coordinative_members[coordinative_member_keys[i]]
+        center_original=np.dot(T_INV,(np.dot(T_rot,center-origin)+origin))/basis
+        #return_coors_list_oxygen.append(center_original)
+        _add_sorbate(domain=domain,id_sorbate=id,el='O',sorbate_v=center_original)
+    return domain
+    
+def OS_sqr_antiprism_oligomer_new(ref_point=[0,0,3.0],domain=None,anchor_atoms=None,geo_lib={},info_lib={},domain_tag='_D1',index_offset=0,**args):
+    #add a regular trigonal pyramid motiff above the surface representing the outer sphere complexation
+    #the pyramid is oriented either Oxygen base top (when r1 is negative) or apex top (when r1 is positive)
+    #cent_point in frational coordinate is the center point of the tetrahedral (body center)
+    #r_Pb_O in ansgtrom is the Pb-O bond length
+    #O_Pb_O_ang in degree is the O_Pb_O bond angle
+    level=args['level'],cap=args['cap'],attach_sorbate_number=args['attach_sorbate_number'],first_or_second=args['first_or_second'],mirror=args['mirror']
 
     cent_point=ref_point+np.array([geo_lib['cent_point_offset_x'],geo_lib['cent_point_offset_y'],geo_lib['cent_point_offset_z']])
     theta,r_sorbate_O,sorbate_el,coordinate_el,domain_tag,rotation_x,rotation_y,rotation_z,basis,T,T_INV=geo_lib['theta'],geo_lib['r'],info_lib['sorbate_el'],\
@@ -179,6 +238,52 @@ def OS_sqr_antiprism_oligomer(ref_point=[0,0,3.0],domain=None,anchor_atoms=None,
         antiprism=oligomer_function(origin=cent_point,r=r_sorbate_O,theta=theta,center_el=sorbate_el,coor_el=coordinate_el,domain_tag=domain_tag,index_offset=index_offset,level=level,cap=cap,shift=shift,attach_sorbate_number=attach_sorbate_number,first_or_second=first_or_second,rotation_angle=rot_angle_attach,mirror=mirror)
     else:
         antiprism=oligomer_function(origin=cent_point,r=r_sorbate_O,theta=theta,center_el=sorbate_el,coor_el=coordinate_el,domain_tag=domain_tag,index_offset=index_offset)
+
+    rot_x,rot_y,rot_z=rotation_x/180*np.pi,rotation_y/180*np.pi,rotation_z/180*np.pi
+    T_rot=f4(rot_x,rot_y,rot_z)
+    origin=cent_point
+    #return_coors_list_sorbate=[]
+    #return_coors_list_oxygen=[]
+    
+    def _add_sorbate(domain=None,id_sorbate=None,el='Pb',sorbate_v=[]):
+        sorbate_index=None
+        try:
+            sorbate_index=np.where(domain.id==id_sorbate)[0][0]
+        except:
+            domain.add_atom( id_sorbate, el,  sorbate_v[0] ,sorbate_v[1], sorbate_v[2] ,0.5,     0.2 ,     1.00000e+00 )
+        if sorbate_index!=None:
+            domain.x[sorbate_index]=sorbate_v[0]
+            domain.y[sorbate_index]=sorbate_v[1]
+            domain.z[sorbate_index]=sorbate_v[2]
+    center_point_keys=np.sort(antiprism.center_point.keys())
+    coordinative_member_keys=np.sort(antiprism.coordinative_members.keys())
+    for i in range(len(center_point_keys)):
+        id=str(center_point_keys[i])
+        center=antiprism.center_point[center_point_keys[i]]
+        center_original=np.dot(T_INV,(np.dot(T_rot,center-origin)+origin))/basis
+        #return_coors_list_sorbate.append(center_original)
+        _add_sorbate(domain=domain,id_sorbate=id,el=sorbate_el,sorbate_v=center_original)
+    for i in range(len(coordinative_member_keys)):
+        id=str(coordinative_member_keys[i])
+        center=antiprism.coordinative_members[coordinative_member_keys[i]]
+        center_original=np.dot(T_INV,(np.dot(T_rot,center-origin)+origin))/basis
+        #return_coors_list_oxygen.append(center_original)
+        _add_sorbate(domain=domain,id_sorbate=id,el='O',sorbate_v=center_original)
+    return domain
+    
+def OS_cubic_oligomer(ref_point=[0,0,3.0],domain=None,anchor_atoms=None,geo_lib={},info_lib={},domain_tag='_D1',index_offset=0,**args):
+    #add a regular trigonal pyramid motiff above the surface representing the outer sphere complexation
+    #the pyramid is oriented either Oxygen base top (when r1 is negative) or apex top (when r1 is positive)
+    #cent_point in frational coordinate is the center point of the tetrahedral (body center)
+    #r_Pb_O in ansgtrom is the Pb-O bond length
+    #O_Pb_O_ang in degree is the O_Pb_O bond angle
+    build_grid=args['build_grid']
+    cent_point=ref_point+np.array([geo_lib['cent_point_offset_x'],geo_lib['cent_point_offset_y'],geo_lib['cent_point_offset_z']])
+    r_sorbate_O,sorbate_el,coordinate_el,domain_tag,rotation_x,rotation_y,rotation_z,basis,T,T_INV=geo_lib['r'],info_lib['sorbate_el'],\
+        info_lib['coordinate_el'],domain_tag,geo_lib['rot_x'],geo_lib['rot_y'],geo_lib['rot_z'],info_lib['basis'],info_lib['T'],info_lib['T_INV']
+    cent_point=np.dot(T,cent_point*basis)
+    oligomer_function=getattr(cubic_oligomer,info_lib['oligomer_type'])
+    antiprism=oligomer_function(origin=cent_point,build_grid=build_grid,r=r_sorbate_O,center_el=sorbate_el,coor_el=coordinate_el,domain_tag=domain_tag,index_offset=index_offset)
 
     rot_x,rot_y,rot_z=rotation_x/180*np.pi,rotation_y/180*np.pi,rotation_z/180*np.pi
     T_rot=f4(rot_x,rot_y,rot_z)

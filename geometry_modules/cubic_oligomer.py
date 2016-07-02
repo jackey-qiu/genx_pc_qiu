@@ -59,7 +59,7 @@ class polymer():
         h=self.a/2
         for each_center in self.build_index:
             i,j,k=each_center
-            center_point_name=self.center_el+'_%s_%s_%s_offset_%s%s'%(str(i),str(j),str(k),str(self.offset),self.domain_tag)
+            center_point_name=self.center_el+'%s_%s_%s_%s_offset_%s%s'%(str(self.build_index.index(each_center)+1),str(i),str(j),str(k),str(self.offset),self.domain_tag)
             center_point_coord=self.a*np.array(each_center)+self.origin
             self.center_point[center_point_name]=center_point_coord
             n=1
