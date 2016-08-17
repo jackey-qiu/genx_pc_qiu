@@ -18,7 +18,7 @@ if COUNT_TIME:t_0=datetime.now()
 ##<global handles>##
 RUN=False
 BATCH_PATH_HEAD,OUTPUT_FILE_PATH=batch_path.module_path_locator(),output_path.module_path_locator()
-F1F2=np.loadtxt(os.path.join(BATCH_PATH_HEAD,'Zr_K_edge.f1f2'))
+F1F2=np.loadtxt(os.path.join(BATCH_PATH_HEAD,'Zr_K_edge_Aug17_2016.f1f2'))
 RAXR_EL,E0,NUMBER_RAXS_SPECTRA,RAXR_FIT_MODE='Zr',18007,21,'MD'
 NUMBER_DOMAIN,COHERENCE=2,True
 HEIGHT_OFFSET=-2.6685#if set to 0, the top atomic layer is at 2.6685 in fractional unit before relaxation
