@@ -218,10 +218,10 @@ def add_sorbate(domain,anchored_atoms,func,geo_lib,info_lib,domain_tag,rgh,index
         rgh.new_var(key,geo_lib[key])
     return domain,rgh
     
-def add_sorbate_new(domain,anchored_atoms,func,geo_lib,info_lib,domain_tag,rgh,index_offset=[0,1],height_offset=0,symmetry_couple=True,**args):
-    domain=func([0,0,2.0+height_offset],domain,anchored_atoms,geo_lib,info_lib,domain_tag,index_offset=index_offset[0],**args)
+def add_sorbate_new(domain,anchored_atoms,func,geo_lib,info_lib,domain_tag,rgh,index_offset=[0,1],xy_offset=[0,0],height_offset=0,symmetry_couple=True,**args):
+    domain=func([0+xy_offset[0],0+xy_offset[1],2.0+height_offset],domain,anchored_atoms,geo_lib,info_lib,domain_tag,index_offset=index_offset[0],**args)
     if symmetry_couple:
-        domain=func([0.5,0.5,2.0+height_offset],domain,anchored_atoms,geo_lib,info_lib,domain_tag,index_offset=index_offset[1],**args)
+        domain=func([0.5+xy_offset[0],0.5+xy_offset[1],2.0+height_offset],domain,anchored_atoms,geo_lib,info_lib,domain_tag,index_offset=index_offset[1],**args)
     for key in geo_lib.keys():
         rgh.new_var(key,geo_lib[key])
     return domain,rgh
@@ -232,10 +232,10 @@ def update_sorbate(domain,anchored_atoms,func,info_lib,domain_tag,rgh,index_offs
         domain=func([0.5,0.5,2.0+height_offset],domain,anchored_atoms,vars(rgh),info_lib,domain_tag,index_offset=index_offset[1],level=level,cap=cap,attach_sorbate_number=attach_sorbate_number,first_or_second=first_or_second,mirror=mirror)
     return domain
     
-def update_sorbate_new(domain,anchored_atoms,func,info_lib,domain_tag,rgh,index_offset=[0,1],height_offset=0,level=None,symmetry_couple=True,**args):
-    domain=func([0,0,2.0+height_offset],domain,anchored_atoms,vars(rgh),info_lib,domain_tag,index_offset=index_offset[0],**args)
+def update_sorbate_new(domain,anchored_atoms,func,info_lib,domain_tag,rgh,index_offset=[0,1],xy_offset=[0,0],height_offset=0,level=None,symmetry_couple=True,**args):
+    domain=func([0+xy_offset[0],0+xy_offset[1],2.0+height_offset],domain,anchored_atoms,vars(rgh),info_lib,domain_tag,index_offset=index_offset[0],**args)
     if symmetry_couple:
-        domain=func([0.5,0.5,2.0+height_offset],domain,anchored_atoms,vars(rgh),info_lib,domain_tag,index_offset=index_offset[1],**args)
+        domain=func([0.5+xy_offset[0],0.5+xy_offset[1],2.0+height_offset],domain,anchored_atoms,vars(rgh),info_lib,domain_tag,index_offset=index_offset[1],**args)
     return domain
     
 def add_gaussian_old(domain,el='O',number=3,first_peak_height=2,spacing=2,u_init=0.008,occ_init=1,height_offset=0,c=20.1058,domain_tag='_D1'):
@@ -1047,6 +1047,70 @@ def print_structure_files_muscovite(domain_list='',z_shift=0.8,matrix_info=None,
                 f.write(s)
                 f2.write(s2)
                 f3.write(s3)
+        f.close()
+        f2.close()
+        f3.close()
+        
+def print_structure_files_muscovite_new(domain_list='',z_shift=0.8,number_gaussian=0,el='Zr',matrix_info=None,save_file='D://model'):
+
+    for domain_index in range(len(domain_list)):
+        domain=domain_list[domain_index]
+        data=domain._extract_values()
+        index_all=range(len(data[0]))
+        index=index_all[0:74]+index_all[132:]
+        index_f2=index_all[0:74]+index_all[132:(len(data[0])-number_gaussian)]
+        c=(np.max(data[2])+0.3-z_shift)*20.1058
+        f=open(os.path.join(save_file,'Domain'+str(domain_index+1)+'.cif'),'w')
+        f2=open(os.path.join(save_file,'Domain'+str(domain_index+1)+'.xyz'),'w')
+        f3=open(os.path.join(save_file,'Domain'+str(domain_index+1)+'_id.xyz'),'w')
+
+        f.write('data_global\n')
+        f.write("_chemical_name_mineral 'Muscovite'\n")
+        f.write("_chemical_formula_sum 'K Si3 Al3 O12 H2'\n")
+        f.write("_cell_length_a 5.1988\n")
+        f.write("_cell_length_b 9.0266\n")
+        f.write("_cell_length_c "+str(c)+"\n")
+        f.write("_cell_angle_alpha 90\n")
+        f.write("_cell_angle_beta 95.782\n")
+        f.write("_cell_angle_gamma 90\n")
+        f.write("_cell_volume 938.7\n")
+        f.write("_symmetry_space_group_name_H-M 'P 1'\nloop_\n_space_group_symop_operation_xyz\n  'x,y,z'\nloop_\n")
+        f.write("_atom_site_label\n_atom_site_fract_x\n_atom_site_fract_y\n_atom_site_fract_z\n")
+        f2.write(str(74*9+len(index_all[132:(len(data[0])-number_gaussian)]))+'\n#\n')
+        f3.write(str(len(index))+'\n#\n')
+        for i in index:
+            coors=np.dot(matrix_info['T'],np.array([data[0][i],data[1][i],(data[2][i]-z_shift)])*matrix_info['basis'])
+            if i==index[-1]:
+                s = '%-5s   %7.5e   %7.5e   %7.5e' % (data[3][i],data[0][i],data[1][i],(data[2][i]-z_shift)*20.1058/c)
+                s3 = '%-5s   %7.5e   %7.5e   %7.5e' % (domain.id[i],coors[0],coors[1],coors[2])
+                f.write(s)
+                f3.write(s3)
+            else:
+                s = '%-5s   %7.5e   %7.5e   %7.5e\n' % (data[3][i],data[0][i],data[1][i],(data[2][i]-z_shift)*20.1058/c)
+                s3 = '%-5s   %7.5e   %7.5e   %7.5e\n' % (domain.id[i],coors[0],coors[1],coors[2])
+                f.write(s)
+                f3.write(s3)
+        for i in index_f2:
+            coors=np.dot(matrix_info['T'],np.array([data[0][i],data[1][i],(data[2][i]-z_shift)])*matrix_info['basis'])
+            if i==index[-1]:
+                if el in domain.id[i]:
+                    s2 = '%-5s   %7.5e   %7.5e   %7.5e' % (data[3][i],coors[0],coors[1],coors[2])
+                    f2.write(s2)
+                else:
+                    for grid in np.array([[0,0,0],[1,0,0],[2,0,0],[0,1,0],[1,1,0],[2,1,0],[0,2,0],[1,2,0],[2,2,0]]):
+                        a,b,c=grid*matrix_info['basis']
+                        s2 = '%-5s   %7.5e   %7.5e   %7.5e' % (data[3][i],coors[0]+a,coors[1]+b,coors[2]+c)
+                        f2.write(s2)
+                   
+            else:
+                if el in domain.id[i]:
+                    s2 = '%-5s   %7.5e   %7.5e   %7.5e\n' % (data[3][i],coors[0],coors[1],coors[2])
+                    f2.write(s2)
+                else:
+                    for grid in np.array([[0,0,0],[1,0,0],[2,0,0],[0,1,0],[1,1,0],[2,1,0],[0,2,0],[1,2,0],[2,2,0]]):
+                        a,b,c=grid*matrix_info['basis']
+                        s2 = '%-5s   %7.5e   %7.5e   %7.5e\n' % (data[3][i],coors[0]+a,coors[1]+b,coors[2]+c)
+                        f2.write(s2)
         f.close()
         f2.close()
         f3.close()
