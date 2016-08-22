@@ -5,6 +5,8 @@ import matplotlib as mpt
 import pickle
 import sys,os,inspect
 from matplotlib import pyplot
+from scipy.optimize import curve_fit
+import matplotlib.pyplot as plt
 
 def local_func():
     return None
@@ -423,6 +425,8 @@ def plot_all(path=module_path_locator()):
     ctr_file_names=["temp_plot"]#you may want to overplot differnt ctr profiles based on differnt models
     raxr_file=os.path.join(PATH,"temp_plot_raxr")
     AP_Q_file=os.path.join(PATH,"temp_plot_raxr_A_P_Q")
+    e_den_subtracted=None
+    e_den_raxr_MI=None
     #plot electron density profile
     if plot_e_model: 
         data_eden=pickle.load(open(e_file,"rb"))
@@ -447,15 +451,21 @@ def plot_all(path=module_path_locator()):
                 if i==0:
                     ax.plot(data_eden_FS[0],list(np.array(data_eden_FS[2])[:,i]),color='r',label="RAXR imaging (MI)")
                     ax.fill_between(data_eden_FS[0],list(np.array(data_eden_FS[2])[:,i]),color='m',alpha=0.6)
-                    ax.fill_between(data_eden_FS[0],list(edata[i][1,:]-np.array(data_eden_FS[2])[:,i]),color='black',alpha=0.6,label="Total e - RAXR(MI)")
+                    #clip off negative part of the e density through Fourier thynthesis
+                    ax.fill_between(data_eden_FS[0],list(edata[i][1,:]-edata[i][3,:]-np.array(data_eden_FS[2])[:,i]*(np.array(data_eden_FS[2])[:,i]>0.01)),color='black',alpha=0.6,label="Total e - LayerWater - RAXR")
                     
                     ax.plot(data_eden_FS_sub[0],list(np.array(data_eden_FS_sub[2])[:,i]),color='black',label="RAXR imaging (MD)")
                     ax.fill_between(data_eden_FS_sub[0],list(np.array(data_eden_FS_sub[2])[:,i]),color='c',alpha=0.6)
                 elif i==N-1:
                     ax.plot(data_eden_FS[0],data_eden_FS[1],color='r',label="RAXR imaging (MI)")
                     ax.fill_between(data_eden_FS[0],data_eden_FS[1],color='m',alpha=0.6)
-                    ax.fill_between(data_eden_FS[0],edata[i][1,:]-data_eden_FS[1],color='black',alpha=0.6,label="Total e - RAXR(MI)")
-                    
+                    #ax.fill_between(data_eden_FS[0],edata[i][1,:]-data_eden_FS[1],color='black',alpha=0.6,label="Total e - RAXR(MI)")
+                    ax.fill_between(data_eden_FS[0],list(edata[i][1,:]-edata[i][3,:]-np.array(data_eden_FS[1])*(np.array(data_eden_FS[1])>0.01)),color='black',alpha=0.6,label="Total e - LayerWater - RAXR")
+                    eden_temp=list(edata[i][1,:]-edata[i][3,:]-np.array(data_eden_FS[1])*(np.array(data_eden_FS[1])>0.01))
+                    eden_temp=(np.array(eden_temp)*(np.array(eden_temp)>0.01))[:,np.newaxis]
+                    z_temp=np.array(data_eden_FS[0])[:,np.newaxis]
+                    e_den_subtracted=np.append(z_temp,eden_temp,axis=1)
+                    e_den_raxr_MI=np.append(np.array(data_eden_FS[0])[:,np.newaxis],(np.array(data_eden_FS[1])*(np.array(data_eden_FS[1])>0.01))[:,np.newaxis],axis=1)
                     ax.plot(data_eden_FS_sub[0],data_eden_FS_sub[1],color='black',label="RAXR imaging (MD)")
                     ax.fill_between(data_eden_FS_sub[0],data_eden_FS_sub[1],color='c',alpha=0.6)
             if i==N-1:pyplot.xlabel('Z(Angstrom)',axes=ax,fontsize=12)
@@ -493,7 +503,65 @@ def plot_all(path=module_path_locator()):
         pyplot.xlabel("Q",axes=ax2)
         pyplot.legend()
         fig1.savefig(os.path.join(PATH,'temp_APQ_profile.png'),dpi=300)
+    #now plot the subtracted e density and print out the gaussian fit results
+    pyplot.figure()
+    print 'Total e - raxr -layer water'
+    gaussian_fit(e_den_subtracted)
+    pyplot.figure()
+    print 'RAXR (MI)'
+    gaussian_fit(e_den_raxr_MI,zs=np.array([4.58,6.65,8.51,10.05,11.94,13.9,15.82,17.82,19.85,22.22,24.75,26.22,27.95,29.41]),N=40)
     pyplot.show()
+    
+
+def gaussian_fit(data,fit_range=[1,40],zs=None,N=8):
+    x,y=[],[]
+    for i in range(len(data)):
+        if data[i,0]>fit_range[0] and data[i,0]<fit_range[1]:
+            x.append(data[i,0]),y.append(data[i,1])
+    plt.plot(x,y)
+    plt.show()
+
+    def func(x_ctrs,*params):
+        y = np.zeros_like(x_ctrs[0])
+        x=x_ctrs[0]
+        ctrs=x_ctrs[1]
+        for i in range(0, len(params), 2):
+            amp = abs(params[i])
+            wid = abs(params[i+1])
+            ctr=ctrs[int(i/2)]
+            y = y + amp * np.exp( -((x - ctr)/wid)**2/2)
+        return y
+
+    guess = []
+    ctrs=[]
+    if zs!=None:
+        ctrs=np.array(zs)
+    else:
+        for i in range(1,len(x)-1):
+            if y[i-1]<y[i] and y[i+1]<y[i]:
+                ctrs.append(x[i])
+    for i in range(len(ctrs)):
+        guess += [0.5, 1]   
+
+    popt, pcov = curve_fit(func, [x,ctrs], y, p0=guess)
+    combinded_set=[]
+    print 'z occupancy*4 U(sigma**2)'
+    for i in range(0,len(popt),2):
+        combinded_set=combinded_set+[ctrs[i/2],abs(popt[i])/N*(abs(popt[i+1])*np.sqrt(np.pi*2)*5.199*9.027)*4,abs(popt[i+1])**2]
+        print '%3.3f\t%3.3f\t%3.3f'%(ctrs[i/2],abs(popt[i])/N*(abs(popt[i+1])*np.sqrt(np.pi*2)*5.199*9.027)*4,abs(popt[i+1])**2)
+    combinded_set=np.reshape(np.array(combinded_set),(len(combinded_set)/3,3)).transpose()
+    #combinded_set=combinded_set.transpose()
+    print 'z'
+    print combinded_set[0,:]
+    print 'occupancy*4'
+    print combinded_set[1,:]
+    print 'U(sigma**2)'
+    print combinded_set[2,:]
+    fit = func([x,ctrs], *popt)
+
+    plt.plot(x, y)
+    plt.plot(x, fit , 'r-')
+    plt.show()
 if __name__=="__main__":    
     plot_all()
     
