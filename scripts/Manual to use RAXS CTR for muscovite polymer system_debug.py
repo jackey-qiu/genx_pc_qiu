@@ -51,6 +51,7 @@ SYMMETRY,SWITCH_EXTRA_SORBATE=False,[True]*10
 MIRROR_EXTRA_SORBATE=[True]*10
 #NUMBER_SORBATE_LAYER,NUMBER_EL_MOTIF=1,LEVEL+len(CAP)*2+len(EXTRA_SORBATE)#1 if monomer, 2 if dimmer and so on, for square_antiprism only
 NUMBER_SORBATE_LAYER=1
+NUMBER_EL_MOTIF=None
 if type(BUILD_GRID)==type([]):
     NUMBER_EL_MOTIF=len(BUILD_GRID)
 elif type(BUILD_GRID)==int(1):
