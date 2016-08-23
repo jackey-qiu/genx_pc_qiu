@@ -453,13 +453,15 @@ def plot_all(path=module_path_locator()):
                     ax.fill_between(data_eden_FS[0],list(np.array(data_eden_FS[2])[:,i]),color='m',alpha=0.6)
                     #clip off negative part of the e density through Fourier thynthesis
                     ax.fill_between(data_eden_FS[0],list(edata[i][1,:]-edata[i][3,:]-np.array(data_eden_FS[2])[:,i]*(np.array(data_eden_FS[2])[:,i]>0.01)),color='black',alpha=0.6,label="Total e - LayerWater - RAXR")
-                    
+                    ax.fill_between(data_eden_FS[0],edata[i][3,:],color='blue',alpha=0.6,label="LayerWater")
+
                     ax.plot(data_eden_FS_sub[0],list(np.array(data_eden_FS_sub[2])[:,i]),color='black',label="RAXR imaging (MD)")
                     ax.fill_between(data_eden_FS_sub[0],list(np.array(data_eden_FS_sub[2])[:,i]),color='c',alpha=0.6)
                 elif i==N-1:
                     ax.plot(data_eden_FS[0],data_eden_FS[1],color='r',label="RAXR imaging (MI)")
                     ax.fill_between(data_eden_FS[0],data_eden_FS[1],color='m',alpha=0.6)
                     #ax.fill_between(data_eden_FS[0],edata[i][1,:]-data_eden_FS[1],color='black',alpha=0.6,label="Total e - RAXR(MI)")
+                    ax.fill_between(data_eden_FS[0],edata[i][3,:],color='blue',alpha=0.6,label="LayerWater")
                     ax.fill_between(data_eden_FS[0],list(edata[i][1,:]-edata[i][3,:]-np.array(data_eden_FS[1])*(np.array(data_eden_FS[1])>0.01)),color='black',alpha=0.6,label="Total e - LayerWater - RAXR")
                     eden_temp=list(edata[i][1,:]-edata[i][3,:]-np.array(data_eden_FS[1])*(np.array(data_eden_FS[1])>0.01))
                     eden_temp=(np.array(eden_temp)*(np.array(eden_temp)>0.01))[:,np.newaxis]
@@ -504,12 +506,14 @@ def plot_all(path=module_path_locator()):
         pyplot.legend()
         fig1.savefig(os.path.join(PATH,'temp_APQ_profile.png'),dpi=300)
     #now plot the subtracted e density and print out the gaussian fit results
+    
     pyplot.figure()
-    print 'Total e - raxr -layer water'
+    print '##############Total e - raxr -layer water#################'
     gaussian_fit(e_den_subtracted)
     pyplot.figure()
-    print 'RAXR (MI)'
-    gaussian_fit(e_den_raxr_MI,zs=np.array([4.58,6.65,8.51,10.05,11.94,13.9,15.82,17.82,19.85,22.22,24.75,26.22,27.95,29.41]),N=40)
+    print '#########################RAXR (MI)########################'
+    gaussian_fit(e_den_raxr_MI,zs=None,N=40)
+    
     pyplot.show()
     
 
@@ -518,6 +522,7 @@ def gaussian_fit(data,fit_range=[1,40],zs=None,N=8):
     for i in range(len(data)):
         if data[i,0]>fit_range[0] and data[i,0]<fit_range[1]:
             x.append(data[i,0]),y.append(data[i,1])
+    x,y=np.array(x),np.array(y)
     plt.plot(x,y)
     plt.show()
 
@@ -534,29 +539,33 @@ def gaussian_fit(data,fit_range=[1,40],zs=None,N=8):
 
     guess = []
     ctrs=[]
-    if zs!=None:
-        ctrs=np.array(zs)
-    else:
+    if zs==None:
         for i in range(1,len(x)-1):
             if y[i-1]<y[i] and y[i+1]<y[i]:
                 ctrs.append(x[i])
+    elif type(zs)==int:
+        ctrs=[fit_range[0]+(fit_range[1]-fit_range[0])/zs*i for i in range(zs)]+[fit_range[1]]
+    else:
+        ctrs=np.array(zs)
     for i in range(len(ctrs)):
         guess += [0.5, 1]   
 
     popt, pcov = curve_fit(func, [x,ctrs], y, p0=guess)
     combinded_set=[]
-    print 'z occupancy*4 U(sigma**2)'
+    #print 'z occupancy*4 U(sigma**2)'
     for i in range(0,len(popt),2):
         combinded_set=combinded_set+[ctrs[i/2],abs(popt[i])/N*(abs(popt[i+1])*np.sqrt(np.pi*2)*5.199*9.027)*4,abs(popt[i+1])**2]
-        print '%3.3f\t%3.3f\t%3.3f'%(ctrs[i/2],abs(popt[i])/N*(abs(popt[i+1])*np.sqrt(np.pi*2)*5.199*9.027)*4,abs(popt[i+1])**2)
+        #print '%3.3f\t%3.3f\t%3.3f'%(ctrs[i/2],abs(popt[i])/N*(abs(popt[i+1])*np.sqrt(np.pi*2)*5.199*9.027)*4,abs(popt[i+1])**2)
     combinded_set=np.reshape(np.array(combinded_set),(len(combinded_set)/3,3)).transpose()
     #combinded_set=combinded_set.transpose()
-    print 'z'
-    print combinded_set[0,:]
-    print 'occupancy*4'
-    print combinded_set[1,:]
-    print 'U(sigma**2)'
-    print combinded_set[2,:]
+    print 'total_occupancy=',np.sum(combinded_set[1,:]/4)
+    print 'OC_RAXS_LIST=np.array([',','.join([str(each) for each in combinded_set[1,:]]),'])'
+    print 'U_RAXS_LIST=np.array([',','.join([str(each) for each in combinded_set[2,:]]),'])'
+    print 'X_RAXS_LIST=[0.5]*',len(combinded_set[1,:])
+    print 'Y_RAXS_LIST=[0.5]*',len(combinded_set[1,:])
+    print 'Z_RAXS_LIST=np.array([',','.join([str(each) for each in combinded_set[0,:]]),'])'
+    
+    
     fit = func([x,ctrs], *popt)
 
     plt.plot(x, y)
