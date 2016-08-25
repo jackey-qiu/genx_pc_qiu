@@ -3,13 +3,14 @@ from mpi4py import MPI
 import numpy as np
 from numpy import *
 from datetime import datetime
+#genxpath = '/home/qiu05/genx_mpi_qiu/genx_test'
 genxpath = '/home/qiu05/genx_pc_qiu'
 import sys
 import time
 sys.path.insert(0,genxpath)
 #sys.path.append(genxpath+'/geometry_modules')
 import model, time, fom_funcs
-import diffev_mpi as diffev
+import diffev
 import filehandling as io
 ##new in version 2##
 #errro bar for each par will be calculated before program being halted
@@ -74,7 +75,7 @@ iter_list = [1]
 #   'logbars'
 #   'sintth4'
 # e.g.: fom_list = ['log','R1']  # performs all repetitions for 'log' and 'R1'
-fom_list = ['chi2bars']
+fom_list = ['R1_weighted']
 
 # diffev control parameters
 # needs to be a list of parameters combinations to use. 
@@ -96,7 +97,7 @@ pop_size = pop_num        # if use_pop_mult = False, population size
 
 # Generations
 use_max_generations = True       # absolute (T) or relative (F) maximum gen.
-max_generations=pop_num*10      # if use_max_generations = True
+max_generations=60      # if use_max_generations = True
 max_generation_mult = 6          # if use_max_generations = False
 
 # Parallel processing
@@ -505,7 +506,7 @@ for pars in par_list:
 	if gen%opt.autosave_interval==0:
 	    
 	    std_val=std(opt.fom_log[:,1][-200:])
-	    if opt.fom_log[:,1][-1]<0.01:
+	    if std_val<0.00001:
 		if rank==0:
 		    opt.text_output('std='+str(std_val))
 	        break

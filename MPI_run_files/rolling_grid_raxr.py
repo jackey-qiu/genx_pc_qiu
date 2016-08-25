@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+#-*- coding: utf-8 -*-
 """
 Created on Wed Apr 29 20:29:10 2015
 
@@ -20,7 +20,12 @@ mod = model.Model()
 config = io.Config()
 opt = diffev.DiffEv()
 io.load_gx(sys.argv[1],mod,opt,config)
-for i in range(4):
+num_pars_each_roll=None
+if 'MI' in mod.get_script():
+    num_pars_each_roll=5
+else:
+    num_pars_each_roll=3
+for i in range(num_pars_each_roll):
     mod.parameters.set_value(int(sys.argv[2])+i,2,not mod.parameters.get_value(int(sys.argv[2])+i,2))
 mod.data.toggle_use(int(sys.argv[3]))
 io.save_gx(sys.argv[1],mod,opt,config)

@@ -61,7 +61,7 @@ t_start_0=datetime.now()
 #iter_list = range(5)
 
 #print "the run starts @ %s"%(str(datetime.now()))
-iter_list = [1]
+iter_list = [1,2,3,4]
 #####################
 # figure of merit (FOM) to use
 # needs to be a list of strings, valid names are:
@@ -75,7 +75,7 @@ iter_list = [1]
 #   'logbars'
 #   'sintth4'
 # e.g.: fom_list = ['log','R1']  # performs all repetitions for 'log' and 'R1'
-fom_list = ['chi2bars']
+fom_list = ['R1_weighted_2']
 
 # diffev control parameters
 # needs to be a list of parameters combinations to use. 
@@ -323,8 +323,8 @@ for pars in par_list:
     # build outfile name
     outfile = infile
     outfile = outfile.replace('.gx','')
-    #outfile = '%s_%s_%s_kr%.2f_km%.2f_pf%.2f_run%d.gx' % (outfile, trial,fom, kr, km, pf,iter)
-    outfile=outfile+fom+str(iter)+'_ran.gx'
+    outfile = '%s_%s_%s_kr%.2f_km%.2f_pf%.2f_run%d_ran.gx' % (outfile, trial,fom, kr, km, pf,iter)
+    #outfile=outfile+fom+str(iter)+'_ran.gx'
     #outfile = '%s_%s_run%d.gx' % (outfile, TAG, iter)
     if rank==0:
         print 'Saving the initial model to %s'%outfile
@@ -506,7 +506,7 @@ for pars in par_list:
 	if gen%opt.autosave_interval==0:
 	    
 	    std_val=std(opt.fom_log[:,1][-200:])
-	    if std_val<0.01:
+	    if std_val<0.000001:
 		if rank==0:
 		    opt.text_output('std='+str(std_val))
 	        break
