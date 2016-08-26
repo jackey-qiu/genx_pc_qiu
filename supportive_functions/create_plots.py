@@ -510,12 +510,17 @@ def plot_all(path=module_path_locator()):
     pyplot.figure()
     print '##############Total e - raxr -layer water#################'
     gaussian_fit(e_den_subtracted)
+    pyplot.title('Total e - raxr -layer water')
     pyplot.figure()
     print '#########################RAXR (MI)########################'
     gaussian_fit(e_den_raxr_MI,zs=None,N=40)
-    
+    pyplot.title('RAXR (MI)')
+    pyplot.figure()
+    print '#########################RAXR (MD)########################'
+    gaussian_fit(np.append([data_eden_FS_sub[0]],[data_eden_FS_sub[1]*(np.array(data_eden_FS_sub[1])>0)],axis=0).transpose(),zs=None,N=40)
+    pyplot.title('RAXR (MD)')
     pyplot.show()
-    
+    #return e_den_subtracted,data_eden_FS
 
 def gaussian_fit(data,fit_range=[1,40],zs=None,N=8):
     x,y=[],[]
@@ -571,6 +576,8 @@ def gaussian_fit(data,fit_range=[1,40],zs=None,N=8):
     plt.plot(x, y)
     plt.plot(x, fit , 'r-')
     plt.show()
+    
+    
 if __name__=="__main__":    
     plot_all()
     
