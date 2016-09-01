@@ -137,8 +137,105 @@ def generate_plot_files(output_file_path,sample,rgh,data,fit_mode, z_min=0,z_max
     #z_plot_sub,eden_plot_sub,eden_domains_sub=sample.fourier_synthesis(np.array([[HKL_list_raxr[0][0]]*100,[HKL_list_raxr[1][0]]*100,np.arange(0,HKL_list_raxr[2][-1],HKL_list_raxr[2][-1]/100.)]),np.array(P_list_calculated_sub).transpose(),np.array(A_list_calculated_sub).transpose(),z_min=z_min,z_max=z_max,resonant_el=sample.domain['el'],resolution=1000)
 
     pickle.dump([z_plot,eden_plot,eden_domains],open(os.path.join(output_file_path,"temp_plot_eden_fourier_synthesis"),"wb"))
-    pickle.dump([z_plot_sub,eden_plot_sub,eden_domains_sub],open(os.path.join(output_file_path,"temp_plot_eden_fourier_synthesis_sub"),"wb"))    
+    pickle.dump([z_plot_sub,eden_plot_sub,eden_domains_sub],open(os.path.join(output_file_path,"temp_plot_eden_fourier_synthesis_sub"),"wb")) 
 
+#a function to make files to generate vtk files    
+def generate_plot_files_2(output_file_path,sample,rgh,data,fit_mode, z_min=0,z_max=29,RAXR_HKL=[0,0,20],bl_dl=bl_dl_muscovite,height_offset=0,tag=1):
+    plot_data_container_experiment={}
+    plot_data_container_model={}
+    plot_raxr_container_experiment={}
+    plot_raxr_container_model={}
+    A_list_Fourier_synthesis=[]
+    P_list_Fourier_synthesis=[]
+    HKL_list_raxr=[[],[],[]]
+    A_list_calculated,P_list_calculated,Q_list_calculated=sample.find_A_P_muscovite(h=RAXR_HKL[0],k=RAXR_HKL[1],l=RAXR_HKL[2])
+    i=0
+    for data_set in data:
+        f=np.array([])   
+        h = data_set.extra_data['h']
+        k = data_set.extra_data['k']
+        x = data_set.x
+        y = data_set.extra_data['Y']
+        LB = data_set.extra_data['LB']
+        dL = data_set.extra_data['dL']
+        I=data_set.y
+        eI=data_set.error
+        if x[0]>100:
+            i+=1
+            A_key_list,P_key_list=[key for key in sample.domain['raxs_vars'].keys() if 'A'+str(i)+'_D' in key and 'set' not in key and 'get' not in key],[key for key in sample.domain['raxs_vars'].keys() if 'P'+str(i)+'_D' in key and 'set' not in key and 'get' not in key]
+            A_key_list.sort(),P_key_list.sort()
+            A_list_Fourier_synthesis.append(sample.domain['raxs_vars'][A_key_list[0]])
+            P_list_Fourier_synthesis.append(sample.domain['raxs_vars'][P_key_list[0]])
+            rough = (1-rgh.beta)/((1-rgh.beta)**2 + 4*rgh.beta*np.sin(np.pi*(y-LB)/dL)**2)**0.5
+            f=rough*abs(sample.calculate_structure_factor(h,k,x,y,index=i,fit_mode=fit_mode,height_offset=height_offset))
+            f=f*f
+            label=str(int(h[0]))+'_'+str(int(k[0]))+'_'+str(y[0])
+            plot_raxr_container_experiment[label]=np.concatenate((x[:,np.newaxis],I[:,np.newaxis],eI[:,np.newaxis]),axis=1)
+            plot_raxr_container_model[label]=np.concatenate((x[:,np.newaxis],f[:,np.newaxis]),axis=1)
+            HKL_list_raxr[0].append(h[0])
+            HKL_list_raxr[1].append(k[0])
+            HKL_list_raxr[2].append(y[0])
+        else:
+            f=np.array([])   
+            h = data_set.extra_data['h']
+            k = data_set.extra_data['k']
+            l = data_set.x
+            LB = data_set.extra_data['LB']
+            dL = data_set.extra_data['dL']
+            I=data_set.y
+            eI=data_set.error
+            #make dumy hkl and f to make the plot look smoother
+            if l[0]>0:
+                l_dumy=np.arange(0.05,l[-1]+0.1,0.1)
+            else:
+                l_dumy=np.arange(l[0],l[-1]+0.1,0.1)
+            N=len(l_dumy)
+            h_dumy=np.array([h[0]]*N)
+            k_dumy=np.array([k[0]]*N)
+            q_dumy=np.pi*2*sample.unit_cell.abs_hkl(h_dumy,k_dumy,l_dumy)
+            q_data=np.pi*2*sample.unit_cell.abs_hkl(h,k,l)
+            LB_dumy=[]
+            dL_dumy=[]
+            f_dumy=[]
+            
+            for j in range(N):
+                key=None
+                if l_dumy[j]>=0:
+                    key=str(int(h[0]))+'_'+str(int(k[0]))
+                else:key=str(int(-h[0]))+'_'+str(int(-k[0]))
+                for ii in bl_dl[key]['segment']:
+                    if abs(l_dumy[j])>=ii[0] and abs(l_dumy[j])<ii[1]:
+                        n=bl_dl[key]['segment'].index(ii)
+                        LB_dumy.append(bl_dl[key]['info'][n][1])
+                        dL_dumy.append(bl_dl[key]['info'][n][0])
+            LB_dumy=np.array(LB_dumy)
+            dL_dumy=np.array(dL_dumy)
+            rough_dumy = (1-rgh.beta)/((1-rgh.beta)**2 + 4*rgh.beta*np.sin(np.pi*(l_dumy-LB_dumy)/dL_dumy)**2)**0.5
+            f_dumy=rough_dumy*abs(sample.calculate_structure_factor(h_dumy,k_dumy,l_dumy,None,index=0,fit_mode=fit_mode,height_offset=height_offset))
+            f_dumy=f_dumy*f_dumy
+            f_ctr=lambda q:(np.sin(q*20.003509882813105/4))**2
+            #f_ctr=lambda q:(np.sin(q*19.96/4))**2
+            f_dumy_norm=f_dumy*f_ctr(q_dumy)
+            label=str(int(h[0]))+str(int(k[0]))+'L'
+            plot_data_container_experiment[label]=np.concatenate((l[:,np.newaxis],I[:,np.newaxis],eI[:,np.newaxis],(I*f_ctr(q_data))[:,np.newaxis],(eI*f_ctr(q_data))[:,np.newaxis]),axis=1)
+            plot_data_container_model[label]=np.concatenate((l_dumy[:,np.newaxis],f_dumy[:,np.newaxis],f_dumy_norm[:,np.newaxis]),axis=1)
+    Q_list_Fourier_synthesis=np.pi*2*sample.unit_cell.abs_hkl(np.array(HKL_list_raxr[0]),np.array(HKL_list_raxr[1]),np.array(HKL_list_raxr[2]))    
+    
+    A_list_calculated_sub,P_list_calculated_sub,Q_list_calculated_sub=sample.find_A_P_muscovite(h=list(HKL_list_raxr[0]),k=list(HKL_list_raxr[1]),l=list(HKL_list_raxr[2]))
+    #A_list_calculated_sub,P_list_calculated_sub,Q_list_calculated_sub=sample.find_A_P_muscovite(h=HKL_list_raxr[0][0],k=HKL_list_raxr[1][0],l=HKL_list_raxr[2][-1])
+
+    #output files
+    #CTR
+    np.savetxt('D://temp_CTR'+str(tag),plot_data_container_model['00L'])
+    #RAXR
+    keys=plot_raxr_container_model.keys()
+    keys.sort()
+    np.savetxt('D://temp_RAXR'+str(tag),plot_raxr_container_model[keys[0]])
+    #Fourier components
+    #print A_list_calculated
+    ap_data=np.concatenate((A_list_calculated[:,np.newaxis],P_list_calculated[:,np.newaxis],Q_list_calculated[:,np.newaxis]),axis=1)
+    np.savetxt('D://temp_APQ'+str(tag),ap_data)
+       
 #this function must be called within the shell of GenX gui and par_instance=model.parameters,dump_file='D://temp_plot_raxr_A_P_Q' by default
 #The purpose of this function is to append the errors of A and P extracted from the errors displaying inside the tab of GenX gui 
 #copy and past this command line to the shell for action:
@@ -511,12 +608,17 @@ def plot_all(path=module_path_locator()):
     pyplot.figure()
     print '##############Total e - raxr -layer water#################'
     gaussian_fit(e_den_subtracted)
+    pyplot.title('Total e - raxr -layer water')
     pyplot.figure()
     print '#########################RAXR (MI)########################'
     gaussian_fit(e_den_raxr_MI,zs=None,N=40)
-    
+    pyplot.title('RAXR (MI)')
+    pyplot.figure()
+    print '#########################RAXR (MD)########################'
+    gaussian_fit(np.append([data_eden_FS_sub[0]],[data_eden_FS_sub[1]*(np.array(data_eden_FS_sub[1])>0)],axis=0).transpose(),zs=None,N=40)
+    pyplot.title('RAXR (MD)')
     pyplot.show()
-    
+    #return e_den_subtracted,data_eden_FS
 
 def gaussian_fit(data,fit_range=[1,40],zs=None,N=8):
     x,y=[],[]
@@ -572,6 +674,8 @@ def gaussian_fit(data,fit_range=[1,40],zs=None,N=8):
     plt.plot(x, y)
     plt.plot(x, fit , 'r-')
     plt.show()
+    
+    
 if __name__=="__main__":    
     plot_all()
     
