@@ -1259,7 +1259,7 @@ class Sample:
         ftot = fs + fb
         return ftot*self.inst.inten
         
-    def fourier_synthesis(self,HKL_list,P_list,A_list,z_min=0.,z_max=20.,el_lib={'O':8,'Fe':26,'As':33,'Pb':82,'Sb':51,'Zr':40},resonant_el='Pb',resolution=1000):
+    def fourier_synthesis(self,HKL_list,P_list,A_list,z_min=0.,z_max=20.,el_lib={'O':8,'Fe':26,'As':33,'Pb':82,'Sb':51,'Zr':40},resonant_el='Pb',resolution=1000,water_scaling=1):
         ZR=el_lib[resonant_el]
         q_list = self.unit_cell.abs_hkl(np.array(HKL_list[0]), np.array(HKL_list[1]), np.array(HKL_list[2]))#a list of 1/d for each hkl set
         q_list_sorted=copy.copy(q_list)
@@ -1275,7 +1275,7 @@ class Sample:
             z_plot.append(z_each)
             eden=0
             eden_domains=[]
-            eden_each_domain=ZR/Auc/np.pi/2*np.sum(A_list*np.cos(2*np.pi*P_list-np.array(q_list_sorted)*z_each)*delta_q)
+            eden_each_domain=ZR/Auc/np.pi/2*np.sum(A_list*np.cos(2*np.pi*P_list-np.array(q_list_sorted)*z_each)*delta_q)/water_scaling
             eden_domains.append(eden_each_domain)
             eden+=eden_each_domain
             eden_plot.append(eden)
@@ -1431,14 +1431,21 @@ class Sample:
                 eden_raxs[-1]=eden_raxs[-1]+np.sum(el_lib[raxs_el]*wt*sorbate_density*np.exp(-np.array(sorbate_damping_factors))*(2*np.pi*np.array(sigma_layered_sorbate)**2)**-0.5*np.exp(-0.5/np.array(sigma_layered_sorbate)**2*(z_each-np.array(z_layered_sorbate))**2))
 
             labels.append('Domain'+str(domain_index+1))
-            e_data.append(np.array([z_plot,eden,eden_raxs,eden_layer_water]))
+            #e_data.append(np.array([z_plot,eden,eden_raxs,eden_layer_water]))
+            if domain_index==0:#domain1 has a 0.25 weighting factor
+                e_data.append(np.array([z_plot,np.array(eden)/eden_layer_water[-1]*0.25,np.array(eden_raxs)/eden_layer_water[-1]*0.25,np.array(eden_layer_water)/eden_layer_water[-1]*0.25]))
+            elif domain_index==1:#domain2 has a 0.75 weighting factor
+                e_data.append(np.array([z_plot,np.array(eden)/eden_layer_water[-1]*0.75,np.array(eden_raxs)/eden_layer_water[-1]*0.75,np.array(eden_layer_water)/eden_layer_water[-1]*0.75]))
             e_total=e_total+np.array(eden)
             e_total_raxs=e_total_raxs+np.array(eden_raxs)
             e_total_layer_water=e_total_layer_water+np.array(eden_layer_water)
         labels.append('Total electron density')
-        e_data.append(np.array([list(e_data[0])[0],e_total,e_total_raxs,e_total_layer_water]))
+        #e_data.append(np.array([list(e_data[0])[0],e_total,e_total_raxs,e_total_layer_water]))
+        e_data.append(np.array([list(e_data[0])[0],e_total/e_total_layer_water[-1],e_total_raxs/e_total_layer_water[-1],e_total_layer_water/e_total_layer_water[-1]]))
+        water_scaling=e_total_layer_water[-1]
         pickle.dump([e_data,labels],open(os.path.join(file_path,"temp_plot_eden"),"wb"))
-
+        return water_scaling
+        
     def calc_fs(self, h, k, l,slabs):
         '''Calculate the structure factors from the surface
         '''
