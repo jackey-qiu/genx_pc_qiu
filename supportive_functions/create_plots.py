@@ -7,6 +7,7 @@ import sys,os,inspect
 from matplotlib import pyplot
 from scipy.optimize import curve_fit
 import matplotlib.pyplot as plt
+from color_mate import color_combine_mate as set_color
 
 def local_func():
     return None
