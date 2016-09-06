@@ -135,9 +135,9 @@ def generate_plot_files(output_file_path,sample,rgh,data,fit_mode, z_min=0,z_max
     z_plot,eden_plot,eden_domains=sample.fourier_synthesis(np.array(HKL_list_raxr),np.array(P_list_Fourier_synthesis).transpose(),np.array(A_list_Fourier_synthesis).transpose(),z_min=z_min,z_max=z_max,resonant_el=sample.domain['el'],resolution=1000,water_scaling=water_scaling)
     z_plot_sub,eden_plot_sub,eden_domains_sub=sample.fourier_synthesis(np.array(HKL_list_raxr),np.array(P_list_calculated_sub).transpose(),np.array(A_list_calculated_sub).transpose(),z_min=z_min,z_max=z_max,resonant_el=sample.domain['el'],resolution=1000,water_scaling=water_scaling)
     #z_plot_sub,eden_plot_sub,eden_domains_sub=sample.fourier_synthesis(np.array([[HKL_list_raxr[0][0]]*100,[HKL_list_raxr[1][0]]*100,np.arange(0,HKL_list_raxr[2][-1],HKL_list_raxr[2][-1]/100.)]),np.array(P_list_calculated_sub).transpose(),np.array(A_list_calculated_sub).transpose(),z_min=z_min,z_max=z_max,resonant_el=sample.domain['el'],resolution=1000)
-
     pickle.dump([z_plot,eden_plot,eden_domains],open(os.path.join(output_file_path,"temp_plot_eden_fourier_synthesis"),"wb"))
     pickle.dump([z_plot_sub,eden_plot_sub,eden_domains_sub],open(os.path.join(output_file_path,"temp_plot_eden_fourier_synthesis_sub"),"wb")) 
+    pickle.dump([water_scaling*0.25,water_scaling*0.75,water_scaling],open(os.path.join(output_file_path,"water_scaling"),"wb")) 
 
 #a function to make files to generate vtk files    
 def generate_plot_files_2(output_file_path,sample,rgh,data,fit_mode, z_min=0,z_max=29,RAXR_HKL=[0,0,20],bl_dl=bl_dl_muscovite,height_offset=0,tag=1):
@@ -339,12 +339,17 @@ def plotting_raxr_multiple(file_head=module_path_locator(),dump_files=['temp_plo
             data=datas[j]
             experiment_data,model=data[0],data[1]
             labels=model.keys()
+            labels.sort()
             label_tag=map(lambda x:float(x.split("_")[-1]),labels)
             label_tag.sort()
             labels=map(lambda x:"0_0_"+str(x),label_tag)
-            ax.scatter(experiment_data[labels[i]][:,0],experiment_data[labels[i]][:,1],marker=marker[0],s=15,c=color[j],edgecolors=color[j],label=label_marks[j])
-            ax.errorbar(experiment_data[labels[i]][:,0],experiment_data[labels[i]][:,1],yerr=experiment_data[labels[i]][:,2],fmt=None,ecolor=color[j])
-            ax.plot(model[labels[i]][:,0],model[labels[i]][:,1],color=color[j],lw=1.5)
+            labels_comp=datas[0][1].keys()
+            labels_comp.sort()
+            offset=model[labels[i]][:,1][0]-datas[0][1][labels_comp[i]][:,1][0]-j*0.2#arbitrary offset between datasets
+            #print labels[i],offset
+            ax.scatter(experiment_data[labels[i]][:,0],experiment_data[labels[i]][:,1]-offset,marker=marker[0],s=15,c=color[j],edgecolors=color[j],label=label_marks[j])
+            ax.errorbar(experiment_data[labels[i]][:,0],experiment_data[labels[i]][:,1]-offset,yerr=experiment_data[labels[i]][:,2],fmt=None,ecolor=color[j])
+            ax.plot(model[labels[i]][:,0],model[labels[i]][:,1]-offset,color=color[j],lw=1.5)
             if i in [6,7,8]:
                 pyplot.xlabel('Energy (ev)',axes=ax,fontsize=12)
             if i in [0,3,6]:
@@ -353,14 +358,14 @@ def plotting_raxr_multiple(file_head=module_path_locator(),dump_files=['temp_plo
                 pyplot.title(labels[i],size=12)
             if i==0:
                 ax.legend(loc=2,ncol=2,prop={'size':12})
-                pyplot.ylim((0.5,3))
+                pyplot.ylim((1.5,3.5))
     pyplot.subplots_adjust(wspace=0.2, hspace=None)
     #fig.tight_layout()
     
     fig.savefig(os.path.join(file_head,'multiple_raxrs.png'),dpi=300)
     return fig
         
-def plot_CTR_multiple_model_muscovite(file_head=module_path_locator(),dump_files=['temp_plot_0NaCl','temp_plot_1NaCl','temp_plot_10NaCl','temp_plot_100NaCl'],labels=['0NaCl','1uM NaCl','10uM NaCl','100uM NaCl'],markers=['.']*20,fontsize=16,lw=1.5,color_type=1):
+def plot_CTR_multiple_model_muscovite(file_head=module_path_locator(),dump_files=['temp_plot_0NaCl','temp_plot_1NaCl','temp_plot_10NaCl','temp_plot_100NaCl'],labels=['0NaCl','1mM NaCl','10mM NaCl','100mM NaCl'],markers=['.']*20,fontsize=16,lw=1.5,color_type=1):
     colors=set_color(len(dump_files)*2,color_type)
     objects=[pickle.load(open(os.path.join(file_head,file))) for file in dump_files]
     fig=pyplot.figure(figsize=(10,8))
@@ -594,19 +599,56 @@ def plot_many_experiment_data(data_files=['D:\\Google Drive\\data\\400uM_Sb_hema
             pyplot.ylabel('|F|',axes=ax,fontsize=fontsize)
     return True
     
-def plot_multiple_e_profiles(file_head=module_path_locator(),dump_files=['temp_plot_eden_0NaCl','temp_plot_eden_1NaCl','temp_plot_eden_10NaCl','temp_plot_eden_100NaCl'],label_marks=['0NaCl','1uM NaCl','10uM NaCl','100uM NaCl'],color_type=5):
+def plot_multiple_e_profiles(file_head=module_path_locator(),dump_files=['temp_plot_eden_0NaCl','temp_plot_eden_1NaCl','temp_plot_eden_10NaCl','temp_plot_eden_100NaCl'],label_marks=['0NaCl','1mM NaCl','10mM NaCl','100mM NaCl'],color_type=5):
     colors=set_color(len(dump_files),color_type)
-    fig=pyplot.figure(figsize=(8,8))
+    fig=pyplot.figure(figsize=(6,8))
+    ax1=fig.add_subplot(2,1,1)
+    pyplot.ylabel("E_density",fontsize=12)
+    #pyplot.xlabel("Z(Angstrom)",fontsize=12)
+    pyplot.title('Total e profile',fontsize=12)
+    ax2=fig.add_subplot(2,1,2)
+    pyplot.ylabel("E_density",fontsize=12)
+    pyplot.xlabel("Z(Angstrom)",fontsize=12)
+    pyplot.title('Zr e profile',fontsize=12)
     for i in range(len(dump_files)):
         data_eden=pickle.load(open(os.path.join(file_head,dump_files[i]),"rb"))
         edata,labels=data_eden[0],data_eden[1]
-        pyplot.plot(np.array(edata[-1][0,:]),edata[-1][1,:]+i,color=colors[i],label="Total e "+label_marks[i],lw=2)
-        pyplot.fill_between(np.array(edata[-1][0,:]),edata[-1][2,:]*0+i,edata[-1][2,:]+i,color=colors[i],label="RAXS e profile (MD) "+label_marks[i],alpha=0.6)
-    pyplot.xlabel('Z(Angstrom)',fontsize=12)
-    pyplot.ylabel('E_density',fontsize=12)
-    pyplot.legend(fontsize=12)
+        ax1.plot(np.array(edata[-1][0,:]),edata[-1][1,:]+i,color=colors[i],label="Total e "+label_marks[i],lw=2)
+        ax2.fill_between(np.array(edata[-1][0,:]),edata[-1][2,:]*0+i,edata[-1][2,:]+i,color=colors[i],label="Zr e profile (MD) "+label_marks[i],alpha=0.6)
+    ax1.legend(fontsize=12)
+    ax2.legend(fontsize=12)
+    ax2.set_ylim(0,6)
+    fig.tight_layout()
     fig.savefig(os.path.join(file_head,'multiple_eprofiles.png'),dpi=300)
     return fig
+    
+    
+def plot_multiple_APQ_profiles(file_head=module_path_locator(),dump_files=['temp_plot_raxr_A_P_Q_0NaCl','temp_plot_raxr_A_P_Q_1NaCl','temp_plot_raxr_A_P_Q_10NaCl','temp_plot_raxr_A_P_Q_100NaCl'],labels=['0NaCl','1uM NaCl','10uM NaCl','100uM NaCl'],color_type=5):
+    colors=set_color(len(dump_files),color_type)
+    fig1=pyplot.figure(figsize=(9,9))
+    ax1=fig1.add_subplot(2,1,1)
+    pyplot.ylabel("A")
+    pyplot.xlabel("Q")
+    ax2=fig1.add_subplot(2,1,2)
+    pyplot.ylabel("P/Q(2pi)")
+    pyplot.xlabel("Q")
+    
+    for i in range(len(dump_files)):
+        AP_Q_file=os.path.join(file_head,dump_files[i])
+        #plot Q dependence of Foriour components A and P
+        data_AP_Q=pickle.load(open(AP_Q_file,"rb"))
+        #A over Q
+        ax1.plot(data_AP_Q[0][2],data_AP_Q[0][0],color=colors[i],label=labels[i],lw=1.5)
+        ax1.errorbar(data_AP_Q[1][2],data_AP_Q[1][0],yerr=np.transpose(data_AP_Q[1][3]),color=colors[i],fmt='o',markersize=4.5)
+        #P over Q
+        ax2.plot(data_AP_Q[0][2],np.array(data_AP_Q[0][1])/np.array(data_AP_Q[0][2])*np.pi*2,color=colors[i],label=labels[i],lw=1.5)
+        ax2.errorbar(data_AP_Q[1][2],np.array(data_AP_Q[1][1])/np.array(data_AP_Q[1][2])*np.pi*2,yerr=np.transpose(data_AP_Q[1][4])*np.pi*2/[data_AP_Q[1][2],data_AP_Q[1][2]],color=colors[i],fmt='o',markersize=4.5)
+    ax2.legend()
+    ax1.legend()
+    ax1.set_xlim(0,4)
+    ax2.set_xlim(0,4)
+    fig1.savefig(os.path.join(file_head,'multiple_APQ_profiles.png'),dpi=300)
+    return fig1
     
 def plot_all(path=module_path_locator()):
     PATH=path
@@ -616,16 +658,19 @@ def plot_all(path=module_path_locator()):
     #specify file paths (files are dumped files when setting running_mode=False in GenX script)
     e_file=os.path.join(PATH,"temp_plot_eden")#e density from model
     e_file_FS=os.path.join(PATH,"temp_plot_eden_fourier_synthesis") #e density from Fourier synthesis
+    water_scaling_file=os.path.join(PATH,"water_scaling")
     ctr_file_folder=PATH
     ctr_file_names=["temp_plot"]#you may want to overplot differnt ctr profiles based on differnt models
     raxr_file=os.path.join(PATH,"temp_plot_raxr")
     AP_Q_file=os.path.join(PATH,"temp_plot_raxr_A_P_Q")
     e_den_subtracted=None
     e_den_raxr_MI=None
+    water_scaling=None
     #plot electron density profile
     if plot_e_model: 
         data_eden=pickle.load(open(e_file,"rb"))
         edata,labels=data_eden[0],data_eden[1]
+        water_scaling=pickle.load(open(water_scaling_file,"rb"))[-1]#total water scaling factor to be used in Gaussian fit below
         N=len(labels)
         fig=pyplot.figure(figsize=(15,6))
         if plot_e_FS:
@@ -704,25 +749,26 @@ def plot_all(path=module_path_locator()):
     
     pyplot.figure()
     print '##############Total e - raxr -layer water#################'
-    gaussian_fit(e_den_subtracted)
+    gaussian_fit(e_den_subtracted,water_scaling=water_scaling)
     pyplot.title('Total e - raxr -layer water')
     pyplot.figure()
     print '#########################RAXR (MI)########################'
-    gaussian_fit(e_den_raxr_MI,zs=None,N=40)
+    gaussian_fit(e_den_raxr_MI,zs=None,N=40,water_scaling=water_scaling)
     pyplot.title('RAXR (MI)')
     pyplot.figure()
     print '#########################RAXR (MD)########################'
-    gaussian_fit(np.append([data_eden_FS_sub[0]],[data_eden_FS_sub[1]*(np.array(data_eden_FS_sub[1])>0)],axis=0).transpose(),zs=None,N=40)
+    gaussian_fit(np.append([data_eden_FS_sub[0]],[data_eden_FS_sub[1]*(np.array(data_eden_FS_sub[1])>0)],axis=0).transpose(),zs=None,N=40,water_scaling=water_scaling)
     pyplot.title('RAXR (MD)')
     pyplot.show()
     #return e_den_subtracted,data_eden_FS
+    return water_scaling
 
-def gaussian_fit(data,fit_range=[1,40],zs=None,N=8):
+def gaussian_fit(data,fit_range=[1,40],zs=None,N=8,water_scaling=1):
     x,y=[],[]
     for i in range(len(data)):
         if data[i,0]>fit_range[0] and data[i,0]<fit_range[1]:
             x.append(data[i,0]),y.append(data[i,1])
-    x,y=np.array(x),np.array(y)
+    x,y=np.array(x),np.array(y)*water_scaling
     plt.plot(x,y)
     plt.show()
 
