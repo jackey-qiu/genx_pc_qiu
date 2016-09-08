@@ -653,7 +653,7 @@ def plot_multiple_APQ_profiles(file_head=module_path_locator(),dump_files=['temp
 def plot_all(path=module_path_locator()):
     PATH=path
     #which plots do you want to create
-    plot_e_model,plot_e_FS,plot_ctr,plot_raxr,plot_AP_Q=1,1,1,1,1
+    plot_e_model,plot_e_FS,plot_ctr,plot_raxr,plot_AP_Q=1,1,0,0,0
 
     #specify file paths (files are dumped files when setting running_mode=False in GenX script)
     e_file=os.path.join(PATH,"temp_plot_eden")#e density from model
@@ -753,7 +753,7 @@ def plot_all(path=module_path_locator()):
     pyplot.title('Total e - raxr -layer water')
     pyplot.figure()
     print '#########################RAXR (MI)########################'
-    gaussian_fit(e_den_raxr_MI,zs=None,N=40,water_scaling=water_scaling)
+    gaussian_fit(e_den_raxr_MI,zs=[3.32,5.15,6.84,8.89,10.23,11.85,13.48,15.6,17.29],N=40,water_scaling=water_scaling)
     pyplot.title('RAXR (MI)')
     pyplot.figure()
     print '#########################RAXR (MD)########################'
@@ -818,6 +818,154 @@ def gaussian_fit(data,fit_range=[1,40],zs=None,N=8,water_scaling=1):
     plt.plot(x, fit , 'r-')
     plt.show()
     
+def find_A_P_muscovite(q_list,ctrs,amps,wids):
+    #ctrs:z list (in A with reference of surface having 0A)
+    #amps:oc list
+    #wids:u list(in A)
+    Q=q_list
+    A_container,P_container=[],[]
+    for q_index in range(len(Q)):
+        q=Q[q_index]
+        complex_sum=0.+1.0J*0.
+        for i in range(len(ctrs)):
+            complex_sum+=amps[i]*np.exp(-q**2*wids[i]**2/2)*np.exp(1.0J*q*ctrs[i])#z should be plus 1 to account for the fact that surface slab sitting on top of bulk slab
+        A_container.append(abs(complex_sum))
+        img_complex_sum, real_complex_sum=np.imag(complex_sum),np.real(complex_sum)
+        if img_complex_sum==0.:
+            P_container.append(0)
+        elif real_complex_sum==0 and img_complex_sum==1:
+            P_container.append(0.25)#1/2pi/2pi
+        elif real_complex_sum==0 and img_complex_sum==-1:  
+            P_container.append(0.75)#3/2pi/2pi
+        else:#adjustment is needed since the return of np.arctan is ranging from -1/2pi to 1/2pi
+            if real_complex_sum>0 and img_complex_sum>0:
+                P_container.append(np.arctan(img_complex_sum/real_complex_sum)/np.pi/2.)
+            elif real_complex_sum>0 and img_complex_sum<0:
+                P_container.append(np.arctan(img_complex_sum/real_complex_sum)/np.pi/2.+1.)
+            elif real_complex_sum<0 and img_complex_sum>0:
+                P_container.append(np.arctan(img_complex_sum/real_complex_sum)/np.pi/2.+0.5)
+            elif real_complex_sum<0 and img_complex_sum<0:
+                P_container.append(np.arctan(img_complex_sum/real_complex_sum)/np.pi/2.+0.5)
+        
+    return np.array(A_container),np.array(P_container),Q
+    
+def fourier_synthesis(q_list,P,A,z,N=40,Auc=46.9275):
+    ZR=N
+    q_list.sort()
+    delta_q=np.average([q_list[i+1]-q_list[i] for i in range(len(q_list)-1)])
+    z_plot=z
+    eden_plot=[]
+    for i in range(len(z)):
+        z_each=z[i]
+        eden=0
+        eden=ZR/Auc/np.pi/2*np.sum(A*np.cos(2*np.pi*P-np.array(q_list)*z_each)*delta_q)
+        eden_plot.append(eden)
+    return eden_plot
+    
+def q_list_func(h, k, l,a=5.1988, b=9.0266, c=20.1058, alpha=90,beta=95.782,gamma=90):
+    '''Returns the absolute value of (h,k,l) vector in units of
+    AA.
+
+    This is equal to the inverse lattice spacing 1/d_hkl.
+    '''
+    h=np.array(h)
+    k=np.array(k)
+    l=np.array(l)
+    dinv = np.sqrt(((h/a*np.sin(alpha))**2 +
+                     (k/b*np.sin(beta))**2  +
+                     (l/c*np.sin(gamma))**2 +
+                    2*k*l/b/c*(np.cos(beta)*
+                                         np.cos(gamma) -
+                                         np.cos(alpha)) +
+                    2*l*h/c/a*(np.cos(gamma)*
+                                         np.cos(alpha) -
+                                         np.cos(beta)) +
+                    2*h*k/a/b*(np.cos(alpha)*
+                                         np.cos(beta) -
+                                         np.cos(gamma)))
+                    /(1 - np.cos(alpha)**2 - np.cos(beta)**2
+                      - np.cos(gamma)**2 + 2*np.cos(alpha)
+                      *np.cos(beta)*np.cos(gamma)))
+    return dinv*np.pi*2
+    
+def fit_e_density(path=module_path_locator(),fit_range=[1,40],zs=None,N=8):
+    PATH=path
+    ##extract hkl values##
+    full_dataset=np.loadtxt(os.path.join(PATH,"temp_full_dataset.dat"))
+    h,k,l=[],[],[]
+    for i in range(len(full_dataset)):
+        if full_dataset[i,3]!=0:
+            if full_dataset[i,3] not in l:
+                h.append(full_dataset[i,1])
+                k.append(full_dataset[i,2])
+                l.append(full_dataset[i,3])
+    ##extract e density data##
+    data_file=os.path.join(PATH,"temp_plot_eden_fourier_synthesis")
+    data=np.append([pickle.load(open(data_file,"rb"))[0]],[pickle.load(open(data_file,"rb"))[1]],axis=0).transpose()
+    ##extract water scaling value##
+    water_scaling_file=os.path.join(PATH,"water_scaling")
+    water_scaling=pickle.load(open(water_scaling_file,"rb"))[-1]
+    x,y=[],[]
+    for i in range(len(data)):
+        if data[i,0]>fit_range[0] and data[i,0]<fit_range[1]:
+            x.append(data[i,0]),y.append(data[i,1])
+    x,y=np.array(x),np.array(y)*water_scaling
+    plt.plot(x,y)
+    plt.show()
+
+    #cal q list
+    q_list=q_list_func(h,k,l)
+    
+    def func(x_ctrs_qs,*params):
+        x=x_ctrs_qs[0]
+        ctrs=x_ctrs_qs[1]
+        q_list=x_ctrs_qs[2]
+        amps=[]
+        wids=[]
+        for i in range(0, len(params), 2):
+            amps.append(abs(params[i]))
+            wids.append(abs(params[i+1]))
+
+        #cal A and P list 
+        A,P,Q=find_A_P_muscovite(q_list,ctrs,amps,wids)
+        #Fourier thynthesis
+        y=fourier_synthesis(q_list,P,A,z=x,N=40)
+        return y
+
+    guess = []
+    ctrs=[]
+    if zs==None:
+        for i in range(1,len(x)-1):
+            if y[i-1]<y[i] and y[i+1]<y[i]:
+                ctrs.append(x[i])
+    elif type(zs)==int:
+        ctrs=[fit_range[0]+(fit_range[1]-fit_range[0])/zs*i for i in range(zs)]+[fit_range[1]]
+    else:
+        ctrs=np.array(zs)
+    for i in range(len(ctrs)):
+        guess += [0.5, 1]   
+    #print x,ctrs
+    popt, pcov = curve_fit(func, [x,ctrs,q_list], y, p0=guess)
+    combinded_set=[]
+    #print 'z occupancy*4 U(sigma**2)'
+    for i in range(0,len(popt),2):
+        combinded_set=combinded_set+[ctrs[i/2],abs(popt[i])*4,abs(popt[i+1])**2]
+        #print '%3.3f\t%3.3f\t%3.3f'%(ctrs[i/2],abs(popt[i])/N*(abs(popt[i+1])*np.sqrt(np.pi*2)*5.199*9.027)*4,abs(popt[i+1])**2)
+    combinded_set=np.reshape(np.array(combinded_set),(len(combinded_set)/3,3)).transpose()
+    #combinded_set=combinded_set.transpose()
+    print 'total_occupancy=',np.sum(combinded_set[1,:]/4)
+    print 'OC_RAXS_LIST=np.array([',','.join([str(each) for each in combinded_set[1,:]]),'])'
+    print 'U_RAXS_LIST=np.array([',','.join([str(each) for each in combinded_set[2,:]]),'])'
+    print 'X_RAXS_LIST=[0.5]*',len(combinded_set[1,:])
+    print 'Y_RAXS_LIST=[0.5]*',len(combinded_set[1,:])
+    print 'Z_RAXS_LIST=np.array([',','.join([str(each) for each in combinded_set[0,:]]),'])'
+    
+    
+    fit = func([x,ctrs], *popt)
+
+    plt.plot(x, y)
+    plt.plot(x, fit , 'r-')
+    plt.show()
     
 if __name__=="__main__":    
     plot_all()
