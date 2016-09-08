@@ -117,7 +117,6 @@ def generate_plot_files(output_file_path,sample,rgh,data,fit_mode, z_min=0,z_max
     
     A_list_calculated_sub,P_list_calculated_sub,Q_list_calculated_sub=sample.find_A_P_muscovite(h=list(HKL_list_raxr[0]),k=list(HKL_list_raxr[1]),l=list(HKL_list_raxr[2]))
     #A_list_calculated_sub,P_list_calculated_sub,Q_list_calculated_sub=sample.find_A_P_muscovite(h=HKL_list_raxr[0][0],k=HKL_list_raxr[1][0],l=HKL_list_raxr[2][-1])
-
     
     #dump CTR data and profiles
     hkls=['00L']
@@ -818,7 +817,7 @@ def gaussian_fit(data,fit_range=[1,40],zs=None,N=8,water_scaling=1):
     plt.plot(x, fit , 'r-')
     plt.show()
     
-def find_A_P_muscovite(q_list,ctrs,amps,wids):
+def find_A_P_muscovite(q_list,ctrs,amps,wids,wt=0.25):
     #ctrs:z list (in A with reference of surface having 0A)
     #amps:oc list
     #wids:u list(in A)
@@ -828,7 +827,7 @@ def find_A_P_muscovite(q_list,ctrs,amps,wids):
         q=Q[q_index]
         complex_sum=0.+1.0J*0.
         for i in range(len(ctrs)):
-            complex_sum+=amps[i]*np.exp(-q**2*wids[i]**2/2)*np.exp(1.0J*q*ctrs[i])#z should be plus 1 to account for the fact that surface slab sitting on top of bulk slab
+            complex_sum+=wt*amps[i]*np.exp(-q**2*wids[i]**2/2)*np.exp(1.0J*q*ctrs[i])#z should be plus 1 to account for the fact that surface slab sitting on top of bulk slab
         A_container.append(abs(complex_sum))
         img_complex_sum, real_complex_sum=np.imag(complex_sum),np.real(complex_sum)
         if img_complex_sum==0.:
@@ -871,6 +870,7 @@ def q_list_func(h, k, l,a=5.1988, b=9.0266, c=20.1058, alpha=90,beta=95.782,gamm
     h=np.array(h)
     k=np.array(k)
     l=np.array(l)
+    alpha,beta,gamma=np.deg2rad(alpha),np.deg2rad(beta),np.deg2rad(gamma)
     dinv = np.sqrt(((h/a*np.sin(alpha))**2 +
                      (k/b*np.sin(beta))**2  +
                      (l/c*np.sin(gamma))**2 +

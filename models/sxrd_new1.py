@@ -1062,9 +1062,11 @@ class Sample:
                 slabs=[single_domain]
                 x, y, z, u, oc, el = self._surf_pars(slabs)
                 res_el=self.domain['el']
-                sorbate_index=[ii for ii in range(len(el)) if el[ii]==res_el]           
+                sorbate_index=[ii for ii in range(len(el)) if el[ii]==res_el]
                 for j in sorbate_index:
-                    complex_sum+=getattr(self.domain['global_vars'],'wt'+str(i+1))*oc[j]*np.exp(-q**2*u[j]**2/2)*np.exp(1.0J*2*np.pi*(h_single*x[j]+k_single*y[j]+l_single*(z[j]+1)))#z should be plus 1 to account for the fact that surface slab sitting on top of bulk slab
+                    #complex_sum+=getattr(self.domain['global_vars'],'wt'+str(i+1))*oc[j]*np.exp(-q**2*u[j]**2/2)*np.exp(1.0J*2*np.pi*(h_single*x[j]+k_single*y[j]+l_single*(z[j]+1)))#z should be plus 1 to account for the fact that surface slab sitting on top of bulk slab
+                    #l is not necessary perpendicular to z direction
+                    complex_sum+=getattr(self.domain['global_vars'],'wt'+str(i+1))*oc[j]*np.exp(-q**2*u[j]**2/2)*np.exp(1.0J*q*(z[j]+1)*self.unit_cell.c)
             A_container.append(abs(complex_sum))
             img_complex_sum, real_complex_sum=np.imag(complex_sum),np.real(complex_sum)
             if img_complex_sum==0.:
