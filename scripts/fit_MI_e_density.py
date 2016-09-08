@@ -100,5 +100,13 @@ def Sim(data):
         F.append(f)
         fom_scaler.append(1)
         
+    print_items=False
+    if print_items:
+        print 'U_RAXS_LIST=['+','.join(map(lambda x:str(x**2),u_list))+']'
+        print 'OC_RAXS_LIST=['+','.join(map(lambda x:str(x),oc_list))+']'
+        print 'Z_RAXS_LIST=['+','.join(map(lambda x:str(x/20.1058-1),zs+np.array(dz_list)))+']'
+        print 'X_RAXS_LIST=[0]*'+str(len(u_list))
+        print 'Y_RAXS_LIST=[0]*'+str(len(u_list))
+        
     return F,1,fom_scaler
     ##========================================<program ends here>========================================================##
