@@ -694,6 +694,18 @@ def overplot_total_raxr_e_density():
     pyplot.legend()
     return None
     
+def overplot_raxr_e_density(dump_files=["temp_plot_RAXR_eden_e_fit_0mMNaCl","temp_plot_RAXR_eden_e_fit_1mMNaCl","temp_plot_RAXR_eden_e_fit_10mMNaCl","temp_plot_RAXR_eden_e_fit_100mMNaCl"],labels=['0mM NaCl','1mM NaCl','10mM NaCl','100mM NaCl']):
+    fig=pyplot.figure()
+    colors=set_color(len(dump_files),1)
+    for i in range(len(dump_files)):
+        dump_file=dump_files[i]
+        label=labels[i]
+        raxr_eden=pickle.load(open(os.path.join(module_path_locator(),dump_file),"rb"))
+        pyplot.fill_between(raxr_eden[0],np.array(raxr_eden[1])+i,i,color=colors[i],label=label)
+    pyplot.legend()
+    #fig.savefig(os.path.join(os.path.join(module_path_locator(),'temp_raxr_e_profiles_overlapping_profile.png'),dpi=300))
+    return fig
+        
 def plot_all(path=module_path_locator()):
     PATH=path
     #which plots do you want to create
