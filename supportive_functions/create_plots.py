@@ -34,6 +34,8 @@ bl_dl_muscovite_old={'3_0':{'segment':[[0,1],[1,9]],'info':[[2,1],[6,1]]},'2_0':
     '-2_1':{'segment':[[0,4.8609],[4.8609,9]],'info':[[4,-4.8609],[2,-6.8609]]},'-1_-1':{'segment':[[0,9]],'info':[[2,-4.1391]]},'-3_0':{'segment':[[0,1],[1,9]],'info':[[2,-1],[6,-1]]}}
 bl_dl_muscovite={'0_0':{'segment':[[0,20]],'info':[[2,2]]}}
 
+
+            
 def generate_plot_files(output_file_path,sample,rgh,data,fit_mode, z_min=0,z_max=29,RAXR_HKL=[0,0,20],bl_dl=bl_dl_muscovite,height_offset=0):
     plot_data_container_experiment={}
     plot_data_container_model={}
@@ -648,6 +650,49 @@ def plot_multiple_APQ_profiles(file_head=module_path_locator(),dump_files=['temp
     ax2.set_xlim(0,4)
     fig1.savefig(os.path.join(file_head,'multiple_APQ_profiles.png'),dpi=300)
     return fig1
+    
+def cal_e_density(z_list,oc_list,u_list,z_min=0,z_max=29,resolution=1000,N=40,wt=0.25,Auc=46.927488088,water_scaling=1):
+    height_list=[]
+    e_list=[]
+    z_min=float(z_min)
+    z_max=float(z_max)
+    def _density_at_z(z,z_cen,oc,u):
+        return wt*N*oc*(2*np.pi*u**2)**-0.5*np.exp(-0.5/u**2*(z-z_cen)**2)/Auc
+    for i in range(resolution):
+        z_each=z_min+(z_max-z_min)/resolution*i
+        e_temp=0
+        for j in range(len(z_list)):
+            z_cen=z_list[j]
+            oc=oc_list[j]
+            u=u_list[j]
+            e_temp+=_density_at_z(z_each,z_cen,oc,u)
+        height_list.append(z_each)
+        e_list.append(e_temp/water_scaling)
+    pickle.dump([height_list,e_list],open(os.path.join(module_path_locator(),"temp_plot_RAXR_eden_e_fit"),"wb"))
+    pyplot.figure()
+    pyplot.plot(height_list,e_list)
+    return None
+    
+def fit_e_2(zs=None,water_scaling=1,fit_range=[1,40]):
+    total_eden=pickle.load(open(os.path.join(module_path_locator(),"temp_plot_eden"),"rb"))[0][-1]
+    raxr_eden=pickle.load(open(os.path.join(module_path_locator(),"temp_plot_RAXR_eden_e_fit"),"rb"))
+    pyplot.figure()
+    pyplot.plot(raxr_eden[0],raxr_eden[1])
+    fit_data=np.append(np.array(raxr_eden[0])[:,np.newaxis],(np.array(total_eden[1,:])-np.array(raxr_eden[1]))[:,np.newaxis],axis=1)
+    pyplot.figure()
+    print '##############Total e - raxr - water#################'
+    gaussian_fit(fit_data,fit_range=fit_range,zs=zs,water_scaling=water_scaling)
+    pyplot.title('Total e - raxr -water')
+    return None
+    
+def overplot_total_raxr_e_density():
+    total_eden=pickle.load(open(os.path.join(module_path_locator(),"temp_plot_eden"),"rb"))[0][-1]
+    raxr_eden=pickle.load(open(os.path.join(module_path_locator(),"temp_plot_RAXR_eden_e_fit"),"rb"))
+    pyplot.figure()
+    pyplot.plot(raxr_eden[0],raxr_eden[1],label='RAXR el e density')
+    pyplot.plot(total_eden[0,:],total_eden[1,:],label='Total e density')
+    pyplot.legend()
+    return None
     
 def plot_all(path=module_path_locator()):
     PATH=path
