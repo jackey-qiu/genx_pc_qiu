@@ -600,7 +600,7 @@ def plot_many_experiment_data(data_files=['D:\\Google Drive\\data\\400uM_Sb_hema
             pyplot.ylabel('|F|',axes=ax,fontsize=fontsize)
     return True
     
-def plot_multiple_e_profiles(file_head=module_path_locator(),dump_files=['temp_plot_eden_0NaCl','temp_plot_eden_1NaCl','temp_plot_eden_10NaCl','temp_plot_eden_100NaCl'],label_marks=['0NaCl','1mM NaCl','10mM NaCl','100mM NaCl'],color_type=5):
+def plot_multiple_e_profiles(file_head=module_path_locator(),dump_files=['temp_plot_eden_0NaCl','temp_plot_eden_1NaCl','temp_plot_eden_10NaCl','temp_plot_eden_100NaCl'],label_marks=['0mM NaCl','1mM NaCl','10mM NaCl','100mM NaCl'],color_type=5):
     colors=set_color(len(dump_files),color_type)
     fig=pyplot.figure(figsize=(6,8))
     ax1=fig.add_subplot(2,1,1)
@@ -671,7 +671,7 @@ def cal_e_density(z_list,oc_list,u_list,z_min=0,z_max=29,resolution=1000,N=40,wt
     pickle.dump([height_list,e_list],open(os.path.join(module_path_locator(),"temp_plot_RAXR_eden_e_fit"),"wb"))
     pyplot.figure()
     pyplot.plot(height_list,e_list)
-    return None
+    return e_list
     
 def fit_e_2(zs=None,water_scaling=1,fit_range=[1,40]):
     total_eden=pickle.load(open(os.path.join(module_path_locator(),"temp_plot_eden"),"rb"))[0][-1]
@@ -709,7 +709,7 @@ def overplot_raxr_e_density(dump_files=["temp_plot_RAXR_eden_e_fit_0mMNaCl","tem
 def plot_all(path=module_path_locator()):
     PATH=path
     #which plots do you want to create
-    plot_e_model,plot_e_FS,plot_ctr,plot_raxr,plot_AP_Q=1,1,1,0,0
+    plot_e_model,plot_e_FS,plot_ctr,plot_raxr,plot_AP_Q=1,1,0,0,0
 
     #specify file paths (files are dumped files when setting running_mode=False in GenX script)
     e_file=os.path.join(PATH,"temp_plot_eden")#e density from model
@@ -756,7 +756,7 @@ def plot_all(path=module_path_locator()):
                 elif i==N-1:
                     ax.plot(data_eden_FS[0],data_eden_FS[1],color='r',label="RAXR imaging (MI)")
                     ax.fill_between(data_eden_FS[0],data_eden_FS[1],color='m',alpha=0.6)
-                    #ax.fill_between(data_eden_FS[0],edata[i][1,:]-data_eden_FS[1],color='black',alpha=0.6,label="Total e - RAXR(MI)")
+                    ax.fill_between(data_eden_FS[0],edata[i][1,:]-data_eden_FS[1],color='black',alpha=0.6,label="Total e - RAXR(MI)")
                     ax.fill_between(data_eden_FS[0],edata[i][3,:],color='blue',alpha=0.6,label="LayerWater")
                     ax.fill_between(data_eden_FS[0],list(edata[i][1,:]-edata[i][3,:]-np.array(data_eden_FS[1])*(np.array(data_eden_FS[1])>0.01)),color='black',alpha=0.6,label="Total e - LayerWater - RAXR")
                     eden_temp=list(edata[i][1,:]-edata[i][3,:]-np.array(data_eden_FS[1])*(np.array(data_eden_FS[1])>0.01))
@@ -809,7 +809,7 @@ def plot_all(path=module_path_locator()):
     pyplot.title('Total e - raxr -layer water')
     pyplot.figure()
     print '#########################RAXR (MI)########################'
-    gaussian_fit(e_den_raxr_MI,zs=[3.32,5.15,6.84,8.89,10.23,11.85,13.48,15.6,17.29],N=40,water_scaling=water_scaling)
+    gaussian_fit(e_den_raxr_MI,zs=None,N=40,water_scaling=water_scaling)
     pyplot.title('RAXR (MI)')
     pyplot.figure()
     print '#########################RAXR (MD)########################'

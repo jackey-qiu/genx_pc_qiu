@@ -20,7 +20,7 @@ f2=lambda p1,p2:np.sqrt(np.sum((p1-p2)**2))
 f3=lambda p1,p2:(1./f2(p1,p2))*(p2-p1)+p1
 
 class polymer():
-    def __init__(self,origin=np.array([0.,0.,0.]),build_grid=3,r=2.2,center_el='Zr',coor_el='O',domain_tag='_D1',index_offset=1):
+    def __init__(self,origin=np.array([0.,0.,0.]),build_grid=3,r=2.2,center_el='Zr',coor_el='O',domain_tag='_D1',index_offset=1,build_type='fill_up'):
         self.r=r
         self.a=(4*r**2/3)**0.5
         self.center_point={}
@@ -30,10 +30,10 @@ class polymer():
         self.origin=origin
         self.domain_tag=domain_tag
         self.offset=index_offset
-        self.build_index=self.translate_build_grid(build_grid)
+        self.build_index=self.translate_build_grid(build_grid,build_type)
         self.build()
         
-    def translate_build_grid(self,build_grid):
+    def translate_build_grid_original(self,build_grid):
         build_grid_return=[]
         if type(build_grid)==type(int(1)):
             for i in range(build_grid):
@@ -53,6 +53,40 @@ class polymer():
                         if (-1)**(i+j)==1:
                             switch=1
                         build_grid_return.append([k*2+switch,i,j])
+        return build_grid_return
+        
+    def translate_build_grid(self,build_grid,build_type='fill_up'):
+        build_grid_return=[]
+        if type(build_grid)==type(int(1)):
+            for i in range(build_grid):
+                for j in range(build_grid):
+                    for k in range(build_grid):
+                        switch=0
+                        if (-1)**(i+j)==1:
+                            switch=1
+                        build_grid_return.append([k*2+switch,j,i])
+        elif type(build_grid)==type([]) and type(build_grid[0])==type([]):
+            build_grid_return=build_grid
+        elif type(build_grid)==type([]) and type(build_grid[0])==type(int(1)):
+            if build_type=='fill_up':
+                for i in range(build_grid[2]):
+                    for j in range(build_grid[1]):
+                        for k in range(build_grid[0]):
+                            switch=0
+                            if (-1)**(i+j)==1:
+                                switch=1
+                            build_grid_return.append([k*2+switch,j,i])
+            elif build_type=='decrease':
+                for i in range(build_grid[2]):
+                    for j in range(i,build_grid[1]-i):
+                        for k in range(build_grid[0]):
+                            switch=0
+                            if (-1)**(i+j)==1:
+                                switch=1
+                            if ((k*2+switch)>i) and ((k*2+switch)<(build_grid[0]-i)):
+                                build_grid_return.append([k*2+switch,j,i])
+                                build_grid_return.append([k*2+switch,j,-i])
+                
         return build_grid_return
            
     def build(self,**arg):
