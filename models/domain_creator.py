@@ -1233,15 +1233,24 @@ def print_data_for_publication_B2_muscovite(N_sorbate=4,domain='',z_shift=1,save
       
     data=domain._extract_values()
     index_all=range(len(data[0]))
-    index=index_all[0:20]+index_all[132:132+N_sorbate]
+    index=index_all[0:20]
+    z_temp=data[2][132:132+N_sorbate]
+    for each_z in np.sort(z_temp):
+        index.append(list(np.where(data[2]==each_z))[0][0])
     f=open(save_file,'w')
     #f.write(str(len(index))+'\n#\n')
     for i in index:
+        #if i==index[-1]:
+        #    s = '%s\t%s\t%5.3f\t%5.3f\t%5.3f\t%5.3f\t%5.3f\t%5.3f\t%4.2f\t%4.2f' % (domain.id[i],data[3][i],data[0][i],data[1][i],(data[2][i]-z_shift)*20.1058,(data[0][i]-domain.x[i])*5.198,(data[1][i]-domain.y[i])*9.0266,(data[2][i]-domain.z[i])*20.1058,data[4][i],data[5][i]/4)
+        #    f.write(s)
+        #else:
+        #    s = '%s\t%s\t%5.3f\t%5.3f\t%5.3f\t%5.3f\t%5.3f\t%5.3f\t%4.2f\t%4.2f\n' % (domain.id[i],data[3][i],data[0][i],data[1][i],(data[2][i]-z_shift)*20.1058,(data[0][i]-domain.x[i])*5.198,(data[1][i]-domain.y[i])*9.0266,(data[2][i]-domain.z[i])*20.1058,data[4][i],data[5][i]/4)
+        #    f.write(s)
         if i==index[-1]:
-            s = '%s\t%s\t%5.3f\t%5.3f\t%5.3f\t%5.3f\t%5.3f\t%5.3f\t%4.2f\t%4.2f' % (domain.id[i],data[3][i],data[0][i],data[1][i],data[2][i]-z_shift,(data[0][i]-domain.x[i])*5.198,(data[1][i]-domain.y[i])*9.0266,(data[2][i]-domain.z[i])*20.1058,domain.u[i],domain.oc[i])
+            s = '%s\t%s\t%5.3f\t%5.3f\t%4.2f' % (domain.id[i],data[3][i],(data[2][i]-z_shift)*20.1058,data[4][i],data[5][i]/4)
             f.write(s)
         else:
-            s = '%s\t%s\t%5.3f\t%5.3f\t%5.3f\t%5.3f\t%5.3f\t%5.3f\t%4.2f\t%4.2f\n' % (domain.id[i],data[3][i],data[0][i],data[1][i],data[2][i]-z_shift,(data[0][i]-domain.x[i])*5.198,(data[1][i]-domain.y[i])*9.0266,(data[2][i]-domain.z[i])*20.1058,domain.u[i],domain.oc[i])
+            s = '%s\t%s\t%5.3f\t%5.3f\t%4.2f\n' % (domain.id[i],data[3][i],(data[2][i]-z_shift)*20.1058,data[4][i],data[5][i]/4)
             f.write(s)
     f.close()
     

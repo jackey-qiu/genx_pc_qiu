@@ -330,7 +330,7 @@ def plotting_raxr_new(data,savefile="D://raxr_temp.png",color=['b','r'],marker=[
     fig.savefig(savefile,dpi=300)
     return fig
     
-def plotting_raxr_multiple(file_head=module_path_locator(),dump_files=['temp_plot_raxr_0NaCl','temp_plot_raxr_1NaCl','temp_plot_raxr_10NaCl','temp_plot_raxr_100NaCl'],label_marks=['0uM NaCl','1uM NaCl','10uM NaCl','100uM NaCl'],number=9,color_type=1,marker=['o']):
+def plotting_raxr_multiple(file_head=module_path_locator(),dump_files=['temp_plot_raxr_0NaCl','temp_plot_raxr_1NaCl','temp_plot_raxr_10NaCl','temp_plot_raxr_100NaCl'],label_marks=['0mM NaCl','1mM NaCl','10mM NaCl','100mM NaCl'],number=9,color_type=1,marker=['o']):
     color=set_color(len(dump_files),color_type)
     datas=[pickle.load(open(os.path.join(file_head,file))) for file in dump_files]
     fig=pyplot.figure(figsize=(15,10))
@@ -709,7 +709,7 @@ def overplot_raxr_e_density(dump_files=["temp_plot_RAXR_eden_e_fit_0mMNaCl","tem
 def plot_all(path=module_path_locator()):
     PATH=path
     #which plots do you want to create
-    plot_e_model,plot_e_FS,plot_ctr,plot_raxr,plot_AP_Q=1,1,0,0,0
+    plot_e_model,plot_e_FS,plot_ctr,plot_raxr,plot_AP_Q=1,1,1,1,0
 
     #specify file paths (files are dumped files when setting running_mode=False in GenX script)
     e_file=os.path.join(PATH,"temp_plot_eden")#e density from model
