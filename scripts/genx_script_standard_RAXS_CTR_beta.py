@@ -3,8 +3,9 @@ import models.raxs as model2
 from models.utils import UserVars
 from datetime import datetime
 import numpy as np
-import sys,pickle,__main__
+import sys,pickle,__main__,os
 import batchfile.locate_path as batch_path
+import dump_files.locate_path as output_path
 import models.domain_creator as domain_creator
 import supportive_functions.make_parameter_table_GenX_beta4 as make_grid
 import supportive_functions.formate_xyz_to_vtk as xyz
@@ -96,7 +97,7 @@ commands_other=\
    ]
 commands=commands_other+commands_surface
 #depository path for output files(structure model files(.xyz,.cif), optimized values (CTR,RAXR,E_Density) for plotting
-output_file_path="D:\\"
+output_file_path=output_path.module_path_locator()
 ##############################################end of main setup zone############################################
 
 ##file paths and wt factors##
@@ -377,7 +378,7 @@ if TABLE:
                 elif len(SORBATE_ATTACH_ATOM[i][j])==3:
                     temp_binding_mode.append('TD')   
         binding_mode.append(temp_binding_mode)
-    make_grid.make_structure(map(sum,SORBATE_NUMBER),O_N,WATER_NUMBER,DOMAIN,Metal=SORBATE,binding_mode=binding_mode,long_slab=full_layer_pick,long_slab_HL=half_layer_pick,local_structure=LOCAL_STRUCTURE,add_distal_wild=ADD_DISTAL_LIGAND_WILD,use_domains=TABLE_DOMAINS,N_raxr=NUMBER_SPECTRA,domain_raxr_el=RESONANT_EL_LIST,layered_water=layered_water_pars['yes_OR_no'],layered_sorbate=layered_sorbate_pars['yes_OR_no'])
+    make_grid.make_structure(map(sum,SORBATE_NUMBER),O_N,WATER_NUMBER,DOMAIN,Metal=SORBATE,binding_mode=binding_mode,long_slab=full_layer_pick,long_slab_HL=half_layer_pick,local_structure=LOCAL_STRUCTURE,add_distal_wild=ADD_DISTAL_LIGAND_WILD,use_domains=TABLE_DOMAINS,N_raxr=NUMBER_SPECTRA,domain_raxr_el=RESONANT_EL_LIST,layered_water=layered_water_pars['yes_OR_no'],layered_sorbate=layered_sorbate_pars['yes_OR_no'],tab_path=os.path.join(output_file_path,'table.tab'))
 
 #function to group the Fourier components (FC) from different domains in each RAXR spectra
 #domain_index=[0,1] means setting the FC for domain2 (1+1) same as domain1 (0+1)
@@ -577,23 +578,24 @@ for scale in scales:
 #it is a super surface structure by stacking the surface slab on bulk slab, the repeat vector was counted 
 
 #only two possible path(one for runing in pacman, the other in local laptop)
-batch_path_head='//'.join(batch_path.module_path_locator().rsplit('/'))+'//'
-try:
-    domain_creator.add_atom_in_slab(bulk,batch_path_head+'bulk.str')
-except:
-    batch_path_head='/u1/uaf/cqiu/batchfile/'
-    domain_creator.add_atom_in_slab(bulk,batch_path_head+'bulk.str')
-domain_creator.add_atom_in_slab(ref_L_domain1,batch_path_head+'half_layer2.str')
-domain_creator.add_atom_in_slab(ref_S_domain1,batch_path_head+'half_layer3.str')
-domain_creator.add_atom_in_slab(ref_L_domain2,batch_path_head+'full_layer2.str')
-domain_creator.add_atom_in_slab(ref_S_domain2,batch_path_head+'full_layer3.str')
+#batch_path_head='//'.join(batch_path.module_path_locator().rsplit('/'))+'//'
+batch_path_head=batch_path.module_path_locator()
+#try:
+#    domain_creator.add_atom_in_slab(bulk,batch_path_head+'bulk.str')
+#except:
+#    batch_path_head='/u1/uaf/cqiu/batchfile/'
+domain_creator.add_atom_in_slab(bulk,os.path.join(batch_path_head,'bulk.str'))
+domain_creator.add_atom_in_slab(ref_L_domain1,os.path.join(batch_path_head,'half_layer2.str'))
+domain_creator.add_atom_in_slab(ref_S_domain1,os.path.join(batch_path_head,'half_layer3.str'))
+domain_creator.add_atom_in_slab(ref_L_domain2,os.path.join(batch_path_head,'full_layer2.str'))
+domain_creator.add_atom_in_slab(ref_S_domain2,os.path.join(batch_path_head,'full_layer3.str'))
 
 ##set up Fourier pars if there are RAXR datasets
 #Fourier component looks like A_Dn0_n1, where n0, n1 are used to specify the index for domain, and spectra, respectively
 #Each spectra will have its own set of A and P list, and each domain has its own set of P and A list
 rgh_raxs=None
 if NUMBER_SPECTRA!=0:
-    F1F2=np.loadtxt(batch_path_head+F1F2_FILE)
+    F1F2=np.loadtxt(os.path.join(batch_path_head,F1F2_FILE))
     rgh_raxr=UserVars()
     for i in range(NUMBER_SPECTRA):
         rgh_raxr.new_var('a'+str(i+1),0.0)
@@ -1507,7 +1509,7 @@ def Sim(data,VARS=VARS):
                         if el=="H":
                             temp_bv=domain_class_1.cal_bond_valence1_new2B_4(super_cell_surface,key,el,2.5,VARS['match_lib_'+str(i+1)+'A'][key],1,False,R0_BV,2.5)['total_valence']
                         else:
-                            temp_bv=domain_class_1.cal_bond_valence1_new2B_7(super_cell_surface,key,el,SEARCH_RANGE_OFFSET,IDEAL_BOND_LENGTH,VARS['match_lib_'+str(i+1)+'A'][key],50,False,R0_BV,2.5,BOND_VALENCE_WAIVER)['total_valence']
+                            temp_bv=domain_class_1.cal_bond_valence1_new2B_7_2(super_cell_surface,key,el,SEARCH_RANGE_OFFSET,IDEAL_BOND_LENGTH,VARS['match_lib_'+str(i+1)+'A'][key],50,False,R0_BV,2.5,BOND_VALENCE_WAIVER,check=not running_mode)['total_valence']
                     else:
                         #no searching in this algorithem
                         temp_bv=domain_class_1.cal_bond_valence4B(super_cell_surface,key,VARS['match_lib_'+str(i+1)+'A'][key],2.5)
@@ -1519,7 +1521,7 @@ def Sim(data,VARS=VARS):
                             el="H"
                         if el=="O":
                             try:
-                                temp_bv=domain_class_1.cal_bond_valence1_new2B_7(super_cell_sorbate,key,el,SEARCH_RANGE_OFFSET,IDEAL_BOND_LENGTH,VARS['match_lib_'+str(i+1)+'A'][key],50,False,R0_BV,2.5,BOND_VALENCE_WAIVER)['total_valence']
+                                temp_bv=domain_class_1.cal_bond_valence1_new2B_7_2(super_cell_sorbate,key,el,SEARCH_RANGE_OFFSET,IDEAL_BOND_LENGTH,VARS['match_lib_'+str(i+1)+'A'][key],50,False,R0_BV,2.5,BOND_VALENCE_WAIVER,check=not running_mode)['total_valence']
                             except:
                                 temp_bv=2
                         else:
@@ -1534,12 +1536,12 @@ def Sim(data,VARS=VARS):
                         if "HB" in key:
                             el="H"
                         if el=="O":
-                            temp_bv=domain_class_1.cal_bond_valence1_new2B_7(super_cell_sorbate,key,el,SEARCH_RANGE_OFFSET,IDEAL_BOND_LENGTH,VARS['match_lib_'+str(i+1)+'A'][key],50,False,R0_BV,2.5,BOND_VALENCE_WAIVER)['total_valence']
+                            temp_bv=domain_class_1.cal_bond_valence1_new2B_7_2(super_cell_sorbate,key,el,SEARCH_RANGE_OFFSET,IDEAL_BOND_LENGTH,VARS['match_lib_'+str(i+1)+'A'][key],50,False,R0_BV,2.5,BOND_VALENCE_WAIVER,check=not running_mode)['total_valence']
                         else:
                             temp_bv=domain_class_1.cal_bond_valence1_new2B_4(super_cell_sorbate,key,el,2.5,VARS['match_lib_'+str(i+1)+'A'][key],1,False,R0_BV,2.5)['total_valence']
                     else:#metals 
                         try:
-                            temp_bv=domain_class_1.cal_bond_valence1_new2B_7(super_cell_sorbate,key,SORBATE_LIST[i][j],SEARCH_RANGE_OFFSET,IDEAL_BOND_LENGTH,VARS['match_lib_'+str(i+1)+'A'][key],SEARCHING_PARS['sorbate'][1],False,R0_BV,2.5,BOND_VALENCE_WAIVER)['total_valence']
+                            temp_bv=domain_class_1.cal_bond_valence1_new2B_7_2(super_cell_sorbate,key,SORBATE_LIST[i][j],SEARCH_RANGE_OFFSET,IDEAL_BOND_LENGTH,VARS['match_lib_'+str(i+1)+'A'][key],SEARCHING_PARS['sorbate'][1],False,R0_BV,2.5,BOND_VALENCE_WAIVER,check=not running_mode)['total_valence']
                         except:
                             temp_bv=METAL_BV[i][int(key.rsplit('_')[0][-1])-1][0]
                     
@@ -1736,18 +1738,18 @@ def Sim(data,VARS=VARS):
             TOTAL_NUMBER=total_sorbate_number+water_number/3
             if INCLUDE_HYDROGEN:
                 TOTAL_NUMBER=N_HB_SURFACE+N_HB_DISTAL+total_sorbate_number+water_number
-            domain_creator.print_data2(N_sorbate=TOTAL_NUMBER,domain=VARS['domain'+str(i+1)+'A'],z_shift=1,half_layer=DOMAIN[i]-2,half_layer_long=half_layer_pick[i],full_layer_long=full_layer_pick[i],save_file=output_file_path+'Model_domain'+str(i+1)+'_dsv.xyz')    
-            domain_creator.print_data2C(domain=VARS['domain'+str(i+1)+'A'],z_shift=1,half_layer=DOMAIN[i]-2,half_layer_long=half_layer_pick[i],full_layer_long=full_layer_pick[i],save_file=output_file_path+'Model_domain'+str(i+1)+'.xyz',sorbate_index_list=first_item_index,each_segment_length=length_of_each_segment)    
-            domain_creator.make_cif_file(domain=VARS['domain'+str(i+1)+'A'],z_shift=1,half_layer=DOMAIN[i]-2,half_layer_long=half_layer_pick[i],full_layer_long=full_layer_pick[i],save_file=output_file_path+'Model_domain'+str(i+1)+'.cif',sorbate_index_list=first_item_index,each_segment_length=length_of_each_segment)    
-            test=xyz.formate_vtk(output_file_path+'Model_domain'+str(i+1)+'.xyz')
+            domain_creator.print_data2(N_sorbate=TOTAL_NUMBER,domain=VARS['domain'+str(i+1)+'A'],z_shift=1,half_layer=DOMAIN[i]-2,half_layer_long=half_layer_pick[i],full_layer_long=full_layer_pick[i],save_file=os.path.join(output_file_path,'Model_domain'+str(i+1)+'_dsv.xyz'))    
+            domain_creator.print_data2C(domain=VARS['domain'+str(i+1)+'A'],z_shift=1,half_layer=DOMAIN[i]-2,half_layer_long=half_layer_pick[i],full_layer_long=full_layer_pick[i],save_file=os.path.join(output_file_path,'Model_domain'+str(i+1)+'.xyz'),sorbate_index_list=first_item_index,each_segment_length=length_of_each_segment)    
+            domain_creator.make_cif_file(domain=VARS['domain'+str(i+1)+'A'],z_shift=1,half_layer=DOMAIN[i]-2,half_layer_long=half_layer_pick[i],full_layer_long=full_layer_pick[i],save_file=os.path.join(output_file_path,'Model_domain'+str(i+1)+'.cif'),sorbate_index_list=first_item_index,each_segment_length=length_of_each_segment)    
+            test=xyz.formate_vtk(os.path.join(output_file_path,'Model_domain'+str(i+1)+'.xyz'))
             test.all_in_all()
             #output for publication
             if water_pars['use_default']:
-                domain_creator.print_data_for_publication_B2(N_sorbate=np.sum(SORBATE_NUMBER[i])+np.sum(O_NUMBER[i])+WATER_NUMBER[i],domain=VARS['domain'+str(int(i+1))+'A'],z_shift=1,layer_types=(half_layer+full_layer)[i],save_file=output_file_path+'Model_domain'+str(i+1)+'A_publication.dat')
+                domain_creator.print_data_for_publication_B2(N_sorbate=np.sum(SORBATE_NUMBER[i])+np.sum(O_NUMBER[i])+WATER_NUMBER[i],domain=VARS['domain'+str(int(i+1))+'A'],z_shift=1,layer_types=(half_layer+full_layer)[i],save_file=os.path.join(output_file_path,'Model_domain'+str(i+1)+'A_publication.dat'))
             else:
-                domain_creator.print_data_for_publication_B2(N_sorbate=np.sum(SORBATE_NUMBER[i])+np.sum(O_NUMBER[i]),domain=VARS['domain'+str(int(i+1))+'A'],z_shift=1,layer_types=(half_layer+full_layer)[i],save_file=output_file_path+'Model_domain'+str(i+1)+'A_publication.dat')
+                domain_creator.print_data_for_publication_B2(N_sorbate=np.sum(SORBATE_NUMBER[i])+np.sum(O_NUMBER[i]),domain=VARS['domain'+str(int(i+1))+'A'],z_shift=1,layer_types=(half_layer+full_layer)[i],save_file=os.path.join(output_file_path,'Model_domain'+str(i+1)+'A_publication.dat'))
             try:#make sure you have the test.tab file in the specified folder
-                domain_creator.make_publication_table(model_file=output_file_path+'Model_domain'+str(i+1)+'A_publication.dat',par_file=output_file_path+"test.tab",el_substrate=['Fe','O'],el_sorbate=['Pb'],abc=[5.038,5.434,7.3707])
+                domain_creator.make_publication_table(model_file=os.path.join(output_file_path,'Model_domain'+str(i+1)+'A_publication.dat'),par_file=os.path.join(output_file_path,"test.tab"),el_substrate=['Fe','O'],el_sorbate=['Pb'],abc=[5.038,5.434,7.3707])
             except:
                 pass
     #make dummy raxr dataset you will need to double check the LB,dL and the hkl
@@ -1872,15 +1874,15 @@ def Sim(data,VARS=VARS):
         plot_data_list=[]
         for hkl in hkls:
             plot_data_list.append([plot_data_container_experiment[hkl],plot_data_container_model[hkl]])
-        pickle.dump(plot_data_list,open(output_file_path+"temp_plot","wb"))
+        pickle.dump(plot_data_list,open(os.path.join(output_file_path,"temp_plot"),"wb"))
         #dump raxr data and profiles
-        pickle.dump([plot_raxr_container_experiment,plot_raxr_container_model],open(output_file_path+"temp_plot_raxr","wb"))
+        pickle.dump([plot_raxr_container_experiment,plot_raxr_container_model],open(os.path.join(output_file_path,"temp_plot_raxr"),"wb"))
         #dump electron density profiles
         #e density based on model fitting
         sample.plot_electron_density(sample.domain,file_path=output_file_path,z_max=29)#dumpt file name is "temp_plot_eden" 
         #e density based on Fourier synthesis
         z_plot,eden_plot,eden_domains=sample.fourier_synthesis(np.array(HKL_list_raxr),np.array(P_list_Fourier_synthesis).transpose(),np.array(A_list_Fourier_synthesis).transpose(),z_min=0.,z_max=29.,resonant_el=RAXR_EL,resolution=1000)
-        pickle.dump([z_plot,eden_plot,eden_domains],open(output_file_path+"temp_plot_eden_fourier_synthesis","wb"))
+        pickle.dump([z_plot,eden_plot,eden_domains],open(os.path.join(output_file_path,"temp_plot_eden_fourier_synthesis"),"wb"))
     #you may play with the weighting rule by setting eg 2**bv, 5**bv for the wt factor, that way you are pushing the GenX to find a fit btween 
     #good fit (low wt factor) and a reasonable fit (high wt factor)
     if COUNT_TIME:t_3=datetime.now()

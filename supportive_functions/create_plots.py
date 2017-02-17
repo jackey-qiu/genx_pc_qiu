@@ -365,6 +365,97 @@ def plotting_raxr_multiple(file_head=module_path_locator(),dump_files=['temp_plo
     
     fig.savefig(os.path.join(file_head,'multiple_raxrs.png'),dpi=300)
     return fig
+    
+def plotting_raxr_multiple_2(file_head=module_path_locator(),dump_files=['temp_plot_raxr_0NaCl','temp_plot_raxr_1NaCl','temp_plot_raxr_10NaCl','temp_plot_raxr_100NaCl'],label_marks=['0mM NaCl','1mM NaCl','10mM NaCl','100mM NaCl'],number_raxr=[0,1,6],color_type=1,marker=['o'],plot_layout=[3,1],fig_size=(4.5,6)):
+    color=set_color(len(dump_files),color_type)
+    datas=[pickle.load(open(os.path.join(file_head,file))) for file in dump_files]
+    fig=pyplot.figure(figsize=fig_size)
+    scale=0.3141#q=scale*L, scale=2pi/d[001]
+    number=None
+    if type(number_raxr)==type(1):
+        number=range(number_raxr)
+    else:
+        number=number_raxr
+    for i in number:
+        ax=fig.add_subplot(plot_layout[0],plot_layout[1],number.index(i)+1)
+        for j in range(len(datas)):
+            data=datas[j]
+            experiment_data,model=data[0],data[1]
+            labels=model.keys()
+            labels.sort()
+            label_tag=map(lambda x:float(x.split("_")[-1]),labels)
+            label_tag.sort()
+            labels=map(lambda x:"0_0_"+str(x),label_tag)
+            labels_title=map(lambda x:"q="+str(x)+r'$\rm{\ \AA^{-1}}$',np.round(np.array(label_tag)*scale,3))
+            #labels=map(lambda x:str(x),list(np.array(label_tag)*scale))
+            labels_comp=datas[0][1].keys()
+            labels_comp.sort()
+            offset=model[labels[i]][:,1][0]-datas[0][1][labels_comp[i]][:,1][0]-j*0.15#arbitrary offset between datasets
+            #print labels[i],offset
+            ax.scatter(experiment_data[labels[i]][:,0],experiment_data[labels[i]][:,1]-offset,marker=marker[0],s=15,c=color[j],edgecolors=color[j],label=label_marks[j])
+            ax.errorbar(experiment_data[labels[i]][:,0],experiment_data[labels[i]][:,1]-offset,yerr=experiment_data[labels[i]][:,2],fmt=None,ecolor=color[j])
+            ax.plot(model[labels[i]][:,0],model[labels[i]][:,1]-offset,color=color[j],lw=1.5)
+            pyplot.ylabel(r'|F|',axes=ax,fontsize=12)
+            if i!=number[-1]:
+                ax.get_xaxis().set_ticks([])
+            if i == number[-1]:
+                pyplot.xlabel(r'Energy (ev)',axes=ax,fontsize=12)
+            if j==0:
+                pyplot.title(labels_title[i],size=12)
+            #if i==0:
+            #    ax.legend(loc=2,ncol=2,prop={'size':12})
+            #    pyplot.ylim((1.5,3.5))
+    pyplot.subplots_adjust(wspace=0.2, hspace=None)
+    #fig.tight_layout()
+    
+    fig.savefig(os.path.join(file_head,'multiple_raxrs.png'),dpi=300)
+    return fig
+    
+def plotting_raxr_multiple_full_set(file_head=module_path_locator(),dump_files=['temp_plot_raxr_0NaCl','temp_plot_raxr_1NaCl','temp_plot_raxr_10NaCl','temp_plot_raxr_100NaCl'],label_marks=['0mM NaCl','1mM NaCl','10mM NaCl','100mM NaCl'],number_raxr=range(9),color_type=1,marker=['o'],plot_layout=[3,3],fig_size=(12,8)):
+    color=set_color(len(dump_files),color_type)
+    datas=[pickle.load(open(os.path.join(file_head,file))) for file in dump_files]
+    fig=pyplot.figure(figsize=fig_size)
+    scale=0.3141#q=scale*L, scale=2pi/d[001]
+    number=None
+    if type(number_raxr)==type(1):
+        number=range(number_raxr)
+    else:
+        number=number_raxr
+    for i in number:
+        ax=fig.add_subplot(plot_layout[0],plot_layout[1],number.index(i)+1)
+        for j in range(len(datas)):
+            data=datas[j]
+            experiment_data,model=data[0],data[1]
+            labels=model.keys()
+            labels.sort()
+            label_tag=map(lambda x:float(x.split("_")[-1]),labels)
+            label_tag.sort()
+            labels=map(lambda x:"0_0_"+str(x),label_tag)
+            labels_title=map(lambda x:"q="+str(x)+r'$\rm{\ \AA^{-1}}$',np.round(np.array(label_tag)*scale,3))
+            #labels=map(lambda x:str(x),list(np.array(label_tag)*scale))
+            labels_comp=datas[0][1].keys()
+            labels_comp.sort()
+            offset=model[labels[i]][:,1][0]-datas[0][1][labels_comp[i]][:,1][0]-j*0.15#arbitrary offset between datasets
+            #print labels[i],offset
+            ax.scatter(experiment_data[labels[i]][:,0],experiment_data[labels[i]][:,1]-offset,marker=marker[0],s=15,c=color[j],edgecolors=color[j],label=label_marks[j])
+            ax.errorbar(experiment_data[labels[i]][:,0],experiment_data[labels[i]][:,1]-offset,yerr=experiment_data[labels[i]][:,2],fmt=None,ecolor=color[j])
+            ax.plot(model[labels[i]][:,0],model[labels[i]][:,1]-offset,color=color[j],lw=1.5)
+            if number.index(i) in [0,3,6]:
+                pyplot.ylabel(r'|F|',axes=ax,fontsize=12)
+            if number.index(i) not in [6,7,8]:
+                ax.get_xaxis().set_ticks([])
+            if number.index(i) in [6,7,8]:
+                pyplot.xlabel(r'Energy (ev)',axes=ax,fontsize=12)
+            if j==0:
+                pyplot.title(labels_title[i],size=12)
+            #if i==0:
+            #    ax.legend(loc=2,ncol=2,prop={'size':12})
+            #    pyplot.ylim((1.5,3.5))
+    pyplot.subplots_adjust(wspace=0.2, hspace=None)
+    #fig.tight_layout()
+    
+    fig.savefig(os.path.join(file_head,'multiple_raxrs.png'),dpi=300)
+    return fig
         
 def plot_CTR_multiple_model_muscovite(file_head=module_path_locator(),dump_files=['temp_plot_0NaCl','temp_plot_1NaCl','temp_plot_10NaCl','temp_plot_100NaCl'],labels=['0NaCl','1mM NaCl','10mM NaCl','100mM NaCl'],markers=['.']*20,fontsize=16,lw=1.5,color_type=1):
     colors=set_color(len(dump_files)*2,color_type)
@@ -372,14 +463,15 @@ def plot_CTR_multiple_model_muscovite(file_head=module_path_locator(),dump_files
     fig=pyplot.figure(figsize=(10,8))
     ax=fig.add_subplot(2,1,1)
     ax.set_yscale('log')
+    scale=0.3141
     for i in range(len(objects)):
         object=objects[i][0]
-        ax.scatter(object[0][:,0],object[0][:,1]*(10**i),marker=markers[i],s=20,facecolors='none',edgecolors=colors[i],label='Data_'+labels[i])
-        ax.errorbar(object[0][:,0],object[0][:,1]*(10**i),yerr=object[0][:,2],fmt=None,ecolor=colors[i])
-        l,=ax.plot(object[1][:,0],object[1][:,1]*(10**i),color=colors[i],lw=lw,label='Model_'+labels[i])
+        ax.scatter(object[0][:,0]*scale,object[0][:,1]*(10**i),marker=markers[i],s=20,facecolors='none',edgecolors=colors[i],label='Data_'+labels[i])
+        ax.errorbar(object[0][:,0]*scale,object[0][:,1]*(10**i),yerr=object[0][:,2],fmt=None,ecolor=colors[i])
+        l,=ax.plot(object[1][:,0]*scale,object[1][:,1]*(10**i),color=colors[i],lw=lw,label='Model_'+labels[i])
         #l.set_dashes(l_dashes[i])
         #pyplot.xlabel('L(r.l.u)',axes=ax,fontsize=fontsize)
-        pyplot.ylabel(r'$|F_{HKL}|$',axes=ax,fontsize=fontsize)
+        pyplot.ylabel(r'$\rm{|F_{HKL}|}$',axes=ax,fontsize=fontsize)
         pyplot.title('(00L)',weight=4,size=fontsize,clip_on=True)
     ax.legend(prop={'size':fontsize})
     for xtick in ax.xaxis.get_major_ticks():
@@ -389,21 +481,23 @@ def plot_CTR_multiple_model_muscovite(file_head=module_path_locator(),dump_files
     for l in ax.get_xticklines() + ax.get_yticklines(): 
         l.set_markersize(5) 
         l.set_markeredgewidth(2)
-    pyplot.xlim((-2,30))
+    ax.plot([0.4,0.4],[0,10000],'--',color='black')
+    ax.plot([0.9,0.9],[0,10000],'--',color='black')
+    pyplot.xlim((-2*scale,30*scale))
     ax=fig.add_subplot(2,1,2)
     ax.set_yscale('log')
     for i in range(len(objects)):
         object=objects[i][0]
-        ax.scatter(object[0][:,0],object[0][:,3]*(10**i),marker=markers[i],s=20,facecolors='none',edgecolors=colors[i],label='Data_'+labels[i])
-        ax.errorbar(object[0][:,0],object[0][:,3]*(10**i),yerr=object[0][:,4],fmt=None,ecolor=colors[i])
-        l,=ax.plot(object[1][:,0],object[1][:,2]*(10**i),color=colors[i],lw=lw,label='Model_'+labels[i])
+        ax.scatter(object[0][:,0]*scale,object[0][:,3]*(10**i),marker=markers[i],s=20,facecolors='none',edgecolors=colors[i],label='Data_'+labels[i])
+        ax.errorbar(object[0][:,0]*scale,object[0][:,3]*(10**i),yerr=object[0][:,4],fmt=None,ecolor=colors[i])
+        l,=ax.plot(object[1][:,0]*scale,object[1][:,2]*(10**i),color=colors[i],lw=lw,label='Model_'+labels[i])
         #l.set_dashes(l_dashes[i])
-        pyplot.xlabel('L(r.l.u)',axes=ax,fontsize=fontsize)
-        pyplot.ylabel(r'$|normalized F_{HKL}|$',axes=ax,fontsize=fontsize)
+        pyplot.xlabel(r'$\rm{q\ (\AA^{-1})}$',axes=ax,fontsize=fontsize)
+        pyplot.ylabel(r'$\rm{|normalized\ F_{HKL}|}$',axes=ax,fontsize=fontsize)
         #pyplot.title('(00L)',weight=4,size=10,clip_on=True)
-    ax.plot([1.44,1.44],[0,10000],'--',color='black')
-    ax.plot([0.8,0.8],[0,10000],'--',color='black')
-    ax.plot([2.92,2.92],[0,10000],'--',color='black')
+    ax.plot([0.4,0.4],[0,10000],'--',color='black')
+    ax.plot([0.9,0.9],[0,10000],'--',color='black')
+    #ax.plot([2.92*scale,2.92*scale],[0,10000],'--',color='black')
     ax.legend(prop={'size':fontsize})
     for xtick in ax.xaxis.get_major_ticks():
         xtick.label.set_fontsize(fontsize)
@@ -412,12 +506,42 @@ def plot_CTR_multiple_model_muscovite(file_head=module_path_locator(),dump_files
     for l in ax.get_xticklines() + ax.get_yticklines(): 
         l.set_markersize(5) 
         l.set_markeredgewidth(2)
-    pyplot.xlim((-2,30))
+    pyplot.xlim((-2*scale,30*scale))
     fig.tight_layout()
     fig.savefig(os.path.join(file_head,'multiple_ctrs.png'),dpi=300)
     return fig
     
-    
+def plot_CTR_multiple_model_muscovite_2(file_head=module_path_locator(),dump_files=['temp_plot_0NaCl','temp_plot_1NaCl','temp_plot_10NaCl','temp_plot_100NaCl'],labels=['0NaCl','1mM NaCl','10mM NaCl','100mM NaCl'],markers=['.']*20,fontsize=12,lw=1.5,color_type=1):
+    colors=set_color(len(dump_files)*2,color_type)
+    objects=[pickle.load(open(os.path.join(file_head,file))) for file in dump_files]
+    fig=pyplot.figure(figsize=(5,4))
+    ax=fig.add_subplot(1,1,1)
+    ax.set_yscale('log')
+    scale=0.3141#q=scale*L, scale=2pi/d[001]
+    for i in range(len(objects)):
+        object=objects[i][0]
+        ax.scatter(object[0][:,0]*scale,object[0][:,1]*(10**i),marker=markers[i],s=20,facecolors='none',edgecolors=colors[i],label='Data_'+labels[i])
+        ax.errorbar(object[0][:,0]*scale,object[0][:,1]*(10**i),yerr=object[0][:,2],fmt=None,ecolor=colors[i])
+        l,=ax.plot(object[1][:,0]*scale,object[1][:,1]*(10**i),color=colors[i],lw=lw,label='Model_'+labels[i])
+        #l.set_dashes(l_dashes[i])
+        #pyplot.xlabel('L(r.l.u)',axes=ax,fontsize=fontsize)
+        pyplot.xlabel(r'$\rm{q\ (\AA^{-1})}$',axes=ax,fontsize=fontsize)
+        pyplot.ylabel(r'$\rm{|F_{HKL}|}$',axes=ax,fontsize=fontsize)
+        #pyplot.title('(00L)',weight=4,size=fontsize,clip_on=True)
+    #ax.legend(prop={'size':fontsize})
+    for xtick in ax.xaxis.get_major_ticks():
+        xtick.label.set_fontsize(fontsize)
+    for ytick in ax.yaxis.get_major_ticks():
+        ytick.label.set_fontsize(fontsize)
+    for l in ax.get_xticklines() + ax.get_yticklines(): 
+        l.set_markersize(5) 
+        l.set_markeredgewidth(2)
+    ax.plot([0.35,0.35],[0,10000],':',color='black')
+    ax.plot([0.87,0.87],[0,10000],':',color='black')
+    pyplot.xlim((0,5.5))
+    fig.tight_layout()
+    fig.savefig(os.path.join(file_head,'multiple_ctrs.png'),dpi=300)
+    return fig
         
 def plotting_modelB(object=[],fig=None,index=[2,3,1],color=['0.35','r','c','m','k'],l_dashes=[()],lw=3,label=['Experimental data','Model fit'],title=['10L'],marker=['o'],legend=True,fontsize=10):
     #overlapping the experimental and modeling fit CTR profiles,the data used are exported using GenX,first need to read the data using loadtxt(file,skiprows=3)
@@ -608,8 +732,8 @@ def plot_multiple_e_profiles(file_head=module_path_locator(),dump_files=['temp_p
     #pyplot.xlabel("Z(Angstrom)",fontsize=12)
     pyplot.title('Total e profile',fontsize=12)
     ax2=fig.add_subplot(2,1,2)
-    pyplot.ylabel("E_density",fontsize=12)
-    pyplot.xlabel("Z(Angstrom)",fontsize=12)
+    pyplot.ylabel("e density",fontsize=12)
+    pyplot.xlabel(r"$\rm{Z(\AA)}$",fontsize=12)
     pyplot.title('Zr e profile',fontsize=12)
     for i in range(len(dump_files)):
         data_eden=pickle.load(open(os.path.join(file_head,dump_files[i]),"rb"))
@@ -624,15 +748,41 @@ def plot_multiple_e_profiles(file_head=module_path_locator(),dump_files=['temp_p
     return fig
     
     
+def plot_multiple_e_profiles_2(file_head=module_path_locator(),dump_files=['temp_plot_eden_0NaCl','temp_plot_eden_1NaCl','temp_plot_eden_10NaCl','temp_plot_eden_100NaCl'],label_marks=['0mM NaCl','1mM NaCl','10mM NaCl','100mM NaCl'],color_type=5):
+    colors=set_color(len(dump_files),color_type)
+    fig=pyplot.figure(figsize=(6,6))
+    ax1=fig.add_subplot(1,1,1)
+    pyplot.ylabel("e density",fontsize=12)
+    pyplot.xlabel(r"$\rm{Z(\AA)}$",fontsize=12)
+    #pyplot.title('Total e profile',fontsize=12)
+    
+    #ax2=fig.add_subplot(2,1,2)
+    #pyplot.ylabel("E_density",fontsize=12)
+    #pyplot.xlabel("Z(Angstrom)",fontsize=12)
+    #pyplot.title('Zr e profile',fontsize=12)
+    for i in range(len(dump_files)):
+        data_eden=pickle.load(open(os.path.join(file_head,dump_files[i]),"rb"))
+        edata,labels=data_eden[0],data_eden[1]
+        ax1.plot(np.array(edata[-1][0,:]),edata[-1][1,:]+i*3,color=colors[i],label=label_marks[i],lw=2)
+        ax1.fill_between(np.array(edata[-1][0,:]),edata[-1][2,:]*0+i*3,edata[-1][2,:]+i*3,where=edata[-1][2,:]>(edata[-1][2,:]*0+0.00000001),color=colors[i],alpha=0.6)
+    ax1.legend(fontsize=12)
+    #ax2.legend(fontsize=12)
+    ax1.set_ylim(-10,18)
+    ax1.plot([2.5,2.5],[2.2,12],':',color='black')
+    ax1.plot([4.3,4.3],[2.2,12],':',color='black')
+    fig.tight_layout()
+    fig.savefig(os.path.join(file_head,'multiple_eprofiles2.png'),dpi=300)
+    return fig
+    
 def plot_multiple_APQ_profiles(file_head=module_path_locator(),dump_files=['temp_plot_raxr_A_P_Q_0NaCl','temp_plot_raxr_A_P_Q_1NaCl','temp_plot_raxr_A_P_Q_10NaCl','temp_plot_raxr_A_P_Q_100NaCl'],labels=['0NaCl','1uM NaCl','10uM NaCl','100uM NaCl'],color_type=5):
     colors=set_color(len(dump_files),color_type)
-    fig1=pyplot.figure(figsize=(9,9))
-    ax1=fig1.add_subplot(2,1,1)
+    fig1=pyplot.figure(figsize=(8,5))
+    ax1=fig1.add_subplot(1,2,1)
     pyplot.ylabel("A")
-    pyplot.xlabel("Q")
-    ax2=fig1.add_subplot(2,1,2)
+    pyplot.xlabel(r'$\rm{q\ (\AA^{-1})}$')
+    ax2=fig1.add_subplot(1,2,2)
     pyplot.ylabel("P/Q(2pi)")
-    pyplot.xlabel("Q")
+    pyplot.xlabel(r'$\rm{q\ (\AA^{-1})}$')
     
     for i in range(len(dump_files)):
         AP_Q_file=os.path.join(file_head,dump_files[i])
@@ -648,8 +798,24 @@ def plot_multiple_APQ_profiles(file_head=module_path_locator(),dump_files=['temp
     ax1.legend()
     ax1.set_xlim(0,4)
     ax2.set_xlim(0,4)
+    fig1.tight_layout()
     fig1.savefig(os.path.join(file_head,'multiple_APQ_profiles.png'),dpi=300)
     return fig1
+    
+def plot_AFM_profiles(file_head='P:\\My stuff\\Manuscripts\\zr on mica\\AFM images',profile_files=['AFM profile for 0mM NaCl.csv','AFM profile for 1mM NaCl.csv','AFM profile for 10mM NaCl.csv','AFM profile for 100mM NaCl.csv'],labels=['0mM NaCl','1mM NaCl','10mM NaCl','100mM NaCl'],color_type=5):
+    colors=set_color(len(profile_files),color_type)
+    fig=pyplot.figure(figsize=(6,6))
+    for i in range(len(profile_files)):
+        data=np.loadtxt(os.path.join(file_head,profile_files[i]),delimiter=',')
+        ax=fig.add_subplot(2,2,i+1)
+        ax.plot(data[:,1],data[:,0])
+        pyplot.title(labels[i],fontsize=10)
+        pyplot.xlabel("length (nm)")
+        pyplot.ylabel("height (nm)")
+    fig.tight_layout()
+    fig.savefig(os.path.join(file_head,'AFM_profiles.png'),dpi=300)
+    return fig
+    
     
 def cal_e_density(z_list,oc_list,u_list,z_min=0,z_max=29,resolution=1000,N=40,wt=0.25,Auc=46.927488088,water_scaling=1):
     height_list=[]
@@ -709,7 +875,7 @@ def overplot_raxr_e_density(dump_files=["temp_plot_RAXR_eden_e_fit_0mMNaCl","tem
 def plot_all(path=module_path_locator()):
     PATH=path
     #which plots do you want to create
-    plot_e_model,plot_e_FS,plot_ctr,plot_raxr,plot_AP_Q=1,1,1,1,0
+    plot_e_model,plot_e_FS,plot_ctr,plot_raxr,plot_AP_Q=0,1,1,0,0
 
     #specify file paths (files are dumped files when setting running_mode=False in GenX script)
     e_file=os.path.join(PATH,"temp_plot_eden")#e density from model

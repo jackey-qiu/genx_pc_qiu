@@ -1363,7 +1363,7 @@ class Sample:
             e_total=e_total+np.array(eden)
         labels.append('Total electron density')
         e_data.append(np.array([list(e_data[0])[0],e_total]))
-        pickle.dump([e_data,labels],open(file_path+"temp_plot_eden","wb"))
+        pickle.dump([e_data,labels],open(os.path.join(file_path,"temp_plot_eden"),"wb"))
         
     def plot_electron_density_muscovite(self,slabs,el_lib={'O':8,'Fe':26,'As':33,'Pb':82,'Sb':51,'P':15,'Cr':24,'Cd':48,'Cu':29,'Zn':30,'Al':13,'Si':14,'K':19,'Zr':40},z_min=0.,z_max=28.,N_layered_water=10,resolution=1000,file_path="D:\\",height_offset=0):
         #print dinv

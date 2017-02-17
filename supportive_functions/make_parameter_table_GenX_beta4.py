@@ -48,7 +48,7 @@ structure={'domain1':{'domain_type':'half_layer','domain_tag':1,'surface':surfac
            'domain2':{'domain_type':'half_layer','domain_tag':2,'surface':surface2,'sorbate':sorbate2,'water':water2},\
            'domain3':{'domain_type':'half_layer','domain_tag':3,'surface':surface3,'sorbate':None,'water':water2}}
 #make_structure will be used inside genx script to generate the parameter table           
-def make_structure(sorbate_N,O_N,water_N,Domains,Metal,binding_mode=['BD']*3,long_slab=False,long_slab_HL=False,local_structure='tetrahedral',add_distal_wild=None,use_domains=[1]*10,N_raxr=0,domain_raxr_el=[1,1,0,0],layered_water=None,layered_sorbate=None):
+def make_structure(sorbate_N,O_N,water_N,Domains,Metal,binding_mode=['BD']*3,long_slab=False,long_slab_HL=False,local_structure='tetrahedral',add_distal_wild=None,use_domains=[1]*10,N_raxr=0,domain_raxr_el=[1,1,0,0],layered_water=None,layered_sorbate=None,tab_path='D:\\'):
     structure={}
     for i in range(len(Domains)):
         if use_domains[i]==1:
@@ -91,7 +91,7 @@ def make_structure(sorbate_N,O_N,water_N,Domains,Metal,binding_mode=['BD']*3,lon
             structure['domain'+str(i+1)]={'binding_mode':binding_mode[i],'full_layer_type':full_layer_type,'half_layer_type':half_layer_type,'domain_type':domain_type,'domain_tag':i+1,'surface':temp_surface,'sorbate':temp_sorbate,'water':temp_water}
         else:
             pass
-    return table_maker(structure_info=structure,local_structure=local_structure,N_raxr=N_raxr,domain_raxr_el=domain_raxr_el,layered_water=layered_water,layered_sorbate=layered_sorbate)    
+    return table_maker(table_file_path=tab_path,structure_info=structure,local_structure=local_structure,N_raxr=N_raxr,domain_raxr_el=domain_raxr_el,layered_water=layered_water,layered_sorbate=layered_sorbate)    
 
 def table_maker(table_file_path='D:\\table.tab',structure_info=structure,local_structure='tetrahedral',N_raxr=0,domain_raxr_el=[1,1,0,0],layered_water=None,layered_sorbate=None):
 
