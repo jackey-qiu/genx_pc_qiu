@@ -11,9 +11,9 @@ from color_mate import color_combine_mate as set_color
 
 def local_func():
     return None
-    
+
 def module_path_locator(func=local_func):
-    return os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(inspect.getsourcefile(func)))),'dump_files')  
+    return os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(inspect.getsourcefile(func)))),'dump_files')
 
 """
 functions to make plots of CTR, RAXR, Electron Density using the dumped files created in GenX script (running_mode=False)
@@ -27,6 +27,21 @@ Formates for each kind of dumped files
     eden_domains=[[ed_z1_D1,ed_z1_D2,...,ed_z1_Dm],[ed_z2_D1,ed_z2_D2,...,ed_z2_Dm],...,[ed_zn_D1,ed_zn_D2,...,ed_zn_Dm]] considering m domains
 """
 
+#calcualte the error for pb complex structure
+def output_errors(edge_length=2.7,top_angle=70,error_top_angle=1,error_theta=1,error_delta1=0.02,error_delta2=0.03):
+    sin_alpha_left=np.sin(np.deg2rad(top_angle-error_top_angle)/2.)
+    sin_alpha_right=np.sin(np.deg2rad(top_angle+error_top_angle)/2.)
+    tan_alpha_left=np.tan(np.deg2rad(top_angle-error_top_angle)/2.)
+    tan_alpha_right=np.tan(np.deg2rad(top_angle+error_top_angle)/2.)
+    print 'error of PbO1 bond length:',edge_length/4.*(1./sin_alpha_left-1./sin_alpha_right)+error_delta1
+    print 'error of pbO2 bond length:',edge_length/4.*(1./sin_alpha_left-1./sin_alpha_right)
+    print 'error of PbOdistal bond length:',edge_length/4.*(1./sin_alpha_left-1./sin_alpha_right)++error_delta2
+    print 'error of O1PbO2 bond angle:',error_top_angle
+    print 'error of O1PbOdistal and O2PbOdistal bond angle:',error_top_angle+error_theta
+    print 'error of PbFe seperation:',edge_length/4.*(1./tan_alpha_left-1./tan_alpha_right)
+    return None
+
+
 bl_dl_muscovite_old={'3_0':{'segment':[[0,1],[1,9]],'info':[[2,1],[6,1]]},'2_0':{'segment':[[0,9]],'info':[[2,2.0]]},'2_1':{'segment':[[0,9]],'info':[[4,0.8609]]},'2_2':{'segment':[[0,9]],'info':[[2,1.7218]]},\
     '2_-1':{'segment':[[0,3.1391],[3.1391,9]],'info':[[4,3.1391],[2,3.1391]]},'1_1':{'segment':[[0,9]],'info':[[2,1.8609]]},'1_0':{'segment':[[0,3],[3,9]],'info':[[6,3],[2,3]]},'0_2':{'segment':[[0,9]],'info':[[2,1.7218]]},\
     '0_0':{'segment':[[0,20]],'info':[[2,2]]},'-1_0':{'segment':[[0,3],[3,9]],'info':[[6,-3],[2,-3]]},'0_-2':{'segment':[[0,9]],'info':[[2,-6.2782]]},\
@@ -35,7 +50,7 @@ bl_dl_muscovite_old={'3_0':{'segment':[[0,1],[1,9]],'info':[[2,1],[6,1]]},'2_0':
 bl_dl_muscovite={'0_0':{'segment':[[0,20]],'info':[[2,2]]}}
 
 
-            
+
 def generate_plot_files(output_file_path,sample,rgh,data,fit_mode, z_min=0,z_max=29,RAXR_HKL=[0,0,20],bl_dl=bl_dl_muscovite,height_offset=0):
     plot_data_container_experiment={}
     plot_data_container_model={}
@@ -47,7 +62,7 @@ def generate_plot_files(output_file_path,sample,rgh,data,fit_mode, z_min=0,z_max
     A_list_calculated,P_list_calculated,Q_list_calculated=sample.find_A_P_muscovite(h=RAXR_HKL[0],k=RAXR_HKL[1],l=RAXR_HKL[2])
     i=0
     for data_set in data:
-        f=np.array([])   
+        f=np.array([])
         h = data_set.extra_data['h']
         k = data_set.extra_data['k']
         x = data_set.x
@@ -72,7 +87,7 @@ def generate_plot_files(output_file_path,sample,rgh,data,fit_mode, z_min=0,z_max
             HKL_list_raxr[1].append(k[0])
             HKL_list_raxr[2].append(y[0])
         else:
-            f=np.array([])   
+            f=np.array([])
             h = data_set.extra_data['h']
             k = data_set.extra_data['k']
             l = data_set.x
@@ -93,7 +108,7 @@ def generate_plot_files(output_file_path,sample,rgh,data,fit_mode, z_min=0,z_max
             LB_dumy=[]
             dL_dumy=[]
             f_dumy=[]
-            
+
             for j in range(N):
                 key=None
                 if l_dumy[j]>=0:
@@ -115,11 +130,11 @@ def generate_plot_files(output_file_path,sample,rgh,data,fit_mode, z_min=0,z_max
             label=str(int(h[0]))+str(int(k[0]))+'L'
             plot_data_container_experiment[label]=np.concatenate((l[:,np.newaxis],I[:,np.newaxis],eI[:,np.newaxis],(I*f_ctr(q_data))[:,np.newaxis],(eI*f_ctr(q_data))[:,np.newaxis]),axis=1)
             plot_data_container_model[label]=np.concatenate((l_dumy[:,np.newaxis],f_dumy[:,np.newaxis],f_dumy_norm[:,np.newaxis]),axis=1)
-    Q_list_Fourier_synthesis=np.pi*2*sample.unit_cell.abs_hkl(np.array(HKL_list_raxr[0]),np.array(HKL_list_raxr[1]),np.array(HKL_list_raxr[2]))    
-    
+    Q_list_Fourier_synthesis=np.pi*2*sample.unit_cell.abs_hkl(np.array(HKL_list_raxr[0]),np.array(HKL_list_raxr[1]),np.array(HKL_list_raxr[2]))
+
     A_list_calculated_sub,P_list_calculated_sub,Q_list_calculated_sub=sample.find_A_P_muscovite(h=list(HKL_list_raxr[0]),k=list(HKL_list_raxr[1]),l=list(HKL_list_raxr[2]))
     #A_list_calculated_sub,P_list_calculated_sub,Q_list_calculated_sub=sample.find_A_P_muscovite(h=HKL_list_raxr[0][0],k=HKL_list_raxr[1][0],l=HKL_list_raxr[2][-1])
-    
+
     #dump CTR data and profiles
     hkls=['00L']
     plot_data_list=[]
@@ -131,16 +146,16 @@ def generate_plot_files(output_file_path,sample,rgh,data,fit_mode, z_min=0,z_max
     pickle.dump([[A_list_calculated,P_list_calculated,Q_list_calculated],[A_list_Fourier_synthesis,P_list_Fourier_synthesis,Q_list_Fourier_synthesis]],open(os.path.join(output_file_path,"temp_plot_raxr_A_P_Q"),"wb"))
     #dump electron density profiles
     #e density based on model fitting
-    water_scaling=sample.plot_electron_density_muscovite(sample.domain,file_path=output_file_path,z_min=z_min,z_max=z_max,N_layered_water=100,height_offset=height_offset)#dumpt file name is "temp_plot_eden" 
+    water_scaling=sample.plot_electron_density_muscovite(sample.domain,file_path=output_file_path,z_min=z_min,z_max=z_max,N_layered_water=100,height_offset=height_offset)#dumpt file name is "temp_plot_eden"
     #e density based on Fourier synthesis
     z_plot,eden_plot,eden_domains=sample.fourier_synthesis(np.array(HKL_list_raxr),np.array(P_list_Fourier_synthesis).transpose(),np.array(A_list_Fourier_synthesis).transpose(),z_min=z_min,z_max=z_max,resonant_el=sample.domain['el'],resolution=1000,water_scaling=water_scaling)
     z_plot_sub,eden_plot_sub,eden_domains_sub=sample.fourier_synthesis(np.array(HKL_list_raxr),np.array(P_list_calculated_sub).transpose(),np.array(A_list_calculated_sub).transpose(),z_min=z_min,z_max=z_max,resonant_el=sample.domain['el'],resolution=1000,water_scaling=water_scaling)
     #z_plot_sub,eden_plot_sub,eden_domains_sub=sample.fourier_synthesis(np.array([[HKL_list_raxr[0][0]]*100,[HKL_list_raxr[1][0]]*100,np.arange(0,HKL_list_raxr[2][-1],HKL_list_raxr[2][-1]/100.)]),np.array(P_list_calculated_sub).transpose(),np.array(A_list_calculated_sub).transpose(),z_min=z_min,z_max=z_max,resonant_el=sample.domain['el'],resolution=1000)
     pickle.dump([z_plot,eden_plot,eden_domains],open(os.path.join(output_file_path,"temp_plot_eden_fourier_synthesis"),"wb"))
-    pickle.dump([z_plot_sub,eden_plot_sub,eden_domains_sub],open(os.path.join(output_file_path,"temp_plot_eden_fourier_synthesis_sub"),"wb")) 
-    pickle.dump([water_scaling*0.25,water_scaling*0.75,water_scaling],open(os.path.join(output_file_path,"water_scaling"),"wb")) 
+    pickle.dump([z_plot_sub,eden_plot_sub,eden_domains_sub],open(os.path.join(output_file_path,"temp_plot_eden_fourier_synthesis_sub"),"wb"))
+    pickle.dump([water_scaling*0.25,water_scaling*0.75,water_scaling],open(os.path.join(output_file_path,"water_scaling"),"wb"))
 
-#a function to make files to generate vtk files    
+#a function to make files to generate vtk files
 def generate_plot_files_2(output_file_path,sample,rgh,data,fit_mode, z_min=0,z_max=29,RAXR_HKL=[0,0,20],bl_dl=bl_dl_muscovite,height_offset=0,tag=1):
     plot_data_container_experiment={}
     plot_data_container_model={}
@@ -152,7 +167,7 @@ def generate_plot_files_2(output_file_path,sample,rgh,data,fit_mode, z_min=0,z_m
     A_list_calculated,P_list_calculated,Q_list_calculated=sample.find_A_P_muscovite(h=RAXR_HKL[0],k=RAXR_HKL[1],l=RAXR_HKL[2])
     i=0
     for data_set in data:
-        f=np.array([])   
+        f=np.array([])
         h = data_set.extra_data['h']
         k = data_set.extra_data['k']
         x = data_set.x
@@ -177,7 +192,7 @@ def generate_plot_files_2(output_file_path,sample,rgh,data,fit_mode, z_min=0,z_m
             HKL_list_raxr[1].append(k[0])
             HKL_list_raxr[2].append(y[0])
         else:
-            f=np.array([])   
+            f=np.array([])
             h = data_set.extra_data['h']
             k = data_set.extra_data['k']
             l = data_set.x
@@ -198,7 +213,7 @@ def generate_plot_files_2(output_file_path,sample,rgh,data,fit_mode, z_min=0,z_m
             LB_dumy=[]
             dL_dumy=[]
             f_dumy=[]
-            
+
             for j in range(N):
                 key=None
                 if l_dumy[j]>=0:
@@ -220,8 +235,8 @@ def generate_plot_files_2(output_file_path,sample,rgh,data,fit_mode, z_min=0,z_m
             label=str(int(h[0]))+str(int(k[0]))+'L'
             plot_data_container_experiment[label]=np.concatenate((l[:,np.newaxis],I[:,np.newaxis],eI[:,np.newaxis],(I*f_ctr(q_data))[:,np.newaxis],(eI*f_ctr(q_data))[:,np.newaxis]),axis=1)
             plot_data_container_model[label]=np.concatenate((l_dumy[:,np.newaxis],f_dumy[:,np.newaxis],f_dumy_norm[:,np.newaxis]),axis=1)
-    Q_list_Fourier_synthesis=np.pi*2*sample.unit_cell.abs_hkl(np.array(HKL_list_raxr[0]),np.array(HKL_list_raxr[1]),np.array(HKL_list_raxr[2]))    
-    
+    Q_list_Fourier_synthesis=np.pi*2*sample.unit_cell.abs_hkl(np.array(HKL_list_raxr[0]),np.array(HKL_list_raxr[1]),np.array(HKL_list_raxr[2]))
+
     A_list_calculated_sub,P_list_calculated_sub,Q_list_calculated_sub=sample.find_A_P_muscovite(h=list(HKL_list_raxr[0]),k=list(HKL_list_raxr[1]),l=list(HKL_list_raxr[2]))
     #A_list_calculated_sub,P_list_calculated_sub,Q_list_calculated_sub=sample.find_A_P_muscovite(h=HKL_list_raxr[0][0],k=HKL_list_raxr[1][0],l=HKL_list_raxr[2][-1])
 
@@ -236,11 +251,11 @@ def generate_plot_files_2(output_file_path,sample,rgh,data,fit_mode, z_min=0,z_m
     #print A_list_calculated
     ap_data=np.concatenate((A_list_calculated[:,np.newaxis],P_list_calculated[:,np.newaxis],Q_list_calculated[:,np.newaxis]),axis=1)
     np.savetxt('D://temp_APQ'+str(tag),ap_data)
-       
+
 #this function must be called within the shell of GenX gui and par_instance=model.parameters,dump_file='D://temp_plot_raxr_A_P_Q' by default
-#The purpose of this function is to append the errors of A and P extracted from the errors displaying inside the tab of GenX gui 
+#The purpose of this function is to append the errors of A and P extracted from the errors displaying inside the tab of GenX gui
 #copy and past this command line to the shell for action:
-#model.script_module.create_plots.append_errors_for_A_P(par_instance=model.parameters,dump_file='D://temp_plot_raxr_A_P_Q',raxs_rgh='rgh_raxs')   
+#model.script_module.create_plots.append_errors_for_A_P(par_instance=model.parameters,dump_file='D://temp_plot_raxr_A_P_Q',raxs_rgh='rgh_raxs')
 def append_errors_for_A_P_original(par_instance,dump_file='D://temp_plot_raxr_A_P_Q',raxs_rgh='rgh_raxs'):
     data_AP_Q=pickle.load(open(dump_file,"rb"))
     AP_calculated=data_AP_Q[0]
@@ -273,7 +288,7 @@ def append_errors_for_A_P_original(par_instance,dump_file='D://temp_plot_raxr_A_
         P_error_model_fit.append(P_error_model_fit_domain)
     dump_data=[[AP_calculated[0],AP_calculated[1],AP_calculated[2]],[data_AP_Q[1][0],data_AP_Q[1][1],data_AP_Q[1][2],A_error_model_fit,P_error_model_fit]]
     pickle.dump(dump_data,open(dump_file,"wb"))
-    
+
 def append_errors_for_A_P(par_instance,dump_file='D://temp_plot_raxr_A_P_Q',raxs_rgh='rgh_raxs'):
     data_AP_Q=pickle.load(open(dump_file,"rb"))
     AP_calculated=data_AP_Q[0]
@@ -329,7 +344,7 @@ def plotting_raxr_new(data,savefile="D://raxr_temp.png",color=['b','r'],marker=[
     fig.tight_layout()
     fig.savefig(savefile,dpi=300)
     return fig
-    
+
 def plotting_raxr_multiple(file_head=module_path_locator(),dump_files=['temp_plot_raxr_0NaCl','temp_plot_raxr_1NaCl','temp_plot_raxr_10NaCl','temp_plot_raxr_100NaCl'],label_marks=['0mM NaCl','1mM NaCl','10mM NaCl','100mM NaCl'],number=9,color_type=1,marker=['o']):
     color=set_color(len(dump_files),color_type)
     datas=[pickle.load(open(os.path.join(file_head,file))) for file in dump_files]
@@ -362,10 +377,10 @@ def plotting_raxr_multiple(file_head=module_path_locator(),dump_files=['temp_plo
                 pyplot.ylim((1.5,3.5))
     pyplot.subplots_adjust(wspace=0.2, hspace=None)
     #fig.tight_layout()
-    
+
     fig.savefig(os.path.join(file_head,'multiple_raxrs.png'),dpi=300)
     return fig
-    
+
 def plotting_raxr_multiple_2(file_head=module_path_locator(),dump_files=['temp_plot_raxr_0NaCl','temp_plot_raxr_1NaCl','temp_plot_raxr_10NaCl','temp_plot_raxr_100NaCl'],label_marks=['0mM NaCl','1mM NaCl','10mM NaCl','100mM NaCl'],number_raxr=[0,1,6],color_type=1,marker=['o'],plot_layout=[3,1],fig_size=(4.5,6)):
     color=set_color(len(dump_files),color_type)
     datas=[pickle.load(open(os.path.join(file_head,file))) for file in dump_files]
@@ -407,10 +422,10 @@ def plotting_raxr_multiple_2(file_head=module_path_locator(),dump_files=['temp_p
             #    pyplot.ylim((1.5,3.5))
     pyplot.subplots_adjust(wspace=0.2, hspace=None)
     #fig.tight_layout()
-    
+
     fig.savefig(os.path.join(file_head,'multiple_raxrs.png'),dpi=300)
     return fig
-    
+
 def plotting_raxr_multiple_full_set(file_head=module_path_locator(),dump_files=['temp_plot_raxr_0NaCl','temp_plot_raxr_1NaCl','temp_plot_raxr_10NaCl','temp_plot_raxr_100NaCl'],label_marks=['0mM NaCl','1mM NaCl','10mM NaCl','100mM NaCl'],number_raxr=range(9),color_type=1,marker=['o'],plot_layout=[3,3],fig_size=(12,8)):
     color=set_color(len(dump_files),color_type)
     datas=[pickle.load(open(os.path.join(file_head,file))) for file in dump_files]
@@ -453,10 +468,10 @@ def plotting_raxr_multiple_full_set(file_head=module_path_locator(),dump_files=[
             #    pyplot.ylim((1.5,3.5))
     pyplot.subplots_adjust(wspace=0.2, hspace=None)
     #fig.tight_layout()
-    
+
     fig.savefig(os.path.join(file_head,'multiple_raxrs.png'),dpi=300)
     return fig
-        
+
 def plot_CTR_multiple_model_muscovite(file_head=module_path_locator(),dump_files=['temp_plot_0NaCl','temp_plot_1NaCl','temp_plot_10NaCl','temp_plot_100NaCl'],labels=['0NaCl','1mM NaCl','10mM NaCl','100mM NaCl'],markers=['.']*20,fontsize=16,lw=1.5,color_type=1):
     colors=set_color(len(dump_files)*2,color_type)
     objects=[pickle.load(open(os.path.join(file_head,file))) for file in dump_files]
@@ -478,8 +493,8 @@ def plot_CTR_multiple_model_muscovite(file_head=module_path_locator(),dump_files
         xtick.label.set_fontsize(fontsize)
     for ytick in ax.yaxis.get_major_ticks():
         ytick.label.set_fontsize(fontsize)
-    for l in ax.get_xticklines() + ax.get_yticklines(): 
-        l.set_markersize(5) 
+    for l in ax.get_xticklines() + ax.get_yticklines():
+        l.set_markersize(5)
         l.set_markeredgewidth(2)
     ax.plot([0.4,0.4],[0,10000],'--',color='black')
     ax.plot([0.9,0.9],[0,10000],'--',color='black')
@@ -503,14 +518,14 @@ def plot_CTR_multiple_model_muscovite(file_head=module_path_locator(),dump_files
         xtick.label.set_fontsize(fontsize)
     for ytick in ax.yaxis.get_major_ticks():
         ytick.label.set_fontsize(fontsize)
-    for l in ax.get_xticklines() + ax.get_yticklines(): 
-        l.set_markersize(5) 
+    for l in ax.get_xticklines() + ax.get_yticklines():
+        l.set_markersize(5)
         l.set_markeredgewidth(2)
     pyplot.xlim((-2*scale,30*scale))
     fig.tight_layout()
     fig.savefig(os.path.join(file_head,'multiple_ctrs.png'),dpi=300)
     return fig
-    
+
 def plot_CTR_multiple_model_muscovite_2(file_head=module_path_locator(),dump_files=['temp_plot_0NaCl','temp_plot_1NaCl','temp_plot_10NaCl','temp_plot_100NaCl'],labels=['0NaCl','1mM NaCl','10mM NaCl','100mM NaCl'],markers=['.']*20,fontsize=12,lw=1.5,color_type=1):
     colors=set_color(len(dump_files)*2,color_type)
     objects=[pickle.load(open(os.path.join(file_head,file))) for file in dump_files]
@@ -533,8 +548,8 @@ def plot_CTR_multiple_model_muscovite_2(file_head=module_path_locator(),dump_fil
         xtick.label.set_fontsize(fontsize)
     for ytick in ax.yaxis.get_major_ticks():
         ytick.label.set_fontsize(fontsize)
-    for l in ax.get_xticklines() + ax.get_yticklines(): 
-        l.set_markersize(5) 
+    for l in ax.get_xticklines() + ax.get_yticklines():
+        l.set_markersize(5)
         l.set_markeredgewidth(2)
     ax.plot([0.35,0.35],[0,10000],':',color='black')
     ax.plot([0.87,0.87],[0,10000],':',color='black')
@@ -542,11 +557,11 @@ def plot_CTR_multiple_model_muscovite_2(file_head=module_path_locator(),dump_fil
     fig.tight_layout()
     fig.savefig(os.path.join(file_head,'multiple_ctrs.png'),dpi=300)
     return fig
-        
+
 def plotting_modelB(object=[],fig=None,index=[2,3,1],color=['0.35','r','c','m','k'],l_dashes=[()],lw=3,label=['Experimental data','Model fit'],title=['10L'],marker=['o'],legend=True,fontsize=10):
     #overlapping the experimental and modeling fit CTR profiles,the data used are exported using GenX,first need to read the data using loadtxt(file,skiprows=3)
     #object=[data1,data2,data3],multiple dataset with the first one of experimental data and the others model datasets
-    
+
     ax=fig.add_subplot(index[0],index[1],index[2])
     ax.set_yscale('log')
     ax.scatter(object[0][:,0],object[0][:,1],marker='o',s=20,facecolors='none',edgecolors=color[0],label=label[0])
@@ -560,8 +575,8 @@ def plotting_modelB(object=[],fig=None,index=[2,3,1],color=['0.35','r','c','m','
         pyplot.ylabel(r'$|F_{HKL}|$',axes=ax,fontsize=12)
     #settings for demo showing
     pyplot.title('('+title[0]+')',position=(0.5,0.86),weight=4,size=10,clip_on=True)
-    if title[0]=='0 0 L':
-        pyplot.ylim((0,1000))
+    if title[0]=='00L':
+        pyplot.ylim((1,10000))
         #pyplot.xlim((0,20))
     elif title[0]=='3 0 L':
         pyplot.ylim((1,10000))
@@ -569,7 +584,7 @@ def plotting_modelB(object=[],fig=None,index=[2,3,1],color=['0.35','r','c','m','
     #pyplot.ylim((1,1000))
     #settings for publication
     #pyplot.title('('+title[0]+')',position=(0.5,1.001),weight=4,size=10,clip_on=True)
-    """##add arrows to antidote the misfits 
+    """##add arrows to antidote the misfits
     if title[0]=='0 0 L':
         ax.add_patch(mpt.patches.FancyArrow(0.25,0.6,0,-0.15,width=0.015,head_width=0.045,head_length=0.045,overhang=0,color='k',length_includes_head=True,transform=ax.transAxes))
         ax.add_patch(mpt.patches.FancyArrow(0.83,0.5,0,-0.15,width=0.015,head_width=0.045,head_length=0.045,overhang=0,color='k',length_includes_head=True,transform=ax.transAxes))
@@ -577,7 +592,7 @@ def plotting_modelB(object=[],fig=None,index=[2,3,1],color=['0.35','r','c','m','
         ax.add_patch(mpt.patches.FancyArrow(0.68,0.6,0,-0.15,width=0.015,head_width=0.045,head_length=0.045,overhang=0,color='k',length_includes_head=True,transform=ax.transAxes))
     if title[0]=='3 0 L':
         ax.add_patch(mpt.patches.FancyArrow(0.375,0.8,0,-0.15,width=0.015,head_width=0.045,head_length=0.045,overhang=0,color='k',length_includes_head=True,transform=ax.transAxes))
-    """    
+    """
     if legend==True:
         #ax.legend()
         ax.legend(bbox_to_anchor=(0.2,1.03,3.,1.202),mode='expand',loc=3,ncol=5,borderaxespad=0.,prop={'size':9})
@@ -585,26 +600,27 @@ def plotting_modelB(object=[],fig=None,index=[2,3,1],color=['0.35','r','c','m','
         xtick.label.set_fontsize(fontsize)
     for ytick in ax.yaxis.get_major_ticks():
         ytick.label.set_fontsize(fontsize)
-    for l in ax.get_xticklines() + ax.get_yticklines(): 
-        l.set_markersize(5) 
+    for l in ax.get_xticklines() + ax.get_yticklines():
+        l.set_markersize(5)
         l.set_markeredgewidth(2)
-    #plot normalized data now    
-    ax=fig.add_subplot(index[0],index[1],index[2]+1)
-    ax.set_yscale('log')
-    ax.scatter(object[0][:,0],object[0][:,3],marker='o',s=20,facecolors='none',edgecolors=color[0],label=label[0])
-    ax.errorbar(object[0][:,0],object[0][:,3],yerr=object[0][:,4],fmt=None,ecolor=color[0])
-    for i in range(len(object)-1):#first item is experiment data (L, I, err) while the second one is simulated result (L, I_s)
-        l,=ax.plot(object[i+1][:,0],object[i+1][:,2],color=color[i+1],lw=lw,label=label[i+1])
-        l.set_dashes(l_dashes[i])
-    if index[2] in [7,8,9]:
-        pyplot.xlabel('L(r.l.u)',axes=ax,fontsize=12)
-    if index[2] in [1,4,7]:
-        pyplot.ylabel(r'$|normalized F_{HKL}|$',axes=ax,fontsize=12)
+    #plot normalized data now
+    if index[0]==2 and index[1]==1:
+        ax=fig.add_subplot(index[0],index[1],index[2]+1)
+        ax.set_yscale('log')
+        ax.scatter(object[0][:,0],object[0][:,3],marker='o',s=20,facecolors='none',edgecolors=color[0],label=label[0])
+        ax.errorbar(object[0][:,0],object[0][:,3],yerr=object[0][:,4],fmt=None,ecolor=color[0])
+        for i in range(len(object)-1):#first item is experiment data (L, I, err) while the second one is simulated result (L, I_s)
+            l,=ax.plot(object[i+1][:,0],object[i+1][:,2],color=color[i+1],lw=lw,label=label[i+1])
+            l.set_dashes(l_dashes[i])
+        if index[2] in [7,8,9]:
+            pyplot.xlabel('L(r.l.u)',axes=ax,fontsize=12)
+        if index[2] in [1,4,7]:
+            pyplot.ylabel(r'$|normalized F_{HKL}|$',axes=ax,fontsize=12)
     #settings for demo showing
     pyplot.title('('+title[0]+')',position=(0.5,0.86),weight=4,size=10,clip_on=True)
     if title[0]=='0 0 L':
         pass
-        #pyplot.ylim((0,1000))
+        #pyplot.ylim((0,10000))
         #pyplot.xlim((0,20))
     elif title[0]=='3 0 L':
         pyplot.ylim((1,10000))
@@ -612,7 +628,7 @@ def plotting_modelB(object=[],fig=None,index=[2,3,1],color=['0.35','r','c','m','
     #pyplot.ylim((1,1000))
     #settings for publication
     #pyplot.title('('+title[0]+')',position=(0.5,1.001),weight=4,size=10,clip_on=True)
-    """##add arrows to antidote the misfits 
+    """##add arrows to antidote the misfits
     if title[0]=='0 0 L':
         ax.add_patch(mpt.patches.FancyArrow(0.25,0.6,0,-0.15,width=0.015,head_width=0.045,head_length=0.045,overhang=0,color='k',length_includes_head=True,transform=ax.transAxes))
         ax.add_patch(mpt.patches.FancyArrow(0.83,0.5,0,-0.15,width=0.015,head_width=0.045,head_length=0.045,overhang=0,color='k',length_includes_head=True,transform=ax.transAxes))
@@ -620,7 +636,7 @@ def plotting_modelB(object=[],fig=None,index=[2,3,1],color=['0.35','r','c','m','
         ax.add_patch(mpt.patches.FancyArrow(0.68,0.6,0,-0.15,width=0.015,head_width=0.045,head_length=0.045,overhang=0,color='k',length_includes_head=True,transform=ax.transAxes))
     if title[0]=='3 0 L':
         ax.add_patch(mpt.patches.FancyArrow(0.375,0.8,0,-0.15,width=0.015,head_width=0.045,head_length=0.045,overhang=0,color='k',length_includes_head=True,transform=ax.transAxes))
-    """    
+    """
     if legend==True:
         #ax.legend()
         ax.legend(bbox_to_anchor=(0.2,1.03,3.,1.202),mode='expand',loc=3,ncol=5,borderaxespad=0.,prop={'size':9})
@@ -628,8 +644,8 @@ def plotting_modelB(object=[],fig=None,index=[2,3,1],color=['0.35','r','c','m','
         xtick.label.set_fontsize(fontsize)
     for ytick in ax.yaxis.get_major_ticks():
         ytick.label.set_fontsize(fontsize)
-    for l in ax.get_xticklines() + ax.get_yticklines(): 
-        l.set_markersize(5) 
+    for l in ax.get_xticklines() + ax.get_yticklines():
+        l.set_markersize(5)
         l.set_markeredgewidth(2)
 
     #ax.set_ylim([1,10000])
@@ -649,8 +665,10 @@ def plotting_many_modelB(save_file='D://pic.png',head='C:\\Users\\jackey\\Google
             if j==0:
                 object[-1].append(object_sets[j][i][0])
             object[-1].append(object_sets[j][i][1])
-    if len(object_sets[0])==1:
+    if len(object_sets[0])==1:#case for plotting muscovite (assuming there is one specular rod)
         index=[2,1]
+    else:#case for plotting hematite (9 rods in total including one specular rod)
+        index=[3,3]
 
     for i in range(len(object)):
     #for i in range(1):
@@ -662,7 +680,7 @@ def plotting_many_modelB(save_file='D://pic.png',head='C:\\Users\\jackey\\Google
     fig.tight_layout()
     fig.savefig(save_file,dpi=300)
     return fig
-    
+
 def plotting_single_rod(save_file='D://pic.png',head='C:\\Users\\jackey\\Google Drive\\useful codes\\plotting\\',object_files=['temp_plot_O1O2','temp_plot_O5O6','temp_plot_O1O3','temp_plot_O5O7','temp_plot_O1O4','temp_plot_O5O8'],index=[1,1],color=['0.6','b','b','g','g','r','r'],lw=1.5,l_dashes=[(2,2,2,2),(None,None),(2,2,2,2),(None,None),(2,2,2,2),(None,None)],label=['Experimental data','Model1 results','Model2 results','Model3','Model4','Model5','Model6'],marker=['p'],title=['0 0 L','0 2 L','1 0 L','1 1 L','2 0 L','2 2 L','3 0 L','2 -1 L','2 1 L'],legend=[False,False,False,False,False,False,False,False,False],fontsize=10,rod_index=0):
     #plotting model results simultaneously, object_files=[file1,file2,file3] file is the path of a dumped data/model file
     #setting for demo show
@@ -689,8 +707,8 @@ def plotting_single_rod(save_file='D://pic.png',head='C:\\Users\\jackey\\Google 
     fig.tight_layout()
     fig.savefig(save_file,dpi=300)
     return fig
-    
-#overplotting experimental datas formated with UAF_CTR_RAXS_2 loader in GenX            
+
+#overplotting experimental datas formated with UAF_CTR_RAXS_2 loader in GenX
 def plot_many_experiment_data(data_files=['D:\\Google Drive\\data\\400uM_Sb_hematite_rcut.datnew_formate','D:\\Google Drive\\data\\1000uM_Pb_hematite_rcut.datnew_formate'],labels=['Sb 400uM on hematite','Pb 1000uM on hematite'],HKs=[[0,0],[0,2],[1,0],[1,1],[2,0],[2,1],[2,-1],[2,2],[3,0]],index_subplot=[3,3],colors=['b','g','r','c','m','y','w'],markers=['.','*','o','v','^','<','>'],fontsize=10):
     data_container={}
     for i in range(len(labels)):
@@ -713,8 +731,8 @@ def plot_many_experiment_data(data_files=['D:\\Google Drive\\data\\400uM_Sb_hema
             xtick.label.set_fontsize(fontsize)
         for ytick in ax.yaxis.get_major_ticks():
             ytick.label.set_fontsize(fontsize)
-        for l in ax.get_xticklines() + ax.get_yticklines(): 
-            l.set_markersize(5) 
+        for l in ax.get_xticklines() + ax.get_yticklines():
+            l.set_markersize(5)
             l.set_markeredgewidth(2)
         if i==0:
             ax.legend(bbox_to_anchor=(0.5,0.92,0,3),bbox_transform=fig.transFigure,loc='lower center',ncol=4,borderaxespad=0.,prop={'size':14})
@@ -723,7 +741,7 @@ def plot_many_experiment_data(data_files=['D:\\Google Drive\\data\\400uM_Sb_hema
         if i%index_subplot[1]==0:
             pyplot.ylabel('|F|',axes=ax,fontsize=fontsize)
     return True
-    
+
 def plot_multiple_e_profiles(file_head=module_path_locator(),dump_files=['temp_plot_eden_0NaCl','temp_plot_eden_1NaCl','temp_plot_eden_10NaCl','temp_plot_eden_100NaCl'],label_marks=['0mM NaCl','1mM NaCl','10mM NaCl','100mM NaCl'],color_type=5):
     colors=set_color(len(dump_files),color_type)
     fig=pyplot.figure(figsize=(6,8))
@@ -746,8 +764,8 @@ def plot_multiple_e_profiles(file_head=module_path_locator(),dump_files=['temp_p
     fig.tight_layout()
     fig.savefig(os.path.join(file_head,'multiple_eprofiles.png'),dpi=300)
     return fig
-    
-    
+
+
 def plot_multiple_e_profiles_2(file_head=module_path_locator(),dump_files=['temp_plot_eden_0NaCl','temp_plot_eden_1NaCl','temp_plot_eden_10NaCl','temp_plot_eden_100NaCl'],label_marks=['0mM NaCl','1mM NaCl','10mM NaCl','100mM NaCl'],color_type=5):
     colors=set_color(len(dump_files),color_type)
     fig=pyplot.figure(figsize=(6,6))
@@ -755,7 +773,7 @@ def plot_multiple_e_profiles_2(file_head=module_path_locator(),dump_files=['temp
     pyplot.ylabel("e density",fontsize=12)
     pyplot.xlabel(r"$\rm{Z(\AA)}$",fontsize=12)
     #pyplot.title('Total e profile',fontsize=12)
-    
+
     #ax2=fig.add_subplot(2,1,2)
     #pyplot.ylabel("E_density",fontsize=12)
     #pyplot.xlabel("Z(Angstrom)",fontsize=12)
@@ -773,17 +791,17 @@ def plot_multiple_e_profiles_2(file_head=module_path_locator(),dump_files=['temp
     fig.tight_layout()
     fig.savefig(os.path.join(file_head,'multiple_eprofiles2.png'),dpi=300)
     return fig
-    
-def plot_multiple_APQ_profiles(file_head=module_path_locator(),dump_files=['temp_plot_raxr_A_P_Q_0NaCl','temp_plot_raxr_A_P_Q_1NaCl','temp_plot_raxr_A_P_Q_10NaCl','temp_plot_raxr_A_P_Q_100NaCl'],labels=['0NaCl','1uM NaCl','10uM NaCl','100uM NaCl'],color_type=5):
+
+def plot_multiple_APQ_profiles(file_head=module_path_locator(),dump_files=['temp_plot_raxr_A_P_Q_0NaCl','temp_plot_raxr_A_P_Q_1NaCl','temp_plot_raxr_A_P_Q_10NaCl','temp_plot_raxr_A_P_Q_100NaCl'],labels=['free of NaCl','1 mM NaCl','10 mM NaCl','100 mM NaCl'],color_type=5):
     colors=set_color(len(dump_files),color_type)
-    fig1=pyplot.figure(figsize=(8,5))
+    fig1=pyplot.figure(figsize=(8,4))
     ax1=fig1.add_subplot(1,2,1)
-    pyplot.ylabel("A")
+    pyplot.ylabel(r'$\rm{Partial\ SF\ Amplitude\ (Zr/A_{UC})}$')
     pyplot.xlabel(r'$\rm{q\ (\AA^{-1})}$')
     ax2=fig1.add_subplot(1,2,2)
-    pyplot.ylabel("P/Q(2pi)")
+    pyplot.ylabel(r'$\rm{Partial\ SF\ Phase/q\ (\AA)}$')
     pyplot.xlabel(r'$\rm{q\ (\AA^{-1})}$')
-    
+
     for i in range(len(dump_files)):
         AP_Q_file=os.path.join(file_head,dump_files[i])
         #plot Q dependence of Foriour components A and P
@@ -794,14 +812,14 @@ def plot_multiple_APQ_profiles(file_head=module_path_locator(),dump_files=['temp
         #P over Q
         ax2.plot(data_AP_Q[0][2],np.array(data_AP_Q[0][1])/np.array(data_AP_Q[0][2])*np.pi*2,color=colors[i],label=labels[i],lw=1.5)
         ax2.errorbar(data_AP_Q[1][2],np.array(data_AP_Q[1][1])/np.array(data_AP_Q[1][2])*np.pi*2,yerr=np.transpose(data_AP_Q[1][4])*np.pi*2/[data_AP_Q[1][2],data_AP_Q[1][2]],color=colors[i],fmt='o',markersize=4.5)
-    ax2.legend()
-    ax1.legend()
+    ax2.legend(frameon=False,fontsize=12)
+    ax1.legend(frameon=False,fontsize=12)
     ax1.set_xlim(0,4)
     ax2.set_xlim(0,4)
     fig1.tight_layout()
     fig1.savefig(os.path.join(file_head,'multiple_APQ_profiles.png'),dpi=300)
     return fig1
-    
+
 def plot_AFM_profiles(file_head='P:\\My stuff\\Manuscripts\\zr on mica\\AFM images',profile_files=['AFM profile for 0mM NaCl.csv','AFM profile for 1mM NaCl.csv','AFM profile for 10mM NaCl.csv','AFM profile for 100mM NaCl.csv'],labels=['0mM NaCl','1mM NaCl','10mM NaCl','100mM NaCl'],color_type=5):
     colors=set_color(len(profile_files),color_type)
     fig=pyplot.figure(figsize=(6,6))
@@ -815,8 +833,8 @@ def plot_AFM_profiles(file_head='P:\\My stuff\\Manuscripts\\zr on mica\\AFM imag
     fig.tight_layout()
     fig.savefig(os.path.join(file_head,'AFM_profiles.png'),dpi=300)
     return fig
-    
-    
+
+
 def cal_e_density(z_list,oc_list,u_list,z_min=0,z_max=29,resolution=1000,N=40,wt=0.25,Auc=46.927488088,water_scaling=1):
     height_list=[]
     e_list=[]
@@ -838,7 +856,7 @@ def cal_e_density(z_list,oc_list,u_list,z_min=0,z_max=29,resolution=1000,N=40,wt
     pyplot.figure()
     pyplot.plot(height_list,e_list)
     return e_list
-    
+
 def fit_e_2(zs=None,water_scaling=1,fit_range=[1,40]):
     total_eden=pickle.load(open(os.path.join(module_path_locator(),"temp_plot_eden"),"rb"))[0][-1]
     raxr_eden=pickle.load(open(os.path.join(module_path_locator(),"temp_plot_RAXR_eden_e_fit"),"rb"))
@@ -850,7 +868,7 @@ def fit_e_2(zs=None,water_scaling=1,fit_range=[1,40]):
     gaussian_fit(fit_data,fit_range=fit_range,zs=zs,water_scaling=water_scaling)
     pyplot.title('Total e - raxr -water')
     return None
-    
+
 def overplot_total_raxr_e_density():
     total_eden=pickle.load(open(os.path.join(module_path_locator(),"temp_plot_eden"),"rb"))[0][-1]
     raxr_eden=pickle.load(open(os.path.join(module_path_locator(),"temp_plot_RAXR_eden_e_fit"),"rb"))
@@ -859,7 +877,7 @@ def overplot_total_raxr_e_density():
     pyplot.plot(total_eden[0,:],total_eden[1,:],label='Total e density')
     pyplot.legend()
     return None
-    
+
 def overplot_raxr_e_density(dump_files=["temp_plot_RAXR_eden_e_fit_0mMNaCl","temp_plot_RAXR_eden_e_fit_1mMNaCl","temp_plot_RAXR_eden_e_fit_10mMNaCl","temp_plot_RAXR_eden_e_fit_100mMNaCl"],labels=['0mM NaCl','1mM NaCl','10mM NaCl','100mM NaCl']):
     fig=pyplot.figure()
     colors=set_color(len(dump_files),1)
@@ -871,11 +889,11 @@ def overplot_raxr_e_density(dump_files=["temp_plot_RAXR_eden_e_fit_0mMNaCl","tem
     pyplot.legend()
     #fig.savefig(os.path.join(os.path.join(module_path_locator(),'temp_raxr_e_profiles_overlapping_profile.png'),dpi=300))
     return fig
-        
+
 def plot_all(path=module_path_locator()):
     PATH=path
     #which plots do you want to create
-    plot_e_model,plot_e_FS,plot_ctr,plot_raxr,plot_AP_Q=0,1,1,0,0
+    plot_e_model,plot_e_FS,plot_ctr,plot_raxr,plot_AP_Q=1,0,1,0,0
 
     #specify file paths (files are dumped files when setting running_mode=False in GenX script)
     e_file=os.path.join(PATH,"temp_plot_eden")#e density from model
@@ -889,7 +907,7 @@ def plot_all(path=module_path_locator()):
     e_den_raxr_MI=None
     water_scaling=None
     #plot electron density profile
-    if plot_e_model: 
+    if plot_e_model:
         data_eden=pickle.load(open(e_file,"rb"))
         edata,labels=data_eden[0],data_eden[1]
         water_scaling=pickle.load(open(water_scaling_file,"rb"))[-1]#total water scaling factor to be used in Gaussian fit below
@@ -902,7 +920,8 @@ def plot_all(path=module_path_locator()):
             if i==N-1:
                 ax=fig.add_subplot(1,2,2)
             else:
-                ax=fig.add_subplot(N/2+1,2,i*2+1)
+                #ax=fig.add_subplot(N/2+1,2,i*2+1)
+                ax=fig.add_subplot(N-1,2,i*2+1)
             ax.plot(np.array(edata[i][0,:]),edata[i][1,:],color='b',label="Total e density")
             try:#some domain may have no raxr element
                 ax.plot(np.array(edata[i][0,:]),edata[i][2,:],color='g',label="RAXS element e profile (MD)")
@@ -968,7 +987,7 @@ def plot_all(path=module_path_locator()):
         pyplot.legend()
         fig1.savefig(os.path.join(PATH,'temp_APQ_profile.png'),dpi=300)
     #now plot the subtracted e density and print out the gaussian fit results
-    
+
     pyplot.figure()
     print '##############Total e - raxr -layer water#################'
     gaussian_fit(e_den_subtracted,water_scaling=water_scaling)
@@ -1016,7 +1035,7 @@ def gaussian_fit(data,fit_range=[1,40],zs=None,N=8,water_scaling=1):
     else:
         ctrs=np.array(zs)
     for i in range(len(ctrs)):
-        guess += [0.5, 1]   
+        guess += [0.5, 1]
 
     popt, pcov = curve_fit(func, [x,ctrs], y, p0=guess)
     combinded_set=[]
@@ -1032,14 +1051,14 @@ def gaussian_fit(data,fit_range=[1,40],zs=None,N=8,water_scaling=1):
     print 'X_RAXS_LIST=[0.5]*',len(combinded_set[1,:])
     print 'Y_RAXS_LIST=[0.5]*',len(combinded_set[1,:])
     print 'Z_RAXS_LIST=np.array([',','.join([str(each) for each in combinded_set[0,:]]),'])'
-    
-    
+
+
     fit = func([x,ctrs], *popt)
 
     plt.plot(x, y)
     plt.plot(x, fit , 'r-')
     plt.show()
-    
+
 def find_A_P_muscovite(q_list,ctrs,amps,wids,wt=0.25):
     #ctrs:z list (in A with reference of surface having 0A)
     #amps:oc list
@@ -1057,7 +1076,7 @@ def find_A_P_muscovite(q_list,ctrs,amps,wids,wt=0.25):
             P_container.append(0)
         elif real_complex_sum==0 and img_complex_sum==1:
             P_container.append(0.25)#1/2pi/2pi
-        elif real_complex_sum==0 and img_complex_sum==-1:  
+        elif real_complex_sum==0 and img_complex_sum==-1:
             P_container.append(0.75)#3/2pi/2pi
         else:#adjustment is needed since the return of np.arctan is ranging from -1/2pi to 1/2pi
             if real_complex_sum>0 and img_complex_sum>0:
@@ -1068,9 +1087,9 @@ def find_A_P_muscovite(q_list,ctrs,amps,wids,wt=0.25):
                 P_container.append(np.arctan(img_complex_sum/real_complex_sum)/np.pi/2.+0.5)
             elif real_complex_sum<0 and img_complex_sum<0:
                 P_container.append(np.arctan(img_complex_sum/real_complex_sum)/np.pi/2.+0.5)
-        
+
     return np.array(A_container),np.array(P_container),Q
-    
+
 def fourier_synthesis(q_list,P,A,z,N=40,Auc=46.9275):
     ZR=N
     q_list.sort()
@@ -1083,7 +1102,7 @@ def fourier_synthesis(q_list,P,A,z,N=40,Auc=46.9275):
         eden=ZR/Auc/np.pi/2*np.sum(A*np.cos(2*np.pi*P-np.array(q_list)*z_each)*delta_q)
         eden_plot.append(eden)
     return eden_plot
-    
+
 def q_list_func(h, k, l,a=5.1988, b=9.0266, c=20.1058, alpha=90,beta=95.782,gamma=90):
     '''Returns the absolute value of (h,k,l) vector in units of
     AA.
@@ -1110,7 +1129,7 @@ def q_list_func(h, k, l,a=5.1988, b=9.0266, c=20.1058, alpha=90,beta=95.782,gamm
                       - np.cos(gamma)**2 + 2*np.cos(alpha)
                       *np.cos(beta)*np.cos(gamma)))
     return dinv*np.pi*2
-    
+
 def fit_e_density(path=module_path_locator(),fit_range=[1,40],zs=None,N=8):
     PATH=path
     ##extract hkl values##
@@ -1138,7 +1157,7 @@ def fit_e_density(path=module_path_locator(),fit_range=[1,40],zs=None,N=8):
 
     #cal q list
     q_list=q_list_func(h,k,l)
-    
+
     def func(x_ctrs_qs,*params):
         x=x_ctrs_qs[0]
         ctrs=x_ctrs_qs[1]
@@ -1149,7 +1168,7 @@ def fit_e_density(path=module_path_locator(),fit_range=[1,40],zs=None,N=8):
             amps.append(abs(params[i]))
             wids.append(abs(params[i+1]))
 
-        #cal A and P list 
+        #cal A and P list
         A,P,Q=find_A_P_muscovite(q_list,ctrs,amps,wids)
         #Fourier thynthesis
         y=fourier_synthesis(q_list,P,A,z=x,N=40)
@@ -1166,7 +1185,7 @@ def fit_e_density(path=module_path_locator(),fit_range=[1,40],zs=None,N=8):
     else:
         ctrs=np.array(zs)
     for i in range(len(ctrs)):
-        guess += [0.5, 1]   
+        guess += [0.5, 1]
     #print x,ctrs
     popt, pcov = curve_fit(func, [x,ctrs,q_list], y, p0=guess)
     combinded_set=[]
@@ -1182,19 +1201,13 @@ def fit_e_density(path=module_path_locator(),fit_range=[1,40],zs=None,N=8):
     print 'X_RAXS_LIST=[0.5]*',len(combinded_set[1,:])
     print 'Y_RAXS_LIST=[0.5]*',len(combinded_set[1,:])
     print 'Z_RAXS_LIST=np.array([',','.join([str(each) for each in combinded_set[0,:]]),'])'
-    
-    
+
+
     fit = func([x,ctrs], *popt)
 
     plt.plot(x, y)
     plt.plot(x, fit , 'r-')
     plt.show()
-    
-if __name__=="__main__":    
+
+if __name__=="__main__":
     plot_all()
-    
-    
-    
-    
-    
-    

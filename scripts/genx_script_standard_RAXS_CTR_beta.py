@@ -1749,7 +1749,7 @@ def Sim(data,VARS=VARS):
             else:
                 domain_creator.print_data_for_publication_B2(N_sorbate=np.sum(SORBATE_NUMBER[i])+np.sum(O_NUMBER[i]),domain=VARS['domain'+str(int(i+1))+'A'],z_shift=1,layer_types=(half_layer+full_layer)[i],save_file=os.path.join(output_file_path,'Model_domain'+str(i+1)+'A_publication.dat'))
             try:#make sure you have the test.tab file in the specified folder
-                domain_creator.make_publication_table(model_file=os.path.join(output_file_path,'Model_domain'+str(i+1)+'A_publication.dat'),par_file=os.path.join(output_file_path,"test.tab"),el_substrate=['Fe','O'],el_sorbate=['Pb'],abc=[5.038,5.434,7.3707])
+                domain_creator.make_publication_table2(model_file=os.path.join(output_file_path,'Model_domain'+str(i+1)+'A_publication.dat'),par_file=os.path.join(output_file_path,"test.tab"),el_substrate=['Fe','O'],el_sorbate=['Pb'],abc=[5.038,5.434,7.3707])
             except:
                 pass
     #make dummy raxr dataset you will need to double check the LB,dL and the hkl
