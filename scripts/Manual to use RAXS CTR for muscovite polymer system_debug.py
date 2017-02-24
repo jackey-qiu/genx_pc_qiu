@@ -59,7 +59,7 @@ elif type(BUILD_GRID)==int(1):
 INFO_LIB={'basis':BASIS,'sorbate_el':'Zr','coordinate_el':'O','T':T,'T_INV':T_INV,'oligomer_type':'polymer'}#polymer_new_rot if square_antiprism
 
 for i in range(NUMBER_SORBATE_LAYER):
-    vars()['rgh_domain1_set'+str(i+1)]=UserVars() 
+    vars()['rgh_domain1_set'+str(i+1)]=UserVars()
     geo_lib_domain1={'cent_point_offset_x':0,'cent_point_offset_y':0,'cent_point_offset_z':0,'r':2.2,'theta':59.2641329,'rot_x':0,'rot_y':0,'rot_z':0,'shift_btop':0,'shift_mid':0,'shift_cap':0,'rot_ang_attach1':0,'rot_ang_attach2':0,'rot_ang_attach3':0}
     Domain1,vars()['rgh_domain1_set'+str(i+1)]=domain_creator.add_sorbate_new(domain=Domain1,anchored_atoms=[],func=domain_creator_sorbate.OS_cubic_oligomer,geo_lib=geo_lib_domain1,info_lib=INFO_LIB,domain_tag='_D1',rgh=vars()['rgh_domain1_set'+str(i+1)],index_offset=[i*2*NUMBER_EL_MOTIF,NUMBER_EL_MOTIF+i*2*NUMBER_EL_MOTIF],xy_offset=XY_OFFSET,height_offset=HEIGHT_OFFSET,symmetry_couple=SYMMETRY,level=LEVEL,cap=CAP,attach_sorbate_number=EXTRA_SORBATE,first_or_second=SWITCH_EXTRA_SORBATE,mirror=MIRROR_EXTRA_SORBATE,build_grid=BUILD_GRID)
 
@@ -92,7 +92,7 @@ sorbate_id_list_domain1,sorbate_group_names_domain1=domain_creator.generate_sorb
 sorbate_atom_group_info=[{'domain':Domain1,'ref_id_list':sorbate_id_list_domain1,'ref_group_names':sorbate_group_names_domain1,'ref_sym_list':[],'domain_tag':''}]
 sorbate_groups,sorbate_group_names=domain_creator.setup_atom_group(gp_info=sorbate_atom_group_info)
 for i in range(len(sorbate_groups)):vars()[sorbate_group_names[i]]=sorbate_groups[i]
-    
+
 ##<Define other pars>##
 rgh=domain_creator.define_global_vars(rgh=UserVars(),domain_number=NUMBER_DOMAIN)#global vars
 rgh_raxs=domain_creator.define_raxs_vars(rgh=UserVars(),number_spectra=NUMBER_RAXS_SPECTRA,number_domain=1)#RAXR spectra pars
@@ -119,27 +119,27 @@ def Sim(data,VARS=VARS):
     layered_water_pars=vars(rgh_dlw)
     layered_sorbate_pars=vars(rgh_dls)
     raxs_vars=vars(rgh_raxs)
-    
+
     ##<update sorbates>##
     [domain_creator.update_sorbate_new(domain=Domain1,anchored_atoms=[],func=domain_creator_sorbate.OS_cubic_oligomer,info_lib=INFO_LIB,domain_tag='_D1',rgh=VARS['rgh_domain1_set'+str(i+1)],index_offset=[i*2*NUMBER_EL_MOTIF,NUMBER_EL_MOTIF+i*2*NUMBER_EL_MOTIF],xy_offset=XY_OFFSET,height_offset=HEIGHT_OFFSET,level=LEVEL,symmetry_couple=SYMMETRY,cap=CAP,attach_sorbate_number=EXTRA_SORBATE,first_or_second=SWITCH_EXTRA_SORBATE,mirror=MIRROR_EXTRA_SORBATE,build_grid=BUILD_GRID) for i in range(NUMBER_SORBATE_LAYER)]#domain1
-    
+
     ##<update gaussian peaks>##
     if NUMBER_GAUSSIAN_PEAK>0:
         domain_creator.update_gaussian(domain=Domain1,rgh=rgh_gaussian,groups=Gaussian_groups,el=EL_GAUSSIAN_PEAK,number=NUMBER_GAUSSIAN_PEAK,height_offset=HEIGHT_OFFSET,c=unitcell.c,domain_tag='_D1',shape=GAUSSIAN_SHAPE,print_items=False,use_cumsum=True)
-    
+
     ##<link groups>##
     [eval(each_command) for each_command in domain_creator.link_atom_group(gp_info=atom_group_info,gp_scheme=GROUP_SCHEME)]
-    
+
     ##<format domains>##
     domain={'domains':[Domain1,Domain2],'layered_water_pars':layered_water_pars,'layered_sorbate_pars':layered_sorbate_pars,\
             'global_vars':rgh,'raxs_vars':raxs_vars,'F1F2':F1F2,'E0':E0,'el':RAXR_EL}
     sample = model.Sample(inst, bulk, domain, unitcell,coherence=COHERENCE,surface_parms={'delta1':0.,'delta2':0.})
-    
+
     ##<calculate structure factor>##
     F,fom_scaler=[],[]
     i=0
     for data_set in data:
-        f=np.array([])   
+        f=np.array([])
         h = data_set.extra_data['h']
         k = data_set.extra_data['k']
         x = data_set.x
@@ -154,7 +154,7 @@ def Sim(data,VARS=VARS):
         f=rough*abs(sample.calculate_structure_factor(h,k,x,y,index=i,fit_mode=RAXR_FIT_MODE,height_offset=HEIGHT_OFFSET*BASIS[2]))
         F.append(f*f)
         fom_scaler.append(1)
-        
+
     if COUNT_TIME:
         t_2=datetime.now()
 
@@ -162,7 +162,10 @@ def Sim(data,VARS=VARS):
     if not RUN:
         domain_creator.print_structure_files_muscovite_new(domain_list=[Domain1,Domain2],z_shift=0.8+HEIGHT_OFFSET,number_gaussian=NUMBER_GAUSSIAN_PEAK,el=RAXR_EL,matrix_info=INFO_LIB,save_file=OUTPUT_FILE_PATH)
         create_plots.generate_plot_files(output_file_path=OUTPUT_FILE_PATH,sample=sample,rgh=rgh,data=data,fit_mode=RAXR_FIT_MODE,z_min=0,z_max=50,RAXR_HKL=[0,0,20],height_offset=HEIGHT_OFFSET*BASIS[2])
-        #then do this command inside shell to extract the errors for A and P: model.script_module.create_plots.append_errors_for_A_P(par_instance=model.parameters,dump_file=os.path.join(model.script_module.OUTPUT_FILE_PATH,'temp_plot_raxr_A_P_Q'),raxs_rgh='rgh_raxs') 
+        #make sure the tab_file is saved in the dumped files directory before running this function
+        domain_creator.print_data_for_publication_B3_muscovite(N_sorbate=NUMBER_GAUSSIAN_PEAK+len(U_RAXS_LIST),domain=Domain1,z_shift=0.8+HEIGHT_OFFSET+0.8666,save_file=os.path.join(OUTPUT_FILE_PATH,'temp_publication_data_muscovite.xyz'),tab_file=os.path.join(OUTPUT_FILE_PATH,'best_fit_pars.tab'))
+
+        #then do this command inside shell to extract the errors for A and P: model.script_module.create_plots.append_errors_for_A_P(par_instance=model.parameters,dump_file=os.path.join(model.script_module.OUTPUT_FILE_PATH,'temp_plot_raxr_A_P_Q'),raxs_rgh='rgh_raxs')
         make_dummy_data,combine_data_sets=False,False
         if make_dummy_data:
             domain_creator.make_dummy_data(file=os.path.join(OUTPUT_FILE_PATH,'temp_dummy_data.dat'),data=data,I=F)

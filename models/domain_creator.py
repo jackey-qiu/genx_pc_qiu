@@ -64,7 +64,6 @@ def output_errors(edge_length=2.7,top_angle=70,error_top_angle=1,error_theta=1,e
     print 'error of PbFe seperation:',edge_length/4.*(1./tan_alpha_left-1./tan_alpha_right)
     return None
 
-
 #make dummy data set for test purpose, this function should be inside sim function
 #data is data I is the F (list of calculated structure factors)
 def make_dummy_data(file='D://temp_dummy_data.dat',data=None,I=None):
@@ -1268,6 +1267,70 @@ def print_data_for_publication_B2_muscovite(N_sorbate=4,domain='',z_shift=1,save
             s = '%s\t%s\t%5.3f\t%5.3f\t%4.2f\n' % (domain.id[i],data[3][i],(data[2][i]-z_shift)*20.1058,data[4][i],data[5][i]/4)
             f.write(s)
     f.close()
+
+def print_data_for_publication_B3_muscovite(N_sorbate=4,domain='',z_shift=1,save_file='D://model.xyz',tab_file='D://tab_best.tab'):
+#here the tab_file is the best fit par values exported from GenX, the function will combine the values of oc u and z with the associated error bars from tab_file
+        data=domain._extract_values()
+        index_all=range(len(data[0]))
+        index=index_all[0:20]
+        z_temp=data[2][132:132+N_sorbate]
+        for each_z in np.sort(z_temp):
+            index.append(list(np.where(data[2]==each_z))[0][0])
+        f=open(save_file,'w')
+        f_best_var=open(tab_file,'r')
+        lines_best_var=f_best_var.readlines()
+        def _find_index(lines,phrase_segment):
+            return_index,return_value,return_error=None,None,None
+            for i in range(len(lines)):
+                if phrase_segment in lines[i]:
+                    items=lines[i].rstrip().rsplit('\t')
+                    if items[-1]=='-':
+                        break
+                    else:
+                        return_index=i
+                        return_error=[abs(float(each)) for each in items[-1][1:-1].rsplit(',')]
+                        return_value=items[1]
+                        break
+            if return_index!=None:
+                return return_index,float(return_value),max(return_error)
+            else:
+                return 0,0,0
+        #f.write(str(len(index))+'\n#\n')
+        for i in index:
+            #if i==index[-1]:
+            #    s = '%s\t%s\t%5.3f\t%5.3f\t%5.3f\t%5.3f\t%5.3f\t%5.3f\t%4.2f\t%4.2f' % (domain.id[i],data[3][i],data[0][i],data[1][i],(data[2][i]-z_shift)*20.1058,(data[0][i]-domain.x[i])*5.198,(data[1][i]-domain.y[i])*9.0266,(data[2][i]-domain.z[i])*20.1058,data[4][i],data[5][i]/4)
+            #    f.write(s)
+            #else:
+            #    s = '%s\t%s\t%5.3f\t%5.3f\t%5.3f\t%5.3f\t%5.3f\t%5.3f\t%4.2f\t%4.2f\n' % (domain.id[i],data[3][i],data[0][i],data[1][i],(data[2][i]-z_shift)*20.1058,(data[0][i]-domain.x[i])*5.198,(data[1][i]-domain.y[i])*9.0266,(data[2][i]-domain.z[i])*20.1058,data[4][i],data[5][i]/4)
+            #    f.write(s)
+            oc_error,u_error,z_error=0.00,0.00,0.00
+            if 'Gaussian' in domain.id[i]:
+                oc_tag=domain.id[i]+'.setoc'
+                u_tag=domain.id[i]+'.setu'
+                z_num=domain.id[i].rsplit('_')[-2]
+                z_tag=['rgh_gaussian.setGaussian_z_offset'+z_num,'rgh_gaussian.Gaussian_Spacing','rgh_gaussian.Gaussian_Height']
+                #extract oc error
+                temp_index,temp_value,oc_error=_find_index(lines_best_var,oc_tag)
+                #extract u error
+                temp_index,temp_value,u_error=_find_index(lines_best_var,u_tag)
+                #extract z error
+                z_error_temp=0.00
+                temp_z_error_return=_find_index(lines_best_var,z_tag[0])
+                if temp_z_error_return[1]!=0:
+                    z_error+=temp_z_error_return[2]
+                else:
+                    pass
+                z_error+=_find_index(lines_best_var,z_tag[1])[2]+_find_index(lines_best_var,z_tag[2])[2]
+            elif 'Freezed_el' in domain.id[i]:
+                oc_tag='Domain1.set'+domain.id[i]+'doc'
+                oc_error=_find_index(lines_best_var,oc_tag)[2]
+            else:
+                pass
+
+            s = '%s\t%s\t%5.3f(%5.3f)\t%5.3f(%5.3f)\t%4.2f(%4.2f)\n' % (domain.id[i],data[3][i],(data[2][i]-z_shift)*20.1058,z_error,data[4][i],u_error**0.5,data[5][i]/4.,oc_error/4.)
+            f.write(s)
+        f.close()
+        f_best_var.close()
 
 def make_publication_table(model_file="D:\\Model_domain3A_publication.dat",par_file="D:\\test.tab",el_substrate=['Fe','O'],el_sorbate=['Pb'],abc=[5.038,5.434,7.3707]):
     """This script is used to combine the output model file and the parameter table to a new file of table with errors for publication
