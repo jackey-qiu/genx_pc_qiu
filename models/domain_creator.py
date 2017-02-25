@@ -20,18 +20,18 @@ from best_fit_par_from_genx_to_rod import lib_creator,from_tab_to_par
 create_grid_number, compare_grid, create_match_lib: supporting functions for the bv calculation
 find_neighbors: find neighbors of a specific atoms within a range, retrun atm_ids and offset
 cal_bond_valence1: cal bv of an atom and neiboring atoms within some range, will return a lib with keys of the id of neibor atoms and "total_valence"
-cal_bond_valence2: cal bv based on a match_list of form like [['Fe1','Fe2'],['-x','+y']], which specifys the neibor atoms, will return a 
+cal_bond_valence2: cal bv based on a match_list of form like [['Fe1','Fe2'],['-x','+y']], which specifys the neibor atoms, will return a
                    bond_valence_container with keys from the first item of the list and "total" representing the total bv
-cal_bond_valence3: cal bv based on match_lib of form like {'O1':[['Fe1','Fe2'],['-x','+y']]}, will return a lib with the same keys and the values of 
+cal_bond_valence3: cal bv based on match_lib of form like {'O1':[['Fe1','Fe2'],['-x','+y']]}, will return a lib with the same keys and the values of
                    each key the associated bv calculated
 
 create_coor_transformation: create a spherical coor frame with three atms (z vec normal to the plane), return transformation matrix T (last col define the origin coordinates)
-extract_spherical_pars: cal the r theta and phi in the spherical frame for a specific atom 
+extract_spherical_pars: cal the r theta and phi in the spherical frame for a specific atom
 set_sorbate_xyz: with known r theta and phi values, cal the associated xyz in the original coor frame and set the coor as new pst of an atom in the domain
 
 scale_opt_batch:scale fitting parameters towards deeper layer, it takes a filename as argument
 set_new_vars: set new variables in a sequence, like u_1,u_2,u_3
-set_discrete_new_vars_batch:set discrete new variables, take a filename as argument 
+set_discrete_new_vars_batch:set discrete new variables, take a filename as argument
 init_sim_batch: update the containor of free varibles, eg  u_containor=[u1,u2,u3,u4,u5], during fitting u will be updated, excute this function to update u_containor
 """
 
@@ -47,9 +47,23 @@ f1=lambda x1,y1,z1,x2,y2,z2:np.array([[np.dot(x2,x1),np.dot(x2,y1),np.dot(x2,z1)
 #f2 calculate the distance b/ p1 and p2
 f2=lambda p1,p2:np.sqrt(np.sum((p1-p2)**2))
 
-#anonymous function f3 is to calculate the coordinates of basis with magnitude of 1.,p1 and p2 are coordinates for two known points, the 
+#anonymous function f3 is to calculate the coordinates of basis with magnitude of 1.,p1 and p2 are coordinates for two known points, the
 #direction of the basis is pointing from p1 to p2
 f3=lambda p1,p2:(1./f2(p1,p2))*(p2-p1)+p1
+#calcualte the error for pb complex structure
+def output_errors(edge_length=2.7,top_angle=70,error_top_angle=1,error_theta=1,error_delta1=0.02,error_delta2=0.03):
+    sin_alpha_left=np.sin(np.deg2rad(top_anagle-error_top_angle)/2.)
+    sin_alpha_right=np.sin(np.deg2rad(top_anagle+error_top_angle)/2.)
+    tan_alpha_left=np.tan(np.deg2rad(top_anagle-error_top_angle)/2.)
+    tan_alpha_right=np.tan(np.deg2rad(top_anagle+error_top_angle)/2.)
+    print 'error of PbO1 bond length:',edge_length/4.*(1./sin_alpha_left-1./sin_alpha_right)+error_delta1
+    print 'error of pbO2 bond length:',edge_length/4.*(1./sin_alpha_left-1./sin_alpha_right)
+    print 'error of PbOdistal bond length:',edge_length/4.*(1./sin_alpha_left-1./sin_alpha_right)++error_delta2
+    print 'error of O1PbO2 bond angle:',error_top_angle
+    print 'error of O1PbOdistal and O2PbOdistal bond angle:',error_top_angle+error_theta
+    print 'error of PbFe seperation:',edge_length/4.*(1./tan_alpha_left-1./tan_alpha_right)
+    return None
+
 #make dummy data set for test purpose, this function should be inside sim function
 #data is data I is the F (list of calculated structure factors)
 def make_dummy_data(file='D://temp_dummy_data.dat',data=None,I=None):
@@ -68,7 +82,7 @@ def make_dummy_data(file='D://temp_dummy_data.dat',data=None,I=None):
         data_full=np.concatenate((data_full,temp_set),axis=0)
     np.savetxt(file,data_full,fmt='%.5e')
     return None
-    
+
 def combine_all_datasets(file='D://temp_full_dataset.dat',data=None):
     data_full=np.zeros((0,8))
     for i in range(len(data)):
@@ -85,13 +99,13 @@ def combine_all_datasets(file='D://temp_full_dataset.dat',data=None):
         data_full=np.concatenate((data_full,temp_set),axis=0)
     np.savetxt(file,data_full,fmt='%.5e')
     return None
-        
+
 def define_global_vars(rgh,domain_number=2):
     rgh.new_var('beta',0)
     for i in range(domain_number):
         rgh.new_var('wt'+str(i+1),1)
     return rgh
-    
+
 def define_raxs_vars(rgh,number_spectra=0,number_domain=2):
     for i in range(number_spectra):
         rgh.new_var('a'+str(i+1),1.0)
@@ -101,7 +115,7 @@ def define_raxs_vars(rgh,number_spectra=0,number_domain=2):
             rgh.new_var('A'+str(i+1)+'_D'+str(j+1),0.0)
             rgh.new_var('P'+str(i+1)+'_D'+str(j+1),0.0)
     return rgh
-    
+
 def define_diffused_layer_water_vars(rgh):
     rgh.new_var('u0_w',0.4)
     rgh.new_var('ubar_w',0.4)
@@ -109,7 +123,7 @@ def define_diffused_layer_water_vars(rgh):
     rgh.new_var('d_w',1.9)#inter-layer water seperation in A
     rgh.new_var('density_w',0.033)#number density in unit of # of waters per cubic A(0.033 is the typical value)
     return rgh
-    
+
 def define_diffused_layer_sorbate_vars_original(rgh):
     rgh.new_var('u0_s',0.4)
     rgh.new_var('ubar_s',0.4)
@@ -117,7 +131,7 @@ def define_diffused_layer_sorbate_vars_original(rgh):
     rgh.new_var('d_s',1.9)#inter-layer water seperation in A
     rgh.new_var('density_s',0.033)#number density in unit of # of waters per cubic A(0.033 is the typical value)
     return rgh
-    
+
 def define_diffused_layer_sorbate_vars(rgh):
     rgh.new_var('u0_s',0.4)
     rgh.new_var('ubar_s',0.4)
@@ -126,7 +140,7 @@ def define_diffused_layer_sorbate_vars(rgh):
     rgh.new_var('density_s',0.033)#number density in unit of # of waters per cubic A(0.033 is the typical value)
     rgh.new_var('oc_damping_factor',1.0)#high value the occupancy damping quickly
     return rgh
-    
+
 def setup_atom_group_muscovite(domain=[],group_number=5):
     ref_id_list_Al=[['O4_3_0','O4_4_0'],['O3_3_0','O3_4_0'],['O5_3_0','O5_4_0'],['Al1_3_0','Al1_4_0'],['Al2_3_0','Al2_4_0'],['O1_3_0','O1_4_0'],['O2_3_0','O2_4_0'],['O6_3_0','O6_4_0'],\
                  ['Al3_3_0','Al3_4_0'],['Al3_5_0','Al3_6_0'],['O6_5_0','O6_6_0'],['O2_5_0','O2_6_0'],['O1_5_0','O1_6_0'],['Al2_5_0','Al2_6_0'],['Al1_5_0','Al1_6_0'],['O5_5_0','O5_6_0'],['O4_5_0','O4_6_0'],['O3_5_0','O3_6_0']]
@@ -152,7 +166,7 @@ def setup_atom_group_muscovite(domain=[],group_number=5):
             groups.append(temp_atom_group)
             group_names.append(gp_info[i]['ref_group_names'][j]+tag)
     return groups,group_names,gp_info
-    
+
 def setup_atom_group(gp_info=[]):
     groups,group_names=[],[]
     for i in range(len(gp_info)):
@@ -168,7 +182,7 @@ def setup_atom_group(gp_info=[]):
             groups.append(temp_atom_group)
             group_names.append(gp_info[i]['ref_group_names'][j]+tag)
     return groups,group_names
-    
+
 def link_atom_group(gp_info=[],gp_scheme=[]):
     command_list=[]
     for each_link in gp_scheme:
@@ -183,7 +197,7 @@ def link_atom_group(gp_info=[],gp_scheme=[]):
             command_list.append(each_name+('.setu(%s'%ref_group_name2[ref_group_name1.index(each_name)])+'.getu())')
             command_list.append(each_name+('.setoc(%s'%ref_group_name2[ref_group_name1.index(each_name)])+'.getoc())')
     return command_list
-    
+
 def generate_sorbate_ids_original(domain,sorbate_layers,sorbate_el,number_sorbate_atom=1):#number_sorbate_atom=1 if monomer, 2 if dimmer and so on
     id_container=[]
     id_names=[]
@@ -194,7 +208,7 @@ def generate_sorbate_ids_original(domain,sorbate_layers,sorbate_el,number_sorbat
         id_container.append([id for id in domain.id if sum(map(lambda x:x in id,tag)) and ('O' in id)])
         id_names=id_names+['sorbate_set'+str(i+1)+'_D1',sorbate_el+'_set'+str(i+1)+'_D1','HO_set'+str(i+1)+'_D1']
     return id_container,id_names
-    
+
 def generate_sorbate_ids(domain,sorbate_layers,sorbate_el,number_sorbate_atom=1,symmetry=True,level=[]):#number_sorbate_atom=1 if monomer, 2 if dimmer and so on
     id_container=[]
     id_names=[]
@@ -203,7 +217,7 @@ def generate_sorbate_ids(domain,sorbate_layers,sorbate_el,number_sorbate_atom=1,
         sym_scale=1
     for i in range(sorbate_layers):
         tag=[sorbate_el+str(i*sym_scale*number_sorbate_atom+1+j) for j in range((number_sorbate_atom-len(level)*2)*sym_scale)]+map(lambda x:sorbate_el+str(x)+'rA',level)+map(lambda x:sorbate_el+str(x)+'rB',level)
-        
+
         id_container.append([id for id in domain.id if sum(map(lambda x:x in id,tag))])
         id_container.append([id for id in domain.id if sum(map(lambda x:x in id,tag)) and ('O' not in id)])
         id_container.append([id for id in domain.id if sum(map(lambda x:x in id,tag)) and ('O' in id)])
@@ -217,7 +231,7 @@ def add_sorbate(domain,anchored_atoms,func,geo_lib,info_lib,domain_tag,rgh,index
     for key in geo_lib.keys():
         rgh.new_var(key,geo_lib[key])
     return domain,rgh
-    
+
 def add_sorbate_new(domain,anchored_atoms,func,geo_lib,info_lib,domain_tag,rgh,index_offset=[0,1],xy_offset=[0,0],height_offset=0,symmetry_couple=True,**args):
     domain=func([0+xy_offset[0],0+xy_offset[1],2.0+height_offset],domain,anchored_atoms,geo_lib,info_lib,domain_tag,index_offset=index_offset[0],**args)
     if symmetry_couple:
@@ -225,19 +239,19 @@ def add_sorbate_new(domain,anchored_atoms,func,geo_lib,info_lib,domain_tag,rgh,i
     for key in geo_lib.keys():
         rgh.new_var(key,geo_lib[key])
     return domain,rgh
-    
+
 def update_sorbate(domain,anchored_atoms,func,info_lib,domain_tag,rgh,index_offset=[0,1],height_offset=0,level=None,symmetry_couple=True,cap=[],attach_sorbate_number=[],first_or_second=[],mirror=[]):
     domain=func([0,0,2.0+height_offset],domain,anchored_atoms,vars(rgh),info_lib,domain_tag,index_offset=index_offset[0],level=level,cap=cap,attach_sorbate_number=attach_sorbate_number,first_or_second=first_or_second,mirror=mirror)
     if symmetry_couple:
         domain=func([0.5,0.5,2.0+height_offset],domain,anchored_atoms,vars(rgh),info_lib,domain_tag,index_offset=index_offset[1],level=level,cap=cap,attach_sorbate_number=attach_sorbate_number,first_or_second=first_or_second,mirror=mirror)
     return domain
-    
+
 def update_sorbate_new(domain,anchored_atoms,func,info_lib,domain_tag,rgh,index_offset=[0,1],xy_offset=[0,0],height_offset=0,level=None,symmetry_couple=True,**args):
     domain=func([0+xy_offset[0],0+xy_offset[1],2.0+height_offset],domain,anchored_atoms,vars(rgh),info_lib,domain_tag,index_offset=index_offset[0],**args)
     if symmetry_couple:
         domain=func([0.5+xy_offset[0],0.5+xy_offset[1],2.0+height_offset],domain,anchored_atoms,vars(rgh),info_lib,domain_tag,index_offset=index_offset[1],**args)
     return domain
-    
+
 def add_gaussian_old(domain,el='O',number=3,first_peak_height=2,spacing=2,u_init=0.008,occ_init=1,height_offset=0,c=20.1058,domain_tag='_D1'):
     height_list=1.6685+height_offset+np.array([spacing/c*i+first_peak_height/c for i in range(number)])
     group_names=['Gaussian_'+el+'_'+str(i+1)+domain_tag for i in range(number)]
@@ -245,7 +259,7 @@ def add_gaussian_old(domain,el='O',number=3,first_peak_height=2,spacing=2,u_init
     for i in range(number):
         groups.append(domain.add_atom(id='Gaussian_'+el+'_'+str(i+1)+domain_tag, element=el, x=0.5, y=0.5, z=height_list[i], u = u_init, oc = occ_init, m = 1.0))
     return domain,groups,group_names
-    
+
 def add_gaussian(domain,el='O',number=3,first_peak_height=2,spacing=10,u_init=0.008,occ_init=1,height_offset=0,c=20.1058,domain_tag='_D1',shape='Flat',gaussian_rms=2):
     '''
     If shape is Flat then those gaussian peaks are evenly spaced with equivalent occ,
@@ -259,7 +273,7 @@ def add_gaussian(domain,el='O',number=3,first_peak_height=2,spacing=10,u_init=0.
             el=el*number[0]+el*number[1]
         else:
             el=[el]*number
-        
+
     if shape=='Flat':
         height_list=1.6685+height_offset+np.array([spacing/c*i+first_peak_height/c for i in range(number)])
         oc_list=[occ_init]*number
@@ -305,8 +319,8 @@ def add_gaussian(domain,el='O',number=3,first_peak_height=2,spacing=10,u_init=0.
                 domain.z[index]=height_list[i]
                 domain.oc[index]=oc_list[i]
     elif shape=='Double_Gaussian':
-        group_names1=['Gaussian_set1_'+el[i]+'_'+str(i+1)+domain_tag for i in range(number[0])] 
-        group_names2=['Gaussian_set2_'+el[i]+'_'+str(i+1)+domain_tag for i in range(number[1])]         
+        group_names1=['Gaussian_set1_'+el[i]+'_'+str(i+1)+domain_tag for i in range(number[0])]
+        group_names2=['Gaussian_set2_'+el[i]+'_'+str(i+1)+domain_tag for i in range(number[1])]
         for i in range(number[0]):
             try:
                 groups1.append(domain.add_atom(id='Gaussian_set1_'+el[i]+'_'+str(i+1)+domain_tag, element=el[i], x=0.5, y=0.5, z=height_list[i], u = u_init[0], oc = oc_list[i], m = 1.0))
@@ -335,7 +349,7 @@ def add_gaussian(domain,el='O',number=3,first_peak_height=2,spacing=10,u_init=0.
                 #domain.oc[index]=oc_list2[i]
 
     return domain,groups1+groups2,group_names1+group_names2
-    
+
 def print_gaussian_vars(domain,el=None):
     el_list=[]
     x_list=[]
@@ -393,7 +407,7 @@ def define_gaussian_vars(rgh,domain,shape='Flat'):
         rgh.new_var('Gaussian_Height_2',0)
         rgh.new_var('Gaussian_Spacing_2',10)
     return rgh
-    
+
 def update_gaussian(domain,rgh,groups,el='O',number=3,height_offset=0,c=20.1058,domain_tag='_D1',shape='Flat',print_items=False,use_cumsum=True):
     if shape=='Flat':
         items=map(lambda y:getattr(rgh,y)(),map(lambda x:'getGaussian_z_offset'+str(x+1), range(len(groups))))
@@ -414,7 +428,7 @@ def update_gaussian(domain,rgh,groups,el='O',number=3,height_offset=0,c=20.1058,
         gaussian_height=getattr(rgh,'getGaussian_Height')()
         add_gaussian(domain=domain,el=el,number=number,first_peak_height=gaussian_height,spacing=gaussian_spacing,u_init=gaussian_u,occ_init=gaussian_occ,height_offset=height_offset,c=c,domain_tag=domain_tag,shape=shape,gaussian_rms=gaussian_rms)
     elif shape=='Double_Gaussian':
-        
+
         gaussian_rms=[getattr(rgh,'getGaussian_RMS')(),getattr(rgh,'getGaussian_RMS_2')()]
         gaussian_occ=[getattr(rgh,'getGaussian_OCC')(),getattr(rgh,'getGaussian_OCC_2')()]
         gaussian_u=[getattr(rgh,'getGaussian_U')(),getattr(rgh,'getGaussian_U_2')()]
@@ -422,7 +436,7 @@ def update_gaussian(domain,rgh,groups,el='O',number=3,height_offset=0,c=20.1058,
         gaussian_height=[getattr(rgh,'getGaussian_Height')(),getattr(rgh,'getGaussian_Height_2')()]
         add_gaussian(domain=domain,el=el,number=number,first_peak_height=gaussian_height,spacing=gaussian_spacing,u_init=gaussian_u,occ_init=gaussian_occ,height_offset=height_offset,c=c,domain_tag=domain_tag,shape=shape,gaussian_rms=gaussian_rms)
     return None
-        
+
 def add_freezed_els(domain,el,u,oc,x,y,z,domain_tag='_D1'):
     if type(el)!=type([]):
         el=[el]*len(z)
@@ -430,10 +444,10 @@ def add_freezed_els(domain,el,u,oc,x,y,z,domain_tag='_D1'):
         x=[0.5]*len(z)
     if y==[]:
         y=[0.5]*len(z)
-    for i in range(len(z)):  
+    for i in range(len(z)):
         domain.add_atom(id='Freezed_el_'+str(i+1)+'_'+el[i]+domain_tag, element=el[i], x=x[i], y=y[i], z=z[i], u = u[i], oc = oc[i], m = 1.0)
     return domain
-    
+
 def add_oxygen_pair_muscovite(domain,ids,coors):
     domain.add_atom(id=ids[0],element='O', x=coors[0][0], y=coors[0][1], z=coors[0][2], oc=0.2,u = 1.)
     domain.add_atom(id=ids[1],element='O', x=coors[1][0], y=coors[1][1], z=coors[1][2], oc=0.2,u = 1.)
@@ -453,7 +467,7 @@ def set_RAXR(domain_index=[],number_spectra=0):
         for j in domains[1:]:
             eval('rgh_raxr'+'.setA_D'+str(j+1)+'_'+str(i+1)+'(rgh_raxr'+'.getA_D'+str(domains[0]+1)+'_'+str(i+1)+'())')
             eval('rgh_raxr'+'.setP_D'+str(j+1)+'_'+str(i+1)+'(rgh_raxr'+'.getP_D'+str(domains[0]+1)+'_'+str(i+1)+'())')
-            
+
 #freeze A and B in the process of model fitting
 def set_RAXR_AB(number_spectra=0):
     spectra=None
@@ -463,8 +477,8 @@ def set_RAXR_AB(number_spectra=0):
         spectra=number_spectra
     for i in spectra:
         eval('rgh_raxr'+'.setA'+str(i+1)+'(1.)')
-        eval('rgh_raxr'+'.setB'+str(i+1)+'(0.)') 
-            
+        eval('rgh_raxr'+'.setB'+str(i+1)+'(0.)')
+
 #function to group outer-sphere pars from different domains (to be placed inside sim function)
 def set_OS(domain_names=['domain5','domain4']):
     eval('rgh_'+domain_names[0]+'.setCt_offset_dx_OS(rgh_'+domain_names[1]+'.getCt_offset_dx_OS())')
@@ -477,10 +491,10 @@ def set_OS(domain_names=['domain5','domain4']):
 #function to group bidentate pars from different domains (to be placed inside sim function)
 def set_BD(domain_names=[2,1],sorbate_sets=1,distal_oxygen_number=1,sorbate='Pb'):
     for i in range(sorbate_sets):
-        eval('rgh_domain'+str(domain_names[0]+1)+'.setOffset_BD_'+str(i*2)+'(rgh_domain'+str(domain_names[1]+1)+'.getOffset_BD_'+str(i*2)+'())') 
-        eval('rgh_domain'+str(domain_names[0]+1)+'.setOffset2_BD_'+str(i*2)+'(rgh_domain'+str(domain_names[1]+1)+'.getOffset2_BD_'+str(i*2)+'())') 
+        eval('rgh_domain'+str(domain_names[0]+1)+'.setOffset_BD_'+str(i*2)+'(rgh_domain'+str(domain_names[1]+1)+'.getOffset_BD_'+str(i*2)+'())')
+        eval('rgh_domain'+str(domain_names[0]+1)+'.setOffset2_BD_'+str(i*2)+'(rgh_domain'+str(domain_names[1]+1)+'.getOffset2_BD_'+str(i*2)+'())')
         eval('rgh_domain'+str(domain_names[0]+1)+'.setAngle_offset_BD_'+str(i*2)+'(rgh_domain'+str(domain_names[1]+1)+'.getAngle_offset_BD_'+str(i*2)+'())')
-        eval('rgh_domain'+str(domain_names[0]+1)+'.setR_BD_'+str(i*2)+'(rgh_domain'+str(domain_names[1]+1)+'.getR_BD_'+str(i*2)+'())') 
+        eval('rgh_domain'+str(domain_names[0]+1)+'.setR_BD_'+str(i*2)+'(rgh_domain'+str(domain_names[1]+1)+'.getR_BD_'+str(i*2)+'())')
         eval('rgh_domain'+str(domain_names[0]+1)+'.setPhi_BD_'+str(i*2)+'(rgh_domain'+str(domain_names[1]+1)+'.getPhi_BD_'+str(i*2)+'())')
         eval('rgh_domain'+str(domain_names[0]+1)+'.setTop_angle_BD_'+str(i*2)+'(rgh_domain'+str(domain_names[1]+1)+'.getTop_angle_BD_'+str(i*2)+'())')
         eval('gp_'+sorbate+'_set'+str(i+1)+'_D'+str(domain_names[0]+1)+'.setoc'+'(gp_'+sorbate+'_set'+str(i+1)+'_D'+str(domain_names[1]+1)+'.getoc())')
@@ -522,8 +536,8 @@ def set_distal_wild(domain_name=['domain2','domain1'],tag='BD',N=2):
     for i in range(N):
         eval('rgh_'+domain_name[0]+'.setPhi1_'+str(i)+'_'+tag+'(180-rgh_'+domain_name[1]+'.getPhi1_'+str(i)+'_'+tag+'())')
         eval('rgh_'+domain_name[0]+'.setR1_'+str(i)+'_'+tag+'(rgh_'+domain_name[1]+'.getR1_'+str(i)+'_'+tag+'())')
-        eval('rgh_'+domain_name[0]+'.setTheta1_'+str(i)+'_'+tag+'(rgh_'+domain_name[1]+'.getTheta1_'+str(i)+'_'+tag+'())')  
-        
+        eval('rgh_'+domain_name[0]+'.setTheta1_'+str(i)+'_'+tag+'(rgh_'+domain_name[1]+'.getTheta1_'+str(i)+'_'+tag+'())')
+
 def extract_column(file_name,which_column=0,deepest_row=None,split=','):
     items_container=[]
     f=open(file_name,'r')
@@ -537,7 +551,7 @@ def extract_column(file_name,which_column=0,deepest_row=None,split=','):
         return items_container
     else:
         return items_container[0:deepest_row]
-    
+
 def init_OS_auto(layer_index=[[0,6,6],[7],[10,14]],step_index=[2,3,1],OS_index=[6,14]):
     OS_X=[]
     OS_Y=[]
@@ -573,7 +587,7 @@ def init_OS_auto(layer_index=[[0,6,6],[7],[10,14]],step_index=[2,3,1],OS_index=[
         OS_Y.append(tmp_y)
         OS_Z.append(tmp_z)
     return OS_X,OS_Y,OS_Z
-    
+
 def init_OS_auto2(layer_index=[[0,6,6],[7],[10,14]],OS_index=[6,14]):
     OS_X=[]
     OS_Y=[]
@@ -599,7 +613,7 @@ def init_OS_auto2(layer_index=[[0,6,6],[7],[10,14]],OS_index=[6,14]):
         OS_Y.append(tmp_y)
         OS_Z.append(tmp_z)
     return OS_X,OS_Y,OS_Z
-    
+
 def translate_domain_type(GROUPING_SCHEMES=[[0,1]],full_layer_pick=[None,None,0]):
     domain_type=[]
     def _translate_type(label):
@@ -611,7 +625,7 @@ def translate_domain_type(GROUPING_SCHEMES=[[0,1]],full_layer_pick=[None,None,0]
     for each in GROUPING_SCHEMES:
         domain_type.append([_translate_type(full_layer_pick[each[0]]),_translate_type(full_layer_pick[each[1]])])
     return domain_type
-    
+
 #Generate commands to group surface atom layers from different domains
 #each item inside the domain_index_pair is a two item integer numbers specifying the domain index (counting from 1)
 #domain_type_pair has one to one corresponding to the domain_index_pair, only possible items include
@@ -658,7 +672,7 @@ def generate_commands_for_surface_atom_grouping(domain_index_pair=[[1,2],[3,4]],
                 command_list.append('gp_'+FL_L[j]+'_D'+str(domain_index_pair[i][0])+'.setdy('+'gp_'+FL_S[j]+'_D'+str(domain_index_pair[i][1])+'.getdy())')
                 command_list.append('gp_'+FL_L[j]+'_D'+str(domain_index_pair[i][0])+'.setdz('+'gp_'+FL_S[j]+'_D'+str(domain_index_pair[i][1])+'.getdz())')
                 command_list.append('gp_'+FL_L[j]+'_D'+str(domain_index_pair[i][0])+'.setoc('+'gp_'+FL_S[j]+'_D'+str(domain_index_pair[i][1])+'.getoc())')
-        
+
         elif domain_type_pair[i]==['HL_S','HL_S']:
             for j in range(10-grouping_depth[i],10):
                 command_list.append('gp_'+HL_S[j]+'_D'+str(domain_index_pair[i][0])+'.setdx('+'gp_'+HL_S[j]+'_D'+str(domain_index_pair[i][1])+'.getdx())')
@@ -685,7 +699,7 @@ def generate_commands_for_surface_atom_grouping(domain_index_pair=[[1,2],[3,4]],
                 command_list.append('gp_'+HL_L[j]+'_D'+str(domain_index_pair[i][0])+'.setoc('+'gp_'+HL_S[j]+'_D'+str(domain_index_pair[i][1])+'.getoc())')
 
     return command_list
-            
+
 def generate_commands_for_surface_atom_grouping_muscovit(domain_index_pair=[[1,2],[3,4]],pick_up_index=[[1],[2],[3],[4]],FL_Al=range(19),FL_Si=range(19,19+9),grouping_depth=[18,18]):
     command_list=[]
     FL_Al=['O4_O4O3_O7O8','O3_O4O3_O7O8','O5_O3O4_O8O7','Al1_Al4Al3_Al7Al8','Al2_Al3Al4_Al8Al7','O1_O4O3_O7O8','O2_O3O4_O8O7','O6_O3O4_O8O7','Al3_Al4Al3_Al7Al8','Al3_Al6Al5_Al1Al2','O6_O5O6_O2O1','O2_O5O6_O2O1','O1_O6O5_O1O2','Al2_Al5Al6_Al2Al1','Al1_Al6Al5_Al1Al2','O5_O5O6_O2O1','O4_O6O5_O1O2','O3_O6O5_O1O2']
@@ -716,7 +730,7 @@ def generate_commands_for_surface_atom_grouping_muscovit(domain_index_pair=[[1,2
                 command_list.append('gp_'+FL_Si[j]+'_D'+str(domain_index_pair[i][0]+1)+'.setdz('+'gp_'+FL_Al[j]+'_D'+str(domain_index_pair[i][1]+1)+'.getdz())')
                 command_list.append('gp_'+FL_Si[j]+'_D'+str(domain_index_pair[i][0]+1)+'.setoc('+'gp_'+FL_Al[j]+'_D'+str(domain_index_pair[i][1]+1)+'.getoc())')
     return command_list
-    
+
 #extract xyz for atom with id in domain
 def extract_coor(domain,id):
     index=np.where(domain.id==id)[0][0]
@@ -724,14 +738,14 @@ def extract_coor(domain,id):
     y=domain.y[index]+domain.dy1[index]+domain.dy2[index]+domain.dy3[index]
     z=domain.z[index]+domain.dz1[index]+domain.dz2[index]+domain.dz3[index]
     return np.array([x,y,z])
-    
+
 def translate_offset_symbols(symbol):
     if symbol=='-x':return np.array([-1.,0.,0.])
     elif symbol=='+x':return np.array([1.,0.,0.])
     elif symbol=='-y':return np.array([0.,-1.,0.])
     elif symbol=='+y':return np.array([0.,1.,0.])
     elif symbol==None:return np.array([0.,0.,0.])
-    
+
 def extract_coor_offset(domain,id=['id1','id2'],offset=[],basis=[5.038,5.434,7.3707]):
     coors=[extract_coor(domain,each_id) for each_id in id]
     offsets=[translate_offset_symbols(each_offset) for each_offset in offset]
@@ -752,27 +766,27 @@ def layer_spacing_calculator(domain,layer_N,half_layer):
     for j in range(len(z_org)-1):
         print z_org[j]-z_org[j+1],z_fit[j]-z_fit[j+1],((z_fit[j]-z_fit[j+1])-(z_org[j]-z_org[j+1]))/(z_org[j]-z_org[j+1])
     return True
-    
+
 def extract_coor2(domain,id):
     index=np.where(domain.id==id)[0][0]
     x=domain.x[index]
     y=domain.y[index]
     z=domain.z[index]
     return np.array([x,y,z])
-    
+
 def extract_component(domain,id,name_list):
     index=np.where(domain.id==id)[0][0]
     temp=[vars(domain)[name][index] for name in name_list]
     for i in range(len(name_list)):
         print name_list[i]+'=',temp[i]
-        
+
 #set coor to atom with id in domain
 def set_coor(domain,id,coor):
     index=np.where(domain.id==id)[0][0]
     domain.x[index]=coor[0]
     domain.y[index]=coor[1]
     domain.z[index]=coor[2]
-    
+
 #set sorbate coors to two symmetrical realated domains (rcut hematite in this case)
 #domains:two items with symmetry related to each other
 #ids:two items, first item is a list of ids corresponding to first domain, and second item to the second domain
@@ -845,7 +859,7 @@ def print_data(N_sorbate=4,domain='',z_shift=1,half_layer=False,full_layer_long=
             s = '%-5s   %7.5e   %7.5e   %7.5e\n' % (data[3][i],data[0][i]*5.038,(data[1][i]-0.1391)*5.434,(data[2][i]-z_shift)*7.3707)
             f.write(s)
     f.close()
-    
+
 #function to export refined atoms positions after fitting
 def print_data2(N_sorbate=4,domain='',z_shift=1,half_layer=False,half_layer_long=None,full_layer_long=0,save_file='D://model.xyz'):
     data=domain._extract_values()
@@ -858,7 +872,7 @@ def print_data2(N_sorbate=4,domain='',z_shift=1,half_layer=False,half_layer_long
     elif not half_layer and full_layer_long==1:
         index=index_all[0:22]+index_all[42:42+N_sorbate]
     elif not half_layer and full_layer_long==0:
-        index=index_all[0:22]+index_all[32:32+N_sorbate] 
+        index=index_all[0:22]+index_all[32:32+N_sorbate]
     if half_layer:
         index.pop(2)
         index.pop(2)
@@ -876,12 +890,12 @@ def print_data2(N_sorbate=4,domain='',z_shift=1,half_layer=False,half_layer_long
             s = '%-5s   %7.5e   %7.5e   %7.5e\n' % (data[3][i],data[0][i]*5.038,(data[1][i]-0.1391)*5.434,(data[2][i]-z_shift)*7.3707)
             f.write(s)
     f.close()
-    
-    
+
+
 def print_data2_muscovite(N_sorbate=4,domain='',z_shift=0.8,save_file='D://model.xyz'):
     data=domain._extract_values()
     index_all=range(len(data[0]))
-    index=index_all[0:74]+index_all[132:132+N_sorbate] 
+    index=index_all[0:74]+index_all[132:132+N_sorbate]
     f=open(save_file,'w')
     f.write(str(len(index))+'\n#\n')
     for i in index:
@@ -892,7 +906,7 @@ def print_data2_muscovite(N_sorbate=4,domain='',z_shift=0.8,save_file='D://model
             s = '%-5s   %7.5e   %7.5e   %7.5e\n' % (data[3][i],data[0][i]*5.1988,data[1][i]*9.0266,(data[2][i]-z_shift)*20.1058)
             f.write(s)
     f.close()
-    
+
 def print_data2C(N_sorbate=4,domain='',z_shift=1,half_layer=False,half_layer_long=None,full_layer_long=0,save_file='D://model.xyz',sorbate_index_list=[],each_segment_length=[]):
     #extract only one set of sorbate
     data=domain._extract_values()
@@ -931,8 +945,8 @@ def print_data2C(N_sorbate=4,domain='',z_shift=1,half_layer=False,half_layer_lon
             s = '%-5s   %7.5e   %7.5e   %7.5e\n' % (data[3][i],data[0][i]*5.038,(data[1][i]-0.1391)*5.434,(data[2][i]-z_shift)*7.3707)
             f.write(s)
     f.close()
-    
-    
+
+
 def print_data2C_muscovite(N_sorbate=4,domain='',z_shift=0.8,save_file='D://model.xyz',sorbate_index_list=[],each_segment_length=[]):
     #extract only one set of sorbate
     data=domain._extract_values()
@@ -950,7 +964,7 @@ def print_data2C_muscovite(N_sorbate=4,domain='',z_shift=0.8,save_file='D://mode
             s = '%-5s   %7.5e   %7.5e   %7.5e\n' % (data[3][i],data[0][i]*5.1988,data[1][i]*9.0266,(data[2][i]-z_shift)*20.1058)
             f.write(s)
     f.close()
-    
+
 def make_cif_file(N_sorbate=4,domain='',z_shift=1,half_layer=False,half_layer_long=None,full_layer_long=0,save_file='D://model.xyz',sorbate_index_list=[],each_segment_length=[]):
     #extract only one set of sorbate
     data=domain._extract_values()
@@ -993,8 +1007,8 @@ def make_cif_file(N_sorbate=4,domain='',z_shift=1,half_layer=False,half_layer_lo
     f.write("_cell_volume 201.784\n")
     f.write("_symmetry_space_group_name_H-M 'P 1'\nloop_\n_space_group_symop_operation_xyz\n  'x,y,z'\nloop_\n")
     f.write("_atom_site_label\n_atom_site_fract_x\n_atom_site_fract_y\n_atom_site_fract_z\n")
-    
-    
+
+
     for i in index:
         if i==index[-1]:
             s = '%-5s   %7.5e   %7.5e   %7.5e' % (data[3][i],data[0][i],(data[1][i]-0.1391),(data[2][i]-z_shift)*7.3707/c)
@@ -1003,7 +1017,7 @@ def make_cif_file(N_sorbate=4,domain='',z_shift=1,half_layer=False,half_layer_lo
             s = '%-5s   %7.5e   %7.5e   %7.5e\n' % (data[3][i],data[0][i],(data[1][i]-0.1391),(data[2][i]-z_shift)*7.3707/c)
             f.write(s)
     f.close()
-    
+
 def print_structure_files_muscovite(domain_list='',z_shift=0.8,matrix_info=None,save_file='D://model'):
 
     for domain_index in range(len(domain_list)):
@@ -1050,7 +1064,7 @@ def print_structure_files_muscovite(domain_list='',z_shift=0.8,matrix_info=None,
         f.close()
         f2.close()
         f3.close()
-        
+
 def print_structure_files_muscovite_new(domain_list='',z_shift=0.8,number_gaussian=0,el='Zr',matrix_info=None,save_file='D://model'):
 
     for domain_index in range(len(domain_list)):
@@ -1101,7 +1115,7 @@ def print_structure_files_muscovite_new(domain_list='',z_shift=0.8,number_gaussi
                         a,b,c=grid*matrix_info['basis']
                         s2 = '%-5s   %7.5e   %7.5e   %7.5e' % (data[3][i],coors[0]+a,coors[1]+b,coors[2]+c)
                         f2.write(s2)
-                   
+
             else:
                 if el in domain.id[i]:
                     s2 = '%-5s   %7.5e   %7.5e   %7.5e\n' % (data[3][i],coors[0],coors[1],coors[2])
@@ -1114,8 +1128,8 @@ def print_structure_files_muscovite_new(domain_list='',z_shift=0.8,number_gaussi
         f.close()
         f2.close()
         f3.close()
-    
-    
+
+
 def print_data2B(N_sorbate=4,domain='',z_shift=1,half_layer=False,half_layer_long=None,full_layer_long=0,save_file='D://model.xyz'):
     #moving slab down if z_shift is a negative number
     #moving slab up if z_shift is a positive number
@@ -1130,7 +1144,7 @@ def print_data2B(N_sorbate=4,domain='',z_shift=1,half_layer=False,half_layer_lon
     elif not half_layer and full_layer_long==1:
         index=index_all[0:22]+index_all[42:42+N_sorbate]
     elif not half_layer and full_layer_long==0:
-        index=index_all[0:22]+index_all[32:32+N_sorbate] 
+        index=index_all[0:22]+index_all[32:32+N_sorbate]
     if half_layer:
         index.pop(2)
         index.pop(2)
@@ -1148,7 +1162,7 @@ def print_data2B(N_sorbate=4,domain='',z_shift=1,half_layer=False,half_layer_lon
             s = '%-5s   %7.5e   %7.5e   %7.5e\n' % (data[3][i],data[0][i]*5.038,(data[1][i]+z_offset*0.1391)*5.434,(data[2][i]+z_offset)*7.3707)
             f.write(s)
     f.close()
-    
+
 def print_data_for_publication(N_sorbate=4,domain='',z_shift=1,half_layer=False,full_layer_long=0,save_file='D://model.xyz'):
     data=domain._extract_values()
     index_all=range(len(data[0]))
@@ -1199,7 +1213,7 @@ def print_data_for_publication_B(N_sorbate=4,domain='',z_shift=1,half_layer=Fals
             s = '%s\t%s\t%5.3f\t%5.3f\t%5.3f\t%5.3f\t%5.3f\t%5.3f\t%4.2f\t%4.2f\n' % (domain.id[i],data[3][i],data[0][i],data[1][i]-0.1391,data[2][i]-z_shift,(data[0][i]-domain.x[i])*5.038,(data[1][i]-domain.y[i])*5.434,(data[2][i]-domain.z[i])*7.3707,domain.u[i],domain.oc[i])
             f.write(s)
     f.close()
-    
+
 def print_data_for_publication_B2(N_sorbate=4,domain='',z_shift=1,layer_types=0,save_file='D://model.xyz'):
     #very similar to print_data_for_publication_B but use numbers to identify the layer type (long or short HLT/FLT)
     #0(short FLT),1(long FLT), 2(short HLT), 3(long HLT)
@@ -1229,8 +1243,8 @@ def print_data_for_publication_B2(N_sorbate=4,domain='',z_shift=1,layer_types=0,
             f.write(s)
     f.close()
 
-def print_data_for_publication_B2_muscovite(N_sorbate=4,domain='',z_shift=1,save_file='D://model.xyz'):       
-      
+def print_data_for_publication_B2_muscovite(N_sorbate=4,domain='',z_shift=1,save_file='D://model.xyz'):
+
     data=domain._extract_values()
     index_all=range(len(data[0]))
     index=index_all[0:20]
@@ -1253,14 +1267,78 @@ def print_data_for_publication_B2_muscovite(N_sorbate=4,domain='',z_shift=1,save
             s = '%s\t%s\t%5.3f\t%5.3f\t%4.2f\n' % (domain.id[i],data[3][i],(data[2][i]-z_shift)*20.1058,data[4][i],data[5][i]/4)
             f.write(s)
     f.close()
-    
+
+def print_data_for_publication_B3_muscovite(N_sorbate=4,domain='',z_shift=1,save_file='D://model.xyz',tab_file='D://tab_best.tab'):
+#here the tab_file is the best fit par values exported from GenX, the function will combine the values of oc u and z with the associated error bars from tab_file
+        data=domain._extract_values()
+        index_all=range(len(data[0]))
+        index=index_all[0:20]
+        z_temp=data[2][132:132+N_sorbate]
+        for each_z in np.sort(z_temp):
+            index.append(list(np.where(data[2]==each_z))[0][0])
+        f=open(save_file,'w')
+        f_best_var=open(tab_file,'r')
+        lines_best_var=f_best_var.readlines()
+        def _find_index(lines,phrase_segment):
+            return_index,return_value,return_error=None,None,None
+            for i in range(len(lines)):
+                if phrase_segment in lines[i]:
+                    items=lines[i].rstrip().rsplit('\t')
+                    if items[-1]=='-':
+                        break
+                    else:
+                        return_index=i
+                        return_error=[abs(float(each)) for each in items[-1][1:-1].rsplit(',')]
+                        return_value=items[1]
+                        break
+            if return_index!=None:
+                return return_index,float(return_value),max(return_error)
+            else:
+                return 0,0,0
+        #f.write(str(len(index))+'\n#\n')
+        for i in index:
+            #if i==index[-1]:
+            #    s = '%s\t%s\t%5.3f\t%5.3f\t%5.3f\t%5.3f\t%5.3f\t%5.3f\t%4.2f\t%4.2f' % (domain.id[i],data[3][i],data[0][i],data[1][i],(data[2][i]-z_shift)*20.1058,(data[0][i]-domain.x[i])*5.198,(data[1][i]-domain.y[i])*9.0266,(data[2][i]-domain.z[i])*20.1058,data[4][i],data[5][i]/4)
+            #    f.write(s)
+            #else:
+            #    s = '%s\t%s\t%5.3f\t%5.3f\t%5.3f\t%5.3f\t%5.3f\t%5.3f\t%4.2f\t%4.2f\n' % (domain.id[i],data[3][i],data[0][i],data[1][i],(data[2][i]-z_shift)*20.1058,(data[0][i]-domain.x[i])*5.198,(data[1][i]-domain.y[i])*9.0266,(data[2][i]-domain.z[i])*20.1058,data[4][i],data[5][i]/4)
+            #    f.write(s)
+            oc_error,u_error,z_error=0.00,0.00,0.00
+            if 'Gaussian' in domain.id[i]:
+                oc_tag=domain.id[i]+'.setoc'
+                u_tag=domain.id[i]+'.setu'
+                z_num=domain.id[i].rsplit('_')[-2]
+                z_tag=['rgh_gaussian.setGaussian_z_offset'+z_num,'rgh_gaussian.Gaussian_Spacing','rgh_gaussian.Gaussian_Height']
+                #extract oc error
+                temp_index,temp_value,oc_error=_find_index(lines_best_var,oc_tag)
+                #extract u error
+                temp_index,temp_value,u_error=_find_index(lines_best_var,u_tag)
+                #extract z error
+                z_error_temp=0.00
+                temp_z_error_return=_find_index(lines_best_var,z_tag[0])
+                if temp_z_error_return[1]!=0:
+                    z_error+=temp_z_error_return[2]
+                else:
+                    pass
+                z_error+=_find_index(lines_best_var,z_tag[1])[2]+_find_index(lines_best_var,z_tag[2])[2]
+            elif 'Freezed_el' in domain.id[i]:
+                oc_tag='Domain1.set'+domain.id[i]+'doc'
+                oc_error=_find_index(lines_best_var,oc_tag)[2]
+            else:
+                pass
+
+            s = '%s\t%s\t%5.3f(%5.3f)\t%5.3f(%5.3f)\t%4.2f(%4.2f)\n' % (domain.id[i],data[3][i],(data[2][i]-z_shift)*20.1058,z_error,data[4][i],u_error**0.5,data[5][i]/4.,oc_error/4.)
+            f.write(s)
+        f.close()
+        f_best_var.close()
+
 def make_publication_table(model_file="D:\\Model_domain3A_publication.dat",par_file="D:\\test.tab",el_substrate=['Fe','O'],el_sorbate=['Pb'],abc=[5.038,5.434,7.3707]):
     """This script is used to combine the output model file and the parameter table to a new file of table with errors for publication
         The main idea is to extract the error info from the parameter table and append each to the right positions (atom displacements),
         so that it can save you time to do the tedious work for editing the table for publication.
         par_file:
             Parameter table exported from GenX
-        model_file: 
+        model_file:
             A model files exported using the domain_creator.print_data_for_publication_B2()
         so far this function cannot handle the model containing over 10 slabs (ambiguity could be caused)
             "O1_11_0_D1A" (10th layer) could not be distinguished with "O1_11_t_D1A"(1st layer)
@@ -1278,7 +1356,7 @@ def make_publication_table(model_file="D:\\Model_domain3A_publication.dat",par_f
                'Fe4':'Fe4Fe6','Fe6':'Fe4Fe6',\
                'Fe8':'Fe8Fe9','Fe9':'Fe8Fe9',\
                'Fe10':'Fe10Fe12','Fe12':'Fe10Fe12'}
-               
+
     parameter_values=np.zeros((0,6))
     f_par=open(par_file,'r')
     lines_par=f_par.readlines()
@@ -1320,6 +1398,96 @@ def make_publication_table(model_file="D:\\Model_domain3A_publication.dat",par_f
     f_model.close()
     f_publication.close()
 
+def make_publication_table2(model_file="D:\\Model_domain3A_publication.dat",par_file="D:\\test.tab",el_substrate=['Fe','O'],el_sorbate=['Pb'],abc=[5.038,5.434,7.3707]):
+    """This script is used to combine the output model file and the parameter table to a new file of table with errors for publication
+        The main idea is to extract the error info from the parameter table and append each to the right positions (atom displacements),
+        so that it can save you time to do the tedious work for editing the table for publication.
+        par_file:
+            Parameter table exported from GenX
+        model_file:
+            A model files exported using the domain_creator.print_data_for_publication_B2()
+        so far this function cannot handle the model containing over 10 slabs (ambiguity could be caused)
+            "O1_11_0_D1A" (10th layer) could not be distinguished with "O1_11_t_D1A"(1st layer)
+        """
+    f_model=open(model_file,'r')
+    f_publication=open(model_file.replace('.dat','_combined.dat'),'w')
+    #the id of each atom looks like O1_1_0_D1A
+    match_lib={'O1':'O1O2','O2':'O1O2',\
+               'O3':'O3O4','O4':'O3O4',\
+               'O5':'O5O6','O6':'O5O6',\
+               'O7':'O7O8','O8':'O7O8',\
+               'O9':'O9O10','O10':'O9O10',\
+               'O11':'O11O12','O12':'O11O12',\
+               'Fe2':'Fe2Fe3','Fe3':'Fe2Fe3',\
+               'Fe4':'Fe4Fe6','Fe6':'Fe4Fe6',\
+               'Fe8':'Fe8Fe9','Fe9':'Fe8Fe9',\
+               'Fe10':'Fe10Fe12','Fe12':'Fe10Fe12'}
+
+    parameter_values=np.zeros((0,6))
+    f_par=open(par_file,'r')
+    lines_par=f_par.readlines()
+    for line_par in lines_par:
+        if line_par[0:4] in ["gp_"+x[0] for x in el_substrate]:
+            line_par_items=line_par.split('\t')[:-1]
+            parameter_values=np.append(parameter_values,[line_par_items],axis=0)
+    f_par.close()
+
+    lines_model=f_model.readlines()
+
+    f_publication.write("Element\tX(fra)\tY(fra)\tZ(fra)\tdx(errors)(Angstrom)\tdy(errors)(Angstrom)\tdz(errors)(Angstrom)\tu\tocc\n")
+    def _formate_values(value,errors):
+        import math
+        #eg value='1.245',errors=[-0.1,0.2], will return 1.2(2)
+        value=float(value)
+        error=None
+        if abs(errors[0])>=abs(errors[1]):
+            error=abs(errors[0])
+        else:
+            error=abs(errors[1])
+
+        decimal_place=abs(int(math.log10(abs(error))))+1
+        error_tag=int(round(10**decimal_place*error))
+        if error_tag==10:
+            error_tag=9
+        if decimal_place==1:
+            return '%2.1f'%(value)+'('+str(error_tag)+')'
+        elif decimal_place==2:
+            return '%2.2f'%(value)+'('+str(error_tag)+')'
+        elif decimal_place==3:
+            return '%2.3f'%(value)+'('+str(error_tag)+')'
+        elif decimal_place==4:
+            return '%2.4f'%(value)+'('+str(error_tag)+')'
+        elif decimal_place==5:
+            return '%2.5f'%(value)+'('+str(error_tag)+')'
+        else:
+            return None
+
+    for line_model in lines_model:
+        line_model_items=line_model.rstrip().split('\t')
+        line_publication_items=line_model_items[1:]
+        id=[None,line_model_items[0].split("_")[-1]]
+        if line_model_items[1] in el_substrate and el_sorbate[0] not in line_model_items[0]:
+            id[0]=line_model_items[1]+line_model_items[0].split("_")[1]
+            for par in parameter_values:
+                if match_lib[id[0]]==par[0].split("_")[1] and id[-1][0:-1] in par[0] and par[-1]!='None' and par[-1]!='-':
+                    opt=par[0].split(".")[-1]
+                    errors=[float(par[-1].split(",")[0][1:]),float(par[-1].split(",")[1][:-1])]
+                    if opt=="setdx":
+                        line_publication_items[4]=_formate_values(line_publication_items[4],np.array(errors)*abc[0])
+                    elif opt=="setdy":
+                        line_publication_items[5]=_formate_values(line_publication_items[5],np.array(errors)*abc[1])
+                    elif opt=="setdz":
+                        line_publication_items[6]=_formate_values(line_publication_items[6],np.array(errors)*abc[2])
+                    elif opt=="setu":
+                        line_publication_items[7]=_formate_values(line_publication_items[7],errors)
+                    elif opt=="setoc":
+                        line_publication_items[8]=_formate_values(line_publication_items[8],errors)
+        elif line_model_items[1] in el_sorbate:#to be completed
+            pass
+        f_publication.write('\t'.join(line_publication_items)+"\n")
+    f_model.close()
+    f_publication.close()
+
 def print_data_for_publication2(N_sorbate=4,domain='',z_shift=1,half_layer=False,full_layer_long=0,save_file='D://model.xyz'):
     data=domain._extract_values()
     index_all=range(len(data[0]))
@@ -1344,7 +1512,7 @@ def print_data_for_publication2(N_sorbate=4,domain='',z_shift=1,half_layer=False
             s = '%-5s\t%5.3f\t%5.3f\t%5.3f\t%5.3f\t%5.3f\t%5.3f\t%4.2f\t%4.2f\n' % (domain.id[i],data[0][i],data[1][i]-0.1391,data[2][i]-z_shift,(data[0][i]-domain.x[i])*5.038,(data[1][i]-domain.y[i])*5.434,(data[2][i]-domain.z[i])*7.3707,domain.u[i],domain.oc[i])
             f.write(s)
     f.close()
-    
+
 #function to export ref fit file (a connection between GenX output and ROD input)
 #NOTE:only print out surface atoms, and no sorbates
 def print_data_for_ROD(N_atm=40,domain='',save_file='D:\\Google Drive\\useful codes\\half_layer_GenX_s1.txt'):
@@ -1361,7 +1529,7 @@ def print_data_for_ROD(N_atm=40,domain='',save_file='D:\\Google Drive\\useful co
         f2.write(s)
     f.close()
     f2.close()
-    
+
 def print_data_for_postrun_test(domain='',save_file='D:\\structure_file_postrun_test1.txt'):
     data=domain._extract_values2()
     index=range(len(data[0]))
@@ -1370,7 +1538,7 @@ def print_data_for_postrun_test(domain='',save_file='D:\\structure_file_postrun_
         s = '%s,%s,%6.5f,%6.5f,%6.5f,%6.5f,%6.5f,%6.5f\n' % (domain.id[i][0:-4],data[3][i],data[0][i],data[1][i],data[2][i],data[4][i],data[5][i],1)
         f.write(s)
     f.close()
-    
+
 def create_list(ids,off_set_begin,start_N):
     ids_processed=[[],[]]
     off_set=[None,'+x','-x','+y','-y','+x+y','+x-y','-x+y','-x-y']
@@ -1381,8 +1549,8 @@ def create_list(ids,off_set_begin,start_N):
         for j in range(9):
             ids_processed[0].append(ids[i])
             ids_processed[1].append(off_set[j])
-    return ids_processed 
-#function to build reference bulk and surface slab  
+    return ids_processed
+#function to build reference bulk and surface slab
 def add_atom_in_slab(slab,filename,attach='',height_offset=0):
     f=open(filename)
     lines=f.readlines()
@@ -1421,7 +1589,7 @@ def create_sorbate_ids(el='Pb',N=2,tag='_D1A'):
     id_list=[]
     [id_list.append(el+str(i+1)+tag) for i in range(N)]
     return id_list
-    
+
 def create_HO_ids(anchor_els=['Pb','Sb'],O_N=[1,1],tag='_D1A'):
     id_list=[]
     for i in range(len(O_N)):
@@ -1440,14 +1608,14 @@ def create_HO_ids2(anchor_els=['Pb','Sb'],O_N=[[1,1],[3,3]],tag='_D1A'):
                 temp_ids.append('HO'+str(k+1)+'_'+anchor_els[i]+str(N+j+1)+tag)
             [id_list.append(temp_id) for temp_id in temp_ids]
     return id_list
-    
+
 def create_HO_ids3(anchor_els=['Pb','Sb'],O_N=[3,3],tag='_D1A'):
     id_list=[]
     for i in range(len(O_N)):
         for j in range(O_N[i]):
             id_list.append('HO'+str(j+1)+'_'+anchor_els[i]+str(i+1)+tag)
     return id_list
-    
+
 def create_sorbate_ids2(el=['Pb','Sb'],N=[1,1],tag='_D1A'):
     id_list=[]
     for i in range(len(N)):
@@ -1458,7 +1626,7 @@ def create_sorbate_ids2(el=['Pb','Sb'],N=[1,1],tag='_D1A'):
             else:
                 id_list.append(el[i]+str(j+1)+tag)
     return id_list
-    
+
 def create_sorbate_ids3(el=['Pb','Sb'],N=[1,1],tag='_D1A'):
     id_list=[]
     for i in range(len(N)):
@@ -1479,7 +1647,7 @@ def create_sorbate_ids3(el=['Pb','Sb'],N=[1,1],tag='_D1A'):
                     for k in range(N[i]/2):
                         id_list.append(el[i]+str(j+1)+chr(ord('a') + k)+tag)
     return id_list
-    
+
 def create_sorbate_el_list(el=['Pb','Sb'],N=[[1,2],[1,0]]):
     el_container=[]
     for i in N:
@@ -1489,7 +1657,7 @@ def create_sorbate_el_list(el=['Pb','Sb'],N=[[1,2],[1,0]]):
                 el_temp.append(el[j])
         el_container.append(el_temp)
     return el_container
-    
+
 def create_sorbate_el_list2(el=[['Pb','Sb'],['Pb']],N=[[1,2],[1]]):
     el_container=[]
     for i in range(len(N)):
@@ -1498,7 +1666,7 @@ def create_sorbate_el_list2(el=[['Pb','Sb'],['Pb']],N=[[1,2],[1]]):
             for k in range(N[i][j]):
                 el_temp.append(el[i][j])
         el_container.append(el_temp)
-    return el_container    
+    return el_container
 
 #based on the binding configuration, set up a library showing the coordinated atoms for each atoms
 def create_sorbate_match_lib2(metal='Pb',O_Number=[1],O_list=[['HO1_D1A']],anchors=[['O1_2_0','O1_1_0']],anchor_offsets=[['+y',None]],domain_tag=1):
@@ -1513,7 +1681,7 @@ def create_sorbate_match_lib2(metal='Pb',O_Number=[1],O_list=[['HO1_D1A']],ancho
         if tag==None:return None
         elif tag[0]=='-':return '+'+tag[1:]
         elif tag[0]=='+':return '-'+tag[1:]
-            
+
     for i in range(N_sorbate):
         match_lib_metal[metal+str(i+1)+'_D'+str(domain_tag)+'A']=[O_list[0][O_index_list[i]:O_index_list[i+1]]+shaffle(anchors[i],'_D'+str(domain_tag)+'A'),[None]*O_Number[i]+anchor_offsets[i]]
         for j in range(O_Number[i]):
@@ -1529,7 +1697,7 @@ def create_sorbate_match_lib2(metal='Pb',O_Number=[1],O_list=[['HO1_D1A']],ancho
     for key in match_lib_HO.keys():match_lib[key]=match_lib_HO[key]
     for key in match_lib_O.keys():match_lib[key]=match_lib_O[key]
     return match_lib
-    
+
 #here the metal is a list of sorbate element symbols
 def create_sorbate_match_lib3(metal=['Pb'],O_Number=[1],O_list=[['HO1_D1A']],anchors=[['O1_2_0','O1_1_0']],anchor_offsets=[['+y',None]],domain_tag=1):
     match_lib_metal={}
@@ -1545,7 +1713,7 @@ def create_sorbate_match_lib3(metal=['Pb'],O_Number=[1],O_list=[['HO1_D1A']],anc
         if tag==None:return None
         elif tag[0]=='-':return '+'+tag[1:]
         elif tag[0]=='+':return '-'+tag[1:]
-            
+
     for i in range(N_sorbate):
         match_lib_metal[metal[i]+str(i+1)+'_D'+str(domain_tag)+'A']=[O_list[0][O_index_list[i]:O_index_list[i+1]]+shaffle(anchors[i],'_D'+str(domain_tag)+'A'),[None]*O_Number[i]+anchor_offsets[i]]
         for j in range(O_Number[i]):
@@ -1561,7 +1729,7 @@ def create_sorbate_match_lib3(metal=['Pb'],O_Number=[1],O_list=[['HO1_D1A']],anc
     for key in match_lib_HO.keys():match_lib[key]=match_lib_HO[key]
     for key in match_lib_O.keys():match_lib[key]=match_lib_O[key]
     return match_lib
-    
+
 def create_sorbate_match_lib4(metal=['Pb'],HO_list=['HO1_Pb_D1A'],anchors=[['O1_2_0','O1_1_0']],anchor_offsets=[['+y',None]],domain_tag=1):
     match_lib_metal={}
     match_lib_HO={}
@@ -1573,7 +1741,7 @@ def create_sorbate_match_lib4(metal=['Pb'],HO_list=['HO1_Pb_D1A'],anchors=[['O1_
         if tag==None:return None
         elif tag[0]=='-':return '+'+tag[1:]
         elif tag[0]=='+':return '-'+tag[1:]
-            
+
     for i in range(N_sorbate):
         try:
             match_lib_metal[metal[i]+str(i+1)+'_D'+str(domain_tag)+'A']=[[HO_id for HO_id in HO_list if metal[i] in HO_id]+shaffle(anchors[i],'_D'+str(domain_tag)+'A'),[None]*len([HO_id for HO_id in HO_list if metal[i] in HO_id])+anchor_offsets[i]]
@@ -1604,9 +1772,9 @@ def create_sorbate_match_lib4(metal=['Pb'],HO_list=['HO1_Pb_D1A'],anchors=[['O1_
             match_lib[key]=[match_lib[key][0]+match_lib_O[key][0],match_lib[key][1]+match_lib_O[key][1]]
         except:
             match_lib[key]=match_lib_O[key]
-            
+
     return match_lib
-    
+
 def create_sorbate_match_lib4_test(metal=['Pb'],HO_list=['HO1_Pb_D1A'],anchors=[['O1_2_0','O1_1_0']],anchor_offsets=[['+y',None]],domain_tag=1):
     #a bug fixed here compared to the previous function
     match_lib_metal={}
@@ -1619,7 +1787,7 @@ def create_sorbate_match_lib4_test(metal=['Pb'],HO_list=['HO1_Pb_D1A'],anchors=[
         if tag==None:return None
         elif tag[0]=='-':return '+'+tag[1:]
         elif tag[0]=='+':return '-'+tag[1:]
-            
+
     for i in range(N_sorbate):
         try:
             match_lib_metal[metal[i]+str(i+1)+'_D'+str(domain_tag)+'A']=[[HO_id for HO_id in HO_list if metal[i]+str(i+1) in HO_id]+shaffle(anchors[i],'_D'+str(domain_tag)+'A'),[None]*len([HO_id for HO_id in HO_list if metal[i]+str(i+1) in HO_id])+anchor_offsets[i]]
@@ -1650,9 +1818,9 @@ def create_sorbate_match_lib4_test(metal=['Pb'],HO_list=['HO1_Pb_D1A'],anchors=[
             match_lib[key]=[match_lib[key][0]+match_lib_O[key][0],match_lib[key][1]+match_lib_O[key][1]]
         except:
             match_lib[key]=match_lib_O[key]
-            
+
     return match_lib
-    
+
 def create_sorbate_match_lib(metal='Pb',O_list=[['HO1_D1A']],anchors=[['O1_2_0','O1_1_0']],anchor_offsets=[['+y',None]],domain_tag=1):
     match_lib_metal={}
     match_lib_HO={}
@@ -1664,7 +1832,7 @@ def create_sorbate_match_lib(metal='Pb',O_list=[['HO1_D1A']],anchors=[['O1_2_0',
         if tag==None:return None
         elif tag[0]=='-':return '+'+tag[1:]
         elif tag[0]=='+':return '-'+tag[1:]
-            
+
     for i in range(N_sorbate):
         match_lib_metal[metal+str(i+1)+'_D'+str(domain_tag)+'A']=[O_list[i]+shaffle(anchors[i],'_D'+str(domain_tag)+'A'),[None]*len(O_list[i])+anchor_offsets[i]]
         for j in range(len(O_list[i])):
@@ -1678,8 +1846,8 @@ def create_sorbate_match_lib(metal='Pb',O_list=[['HO1_D1A']],anchors=[['O1_2_0',
 
 #merge two libs in the form returned by create_sorbate_match_lib
 #if same key, append it, if a new key, set a new item with this key
-#also merge the id and the associated offset (eg O1_1_0_D1A_+x)     
-def merge_two_libs(lib_main,lib2):  
+#also merge the id and the associated offset (eg O1_1_0_D1A_+x)
+def merge_two_libs(lib_main,lib2):
     lib=deepcopy(lib_main)
     lib_new_format={}
     keys_main=lib_main.keys()
@@ -1687,7 +1855,7 @@ def merge_two_libs(lib_main,lib2):
         if offset==None:return id
         else:
             return id+'_'+offset
-            
+
     for key in lib2.keys():
         if key in keys_main:
             lib[key]=[lib_main[key][0]+lib2[key][0],lib_main[key][1]+lib2[key][1]]
@@ -1695,7 +1863,7 @@ def merge_two_libs(lib_main,lib2):
     for key in lib.keys():
         lib_new_format[key]=[_append_two(id,offset) for (id,offset) in zip(lib[key][0],lib[key][1])]
     return lib_new_format
-    
+
 def rotate_along_one_axis(domain=None,pass_point_id='',rotation_ids=[],rotation_vector=[],rotation_angle=None,basis=np.array([5.038,5.434,7.3707])):
     #note it works only when the dxdydz==0, if not rewrite the assignment part at line106
     pt_ct=lambda domain,p_O1_index:np.array([domain.x[p_O1_index][0]+domain.dx1[p_O1_index][0]+domain.dx2[p_O1_index][0]+domain.dx3[p_O1_index][0],domain.y[p_O1_index][0]+domain.dy1[p_O1_index][0]+domain.dy2[p_O1_index][0]+domain.dy3[p_O1_index][0],domain.z[p_O1_index][0]+domain.dz1[p_O1_index][0]+domain.dz2[p_O1_index][0]+domain.dz3[p_O1_index][0]])*basis
@@ -1719,8 +1887,8 @@ def rotate_along_one_axis(domain=None,pass_point_id='',rotation_ids=[],rotation_
         domain.x[index],domain.y[index],domain.z[index]=x_new,y_new,z_new
         container.append([x_new,y_new,z_new])
     return container
-        
-    
+
+
 class domain_creator(domain_creator_water,domain_creator_sorbate,domain_creator_surface):
     def __init__(self,ref_domain,id_list,terminated_layer=0,domain_tag='_D1',new_var_module=None,N_layers=5):
         #id_list is a list of id in the order of ref_domain,terminated_layer is the index number of layer to be considered
@@ -1737,7 +1905,7 @@ class domain_creator(domain_creator_water,domain_creator_sorbate,domain_creator_
         self.new_var_module=new_var_module
         self.N_layers=N_layers
         self.domain_A,self.domain_B=self.create_equivalent_domains_2()
-    
+
     def build_super_cell(self,ref_domain,rem_atom_ids=None):
     #build a super cell based on the ref_domain, the super cell is actually two domains stacking together in x direction
     #rem_atom_ids is a list of atom ids you want to remove before building a super cell
@@ -1745,7 +1913,7 @@ class domain_creator(domain_creator_water,domain_creator_sorbate,domain_creator_
         if rem_atom_ids!=None:
             for i in rem_atom_ids:
                 super_cell.del_atom(i)
-            
+
         def _extract_coor(domain,id):
             index=np.where(domain.id==id)[0][0]
             x=domain.x[index]+domain.dx1[index]+domain.dx2[index]+domain.dx3[index]
@@ -1762,9 +1930,9 @@ class domain_creator(domain_creator_water,domain_creator_sorbate,domain_creator_
             super_cell.add_atom(id=str(id)+'_+x+y',element=ref_domain.el[index], x=_extract_coor(ref_domain,id)[0]+1.0, y=_extract_coor(ref_domain,id)[1]+1., z=_extract_coor(ref_domain,id)[2], u = ref_domain.u[index], oc = ref_domain.oc[index], m = ref_domain.m[index])
             super_cell.add_atom(id=str(id)+'_-x+y',element=ref_domain.el[index], x=_extract_coor(ref_domain,id)[0]-1.0, y=_extract_coor(ref_domain,id)[1]+1., z=_extract_coor(ref_domain,id)[2], u = ref_domain.u[index], oc = ref_domain.oc[index], m = ref_domain.m[index])
             super_cell.add_atom(id=str(id)+'_-x-y',element=ref_domain.el[index], x=_extract_coor(ref_domain,id)[0]-1.0, y=_extract_coor(ref_domain,id)[1]-1., z=_extract_coor(ref_domain,id)[2], u = ref_domain.u[index], oc = ref_domain.oc[index], m = ref_domain.m[index])
-        
+
         return super_cell
-    
+
     def build_super_cell_simple(self,ref_domain,rem_atom_ids=None):
     #in this simple mode: a library instead of domain instance will be created, and the key for library is (id,el)
     #so the library looks like: {(id1,el):coords,(id2,el):coords2}
@@ -1784,7 +1952,7 @@ class domain_creator(domain_creator_water,domain_creator_sorbate,domain_creator_
                 elif new_x>1:
                     new_x=new_x-1
             return new_x
-            
+
         def _extract_coor(domain,id):
             index=np.where(domain.id==id)[0][0]
             x=domain.x[index]+domain.dx1[index]+domain.dx2[index]+domain.dx3[index]
@@ -1802,9 +1970,9 @@ class domain_creator(domain_creator_water,domain_creator_sorbate,domain_creator_
             container[str(id)+'_+x+y',str(super_cell.el[index])]=container[str(id)]+[1,1,0]
             container[str(id)+'_-x+y',str(super_cell.el[index])]=container[str(id)]+[-1,1,0]
             container[str(id)+'_-x-y',str(super_cell.el[index])]=container[str(id)]+[-1,-1,0]
-        
+
         return container
-        
+
     def build_super_cell2(self,ref_domain_original,index_for_atoms=[0,1,4,5]):
     #build a super cell based on the ref_domain, the super cell is actually two domains stacking together in x direction
     #rem_atom_ids is a list of atom ids you want to remove before building a super cell
@@ -1817,13 +1985,13 @@ class domain_creator(domain_creator_water,domain_creator_sorbate,domain_creator_
             y=domain.y[index]+domain.dy1[index]+domain.dy2[index]+domain.dy3[index]
             z=domain.z[index]+domain.dz1[index]+domain.dz2[index]+domain.dz3[index]
             return np.array([x,y,z])
-            
+
         ref_domain=model.Slab(c = 1.0,T_factor='B')
         for i in index_for_atoms:
             id=str(ref_domain_original.id[i])
             ref_domain.add_atom(id=str(ref_domain_original.id[i]),element=ref_domain_original.el[i], x=_extract_coor(ref_domain_original,id)[0], y=_extract_coor(ref_domain_original,id)[1], z=_extract_coor(ref_domain_original,id)[2], u = ref_domain_original.u[i], oc = ref_domain_original.oc[i], m = ref_domain_original.m[i])
 
-        super_cell=ref_domain.copy()    
+        super_cell=ref_domain.copy()
         for id in super_cell.id:
             index=np.where(ref_domain.id==id)[0][0]
             super_cell.add_atom(id=str(id)+'_+x',element=ref_domain.el[index], x=_extract_coor(ref_domain,id)[0]+1.0, y=_extract_coor(ref_domain,id)[1], z=_extract_coor(ref_domain,id)[2], u = ref_domain.u[index], oc = ref_domain.oc[index], m = ref_domain.m[index])
@@ -1838,7 +2006,7 @@ class domain_creator(domain_creator_water,domain_creator_sorbate,domain_creator_
         #    index=np.where(super_cell.id==id)[0][0]
         #    print id,super_cell.x[index],super_cell.dx1[index],super_cell.dx2[index],super_cell.dx3[index]
         return super_cell
-        
+
     def build_super_cell2_simple(self,ref_domain_original,index_for_atoms=[0,1,4,5]):
     #in this simple mode: a library instead of domain instance will be created, and the key for library is (id,el)
     #so the library looks like: {(id1,el):coords,(id2,el):coords2}
@@ -1854,14 +2022,14 @@ class domain_creator(domain_creator_water,domain_creator_sorbate,domain_creator_
                 elif new_x>1:
                     new_x=new_x-1
             return new_x
-            
+
         def _extract_coor(domain,id):
             index=np.where(domain.id==id)[0][0]
             x=domain.x[index]+domain.dx1[index]+domain.dx2[index]+domain.dx3[index]
             y=domain.y[index]+domain.dy1[index]+domain.dy2[index]+domain.dy3[index]
             z=domain.z[index]+domain.dz1[index]+domain.dz2[index]+domain.dz3[index]
             return np.array([_round_up(x),_round_up(y),z])
-            
+
         for i in index_for_atoms:
             id=str(ref_domain_original.id[i])
             container[id,str(ref_domain_original.el[i])]=_extract_coor(ref_domain_original,id)
@@ -1877,7 +2045,7 @@ class domain_creator(domain_creator_water,domain_creator_sorbate,domain_creator_
             container[id[0]+'_-x-y',id[1]]=container[id]+[-1,-1,0]
 
         return container
-        
+
     def create_equivalent_domains(self):
         new_domain_A=self.ref_domain.copy()
         new_domain_B=self.ref_domain.copy()
@@ -1903,7 +2071,7 @@ class domain_creator(domain_creator_water,domain_creator_sorbate,domain_creator_
         new_domain_A.id=map(lambda x:x+self.domain_tag+'A',new_domain_A.id)
         new_domain_B.id=map(lambda x:x+self.domain_tag+'B',new_domain_B.id)
         return new_domain_A.copy(),new_domain_B.copy()
-        
+
     def create_equivalent_domains_3(self):
         new_domain_A=self.ref_domain.copy()
         new_domain_B=self.ref_domain.copy()
@@ -1922,19 +2090,19 @@ class domain_creator(domain_creator_water,domain_creator_sorbate,domain_creator_
         new_domain_A.id=map(lambda x:x+self.domain_tag+'A',new_domain_A.id)
         new_domain_B.id=map(lambda x:x+self.domain_tag+'B',new_domain_B.id)
         return new_domain_A.copy(),new_domain_B.copy()
-        
+
     def _extract_list(self,ref_list,extract_index):
         output_list=[]
         for i in extract_index:
             output_list.append(ref_list[i])
         return output_list
-        
+
     def split_number(self,N_str):
         N_list=[]
         for i in range(len(N_str)):
             N_list.append(int(N_str[i]))
         return N_list
-        
+
     def scale_opt(self,atm_gp_list,scale_factor,sign_values=None,flag='u',ref_v=1.):
         #scale the parameter from first layer atom to deeper layer atom
         #dx,dy,dz,u will decrease inward, oc decrease outward usually
@@ -1942,14 +2110,14 @@ class domain_creator(domain_creator_water,domain_creator_sorbate,domain_creator_
         #atm_gp_list is a list of atom group to consider the scaling operation
         #scale_factor is list of values of scale factor, note accummulated product will be used for scaling
         #flag is the parameter symbol
-        #ref_v is the reference value to start off 
+        #ref_v is the reference value to start off
         if sign_values==None:
             for i in range(len(atm_gp_list)):
                 atm_gp_list[i]._set_func(flag)(ref_v*reduce(mul,scale_factor[:i+1]))
         else:
             for i in range(len(atm_gp_list)):
                 atm_gp_list[i]._set_func(flag)(ref_v*sign_values[i]*reduce(mul,scale_factor[:i+1]))
-              
+
     def extract_scale_opts(self,filename):
         self.scale_opt_arr=np.array([[0,0,0,0,0,0]])[0:0]
         f=open(filename)
@@ -1959,7 +2127,7 @@ class domain_creator(domain_creator_water,domain_creator_sorbate,domain_creator_
                 line_split=line.rsplit(',')
                 self.scale_opt_arr=np.append(self.scale_opt_arr,[[line_split[i] for i in range(6)]],axis=0)
         f.close()
-        
+
     #this function do the same thing as the previous one, but it call open/close file only once by assigning the file content to self.scale_opt_arr
     def scale_opt_batch(self,filename):
         #note:the original name is scale_opt_batch2b
@@ -1982,16 +2150,16 @@ class domain_creator(domain_creator_water,domain_creator_sorbate,domain_creator_
                 ref_v=float(line[5])
             except:
                 ref_v=vars(self)[line[5]]
-            
+
             self.scale_opt(self._extract_list(atm_gp_list,index_list),scale_factor,sign_values,flag,ref_v)
-        
+
     def set_new_vars(self,head_list=['u_Fe_'],N_list=[2]):
-    #set new vars 
+    #set new vars
     #head_list is a list of heading test for a new variable,N_list is the associated number of each set of new variable to be created
         for head,N in zip(head_list,N_list):
             for i in range(N):
                 getattr(self.new_var_module,'new_var')(head+str(i+1),1.)
-    
+
     def set_discrete_new_vars_batch(self,filename):
     #set discrete new vars
         f=open(filename)
@@ -2002,7 +2170,7 @@ class domain_creator(domain_creator_water,domain_creator_sorbate,domain_creator_
                 #print line_split
                 getattr(self.new_var_module,'new_var')(line_split[0],float(line_split[1]))
         f.close()
-    
+
     def norm_sign(self,value,scale=1.):
         if value<=0.5:
             return -scale
@@ -2018,7 +2186,7 @@ class domain_creator(domain_creator_water,domain_creator_sorbate,domain_creator_
                 line_split=list(line.rsplit(','))
                 self.sim_val.append(line_split[:-1])
         f.close()
-        
+
     def init_sim_batch(self,filename):
     #note: original name is init_sim_batch2
         try:
@@ -2045,7 +2213,7 @@ class domain_creator(domain_creator_water,domain_creator_sorbate,domain_creator_
                 for i in range(len(line)-2):
                     tmp_list.append(self.norm_sign(getattr(self.new_var_module,line[i+2])))
                 setattr(self,line[1],tmp_list)
-                    
+
     def create_grid_number(self,atm,domain):
         atm_coor=extract_coor(domain,atm)
         x,y=atm_coor[0],atm_coor[1]
@@ -2058,9 +2226,9 @@ class domain_creator(domain_creator_water,domain_creator_sorbate,domain_creator_
         elif ((x>=c) & (x<d))&((y>= a) & (y<b)):
             return 9
         elif ((x>= a) & (x<b))&((y>=b) & (y<c)):
-            return 6     
+            return 6
         elif ((x>=b) & (x<c))&((y>=b) & (y<c)):
-            return 5 
+            return 5
         elif ((x>=c) & (x<d))&((y>=b) & (y<c)):
             return 4
         elif ((x>= a) & (x<b))&((y>=c) & (y<d)):
@@ -2068,14 +2236,14 @@ class domain_creator(domain_creator_water,domain_creator_sorbate,domain_creator_
         elif ((x>=b) & (x<c))&((y>=c) & (y<d)):
             return 2
         elif ((x>=c) & (x<d))&((y>=c) & (y<d)):
-            return 3   
+            return 3
 
     def compare_grid(self,grid1,grid2):
         if grid1==grid2:
             return None
         else:
             return grid_match_lib[grid1][grid2]
-            
+
     def find_neighbors(self,domain,id,searching_range=2.3,basis=np.array([5.038,5.434,7.3707]),T=None):
         neighbor_container=[]
         atm_ids=[]
@@ -2097,7 +2265,7 @@ class domain_creator(domain_creator_water,domain_creator_sorbate,domain_creator_
                 atm_ids.append(i)
                 offset.append(None)
         return atm_ids,offset
-        
+
     def find_neighbors2(self,domain,id,searching_range=2.3):
         neighbor_container={}
         full_offset=['+x','-x','+y','-y','+x-y','+x+y','-x+y','-x-y']
@@ -2106,7 +2274,7 @@ class domain_creator(domain_creator_water,domain_creator_sorbate,domain_creator_
         f2=lambda p1,p2:np.sqrt(np.sum((p1-p2)**2))
         #print domain.id,id
         index=np.where(domain.id==id)[0][0]
-        
+
         for i in range(len(domain.id)):
             if (f2(f1(domain,index),f1(domain,i))<=searching_range)&(f2(f1(domain,index),f1(domain,i))!=0.):
                 neighbor_container[domain.id[i]]=f2(f1(domain,index),f1(domain,i))
@@ -2114,7 +2282,7 @@ class domain_creator(domain_creator_water,domain_creator_sorbate,domain_creator_
         for key in neighbor_container.keys():
             print key,neighbor_container[key]
         return None
-        
+
     def create_match_lib(self,domain,id_list):
         basis=np.array([5.038,5.434,7.3707])
         match_lib={}
@@ -2131,7 +2299,7 @@ class domain_creator(domain_creator_water,domain_creator_sorbate,domain_creator_
                     print f2(f1(domain,index_1),f1(domain,index_2))
                     match_lib[id_list[i]].append(domain.id[j])
         return match_lib
-               
+
     def cal_bond_valence1(self,domain,center_atom_id,searching_range=3.,print_file=False):
     #calculate the bond valence for an atom with specified surroundring atoms by using the equation s=exp[(r0-r)/B]
     #the atoms within the searching range (in unit of A) will be counted for the calculation of bond valence
@@ -2161,7 +2329,7 @@ class domain_creator(domain_creator_water,domain_creator_sorbate,domain_creator_
                 f.write(s)
             f.close()
         return bond_valence_container
-        
+
     def cal_bond_valence1_new2(self,domain,center_atom_id,searching_range=2.5,coordinated_atms=[],wt=100,print_file=False):
     #calculate the bond valence for an atom with specified surroundring atoms by using the equation s=exp[(r0-r)/B]
     #the atoms within the searching range (in unit of A) will be counted for the calculation of bond valence
@@ -2177,7 +2345,7 @@ class domain_creator(domain_creator_water,domain_creator_sorbate,domain_creator_
         index=np.where(domain.id==center_atom_id)[0][0]
         #print center_atom_id,f1(domain,index)
         for i in range(len(domain.id)):
-            
+
             dist=f2(f1(domain,index),f1(domain,i))
             #print domain.id[i],center_atom_id,dist
             if (dist<=searching_range)&(dist!=0.):
@@ -2212,7 +2380,7 @@ class domain_creator(domain_creator_water,domain_creator_sorbate,domain_creator_
                 f.write(s)
             f.close()
         return bond_valence_container
-    
+
     def cal_bond_valence1_new2B(self,domain,center_atom_id,center_atom_el,searching_range=2.5,coordinated_atms=[],wt=100,print_file=False,O_cutoff_limit=2.5):
         #different from new2:domain is a library in the format {(key,el):[x,y,z]}
         bond_valence_container={}
@@ -2222,11 +2390,11 @@ class domain_creator(domain_creator_water,domain_creator_sorbate,domain_creator_
         index=(center_atom_id,center_atom_el)
         #print center_atom_id,f1(domain,index)
         for key in domain.keys():
-            
+
             dist=f2(domain[key]*basis,domain[index]*basis)
             #print domain.id[i],center_atom_id,dist
             if (dist<=searching_range)&(dist!=0.):
-                
+
                 r0=0
                 if ((index[1]=='H')&(key[1]=='O'))|((index[1]=='O')&(key[1]=='H')):r0=0.677
                 if ((index[1]=='Pb')&(key[1]=='O'))|((index[1]=='O')&(key[1]=='Pb')):r0=r0_Pb
@@ -2282,7 +2450,7 @@ class domain_creator(domain_creator_water,domain_creator_sorbate,domain_creator_
                 f.write(s)
             f.close()
         return bond_valence_container
-        
+
     def cal_bond_valence1_new2B_4(self,domain,center_atom_id,center_atom_el,searching_range=2.5,coordinated_atms=[],wt=100,print_file=False,r0_container={('Fe','O'):1.759,('H','O'):0.677,('Pb','O'):2.04,('Sb','O'):1.973},O_cutoff_limit=2.5):
         #different from new2B: add a argument containing info of r0 for possible couples
         bond_valence_container={}
@@ -2292,11 +2460,11 @@ class domain_creator(domain_creator_water,domain_creator_sorbate,domain_creator_
         index=(center_atom_id,center_atom_el)
         #print center_atom_id,f1(domain,index)
         for key in domain.keys():
-            
+
             dist=f2(domain[key]*basis,domain[index]*basis)
             #print domain.id[i],center_atom_id,dist
             if (dist<=searching_range)&(dist!=0.):
-                
+
                 r0=0
                 if (index[1],key[1]) in r0_container.keys():
                     r0=r0_container[(index[1],key[1])]
@@ -2352,7 +2520,7 @@ class domain_creator(domain_creator_water,domain_creator_sorbate,domain_creator_
                 f.write(s)
             f.close()
         return bond_valence_container
-        
+
     def cal_bond_valence1_new2B_5(self,domain,center_atom_id,center_atom_el,searching_range_offset=0.2,ideal_bond_len_container={('Fe','O'):1.759,('H','O'):0.677,('Pb','O'):2.04,('Sb','O'):1.973},coordinated_atms=[],wt=100,print_file=False,r0_container={('Fe','O'):1.759,('H','O'):0.677,('Pb','O'):2.04,('Sb','O'):1.973},O_cutoff_limit=2.5):
         #different from new2B: add a argument containing info of r0 for possible couples
         bond_valence_container={}
@@ -2362,7 +2530,7 @@ class domain_creator(domain_creator_water,domain_creator_sorbate,domain_creator_
         index=(center_atom_id,center_atom_el)
         #print center_atom_id,f1(domain,index)
         for key in domain.keys():
-            
+
             dist=f2(domain[key]*basis,domain[index]*basis)
             searching_range=None
             if (index[1],key[1]) in ideal_bond_len_container.keys():
@@ -2373,7 +2541,7 @@ class domain_creator(domain_creator_water,domain_creator_sorbate,domain_creator_
                 searching_range=2.5
             #print domain.id[i],center_atom_id,dist
             if (dist<=searching_range)&(dist!=0.):
-                
+
                 r0=0
                 if (index[1],key[1]) in r0_container.keys():
                     r0=r0_container[(index[1],key[1])]
@@ -2429,7 +2597,7 @@ class domain_creator(domain_creator_water,domain_creator_sorbate,domain_creator_
                 f.write(s)
             f.close()
         return bond_valence_container
-        
+
     def cal_bond_valence1_new2B_6(self,domain,center_atom_id,center_atom_el,searching_range_offset=0.2,ideal_bond_len_container={('Fe','O'):1.759,('H','O'):0.677,('Pb','O'):2.04,('Sb','O'):1.973},coordinated_atms=[],wt=100,print_file=False,r0_container={('Fe','O'):1.759,('H','O'):0.677,('Pb','O'):2.04,('Sb','O'):1.973},O_cutoff_limit=2.5,waiver_atoms=[]):
         #different from version 5: there is a waiver_atom list, when each two inside the list are being considered for bond valence, such bond valence constrain will be ignored
         bond_valence_container={}
@@ -2439,7 +2607,7 @@ class domain_creator(domain_creator_water,domain_creator_sorbate,domain_creator_
         index=(center_atom_id,center_atom_el)
         #print center_atom_id,f1(domain,index)
         for key in domain.keys():
-            
+
             dist=f2(domain[key]*basis,domain[index]*basis)
             searching_range=None
             if (index[1],key[1]) in ideal_bond_len_container.keys():
@@ -2508,7 +2676,7 @@ class domain_creator(domain_creator_water,domain_creator_sorbate,domain_creator_
                 f.write(s)
             f.close()
         return bond_valence_container
-        
+
     #different from v6: not only consider for the bond valence sum but also consider for the coordination situation compared to the pre-defined coordinated members
     def cal_bond_valence1_new2B_7(self,domain,center_atom_id,center_atom_el,searching_range_offset=0.2,ideal_bond_len_container={('Fe','O'):1.759,('H','O'):0.677,('Pb','O'):2.04,('Sb','O'):1.973},coordinated_atms=[],wt=100,print_file=False,r0_container={('Fe','O'):1.759,('H','O'):0.677,('Pb','O'):2.04,('Sb','O'):1.973},O_cutoff_limit=2.5,waiver_atoms=[],basis=np.array([5.038,5.434,7.3707]),T=None,T_INV=None):
         #different from version 5: there is a waiver_atom list, when each two inside the list are being considered for bond valence, such bond valence constrain will be ignored
@@ -2584,7 +2752,7 @@ class domain_creator(domain_creator_water,domain_creator_sorbate,domain_creator_
         for key in bond_valence_container.keys():
             sum_valence=sum_valence+bond_valence_container[key]
         #Trigger penalty for under-coordination situation
-        if len(bond_valence_container.keys())<len(coordinated_atms) and center_atom_el!='O': 
+        if len(bond_valence_container.keys())<len(coordinated_atms) and center_atom_el!='O':
             sum_valence=sum_valence*wt
         bond_valence_container['total_valence']=sum_valence
         if print_file==True:
@@ -2594,7 +2762,7 @@ class domain_creator(domain_creator_water,domain_creator_sorbate,domain_creator_
                 f.write(s)
             f.close()
         return bond_valence_container
-        
+
     def cal_bond_valence1_new2B_7_2(self,domain,center_atom_id,center_atom_el,searching_range_offset=0.2,ideal_bond_len_container={('Fe','O'):1.759,('H','O'):0.677,('Pb','O'):2.04,('Sb','O'):1.973},coordinated_atms=[],wt=100,print_file=False,r0_container={('Fe','O'):1.759,('H','O'):0.677,('Pb','O'):2.04,('Sb','O'):1.973},O_cutoff_limit=2.5,waiver_atoms=[],basis=np.array([5.038,5.434,7.3707]),T=None,T_INV=None,check=False):
         #different from version 5: there is a waiver_atom list, when each two inside the list are being considered for bond valence, such bond valence constrain will be ignored
         bond_valence_container={}
@@ -2675,7 +2843,7 @@ class domain_creator(domain_creator_water,domain_creator_sorbate,domain_creator_
         for key in bond_valence_container.keys():
             sum_valence=sum_valence+bond_valence_container[key]
         #Trigger penalty for under-coordination situation
-        if len(bond_valence_container.keys())<len(coordinated_atms) and center_atom_el!='O': 
+        if len(bond_valence_container.keys())<len(coordinated_atms) and center_atom_el!='O':
             sum_valence=sum_valence*wt
             sensor=True
         bond_valence_container['total_valence']=sum_valence
@@ -2695,7 +2863,7 @@ class domain_creator(domain_creator_water,domain_creator_sorbate,domain_creator_
                 for key in output_bv_container.keys():
                     print key,output_bv_container[key]
             return bond_valence_container
-        
+
     def cal_bond_valence1_new2B3(self,domain,center_atom_id,center_atom_el,searching_range=2.5,coordinated_atms=[],wt=100,print_file=False):
         #different from new2B:consider a very soft limit for cation cation distance cutoff (1. instead of 2.3), everything else is the same
         #purposely be used to include sorbates into one domain
@@ -2706,11 +2874,11 @@ class domain_creator(domain_creator_water,domain_creator_sorbate,domain_creator_
         index=(center_atom_id,center_atom_el)
         #print center_atom_id,f1(domain,index)
         for key in domain.keys():
-            
+
             dist=f2(domain[key]*basis,domain[index]*basis)
             #print domain.id[i],center_atom_id,dist
             if (dist<=searching_range)&(dist!=0.):
-                
+
                 r0=0
                 if ((index[1]=='Pb')&(key[1]=='O'))|((index[1]=='O')&(key[1]=='Pb')):r0=r0_Pb
                 elif ((index[1]=='Fe')&(key[1]=='O'))|((index[1]=='O')&(key[1]=='Fe')):r0=1.759
@@ -2744,7 +2912,7 @@ class domain_creator(domain_creator_water,domain_creator_sorbate,domain_creator_
                 f.write(s)
             f.close()
         return bond_valence_container
-        
+
     def cal_bond_valence1_new2B_2(self,domain,center_atom_id,center_atom_el,searching_range=2.5,coordinated_atms=[],wt=100,print_file=False):
         #different from new2B:now consider panalty for distortion associated with bond length
         bond_valence_container={}
@@ -2755,7 +2923,7 @@ class domain_creator(domain_creator_water,domain_creator_sorbate,domain_creator_
         #print center_atom_id,f1(domain,index)
         ligand_container={}
         for key in domain.keys():
-            
+
             dist=f2(domain[key]*basis,domain[index]*basis)
             #print key[0],index[0],dist
             #print domain.id[i],center_atom_id,dist
@@ -2791,7 +2959,7 @@ class domain_creator(domain_creator_water,domain_creator_sorbate,domain_creator_
             if (ligand,el_ligand) in ligand_container.keys():
                 #print ligand
                 dists.append(ligand_container[ligand,el_ligand])
-            else:               
+            else:
                 dists.append(f2(domain[ligand,el_ligand]*basis,domain[index]*basis))
         bond_length_distortion=max(dists)-min(dists)
         wt_distortion=0
@@ -2806,7 +2974,7 @@ class domain_creator(domain_creator_water,domain_creator_sorbate,domain_creator_
                 f.write(s)
             f.close()
         return bond_valence_container
-        
+
     def cal_bond_valence1_new2B_3(self,domain,center_atom_id,center_atom_el,searching_range=2.5):
         #different from new2B_2:there wont be any panalty and distortion function
         bond_valence_container={}
@@ -2818,7 +2986,7 @@ class domain_creator(domain_creator_water,domain_creator_sorbate,domain_creator_
         #print center_atom_id,f1(domain,index)
         ligand_container={}
         for key in domain.keys():
-            
+
             dist=f2(domain[key]*basis,domain[index]*basis)
             #print key[0],index[0],dist
             #print domain.id[i],center_atom_id,dist
@@ -2852,11 +3020,11 @@ class domain_creator(domain_creator_water,domain_creator_sorbate,domain_creator_
                 match_lib['_'.join(id_list[:-1])]=center_atom_id+'_'+id_list[-1]
             else:
                 match_lib['_'.join(id_list)]=center_atom_id
-                
+
         bond_valence_container['total_valence']=sum_valence
-        
+
         return bond_valence_container,match_lib
-        
+
     def cal_hydrogen_bond_valence(self,domain,center_atom_id,searching_range=2.5,coordinated_atms=[],wt=100,print_file=False):
     #calculate the bond valence for an atom with specified surroundring atoms by using the equation s=exp[(r0-r)/B]
     #the atoms within the searching range (in unit of A) will be counted for the calculation of bond valence
@@ -2873,7 +3041,7 @@ class domain_creator(domain_creator_water,domain_creator_sorbate,domain_creator_
         f3=lambda x:8.04706*x**4-93.229416*x**3+403.91415*x**2-775.95379*x+558.10065
         index=np.where(domain.id==center_atom_id)[0][0]
         #print center_atom_id,f1(domain,index)
-        
+
         for i in range(len(domain.id)):
             if (f2(f1(domain,index),f1(domain,i))<=searching_range)&(f2(f1(domain,index),f1(domain,i))!=0.):
                 sum_check=0
@@ -2898,9 +3066,9 @@ class domain_creator(domain_creator_water,domain_creator_sorbate,domain_creator_
                 f.write(s)
             f.close()
         return bond_valence_container
-        
+
     def cal_hydrogen_bond_valence2(self,domain,center_atom_id,searching_range=3.0,acceptable_min=2.5):
-        #different from version one: set the acceptable shortest distance between oxygens, if actual distance is 
+        #different from version one: set the acceptable shortest distance between oxygens, if actual distance is
         #shorter than that, return a panalty number 10 instead of calculating the real hydrogen bond valence
         #so any distance number hihger than 2.5 will be equivalent
         bond_valence=0
@@ -2908,7 +3076,7 @@ class domain_creator(domain_creator_water,domain_creator_sorbate,domain_creator_
         f1=lambda domain,index:np.array([domain.x[index]+domain.dx1[index]+domain.dx2[index]+domain.dx3[index],domain.y[index]+domain.dy1[index]+domain.dy2[index]+domain.dy3[index],domain.z[index]+domain.dz1[index]+domain.dz2[index]+domain.dz3[index]])*basis
         f2=lambda p1,p2:np.sqrt(np.sum((p1-p2)**2))
         index=np.where(domain.id==center_atom_id)[0][0]
-        
+
         for i in range(len(domain.id)):
             if (f2(f1(domain,index),f1(domain,i))<=searching_range)&(f2(f1(domain,index),f1(domain,i))!=0.):
                 if f2(f1(domain,index),f1(domain,i))>=acceptable_min:
@@ -2917,7 +3085,7 @@ class domain_creator(domain_creator_water,domain_creator_sorbate,domain_creator_
                     bond_valence=10
                     break
         return bond_valence
-            
+
     def cal_hydrogen_bond_valence2B(self,domain,center_atom_id,searching_range=3.0,acceptable_min=2.5,waiver_atoms=[]):
         #different from valence2:domain is a library in form of {(id,el):coords1}
         bond_valence=0
@@ -2937,7 +3105,7 @@ class domain_creator(domain_creator_water,domain_creator_sorbate,domain_creator_
                         bond_valence=10
                         break
         return bond_valence
-        
+
     def cal_bond_valence2(self,domain,center_atm,match_list):
         #center_atm='O1',match_list=[['Fe1','Fe2'],['-x','+y']]
         #return a library showing the bond valence contribution to O1
@@ -2950,7 +3118,7 @@ class domain_creator(domain_creator_water,domain_creator_sorbate,domain_creator_
         basis=np.array([5.038,5.434,7.3707])
         f1=lambda domain,index:np.array([domain.x[index]+domain.dx1[index]+domain.dx2[index]+domain.dx3[index],domain.y[index]+domain.dy1[index]+domain.dy2[index]+domain.dy3[index],domain.z[index]+domain.dz1[index]+domain.dz2[index]+domain.dz3[index]])*basis
         f2=lambda p1,p2:np.sqrt(np.sum((p1-p2)**2))
-        
+
         def _offset_translate(flag):
             if flag=='+x':
                 return np.array([1.,0.,0.])*basis
@@ -2970,7 +3138,7 @@ class domain_creator(domain_creator_water,domain_creator_sorbate,domain_creator_
                 return np.array([-1.,1.,0.])*basis
             elif flag==None:
                 return np.array([0.,0.,0.])*basis
-    
+
         index=np.where(domain.id==center_atm)[0][0]
         for k in range(len(match_list[0])):
             j=match_list[0][k]
@@ -2986,7 +3154,7 @@ class domain_creator(domain_creator_water,domain_creator_sorbate,domain_creator_
                 #if (i=='pb1'):
                 #print j,str(match_lib[i][1][k]),dist,'pb_coor',f1(domain,index)/basis,'O_coor',(f1(domain,index2)+_offset_translate(match_lib[i][1][k]))/basis,np.exp((r0-dist)/0.37)
             if dist<3.:#take it counted only when they are not two far away
-                
+
                 bond_valence_container[j]=np.exp((r0-dist)/0.37)
                 #print j,extract_coor(domain,j),dist,bond_valence_container[j]
                 match_list[2]=match_list[2]+1
@@ -3011,7 +3179,7 @@ class domain_creator(domain_creator_water,domain_creator_sorbate,domain_creator_
         cum=sum([bond_valence_container[key] for key in bond_valence_container.keys()])
         bond_valence_container['total']=cum
         return bond_valence_container
-        
+
     def cal_bond_valence3(self,domain,match_lib):
         #match_lib={'O1':[['Fe1','Fe2'],['-x','+y']]}
         #calculate the bond valence of (in this case) O1_Fe1, O1_Fe2, where Fe1 and Fe2 have offset defined by '-x' and '+y' respectively.
@@ -3023,11 +3191,11 @@ class domain_creator(domain_creator_water,domain_creator_sorbate,domain_creator_
             except:
                 match_lib[i].append(0)
             bond_valence_container[i]=0
-            
+
         basis=np.array([5.038,5.434,7.3707])
         f1=lambda domain,index:np.array([domain.x[index]+domain.dx1[index]+domain.dx2[index]+domain.dx3[index],domain.y[index]+domain.dy1[index]+domain.dy2[index]+domain.dy3[index],domain.z[index]+domain.dz1[index]+domain.dz2[index]+domain.dz3[index]])*basis
         f2=lambda p1,p2:np.sqrt(np.sum((p1-p2)**2))
-        
+
         def _offset_translate(flag):
             if flag=='+x':
                 return np.array([1.,0.,0.])*basis
@@ -3047,7 +3215,7 @@ class domain_creator(domain_creator_water,domain_creator_sorbate,domain_creator_
                 return np.array([-1.,1.,0.])*basis
             elif flag==None:
                 return np.array([0.,0.,0.])*basis
-    
+
         for i in match_lib.keys():
             index=np.where(domain.id==i)[0][0]
             for k in range(len(match_lib[i][0])):
@@ -3066,7 +3234,7 @@ class domain_creator(domain_creator_water,domain_creator_sorbate,domain_creator_
                 if dist<3.:#take it counted only when they are not two far away
                     bond_valence_container[i]=bond_valence_container[i]+np.exp((r0-dist)/0.37)
                     match_lib[i][2]=match_lib[i][2]+1
-        
+
         for i in bond_valence_container.keys():
             #try to add hydrogen or hydrogen bond to the oxygen with 1.6=2*OH, 1.=OH+H, 0.8=OH and 0.2=H
             index=np.where(domain.id==i)[0][0]
@@ -3083,9 +3251,9 @@ class domain_creator(domain_creator_water,domain_creator_sorbate,domain_creator_
                 #bond_valence_corrected_value=[1.6,1.,0.8,0.2,0.]
                 ref=np.sign(bond_valence_container[i]+np.array(bond_valence_corrected_value)-2.)*(bond_valence_container[i]+np.array(bond_valence_corrected_value)-2.)
                 bond_valence_container[i]=bond_valence_container[i]+bond_valence_corrected_value[np.where(ref==np.min(ref))[0][0]]
-        
+
         return bond_valence_container
-    
+
     def cal_bond_valence4(self,domain,center_atm,match_id_list):
         #center_atm='O1',match_id_list=[ID1,ID2,ID3]
         #return a library showing the bond valence contribution to O1
@@ -3096,7 +3264,7 @@ class domain_creator(domain_creator_water,domain_creator_sorbate,domain_creator_
         f1=lambda domain,index:np.array([domain.x[index]+domain.dx1[index]+domain.dx2[index]+domain.dx3[index],domain.y[index]+domain.dy1[index]+domain.dy2[index]+domain.dy3[index],domain.z[index]+domain.dz1[index]+domain.dz2[index]+domain.dz3[index]])*basis
         #f2=lambda p1,p2:spatial.distance.cdist([p1],[p2])
         f2=lambda p1,p2:np.sqrt(np.sum((p1-p2)**2))
-        
+
         def _offset_translate(flag):
             if flag=='+x':
                 return np.array([1.,0.,0.])*basis
@@ -3131,9 +3299,9 @@ class domain_creator(domain_creator_water,domain_creator_sorbate,domain_creator_
                 else:r0=0.
             if dist<3.:#take it counted only when they are not two far away
                 BV=BV+np.exp((r0-dist)/0.37)
-            
+
         return BV
-        
+
     def cal_bond_valence4B(self,domain,center_atm,match_id_list):
         #different from valence4:domain is not a super cell but a single domain, offset was used to cal the coords
         BV=0
@@ -3162,7 +3330,7 @@ class domain_creator(domain_creator_water,domain_creator_sorbate,domain_creator_
                 return np.array([-1.,1.,0.])*basis
             elif flag==None:
                 return np.array([0.,0.,0.])*basis
-                
+
         for k in range(len(match_id_list)):
             j=match_id_list[k]
             tag=j.rsplit('_')[-1]
@@ -3189,7 +3357,7 @@ class domain_creator(domain_creator_water,domain_creator_sorbate,domain_creator_
                 else:
                     BV=BV+np.exp((r0-dist)/0.37)
         return BV
-        
+
     def cal_bv_deficience(self,bv_container):
         bv_df=0
         for key in bv_container.keys():
@@ -3198,7 +3366,7 @@ class domain_creator(domain_creator_water,domain_creator_sorbate,domain_creator_
             elif 'Pb' in key: bv_df=bv_df+abs(2-bv_container[key])
             elif 'Sb' in key: bv_df=bv_df+abs(5-bv_container[key])
         return bv_df
-        
+
     #set reference coordinate system defined by atoms with ids in domain, create the coordinate transformation matrix between the old and the new ones
     #T is 3by4 matrix with the last column defining the origin of the new coordinate system
     def create_coor_transformation(self,domain,ids):
@@ -3211,7 +3379,7 @@ class domain_creator(domain_creator_water,domain_creator_sorbate,domain_creator_
         T=f1(x0_v,y0_v,z0_v,x_v,y_v,z_v)
         T=np.append(T,origin[:,np.newaxis],axis=1)
         return T
-                
+
     #extract the r theta and phi for atom with id in the reference coordinate system
     def extract_spherical_pars(self,domain,ref_ids,id):
         T=self.create_coor_transformation(domain,ref_ids)
@@ -3227,9 +3395,9 @@ class domain_creator(domain_creator_water,domain_creator_sorbate,domain_creator_
             phi=2*np.pi+np.arctan(y/x)
         elif (x<0) & (y>0)|(x<0) & (y<0):
             phi=np.pi+np.arctan(y/x)
-        return r,theta,phi       
-                            
-    #calculate xyz in old coordinate system from spherical system and set it to atom with id    
+        return r,theta,phi
+
+    #calculate xyz in old coordinate system from spherical system and set it to atom with id
     def set_sorbate_xyz(self,domain,ref_ids,r_theta_phi,id):
         T=self.create_coor_transformation(domain,ref_ids)
         r,theta,phi=r_theta_phi[0],r_theta_phi[1],r_theta_phi[2]
@@ -3239,4 +3407,3 @@ class domain_creator(domain_creator_water,domain_creator_sorbate,domain_creator_
         coors_new=np.array([x,y,z])
         coors_old=np.dot(inv(T[:,0:-1]),coors_new)+T[:,-1]
         set_coor(domain,id,coors_old)
-        

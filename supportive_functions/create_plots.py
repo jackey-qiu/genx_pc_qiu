@@ -27,6 +27,21 @@ Formates for each kind of dumped files
     eden_domains=[[ed_z1_D1,ed_z1_D2,...,ed_z1_Dm],[ed_z2_D1,ed_z2_D2,...,ed_z2_Dm],...,[ed_zn_D1,ed_zn_D2,...,ed_zn_Dm]] considering m domains
 """
 
+#calcualte the error for pb complex structure
+def output_errors(edge_length=2.7,top_angle=70,error_top_angle=1,error_theta=1,error_delta1=0.02,error_delta2=0.03):
+    sin_alpha_left=np.sin(np.deg2rad(top_angle-error_top_angle)/2.)
+    sin_alpha_right=np.sin(np.deg2rad(top_angle+error_top_angle)/2.)
+    tan_alpha_left=np.tan(np.deg2rad(top_angle-error_top_angle)/2.)
+    tan_alpha_right=np.tan(np.deg2rad(top_angle+error_top_angle)/2.)
+    print 'error of PbO1 bond length:',edge_length/4.*(1./sin_alpha_left-1./sin_alpha_right)+error_delta1
+    print 'error of pbO2 bond length:',edge_length/4.*(1./sin_alpha_left-1./sin_alpha_right)
+    print 'error of PbOdistal bond length:',edge_length/4.*(1./sin_alpha_left-1./sin_alpha_right)++error_delta2
+    print 'error of O1PbO2 bond angle:',error_top_angle
+    print 'error of O1PbOdistal and O2PbOdistal bond angle:',error_top_angle+error_theta
+    print 'error of PbFe seperation:',edge_length/4.*(1./tan_alpha_left-1./tan_alpha_right)
+    return None
+
+
 bl_dl_muscovite_old={'3_0':{'segment':[[0,1],[1,9]],'info':[[2,1],[6,1]]},'2_0':{'segment':[[0,9]],'info':[[2,2.0]]},'2_1':{'segment':[[0,9]],'info':[[4,0.8609]]},'2_2':{'segment':[[0,9]],'info':[[2,1.7218]]},\
     '2_-1':{'segment':[[0,3.1391],[3.1391,9]],'info':[[4,3.1391],[2,3.1391]]},'1_1':{'segment':[[0,9]],'info':[[2,1.8609]]},'1_0':{'segment':[[0,3],[3,9]],'info':[[6,3],[2,3]]},'0_2':{'segment':[[0,9]],'info':[[2,1.7218]]},\
     '0_0':{'segment':[[0,20]],'info':[[2,2]]},'-1_0':{'segment':[[0,3],[3,9]],'info':[[6,-3],[2,-3]]},'0_-2':{'segment':[[0,9]],'info':[[2,-6.2782]]},\
@@ -560,8 +575,8 @@ def plotting_modelB(object=[],fig=None,index=[2,3,1],color=['0.35','r','c','m','
         pyplot.ylabel(r'$|F_{HKL}|$',axes=ax,fontsize=12)
     #settings for demo showing
     pyplot.title('('+title[0]+')',position=(0.5,0.86),weight=4,size=10,clip_on=True)
-    if title[0]=='0 0 L':
-        pyplot.ylim((0,1000))
+    if title[0]=='00L':
+        pyplot.ylim((1,10000))
         #pyplot.xlim((0,20))
     elif title[0]=='3 0 L':
         pyplot.ylim((1,10000))
@@ -589,22 +604,23 @@ def plotting_modelB(object=[],fig=None,index=[2,3,1],color=['0.35','r','c','m','
         l.set_markersize(5)
         l.set_markeredgewidth(2)
     #plot normalized data now
-    ax=fig.add_subplot(index[0],index[1],index[2]+1)
-    ax.set_yscale('log')
-    ax.scatter(object[0][:,0],object[0][:,3],marker='o',s=20,facecolors='none',edgecolors=color[0],label=label[0])
-    ax.errorbar(object[0][:,0],object[0][:,3],yerr=object[0][:,4],fmt=None,ecolor=color[0])
-    for i in range(len(object)-1):#first item is experiment data (L, I, err) while the second one is simulated result (L, I_s)
-        l,=ax.plot(object[i+1][:,0],object[i+1][:,2],color=color[i+1],lw=lw,label=label[i+1])
-        l.set_dashes(l_dashes[i])
-    if index[2] in [7,8,9]:
-        pyplot.xlabel('L(r.l.u)',axes=ax,fontsize=12)
-    if index[2] in [1,4,7]:
-        pyplot.ylabel(r'$|normalized F_{HKL}|$',axes=ax,fontsize=12)
+    if index[0]==2 and index[1]==1:
+        ax=fig.add_subplot(index[0],index[1],index[2]+1)
+        ax.set_yscale('log')
+        ax.scatter(object[0][:,0],object[0][:,3],marker='o',s=20,facecolors='none',edgecolors=color[0],label=label[0])
+        ax.errorbar(object[0][:,0],object[0][:,3],yerr=object[0][:,4],fmt=None,ecolor=color[0])
+        for i in range(len(object)-1):#first item is experiment data (L, I, err) while the second one is simulated result (L, I_s)
+            l,=ax.plot(object[i+1][:,0],object[i+1][:,2],color=color[i+1],lw=lw,label=label[i+1])
+            l.set_dashes(l_dashes[i])
+        if index[2] in [7,8,9]:
+            pyplot.xlabel('L(r.l.u)',axes=ax,fontsize=12)
+        if index[2] in [1,4,7]:
+            pyplot.ylabel(r'$|normalized F_{HKL}|$',axes=ax,fontsize=12)
     #settings for demo showing
     pyplot.title('('+title[0]+')',position=(0.5,0.86),weight=4,size=10,clip_on=True)
     if title[0]=='0 0 L':
         pass
-        #pyplot.ylim((0,1000))
+        #pyplot.ylim((0,10000))
         #pyplot.xlim((0,20))
     elif title[0]=='3 0 L':
         pyplot.ylim((1,10000))
@@ -649,8 +665,10 @@ def plotting_many_modelB(save_file='D://pic.png',head='C:\\Users\\jackey\\Google
             if j==0:
                 object[-1].append(object_sets[j][i][0])
             object[-1].append(object_sets[j][i][1])
-    if len(object_sets[0])==1:
+    if len(object_sets[0])==1:#case for plotting muscovite (assuming there is one specular rod)
         index=[2,1]
+    else:#case for plotting hematite (9 rods in total including one specular rod)
+        index=[3,3]
 
     for i in range(len(object)):
     #for i in range(1):
@@ -774,14 +792,14 @@ def plot_multiple_e_profiles_2(file_head=module_path_locator(),dump_files=['temp
     fig.savefig(os.path.join(file_head,'multiple_eprofiles2.png'),dpi=300)
     return fig
 
-def plot_multiple_APQ_profiles(file_head=module_path_locator(),dump_files=['temp_plot_raxr_A_P_Q_0NaCl','temp_plot_raxr_A_P_Q_1NaCl','temp_plot_raxr_A_P_Q_10NaCl','temp_plot_raxr_A_P_Q_100NaCl'],labels=['0NaCl','1uM NaCl','10uM NaCl','100uM NaCl'],color_type=5):
+def plot_multiple_APQ_profiles(file_head=module_path_locator(),dump_files=['temp_plot_raxr_A_P_Q_0NaCl','temp_plot_raxr_A_P_Q_1NaCl','temp_plot_raxr_A_P_Q_10NaCl','temp_plot_raxr_A_P_Q_100NaCl'],labels=['free of NaCl','1 mM NaCl','10 mM NaCl','100 mM NaCl'],color_type=5):
     colors=set_color(len(dump_files),color_type)
-    fig1=pyplot.figure(figsize=(8,5))
+    fig1=pyplot.figure(figsize=(8,4))
     ax1=fig1.add_subplot(1,2,1)
-    pyplot.ylabel("A")
+    pyplot.ylabel(r'$\rm{Partial\ SF\ Amplitude\ (Zr/A_{UC})}$')
     pyplot.xlabel(r'$\rm{q\ (\AA^{-1})}$')
     ax2=fig1.add_subplot(1,2,2)
-    pyplot.ylabel("P/Q(2pi)")
+    pyplot.ylabel(r'$\rm{Partial\ SF\ Phase/q\ (\AA)}$')
     pyplot.xlabel(r'$\rm{q\ (\AA^{-1})}$')
 
     for i in range(len(dump_files)):
@@ -794,8 +812,8 @@ def plot_multiple_APQ_profiles(file_head=module_path_locator(),dump_files=['temp
         #P over Q
         ax2.plot(data_AP_Q[0][2],np.array(data_AP_Q[0][1])/np.array(data_AP_Q[0][2])*np.pi*2,color=colors[i],label=labels[i],lw=1.5)
         ax2.errorbar(data_AP_Q[1][2],np.array(data_AP_Q[1][1])/np.array(data_AP_Q[1][2])*np.pi*2,yerr=np.transpose(data_AP_Q[1][4])*np.pi*2/[data_AP_Q[1][2],data_AP_Q[1][2]],color=colors[i],fmt='o',markersize=4.5)
-    ax2.legend()
-    ax1.legend()
+    ax2.legend(frameon=False,fontsize=12)
+    ax1.legend(frameon=False,fontsize=12)
     ax1.set_xlim(0,4)
     ax2.set_xlim(0,4)
     fig1.tight_layout()
@@ -875,7 +893,7 @@ def overplot_raxr_e_density(dump_files=["temp_plot_RAXR_eden_e_fit_0mMNaCl","tem
 def plot_all(path=module_path_locator()):
     PATH=path
     #which plots do you want to create
-    plot_e_model,plot_e_FS,plot_ctr,plot_raxr,plot_AP_Q=1,0,1,1,0
+    plot_e_model,plot_e_FS,plot_ctr,plot_raxr,plot_AP_Q=1,0,1,0,0
 
     #specify file paths (files are dumped files when setting running_mode=False in GenX script)
     e_file=os.path.join(PATH,"temp_plot_eden")#e density from model
@@ -902,7 +920,8 @@ def plot_all(path=module_path_locator()):
             if i==N-1:
                 ax=fig.add_subplot(1,2,2)
             else:
-                ax=fig.add_subplot(N/2+1,2,i*2+1)
+                #ax=fig.add_subplot(N/2+1,2,i*2+1)
+                ax=fig.add_subplot(N-1,2,i*2+1)
             ax.plot(np.array(edata[i][0,:]),edata[i][1,:],color='b',label="Total e density")
             try:#some domain may have no raxr element
                 ax.plot(np.array(edata[i][0,:]),edata[i][2,:],color='g',label="RAXS element e profile (MD)")
@@ -1193,7 +1212,11 @@ def fit_e_density(path=module_path_locator(),fit_range=[1,40],zs=None,N=8):
     plt.show()
 
 if __name__=="__main__":
+<<<<<<< HEAD
     #plot_all()
     plotting_raxr_multiple_2()
     plot_multiple_APQ_profiles()
     plt.show()
+=======
+    plot_all()
+>>>>>>> ac9e3a3a2637e714a28da9f10ebe4c7009297529
