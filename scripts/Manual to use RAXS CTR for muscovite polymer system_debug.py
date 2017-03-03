@@ -41,7 +41,7 @@ f1=lambda x1,y1,z1,x2,y2,z2:np.array([[np.dot(x2,x1),np.dot(x2,y1),np.dot(x2,z1)
                                       [np.dot(z2,x1),np.dot(z2,y1),np.dot(z2,z1)]])
 BASIS=np.array([unitcell.a, unitcell.b, unitcell.c])
 #BASIS_SET=[[1,0,0],[0,1,0],[0.10126,0,1.0051136]]
-BASIS_SET=[[1,0,0],[0,1,0],[np.tan(unitcell.beta-np.pi/2.),0,1./np.cos(unitcell.beta-np.pi/2.)-1]]
+BASIS_SET=[[1,0,0],[0,1,0],[np.tan(unitcell.beta-np.pi/2.),0,1./np.cos(unitcell.beta-np.pi/2.)]]
 T=inv(np.transpose(f1(x0_v,y0_v,z0_v,*BASIS_SET)))
 T_INV=inv(T)
 
@@ -154,7 +154,7 @@ def Sim(data,VARS=VARS):
             rough = (1-rgh.beta)/((1-rgh.beta)**2 + 4*rgh.beta*np.sin(np.pi*(y-LB)/dL)**2)**0.5
         else:
             rough = (1-rgh.beta)/((1-rgh.beta)**2 + 4*rgh.beta*np.sin(np.pi*(x-LB)/dL)**2)**0.5
-        f=rough*abs(sample.calculate_structure_factor(h,k,x,y,index=i,fit_mode=RAXR_FIT_MODE,height_offset=HEIGHT_OFFSET*BASIS[2]))
+        f=rough*abs(sample.calculate_structure_factor(h,k,x,y,index=i,fit_mode=RAXR_FIT_MODE,height_offset=HEIGHT_OFFSET*unitcell.c))
         F.append(f*f)
         fom_scaler.append(1)
 
