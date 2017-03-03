@@ -50,7 +50,7 @@ This implementation here assumes that the loaded data are intensities (squares o
 [A.J.C. Wilson, Acta Crystallogr. A32, 994 (1976)]<br>
 <br><huge>
   FOM<sub>R1</sub> =
-  &#8721;<sub><var>i</var></sub> [ 
+  &#8721;<sub><var>i</var></sub> [
   &#124;sqrt(<var>Y<sub>i</sub></var>) - sqrt(<var>S<sub>i</sub></var>)
   &#124; ] / &#8721;<sub><var>i</var></sub> [ sqrt(<var>Y<sub>i</sub></var>) ]
 </huge><br>
@@ -63,7 +63,7 @@ The logarithmic R1 factor is a modification of the crystallographic R-factor, ca
     &#8721;<sub><var>i</var></sub> [ &#124;
     log<sub>10</sub>(sqrt(<var>Y<sub>i</sub></var>)) -
     log<sub>10</sub>(sqrt(<var>S<sub>i</sub></var>))
-    &#124; ] / 
+    &#124; ] /
     &#8721;<sub><var>i</var></sub> [
     log<sub>10</sub>(sqrt(<var>Y<sub>i</sub></var>) ]
 </huge><br>
@@ -85,11 +85,11 @@ Like in the case for R1, this implementation assumes that the loaded data are in
 The logarithmic R2 factor is a modification of the crystallographic R2 factor, calculated using the logarithm (base 10) of the structure factor and simulation. This scaling results in a more similar weighting of high-intensity and low-intensity data points which can be very helpful when fitting data which is spanning several orders of magnitude on the y-axis. Essentially it gives all data points equal weight when displayed in a log-plot.<br>
 <br><huge>
     FOM<sub>logR2</sub> =
-    &#8721;<sub><var>i</var></sub> [ 
+    &#8721;<sub><var>i</var></sub> [
     (log<sub>10</sub>(<var>Y<sub>i</sub></var>) -
     log<sub>10</sub>(<var>S<sub>i</sub></var>)
     )<sup>2</sup> ] /
-    &#8721;<sub><var>i</var></sub> [ 
+    &#8721;<sub><var>i</var></sub> [
     log<sub>10</sub>(<var>Y<sub>i</sub>)<sup>2</sup></var> ]
 </huge><br>
 
@@ -222,7 +222,7 @@ def R1(simulations, data):
         if dataset.use])
     return [1.0/denom*(np.sqrt(np.abs(dataset.y)) - np.sqrt(np.abs(sim)))\
         for (dataset, sim) in zip(data,simulations)]
-        
+
 def R1_weighted(simulations, data):
     ''' Crystallographic R-factor (R1)
     '''
@@ -230,7 +230,7 @@ def R1_weighted(simulations, data):
         if dataset.use])
     return [1.0/denom*abs(np.sqrt(np.abs(dataset.y)) - np.sqrt(np.abs(sim)))/np.sqrt(np.abs(dataset.y))\
         for (dataset, sim) in zip(data,simulations)]
-        
+
 def R1_weighted_2(simulations, data):
     ''' Crystallographic R-factor (R1)
     '''
@@ -241,11 +241,26 @@ def R1_weighted_2(simulations, data):
     for (dataset, sim) in zip(data,simulations):
         if dataset.x[0]>100:
             scaler=np.average(dataset.y[[6,19,32]]/sim[[6,19,32]])
-            return_list.append(1.0/denom*abs(np.sqrt(np.abs(dataset.y[6:-6])) - np.sqrt(np.abs(sim[6:-6]*scaler)))/np.abs(dataset.y[6:-6]))
+            return_list.append(1.0/denom*abs(np.sqrt(np.abs(dataset.y[6:-6])) - np.sqrt(np.abs(sim[6:-6]*scaler)))/np.sqrt(np.abs(dataset.y[6:-6])))
         else:
             return_list.append(1.0/denom*abs(np.sqrt(np.abs(dataset.y)) - np.sqrt(np.abs(sim)))/np.sqrt(np.abs(dataset.y)))
     return return_list
-    
+
+def R1_weighted_2b(simulations, data):
+        ''' Crystallographic R-factor (R1)
+        '''
+        denom = np.sum([np.sum(np.sqrt(np.abs(dataset.y))) for dataset in data\
+            if dataset.use])
+        #denom=1
+        return_list=[]
+        for (dataset, sim) in zip(data,simulations):
+            if dataset.x[0]>100:
+                scaler=np.average(dataset.y[[6,19,32]]/sim[[6,19,32]])
+                return_list.append(abs(np.abs(dataset.y[6:-6]) - np.abs(sim[6:-6]*scaler))/np.abs(dataset.y[6:-6]))
+            else:
+                return_list.append(abs(np.sqrt(np.abs(dataset.y)) - np.sqrt(np.abs(sim)))/np.sqrt(np.abs(dataset.y))/60.)
+        return return_list
+
 def R1_weighted_3(simulations, data):
     ''' Crystallographic R-factor (R1)
     '''
@@ -260,7 +275,7 @@ def R1_weighted_3(simulations, data):
         else:
             return_list.append(1.0/denom*abs(np.log10(np.sqrt(np.abs(dataset.y))) - np.log10(np.sqrt(np.abs(sim)))))
     return return_list
-    
+
 def logR1(simulations, data):
     ''' logarithmic crystallographic R-factor (R1)
     '''
@@ -277,15 +292,15 @@ def R2(simulations, data):
         if dataset.use])
     return [1.0/denom*np.sign(dataset.y - sim)*(dataset.y - sim)**2\
         for (dataset, sim) in zip(data,simulations)]
-        
+
 def R2_weighted(simulations, data):
     ''' Crystallographic R2 factor
     '''
     denom = np.sum([np.sum(dataset.y**2) for dataset in data\
         if dataset.use])
     return [1.0/denom*np.sign(dataset.y - sim)*(dataset.y - sim)**2/dataset.error**2\
-        for (dataset, sim) in zip(data,simulations)]        
-        
+        for (dataset, sim) in zip(data,simulations)]
+
 
 def logR2(simulations, data):
     ''' logarithmic crystallographic R2 factor
@@ -348,7 +363,7 @@ def chi2bars_weighted(simulations, data):
             l_span=abs(l-l_mid)
             wt_array.append(50/(1+l_span/l_half_span*50))
         #print wt_array
-        return np.array(wt_array)       
+        return np.array(wt_array)
     N = np.sum([len(dataset.y)*dataset.use for dataset in data])
     return [np.sign(dataset.y - sim)*(dataset.y - sim)**2/dataset.error**2*_weight_fom(dataset.extra_data['h'][0],dataset.extra_data['k'][0],dataset.x)
         for (dataset, sim) in zip(data,simulations)]
