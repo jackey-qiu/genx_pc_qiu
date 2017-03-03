@@ -26,6 +26,7 @@ XY_OFFSET=[0,0]#takes effect only for structural atoms (not include Gaussian ato
 GROUP_SCHEME=[[1,0]]#means group Domain1 and Domain2 for inplane and out of plane movement, set Domain2=Domain1 in side sim func
 
 ##<setting slabs>##
+#unitcell = model.UnitCell(5.1988, 9.0266, 20.1058, 90, 95.782, 90)
 unitcell = model.UnitCell(5.1988, 9.0266, 20.1058, 90, 95.782, 90)
 inst = model.Instrument(wavel = .833, alpha = 2.0)
 bulk, Domain1, Domain2 = model.Slab(T_factor='u'), model.Slab(c = 1.0,T_factor='u'), model.Slab(c = 1.0,T_factor='u')
@@ -38,8 +39,9 @@ x0_v,y0_v,z0_v=np.array([1.,0.,0.]),np.array([0.,1.,0.]),np.array([0.,0.,1.])
 f1=lambda x1,y1,z1,x2,y2,z2:np.array([[np.dot(x2,x1),np.dot(x2,y1),np.dot(x2,z1)],\
                                       [np.dot(y2,x1),np.dot(y2,y1),np.dot(y2,z1)],\
                                       [np.dot(z2,x1),np.dot(z2,y1),np.dot(z2,z1)]])
-BASIS=np.array([5.1988, 9.0266, 20.1058])
-BASIS_SET=[[1,0,0],[0,1,0],[0.10126,0,1.0051136]]
+BASIS=np.array([unitcell.a, unitcell.b, unitcell.c])
+#BASIS_SET=[[1,0,0],[0,1,0],[0.10126,0,1.0051136]]
+BASIS_SET=[[1,0,0],[0,1,0],[np.tan(unitcell.beta-np.pi/2.),0,1./np.cos(unitcell.beta-np.pi/2.)]]
 T=inv(np.transpose(f1(x0_v,y0_v,z0_v,*BASIS_SET)))
 T_INV=inv(T)
 
@@ -114,7 +116,8 @@ if not RUN:
 if COUNT_TIME:t_1=datetime.now()
 VARS=vars()
 def Sim(data,VARS=VARS):
-
+    ##<update the basis info>##
+    INFO_LIB['basis']=np.array([unitcell.a, unitcell.b, unitcell.c])
     ##<Extract pars>##
     layered_water_pars=vars(rgh_dlw)
     layered_sorbate_pars=vars(rgh_dls)
@@ -151,7 +154,7 @@ def Sim(data,VARS=VARS):
             rough = (1-rgh.beta)/((1-rgh.beta)**2 + 4*rgh.beta*np.sin(np.pi*(y-LB)/dL)**2)**0.5
         else:
             rough = (1-rgh.beta)/((1-rgh.beta)**2 + 4*rgh.beta*np.sin(np.pi*(x-LB)/dL)**2)**0.5
-        f=rough*abs(sample.calculate_structure_factor(h,k,x,y,index=i,fit_mode=RAXR_FIT_MODE,height_offset=HEIGHT_OFFSET*BASIS[2]))
+        f=rough*abs(sample.calculate_structure_factor(h,k,x,y,index=i,fit_mode=RAXR_FIT_MODE,height_offset=HEIGHT_OFFSET*unitcell.c))
         F.append(f*f)
         fom_scaler.append(1)
 

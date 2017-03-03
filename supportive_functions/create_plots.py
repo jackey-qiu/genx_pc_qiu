@@ -124,7 +124,8 @@ def generate_plot_files(output_file_path,sample,rgh,data,fit_mode, z_min=0,z_max
             rough_dumy = (1-rgh.beta)/((1-rgh.beta)**2 + 4*rgh.beta*np.sin(np.pi*(l_dumy-LB_dumy)/dL_dumy)**2)**0.5
             f_dumy=rough_dumy*abs(sample.calculate_structure_factor(h_dumy,k_dumy,l_dumy,None,index=0,fit_mode=fit_mode,height_offset=height_offset))
             f_dumy=f_dumy*f_dumy
-            f_ctr=lambda q:(np.sin(q*20.003509882813105/4))**2
+            c_projected_on_z=sample.unit_cell.vol()/(sample.unit_cell.a*sample.unit_cell.b*np.sin(sample.unit_cell.gamma))
+            f_ctr=lambda q:(np.sin(q*c_projected_on_z/4))**2
             #f_ctr=lambda q:(np.sin(q*19.96/4))**2
             f_dumy_norm=f_dumy*f_ctr(q_dumy)
             label=str(int(h[0]))+str(int(k[0]))+'L'
@@ -229,7 +230,8 @@ def generate_plot_files_2(output_file_path,sample,rgh,data,fit_mode, z_min=0,z_m
             rough_dumy = (1-rgh.beta)/((1-rgh.beta)**2 + 4*rgh.beta*np.sin(np.pi*(l_dumy-LB_dumy)/dL_dumy)**2)**0.5
             f_dumy=rough_dumy*abs(sample.calculate_structure_factor(h_dumy,k_dumy,l_dumy,None,index=0,fit_mode=fit_mode,height_offset=height_offset))
             f_dumy=f_dumy*f_dumy
-            f_ctr=lambda q:(np.sin(q*20.003509882813105/4))**2
+            c_projected_on_z=sample.unit_cell.c*np.sin(np.pi-sample.unit_cell.beta)
+            f_ctr=lambda q:(np.sin(q*c_projected_on_z/4))**2
             #f_ctr=lambda q:(np.sin(q*19.96/4))**2
             f_dumy_norm=f_dumy*f_ctr(q_dumy)
             label=str(int(h[0]))+str(int(k[0]))+'L'
@@ -575,8 +577,8 @@ def plotting_modelB(object=[],fig=None,index=[2,3,1],color=['0.35','r','c','m','
         pyplot.ylabel(r'$|F_{HKL}|$',axes=ax,fontsize=12)
     #settings for demo showing
     pyplot.title('('+title[0]+')',position=(0.5,0.86),weight=4,size=10,clip_on=True)
-    if title[0]=='00L':
-        pyplot.ylim((1,10000))
+    if title[0]=='0 0 L':
+        pyplot.ylim((0,1000))
         #pyplot.xlim((0,20))
     elif title[0]=='3 0 L':
         pyplot.ylim((1,10000))
@@ -890,7 +892,7 @@ def overplot_raxr_e_density(dump_files=["temp_plot_RAXR_eden_e_fit_0mMNaCl","tem
     #fig.savefig(os.path.join(os.path.join(module_path_locator(),'temp_raxr_e_profiles_overlapping_profile.png'),dpi=300))
     return fig
 
-def plot_all(path=module_path_locator()):
+def plot_all(path=module_path_locator(),make_offset_of_total_e=False):
     PATH=path
     #which plots do you want to create
     plot_e_model,plot_e_FS,plot_ctr,plot_raxr,plot_AP_Q=1,0,1,0,0
@@ -922,6 +924,13 @@ def plot_all(path=module_path_locator()):
             else:
                 #ax=fig.add_subplot(N/2+1,2,i*2+1)
                 ax=fig.add_subplot(N-1,2,i*2+1)
+            if make_offset_of_total_e:
+                try:
+                    edata[i][1,:]=list(np.array(edata[i][1,:])-np.array(edata[i][2,:]))
+                except:
+                    pass
+            else:
+                pass
             ax.plot(np.array(edata[i][0,:]),edata[i][1,:],color='b',label="Total e density")
             try:#some domain may have no raxr element
                 ax.plot(np.array(edata[i][0,:]),edata[i][2,:],color='g',label="RAXS element e profile (MD)")
