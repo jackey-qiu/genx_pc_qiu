@@ -1221,11 +1221,5 @@ def fit_e_density(path=module_path_locator(),fit_range=[1,40],zs=None,N=8):
     plt.show()
 
 if __name__=="__main__":
-<<<<<<< HEAD
-    #plot_all()
-    plotting_raxr_multiple_2()
-    plot_multiple_APQ_profiles()
-    plt.show()
-=======
+
     plot_all()
->>>>>>> ac9e3a3a2637e714a28da9f10ebe4c7009297529

@@ -52,7 +52,7 @@ instrument contains instrument variables. See below for a full list.
     returned by copy from the original [Slab].
 <code> [Slab].find_atoms(expression)</code><br>
     Function to locate atoms in a slab in order to connect parameters
-    between them. Returns an AtomGroup. 
+    between them. Returns an AtomGroup.
     <dl>
     <dt><code><b>expression</b></code></dt>
     <dd> Either a list of the same length as the number of atoms or
@@ -61,7 +61,7 @@ instrument contains instrument variables. See below for a full list.
     </dl>
 <code> [Slab].all_atoms()</code><br>
     Yields all atoms inside a slab as an AtomGroup.
-    Returns an AtomGroup. 
+    Returns an AtomGroup.
 <code> [Slab][id]</code><br>
     Locates atom that has id <code>id</code>. Returns an AtomGroup
     <dl>
@@ -82,7 +82,7 @@ bulk_sym = []) </code><br>
     <dd>A list ([]) of slabs for the surface structure
     </dd>
     <dt><code><b>unit_cell</b></code></dt>
-    <dd>A UnitCell object 
+    <dd>A UnitCell object
     </dd>
     <dt><code><b>surface_sym</b></code></dt>
     <dd>A list ([]) of SymTrans objects describing the surface symmetry.
@@ -123,7 +123,7 @@ class Slab was updated as follows:
     dx was changed to three parmeter dx1,dx2 and dx3, the same thing to dy dz, it is changed in this way to fit into the operation
     for operations in AtomGroup, refer to AtomGroup part for detail. function _extract_value was changed accordingly
     argument T_factor is a switch to different interpretation of termal factor, which can be either 'u' or 'B'
-    some bugs in function of del_atom was fixed, now it works well 
+    some bugs in function of del_atom was fixed, now it works well
 AtomGroup was changed to consider moving atoms on symmetrical basis
     In the original version, dx/dy/dz shift set in AtomGoup will be set in the exactely the same way for the member atoms
     After considering symmetry operation, operation of dx shift in AtomGroup will make shift of dx1, dy1 and dz1 simultaneously
@@ -199,7 +199,7 @@ class Sample:
 
         if sym_list == []:
             sym_list = [SymTrans()]
-            
+
         if min([type(sym) == type(SymTrans()) for sym in sym_list]) == 0:
             raise TypeError("All members in the symmetry list has to be a memeber of class SymTrans")
 
@@ -231,9 +231,9 @@ class Sample:
         if unit_cell == None:
             unit_cell = UnitCell(1.0, 1,.0, 1.0)
         self.unit_cell = unit_cell
-        
-      
-        
+
+
+
     def calc_f(self, h, k, l):
         '''Calculate the structure factors for the sample
         '''
@@ -247,7 +247,7 @@ class Sample:
         for i in self.domain.keys():
             if "A" in i:keys_domainA.append(i)
             if "B" in i:keys_domainB.append(i)
-            
+
         if self.coherence==True:
             for i in keys_domainA:
                 if self.domain[i]['wt']!=0:
@@ -272,8 +272,8 @@ class Sample:
                     pass
         ftot=abs(ftot_A)+abs(ftot_B)
         return abs(ftot)*self.inst.inten
-        
-        
+
+
     def calc_f2(self, h, k, l):
         #here incoherence means add up all domains in-coherently, and coherence means adding up all coherently
         ftot=0
@@ -310,12 +310,12 @@ class Sample:
             else:
                 ftot_B_IC=ftot_B_IC+abs(fb+self.calc_fs(h, k, l,[self.domain[i]['slab']]))*self.domain[i]['wt']
         ftot=abs(ftot_A_C)+ftot_A_IC+ftot_B_IC+abs(ftot_B_C)
-        
+
         return abs(ftot)*self.inst.inten
-        
+
     def calc_f4(self, h, k, l):
         #now the coherence looks like [{True:[0,1]},{False:[2,3]}] which means adding up first two domains coherently
-        #and last two domains in-coherently. After calculation of structure factor for each item of the list, absolute 
+        #and last two domains in-coherently. After calculation of structure factor for each item of the list, absolute
         #value of SF will be calculated followed by being summed up
         #so [{True:[0,1]},{True:[2,3]}] is different from [{True:[0,1,2,3]}]
         ftot=0
@@ -327,7 +327,7 @@ class Sample:
             ftot_B_C, ftot_B_IC=0,0
             keys_domainA=[]
             keys_domainB=[]
-            
+
             for i in coherence[n].values()[0]:
                 keys_domainA.append('domain'+str(i+1)+'A')
                 keys_domainB.append('domain'+str(i+1)+'B')
@@ -344,23 +344,23 @@ class Sample:
             ftot=ftot+abs(ftot_A_C)+ftot_A_IC+ftot_B_IC+abs(ftot_B_C)
             #ftot=ftot+ftot_A_C+ftot_A_IC+ftot_B_IC+ftot_B_C
         return abs(ftot)*self.inst.inten
-        
+
     def calc_f4_specular(self, h, k, l):
         #now the coherence looks like [{True:[0,1]},{False:[2,3]}] which means adding up first two domains coherently
-        #and last two domains in-coherently. After calculation of structure factor for each item of the list, absolute 
+        #and last two domains in-coherently. After calculation of structure factor for each item of the list, absolute
         #value of SF will be calculated followed by being summed up
         #so [{True:[0,1]},{True:[2,3]}] is different from [{True:[0,1,2,3]}]
         ftot=0
         coherence=self.coherence
         fb = self.calc_fb(h, k, l)
         f_surface=self.calc_fs
-        
+
         for n in range(len(coherence)):
             ftot_A_C, ftot_A_IC=0,0
             ftot_B_C, ftot_B_IC=0,0
             keys_domainA=[]
             keys_domainB=[]
-            
+
             for i in coherence[n].values()[0]:
                 keys_domainA.append('domain'+str(i+1)+'A')
                 keys_domainB.append('domain'+str(i+1)+'B')
@@ -390,7 +390,7 @@ class Sample:
             ftot=ftot+abs(ftot_A_C)+ftot_A_IC+ftot_B_IC+abs(ftot_B_C)
             #ftot=ftot+ftot_A_C+ftot_A_IC+ftot_B_IC+ftot_B_C
         return abs(ftot)*self.inst.inten
-        
+
     def calculate_structure_factor(self,h,k,x,y,index=None,fit_mode='MD',height_offset=0):
         if x[0]<100:#CTR data
             return self.calc_f4_muscovite_CTR(h,k,x,height_offset)
@@ -399,7 +399,7 @@ class Sample:
                 return self.calc_f4_muscovite_RAXR_MI(h,k,x,y,index,height_offset)
             elif fit_mode=='MD':
                 return self.calc_f4_muscovite_RAXR_MD(h,k,x,y,index,height_offset)
-        
+
     def calc_f4_muscovite_CTR(self, h, k, l,height_offset=0):
         #now the coherence is either true or force corresponding to coherent and incoherent summation of structure factor
         ftot=0
@@ -416,11 +416,11 @@ class Sample:
             for i in range(len(domains)):
                 ftot=ftot+getattr(self.domain['global_vars'],'wt'+str(i+1))*abs(fb+f_surface(h,k,l,[domains[i]])+f_layered_water+f_layered_sorbate)
         return abs(ftot)*self.inst.inten
-        
+
     def calc_f4_muscovite_RAXR_MI(self,h,k,x,y,index,height_offset=0):
         h, k, l, E, E0, f1f2, a, b, c, resonant_el=h,k,y,x,self.domain['E0'],self.domain['F1F2'],self.domain['raxs_vars']['a'+str(index)],self.domain['raxs_vars']['b'+str(index)],self.domain['raxs_vars']['c'+str(index)],self.domain['el']
         ftot=0
-        
+
         def _extract_f1f2(f1f2,E):
             E_f1f2=np.around(f1f2[:,2],0)#make sure E in eV
             E=np.around(E,0)
@@ -429,10 +429,10 @@ class Sample:
                 if each_E in E:
                     index.append(np.where(E_f1f2==each_E)[0][0])
             return f1f2[index,:]
-            
+
         if len(f1f2)!=len(E):
             f1f2=_extract_f1f2(f1f2,E)
-            
+
         coherence=self.coherence
         fb = self.calc_fb(h, k, l)
         f_surface=self.calc_fs
@@ -441,9 +441,9 @@ class Sample:
         #only consider one set of Fourier components in the whole strucutre
         A_list=[self.domain['raxs_vars']['A'+str(index)+'_D'+str(i+1)] for i in range(1)]
         P_list=[self.domain['raxs_vars']['P'+str(index)+'_D'+str(i+1)] for i in range(1)]
-        
 
-        domains=self.domain['domains']    
+
+        domains=self.domain['domains']
         if coherence:
             for i in range(len(domains)):
                 ftot=ftot+getattr(self.domain['global_vars'],'wt'+str(i+1))*(fb+f_surface(h,k,l,[domains[i]])+f_layered_water+f_layered_sorbate+(f1f2[:,0]+1.0J*f1f2[:,1])*A_list[0]*np.exp(1.0J*np.pi*2*P_list[0]))
@@ -452,11 +452,11 @@ class Sample:
                 ftot=ftot+getattr(self.domain['global_vars'],'wt'+str(i+1))*abs(fb+f_surface(h,k,l,[domains[i]])+f_layered_water+f_layered_sorbate+(f1f2[:,0]+1.0J*f1f2[:,1])*A_list[0]*np.exp(1.0J*np.pi*2*P_list[0]))
         ftot=np.exp(-a*(E-E0)**2/E0**2+b*(E-E0)/E0)*c*abs(ftot)
         return ftot*self.inst.inten
-        
+
     def calc_f4_muscovite_RAXR_MD(self,h,k,x,y,index,height_offset=0):
         h, k, l, E, E0, f1f2, a, b, c, resonant_el=h,k,y,x,self.domain['E0'],self.domain['F1F2'],self.domain['raxs_vars']['a'+str(index)],self.domain['raxs_vars']['b'+str(index)],self.domain['raxs_vars']['c'+str(index)],self.domain['el']
         ftot=0
-        
+
         def _extract_f1f2(f1f2,E):
             E_f1f2=np.around(f1f2[:,2],0)#make sure E in eV
             E=np.around(E,0)
@@ -465,17 +465,17 @@ class Sample:
                 if each_E in E:
                     index.append(np.where(E_f1f2==each_E)[0][0])
             return f1f2[index,:]
-            
+
         if len(f1f2)!=len(E):
             f1f2=_extract_f1f2(f1f2,E)
-            
+
         coherence=self.coherence
         fb = self.calc_fb(h, k, l)
         f_surface=self.calc_fs_RAXR
         f_layered_water=self.calc_f_layered_water_muscovite(h,k,l,self.domain['layered_water_pars'],height_offset)
         f_layered_sorbate=self.calc_f_layered_sorbate_muscovite_RAXR(h,k,l,self.domain['layered_sorbate_pars'],height_offset,f1f2)
         domains=self.domain['domains']
-        
+
         if coherence:
             for i in range(len(domains)):
                 ftot=ftot+getattr(self.domain['global_vars'],'wt'+str(i+1))*(fb+f_surface(h, k, l,[domains[i]],f1f2,resonant_el)+f_layered_water+f_layered_sorbate)
@@ -484,10 +484,10 @@ class Sample:
                 ftot=ftot+getattr(self.domain['global_vars'],'wt'+str(i+1))*abs(fb+f_surface(h, k, l,[domains[i]],f1f2,resonant_el)+f_layered_water+f_layered_sorbate)
         ftot=np.exp(-a*(E-E0)**2/E0**2+b*(E-E0)/E0)*c*abs(ftot)
         return ftot*self.inst.inten
-        
+
     def calc_f4_specular_RAXR(self, h, k, l,E,E0,f1f2,a,b,A_list=[],P_list=[],resonant_els=[1,0,0]):
         #now the coherence looks like [{True:[0,1]},{False:[2,3]}] which means adding up first two domains coherently
-        #and last two domains in-coherently. After calculation of structure factor for each item of the list, absolute 
+        #and last two domains in-coherently. After calculation of structure factor for each item of the list, absolute
         #value of SF will be calculated followed by being summed up
         #so [{True:[0,1]},{True:[2,3]}] is different from [{True:[0,1,2,3]}]
         #resonant_els:a list of True or False specifying whether or not considering the resonant scattering in each domain
@@ -505,13 +505,13 @@ class Sample:
         coherence=self.coherence
         fb = self.calc_fb(h, k, l)
         f_surface=self.calc_fs
-        
+
         for n in range(len(coherence)):
             ftot_A_C, ftot_A_IC=0,0
             ftot_B_C, ftot_B_IC=0,0
             keys_domainA=[]
             keys_domainB=[]
-            
+
             for i in coherence[n].values()[0]:
                 keys_domainA.append('domain'+str(i+1)+'A')
                 keys_domainB.append('domain'+str(i+1)+'B')
@@ -559,15 +559,15 @@ class Sample:
             ftot=(a+b*(E-E0))*(ftot+abs(ftot_A_C)+ftot_A_IC+ftot_B_IC+abs(ftot_B_C))
             #ftot=ftot+ftot_A_C+ftot_A_IC+ftot_B_IC+ftot_B_C
         return abs(ftot)*self.inst.inten
-        
-        
+
+
     def calc_f4_specular_RAXR_MI(self, h, k, l,E,E0,f1f2,A_list=[],P_list=[],resonant_els=[1,0,0],**abc):
         #calculate the structure factor in the process of model-independent RAXR fitting
         #Use linear background function (abc.keys=['a','b']), or Victoreen background function (abc.keys=['a','b','c'])
         #Linear func: slope{n} = (a(n)*(E{n}-Eo)+1)*b(n)*norm_offset*1/q(n)^2;
         #Victoreen func: slope{n} = exp(-a(n)*(E{n}-Eo).^2/Eo^2 + b(n)*(E{n}-Eo)/Eo) * c(n);
         #now the coherence looks like [{True:[0,1]},{False:[2,3]}] which means adding up first two domains coherently
-        #and last two domains in-coherently. After calculation of structure factor for each item of the list, absolute 
+        #and last two domains in-coherently. After calculation of structure factor for each item of the list, absolute
         #value of SF will be calculated followed by being summed up
         #so [{True:[0,1]},{True:[2,3]}] is different from [{True:[0,1,2,3]}]
         #resonant_els:a list of True or False specifying whether or not considering the resonant scattering in each domain
@@ -588,13 +588,13 @@ class Sample:
         coherence=self.coherence
         fb = self.calc_fb(h, k, l)
         f_surface=self.calc_fs
-        
+
         for n in range(len(coherence)):
             ftot_A_C, ftot_A_IC=0,0
             ftot_B_C, ftot_B_IC=0,0
             keys_domainA=[]
             keys_domainB=[]
-            
+
             for i in coherence[n].values()[0]:
                 keys_domainA.append('domain'+str(i+1)+'A')
                 keys_domainB.append('domain'+str(i+1)+'B')
@@ -644,14 +644,14 @@ class Sample:
             else:
                 ftot=exp(-a*(E-E0)**2/E0**2+b*(E-E0)/E0)*c*(ftot+abs(ftot_A_C)+ftot_A_IC+ftot_B_IC+abs(ftot_B_C))
         return abs(ftot)*self.inst.inten
-        
+
     def calc_f4_offspecular_RAXR_MI(self, h, k, l,E,E0,f1f2,A_list=[],P_list=[],resonant_els=[1,0,0],**abc):
         #calculate the structure factor in the process of model-independent RAXR fitting for offspecular rods (no influence from layered water and sorbates)
         #Use linear background function (abc.keys=['a','b']), or Victoreen background function (abc.keys=['a','b','c'])
         #Linear func: slope{n} = (a(n)*(E{n}-Eo)+1)*b(n)*norm_offset*1/q(n)^2;
         #Victoreen func: slope{n} = exp(-a(n)*(E{n}-Eo).^2/Eo^2 + b(n)*(E{n}-Eo)/Eo) * c(n);
         #now the coherence looks like [{True:[0,1]},{False:[2,3]}] which means adding up first two domains coherently
-        #and last two domains in-coherently. After calculation of structure factor for each item of the list, absolute 
+        #and last two domains in-coherently. After calculation of structure factor for each item of the list, absolute
         #value of SF will be calculated followed by being summed up
         #so [{True:[0,1]},{True:[2,3]}] is different from [{True:[0,1,2,3]}]
         #resonant_els:a list of True or False specifying whether or not considering the resonant scattering in each domain
@@ -672,13 +672,13 @@ class Sample:
         coherence=self.coherence
         fb = self.calc_fb(h, k, l)
         f_surface=self.calc_fs
-        
+
         for n in range(len(coherence)):
             ftot_A_C, ftot_A_IC=0,0
             ftot_B_C, ftot_B_IC=0,0
             keys_domainA=[]
             keys_domainB=[]
-            
+
             for i in coherence[n].values()[0]:
                 keys_domainA.append('domain'+str(i+1)+'A')
                 keys_domainB.append('domain'+str(i+1)+'B')
@@ -714,14 +714,14 @@ class Sample:
             else:
                 ftot=exp(-a*(E-E0)**2/E0**2+b*(E-E0)/E0)*c*(ftot+abs(ftot_A_C)+ftot_A_IC+ftot_B_IC+abs(ftot_B_C))
         return abs(ftot)*self.inst.inten
-        
+
     def calc_f4_specular_RAXR_for_test_purpose(self, h, k, l,f1f2,res_el='Pb'):
         #this function is used to generate an arbitrary raxr dataset for testing purpose
         #hkl is a list of hkl values
         #f1f2 is in form of [[f1_1,f2_1],[f1_2,f2_2]]
         #The return value is in form of [[],[]] with length =len(f1f2) and the length of each item=len(hkl)
         #now the coherence looks like [{True:[0,1]},{False:[2,3]}] which means adding up first two domains coherently
-        #and last two domains in-coherently. After calculation of structure factor for each item of the list, absolute 
+        #and last two domains in-coherently. After calculation of structure factor for each item of the list, absolute
         #value of SF will be calculated followed by being summed up
         #so [{True:[0,1]},{True:[2,3]}] is different from [{True:[0,1,2,3]}]
         #resonant_els:a list of True or False specifying whether or not considering the resonant scattering in each domain
@@ -735,7 +735,7 @@ class Sample:
         #                  so len(P_list)==len(resonant_els)
         #Resonant structure factor is calculated using equation (9) presented in paper of "Park, Changyong and Fenter, Paul A.(2007) J. Appl. Cryst.40, 290-301"
 
-        
+
         coherence=self.coherence
         fb = self.calc_fb(h, k, l)
         f_surface=self.calc_fs_test_purpose
@@ -747,7 +747,7 @@ class Sample:
                 ftot_B_C, ftot_B_IC=0,0
                 keys_domainA=[]
                 keys_domainB=[]
-                
+
                 for i in coherence[n].values()[0]:
                     keys_domainA.append('domain'+str(i+1)+'A')
                     keys_domainB.append('domain'+str(i+1)+'B')
@@ -775,14 +775,14 @@ class Sample:
                 #ftot=ftot+ftot_A_C+ftot_A_IC+ftot_B_IC+ftot_B_C
             f_total_container.append(abs(ftot)*self.inst.inten)
         return f_total_container
-        
+
     def calc_f4_specular_RAXR_MD(self, h, k, l,E,E0,f1f2,resonant_els=[1,0,0],res_el='Zr',**abc):
         #calculate the structure factor in the process of model-dependent RAXR fitting
         #Use linear background function (abc.keys=['a','b']), or Victoreen background function (abc.keys=['a','b','c'])
         #Linear func: slope{n} = (a(n)*(E{n}-Eo)+1)*b(n)*norm_offset*1/q(n)^2;
         #Victoreen func: slope{n} = exp(-a(n)*(E{n}-Eo).^2/Eo^2 + b(n)*(E{n}-Eo)/Eo) * c(n);
         #now the coherence looks like [{True:[0,1]},{False:[2,3]}] which means adding up first two domains coherently
-        #and last two domains in-coherently. After calculation of structure factor for each item of the list, absolute 
+        #and last two domains in-coherently. After calculation of structure factor for each item of the list, absolute
         #value of SF will be calculated followed by being summed up
         #so [{True:[0,1]},{True:[2,3]}] is different from [{True:[0,1,2,3]}]
         #resonant_els:a list of True or False specifying whether or not considering the resonant scattering in each domain
@@ -803,13 +803,13 @@ class Sample:
         coherence=self.coherence
         fb = self.calc_fb(h, k, l)
         f_surface=self.calc_fs_RAXR
-        
+
         for n in range(len(coherence)):
             ftot_A_C, ftot_A_IC=0,0
             ftot_B_C, ftot_B_IC=0,0
             keys_domainA=[]
             keys_domainB=[]
-            
+
             for i in coherence[n].values()[0]:
                 keys_domainA.append('domain'+str(i+1)+'A')
                 keys_domainB.append('domain'+str(i+1)+'B')
@@ -859,15 +859,15 @@ class Sample:
             else:
                 ftot=exp(-a*(E-E0)**2/E0**2+b*(E-E0)/E0)*c*(ftot+abs(ftot_A_C)+ftot_A_IC+ftot_B_IC+abs(ftot_B_C))
         return abs(ftot)*self.inst.inten
-        
-        
+
+
     def calc_f4_offspecular_RAXR_MD(self, h, k, l,E,E0,f1f2,resonant_els=[1,0,0],res_el='Zr',**abc):
         #calculate the structure factor in the process of model-dependent RAXR fitting for offspecular rods (no influence from layered water and sorbates)
         #Use linear background function (abc.keys=['a','b']), or Victoreen background function (abc.keys=['a','b','c'])
         #Linear func: slope{n} = (a(n)*(E{n}-Eo)+1)*b(n)*norm_offset*1/q(n)^2;
         #Victoreen func: slope{n} = exp(-a(n)*(E{n}-Eo).^2/Eo^2 + b(n)*(E{n}-Eo)/Eo) * c(n);
         #now the coherence looks like [{True:[0,1]},{False:[2,3]}] which means adding up first two domains coherently
-        #and last two domains in-coherently. After calculation of structure factor for each item of the list, absolute 
+        #and last two domains in-coherently. After calculation of structure factor for each item of the list, absolute
         #value of SF will be calculated followed by being summed up
         #so [{True:[0,1]},{True:[2,3]}] is different from [{True:[0,1,2,3]}]
         #resonant_els:a list of True or False specifying whether or not considering the resonant scattering in each domain
@@ -888,13 +888,13 @@ class Sample:
         coherence=self.coherence
         fb = self.calc_fb(h, k, l)
         f_surface=self.calc_fs_RAXR
-        
+
         for n in range(len(coherence)):
             ftot_A_C, ftot_A_IC=0,0
             ftot_B_C, ftot_B_IC=0,0
             keys_domainA=[]
             keys_domainB=[]
-            
+
             for i in coherence[n].values()[0]:
                 keys_domainA.append('domain'+str(i+1)+'A')
                 keys_domainB.append('domain'+str(i+1)+'B')
@@ -930,7 +930,7 @@ class Sample:
             else:
                 ftot=exp(-a*(E-E0)**2/E0**2+b*(E-E0)/E0)*c*(ftot+abs(ftot_A_C)+ftot_A_IC+ftot_B_IC+abs(ftot_B_C))
         return abs(ftot)*self.inst.inten
-        
+
     def calc_fs_test_purpose(self, h, k, l,slabs,single_f1f2,res_el):
         '''Calculate the structure factors from the surface
         '''
@@ -952,10 +952,10 @@ class Sample:
                  l[:,np.newaxis]*(z[np.newaxis, :]+1)))
               for sym_op in self.surface_sym], 0)
                     ,1)
-            
+
         return fs
-        
-    #calculate the Fourier components 
+
+    #calculate the Fourier components
     #this function will only consider the specular rod
     #it will calculate Fourier components only for the domainA's
     def find_A_P(self,l,res_el,print_AP=False):
@@ -971,10 +971,10 @@ class Sample:
             x, y, z, u, oc, el = self._surf_pars(slabs)
             sorbate_index=[i for i in range(len(el)) if el[i]==res_el]
             A_container,P_container=[],[]
-            
+
             for each_l in l:
                 q=each_l*2*np.pi/self.unit_cell.c
-                complex_sum=0.+1.0J*0. 
+                complex_sum=0.+1.0J*0.
                 for i in sorbate_index:
                     complex_sum+=oc[i]*np.exp(-q**2*u[i]**2/2)*np.exp(1.0J*2*np.pi*each_l*(z[i]+1))#z should be plus 1 to account for the fact that surface slab sitting on top of bulk slab
                 A_container.append(domain_wt*abs(complex_sum))
@@ -983,7 +983,7 @@ class Sample:
                     P_container.append(0)
                 elif real_complex_sum==0 and img_complex_sum==1:
                     P_container.append(0.25)#1/2pi/2pi
-                elif real_complex_sum==0 and img_complex_sum==-1:  
+                elif real_complex_sum==0 and img_complex_sum==-1:
                     P_container.append(0.75)#3/2pi/2pi
                 else:#adjustment is needed since the return of np.arctan is ranging from -1/2pi to 1/2pi
                     if real_complex_sum>0 and img_complex_sum>0:
@@ -1003,7 +1003,7 @@ class Sample:
                 print "A list=",['%.4f' % each_A for each_A in A[each_key]]
                 print "P list=",['%.4f' % each_P for each_P in P[each_key]]
         return l,A,P
-        
+
     def find_A_P_muscovite_original(self,h,k,l):
         A,P=[],[]
         hs,ks,ls=np.array([h]*100),np.array([k]*100),np.arange(0,l,l/100.)
@@ -1016,11 +1016,11 @@ class Sample:
             res_el=self.domain['el']
             sorbate_index=[ii for ii in range(len(el)) if el[ii]==res_el]
             A_container,P_container=[],[]
-            
+
             for q_index in range(len(Q)):
                 q=Q[q_index]
                 h_single,k_single,l_single=hs[q_index],ks[q_index],ls[q_index]
-                complex_sum=0.+1.0J*0. 
+                complex_sum=0.+1.0J*0.
                 for j in sorbate_index:
                     complex_sum+=oc[j]*np.exp(-q**2*u[j]**2/2)*np.exp(1.0J*2*np.pi*(h_single*x[j]+k_single*y[j]+l_single*(z[j]+1)))#z should be plus 1 to account for the fact that surface slab sitting on top of bulk slab
                 A_container.append(abs(complex_sum))
@@ -1029,7 +1029,7 @@ class Sample:
                     P_container.append(0)
                 elif real_complex_sum==0 and img_complex_sum==1:
                     P_container.append(0.25)#1/2pi/2pi
-                elif real_complex_sum==0 and img_complex_sum==-1:  
+                elif real_complex_sum==0 and img_complex_sum==-1:
                     P_container.append(0.75)#3/2pi/2pi
                 else:#adjustment is needed since the return of np.arctan is ranging from -1/2pi to 1/2pi
                     if real_complex_sum>0 and img_complex_sum>0:
@@ -1042,9 +1042,9 @@ class Sample:
                         P_container.append(np.arctan(img_complex_sum/real_complex_sum)/np.pi/2.+0.5)
             A.append(A_container)
             P.append(P_container)
-            
+
         return np.transpose(A),np.transpose(P),Q
-        
+
     def find_A_P_muscovite(self,h,k,l):
         if type(h)==type([]):
             hs,ks,ls=h,k,l
@@ -1073,7 +1073,7 @@ class Sample:
                 P_container.append(0)
             elif real_complex_sum==0 and img_complex_sum==1:
                 P_container.append(0.25)#1/2pi/2pi
-            elif real_complex_sum==0 and img_complex_sum==-1:  
+            elif real_complex_sum==0 and img_complex_sum==-1:
                 P_container.append(0.75)#3/2pi/2pi
             else:#adjustment is needed since the return of np.arctan is ranging from -1/2pi to 1/2pi
                 if real_complex_sum>0 and img_complex_sum>0:
@@ -1084,12 +1084,12 @@ class Sample:
                     P_container.append(np.arctan(img_complex_sum/real_complex_sum)/np.pi/2.+0.5)
                 elif real_complex_sum<0 and img_complex_sum<0:
                     P_container.append(np.arctan(img_complex_sum/real_complex_sum)/np.pi/2.+0.5)
-            
+
         return np.array(A_container),np.array(P_container),Q
-        
+
     def calc_f4_nonspecular_RAXR(self, h, k, l,E,E0,f1f2,a,b,A_list=[],P_list=[],resonant_els=[1,1,0]):
         #now the coherence looks like [{True:[0,1]},{False:[2,3]}] which means adding up first two domains coherently
-        #and last two domains in-coherently. After calculation of structure factor for each item of the list, absolute 
+        #and last two domains in-coherently. After calculation of structure factor for each item of the list, absolute
         #value of SF will be calculated followed by being summed up
         #so [{True:[0,1]},{True:[2,3]}] is different from [{True:[0,1,2,3]}]
         #resonant_els:a list of integer numbers (>=0) specifying whether or not considering the resonant scattering in each domain, and how many species on each domain
@@ -1105,13 +1105,13 @@ class Sample:
         coherence=self.coherence
         fb = self.calc_fb(h, k, l)
         f_surface=self.calc_fs
-        
+
         for n in range(len(coherence)):
             ftot_A_C, ftot_A_IC=0,0
             ftot_B_C, ftot_B_IC=0,0
             keys_domainA=[]
             keys_domainB=[]
-            
+
             for i in coherence[n].values()[0]:
                 keys_domainA.append('domain'+str(i+1)+'A')
                 keys_domainB.append('domain'+str(i+1)+'B')
@@ -1145,7 +1145,7 @@ class Sample:
             ftot=(a+b*(E-E0))*(ftot+abs(ftot_A_C)+ftot_A_IC+ftot_B_IC+abs(ftot_B_C))
             #ftot=ftot+ftot_A_C+ftot_A_IC+ftot_B_IC+ftot_B_C
         return abs(ftot)*self.inst.inten
-        
+
     def calc_f_layered_water(self,h,k,l,u0,ubar,d_w,first_layer_height,density_w=0.033):
         #contribution of layered water calculated as equation(29) in Reviews in Mineralogy and Geochemistry v. 49 no. 1 p. 149-221
         #note here the height of first atom layer is not at 0 as in that equation but is specified by the first_layer_height. and the corrections were done accordingly
@@ -1158,7 +1158,7 @@ class Sample:
         F_layered_water=f*(Auc*1*density_w)*np.exp(-0.5*q**2*u0**2)*np.exp(q*first_layer_height*1.0J)\
                         /(1-np.exp(-0.5*q**2*ubar**2)*np.exp(q*d_w*1.0J))
         return F_layered_water
-        
+
     def calc_f_layered_water_muscovite(self,h,k,l,args,height_offset=0):
         #contribution of layered water calculated as equation(29) in Reviews in Mineralogy and Geochemistry v. 49 no. 1 p. 149-221
         #note here the height of first atom layer is not at 0 as in that equation but is specified by the first_layer_height. and the corrections were done accordingly
@@ -1175,7 +1175,7 @@ class Sample:
             return F_layered_water
         else:
             return 0
-        
+
     def calc_f_layered_sorbate(self,h,k,l,el,u0_s,ubar_s,d_s,first_layer_height_s,density_s,f1f2=None):
         #contribution of layered sorbate calculated based on a function modified from equation(29) in Reviews in Mineralogy and Geochemistry v. 49 no. 1 p. 149-221
         #note here the height of first atom layer is not at 0 as in that equation but is specified by the first_layer_height_s. and the corrections were done accordingly
@@ -1190,7 +1190,7 @@ class Sample:
                         /(1-np.exp(-0.5*q**2*ubar_s**2)*np.exp(q*d_s*1.0J))
 
         return F_layered_sorbate
-        
+
     def calc_f_layered_sorbate_muscovite(self,h,k,l,args,height_offset=0):
         #contribution of layered sorbate calculated based on a function modified from equation(29) in Reviews in Mineralogy and Geochemistry v. 49 no. 1 p. 149-221
         #note here the height of first atom layer is not at 0 as in that equation but is specified by the first_layer_height_s. and the corrections were done accordingly
@@ -1212,7 +1212,7 @@ class Sample:
             return F_layered_sorbate
         else:
             return 0
-        
+
     def calc_f_layered_sorbate_RAXR(self,h,k,l,el,u0_s,ubar_s,d_s,first_layer_height_s,density_s,f1f2):
         #contribution of layered sorbate calculated based on a function modified from equation(29) in Reviews in Mineralogy and Geochemistry v. 49 no. 1 p. 149-221
         #note here the height of first atom layer is not at 0 as in that equation but is specified by the first_layer_height_s. and the corrections were done accordingly
@@ -1225,7 +1225,7 @@ class Sample:
         F_layered_sorbate=f*(Auc*1*density_s)*np.exp(-0.5*q**2*u0_s**2)*np.exp(q*first_layer_height_s*1.0J)\
                         /(1-np.exp(-0.5*q**2*ubar_s**2)*np.exp(q*d_s*1.0J))
         return F_layered_sorbate
-        
+
     def calc_f_layered_sorbate_muscovite_RAXR(self,h,k,l,args,height_offset=0,f1f2=None):
         #contribution of layered sorbate calculated based on a function modified from equation(29) in Reviews in Mineralogy and Geochemistry v. 49 no. 1 p. 149-221
         #note here the height of first atom layer is not at 0 as in that equation but is specified by the first_layer_height_s. and the corrections were done accordingly
@@ -1242,7 +1242,6 @@ class Sample:
             else:
                 pass
             dinv = self.unit_cell.abs_hkl(h, k, l)
-                           
             f=self._get_f(np.array([el]), dinv)[:,0]+(f1f2[:,0]+1.0J*f1f2[:,1])#atomic form factor corrected by the f1f2 correction items
             Auc=self.unit_cell.a*self.unit_cell.b*np.sin(self.unit_cell.gamma)
             q=2*np.pi*dinv
@@ -1251,7 +1250,7 @@ class Sample:
             return F_layered_sorbate
         else:
             return 0
-        
+
     def turbo_calc_f(self, h, k, l):
         '''Calculate the structure factors for the sample with
         inline c code for the surface.
@@ -1260,8 +1259,8 @@ class Sample:
         fb = self.calc_fb(h, k, l)
         ftot = fs + fb
         return ftot*self.inst.inten
-        
-    def fourier_synthesis(self,HKL_list,P_list,A_list,z_min=0.,z_max=20.,el_lib={'O':8,'Fe':26,'As':33,'Pb':82,'Sb':51,'Zr':40},resonant_el='Pb',resolution=1000,water_scaling=1):
+
+    def fourier_synthesis(self,HKL_list,P_list,A_list,z_min=0.,z_max=20.,el_lib={'O':8,'Fe':26,'As':33,'Pb':82,'Sb':51,'Zr':40,"Th":90},resonant_el='Pb',resolution=1000,water_scaling=1):
         ZR=el_lib[resonant_el]
         q_list = self.unit_cell.abs_hkl(np.array(HKL_list[0]), np.array(HKL_list[1]), np.array(HKL_list[2]))#a list of 1/d for each hkl set
         q_list_sorted=copy.copy(q_list)
@@ -1283,7 +1282,7 @@ class Sample:
             eden_plot.append(eden)
             eden_domain_plot.append(eden_domains)
         return z_plot,eden_plot,eden_domain_plot
-        
+
     def fourier_synthesis_original(self,HKL_list,P_list,A_list,z_min=0.,z_max=20.,el_lib={'O':8,'Fe':26,'As':33,'Pb':82,'Sb':51,'Zr':40},resonant_el='Pb',resolution=1000):
         ZR=el_lib[resonant_el]
         q_list = self.unit_cell.abs_hkl(np.array(HKL_list[0]), np.array(HKL_list[1]), np.array(HKL_list[2]))#a list of 1/d for each hkl set
@@ -1307,7 +1306,7 @@ class Sample:
             eden_plot.append(eden)
             eden_domain_plot.append(eden_domains)
         return z_plot,eden_plot,eden_domain_plot
-    
+
     def plot_electron_density(self,slabs,el_lib={'O':8,'Fe':26,'As':33,'Pb':82,'Sb':51,'P':15,'Cr':24,'Cd':48,'Cu':29,'Zn':30,'Al':13,'Si':14,'K':19},z_min=0.,z_max=28.,N_layered_water=10,resolution=1000,file_path="D:\\"):
         #print dinv
         e_data=[]
@@ -1333,7 +1332,7 @@ class Sample:
                 for i in range(N_layered_water):
                     z_layered_water.append((layered_water[3]+1.)*self.unit_cell.c+i*layered_water[2])#first layer is offseted by 1 accordingly
                     sigma_layered_water.append((layered_water[0]**2+i*layered_water[1]**2)**0.5)
-            #consider the e density of layered sorbate        
+            #consider the e density of layered sorbate
             layered_sorbate,z_layered_sorbate,sigma_layered_sorbate,d_s,sorbate_density=None,[],[],None,None
             if 'layered_sorbate' in slabs[key].keys():
                 if slabs[key]['layered_sorbate']!=[]:
@@ -1364,8 +1363,8 @@ class Sample:
         labels.append('Total electron density')
         e_data.append(np.array([list(e_data[0])[0],e_total]))
         pickle.dump([e_data,labels],open(os.path.join(file_path,"temp_plot_eden"),"wb"))
-        
-    def plot_electron_density_muscovite(self,slabs,el_lib={'O':8,'Fe':26,'As':33,'Pb':82,'Sb':51,'P':15,'Cr':24,'Cd':48,'Cu':29,'Zn':30,'Al':13,'Si':14,'K':19,'Zr':40},z_min=0.,z_max=28.,N_layered_water=10,resolution=1000,file_path="D:\\",height_offset=0):
+
+    def plot_electron_density_muscovite(self,slabs,el_lib={'O':8,'Fe':26,'As':33,'Pb':82,'Sb':51,'P':15,'Cr':24,'Cd':48,'Cu':29,'Zn':30,'Al':13,'Si':14,'K':19,'Zr':40,"Th":90},z_min=0.,z_max=28.,N_layered_water=10,resolution=1000,file_path="D:\\",height_offset=0):
         #print dinv
         e_data=[]
         labels=[]
@@ -1378,7 +1377,7 @@ class Sample:
             raxs_el=slabs['el']
             slab=[slabs['domains'][domain_index]]
             x, y, z, u, oc, el = self._surf_pars(slab)
-            
+
             index_raxs=np.where(np.array(el)==raxs_el)[0]
             z_raxs=np.array([(z[i]+1.)*self.unit_cell.c for i in index_raxs])
             u_raxs=np.array([u[i] for i in index_raxs])
@@ -1386,8 +1385,8 @@ class Sample:
             f_raxs=el_lib[raxs_el]
             eden_raxs=[]
             eden_layer_water=[]
-            
-            
+
+
             z=(z+1.)*self.unit_cell.c#z is offseted by 1 unit since such offset is explicitly considered in the calculatino of structure factor
             f=np.array([el_lib[each] for each in el])
             Auc=self.unit_cell.a*self.unit_cell.b*np.sin(self.unit_cell.gamma)
@@ -1403,7 +1402,7 @@ class Sample:
                 #z_layered_water.append(layered_water[3]+54.3+height_offset+i*layered_water[2])#first layer is offseted by 1 accordingly
                 z_layered_water.append(layered_water[3]+53.6523273+height_offset+i*layered_water[2])
                 sigma_layered_water.append((layered_water[0]**2+i*layered_water[1]**2)**0.5)
-            #consider the e density of layered sorbate        
+            #consider the e density of layered sorbate
             layered_sorbate,z_layered_sorbate,sigma_layered_sorbate,sorbate_damping_factors,d_s,sorbate_density=None,[],[],[],None,None
             layered_sorbate_keys=['u0_s','ubar_s','d_s','first_layer_height_s','density_s','oc_damping_factor']
             layered_sorbate=[slabs['layered_sorbate_pars'][each_key] for each_key in layered_sorbate_keys]
@@ -1429,7 +1428,7 @@ class Sample:
                 eden_layer_water.append(np.sum(10*wt*water_density*(2*np.pi*np.array(sigma_layered_water)**2)**-0.5*np.exp(-0.5/np.array(sigma_layered_water)**2*(z_each-np.array(z_layered_water))**2))+(.33-0.16233394)*wt*bulk_water)
                 #eden[-1]=eden[-1]+np.sum(10*wt*water_density*(np.exp(-0.5/np.array(sigma_layered_water)**2*(z_each-np.array(z_layered_water))**2)))
                 eden[-1]=eden[-1]+np.sum(el_lib[raxs_el]*wt*sorbate_density*np.exp(-np.array(sorbate_damping_factors))*(2*np.pi*np.array(sigma_layered_sorbate)**2)**-0.5*np.exp(-0.5/np.array(sigma_layered_sorbate)**2*(z_each-np.array(z_layered_sorbate))**2))
-                
+
                 eden_raxs[-1]=eden_raxs[-1]+np.sum(el_lib[raxs_el]*wt*sorbate_density*np.exp(-np.array(sorbate_damping_factors))*(2*np.pi*np.array(sigma_layered_sorbate)**2)**-0.5*np.exp(-0.5/np.array(sigma_layered_sorbate)**2*(z_each-np.array(z_layered_sorbate))**2))
 
             labels.append('Domain'+str(domain_index+1))
@@ -1447,7 +1446,7 @@ class Sample:
         water_scaling=e_total_layer_water[-1]
         pickle.dump([e_data,labels],open(os.path.join(file_path,"temp_plot_eden"),"wb"))
         return water_scaling
-        
+
     def calc_fs(self, h, k, l,slabs):
         '''Calculate the structure factors from the surface
         '''
@@ -1471,7 +1470,7 @@ class Sample:
         """
         for id in slabs[0].id:
             if "Pb" in str(id):
-                
+
                 print id, np.sum([np.exp(2.0*np.pi*1.0J*(\
                     1*(sym_op.trans_x(x, y)+self.delta1) +\
                     1*(sym_op.trans_y(x, y)+self.delta2) +\
@@ -1479,7 +1478,7 @@ class Sample:
                     for sym_op in self.surface_sym][0][0])#[np.where(slabs[0].id==id)[0][0]]
         """
         return fs
-        
+
     def calc_fs_RAXR(self, h, k, l,slabs,f1f2,res_el='Zr'):
         '''Calculate the structure factors from the surface with resonant element
            In the normal case, hkl will be an array of same number (eg h=[1]*10,k=[1]*10,l=[1.3]*10,f1f2 has the same length as hkl, but it changes as a function of E)
@@ -1512,7 +1511,7 @@ class Sample:
         """
         for id in slabs[0].id:
             if "Pb" in str(id):
-                
+
                 print id, np.sum([np.exp(2.0*np.pi*1.0J*(\
                     1*(sym_op.trans_x(x, y)+self.delta1) +\
                     1*(sym_op.trans_y(x, y)+self.delta2) +\
@@ -1520,7 +1519,7 @@ class Sample:
                     for sym_op in self.surface_sym][0][0])#[np.where(slabs[0].id==id)[0][0]]
         """
         return fs
-        
+
     def calc_fs_offspecular(self, h, k, l,slabs):
         '''Calculate the structure factors from the surface
         '''
@@ -1543,7 +1542,7 @@ class Sample:
         """
         for id in slabs[0].id:
             if "Pb" in str(id):
-                
+
                 print id, np.sum([np.exp(2.0*np.pi*1.0J*(\
                     1*(sym_op.trans_x(x, y)+self.delta1) +\
                     1*(sym_op.trans_y(x, y)+self.delta2) +\
@@ -1600,7 +1599,7 @@ class Sample:
                      Pt[0 + offset], Pt[1 + offset],
                      Pt[3 + offset], Pt[4 + offset]);
                      printf(", t = [%d, %d]\\n", Pt[2 + offset], Pt[5+offset]);
-                
+
                   } // End if statement
               } // End symmetry loop index m
               fs[i] += oc[j]*f[ij]*exp(-2.0*pow(pi*dinv[i],2.0)*u[j])*tmp[0];
@@ -1641,9 +1640,9 @@ class Sample:
                     ,1)
         # Putting it all togheter
         fb = f_u/denom*delta_funcs
-                       
+
         return fb
-        
+
     def calc_rhos(self, x, y, z, sb = 0.8):
         '''Calcualte the electron density of the unitcell
            Not working yet
@@ -1661,7 +1660,7 @@ class Sample:
                               zip(rhos, px, py, pz, u, oc)], 0)
                       for sym_op in self.surface_sym], 0)
         return rho
-    
+
 
     def _surf_pars(self,slabs):
         '''Extracts the necessary parameters for simulating the surface part
@@ -1688,17 +1687,17 @@ class Sample:
         #print y-y1
 
         return x, y, z, u, oc, el
-    
+
     def _surf_pars_offspecular(self,slabs):
         '''Extracts the necessary parameters for simulating the surface part
         '''
         #the effect of interfacial molecules wont be included for the calculation of structure factor for offspecular rods
         # Extract the parameters we need
         # the star in zip(*... transform the list elements to arguments
-        
+
         xt, yt, zt, elt, ut, oct, ct = zip(*[slab._extract_values_offspecular()
                                   for slab in slabs])
-        
+
         #x1 = np. r_[xt]
         #y1 = np.r_[yt]
         # scale and shift the slabs with respect to each other
@@ -1717,7 +1716,7 @@ class Sample:
         #print y-y1
 
         return x, y, z, u, oc, el
-        
+
     def create_uc_output(self):
         ''' Create atomic positions and such for output '''
         x, y, z, u, oc, el = self._surf_pars()
@@ -1738,7 +1737,7 @@ class Sample:
             ocout = np.r_[ocout, oc]
             elout = np.r_[elout, el]
         idsout.extend(ids)
-            
+
         return xout, yout, zout, uout, ocout, elout, idsout
 
     def _get_f(self, el, dinv):
@@ -1750,7 +1749,7 @@ class Sample:
         '''Returns the rho functions for all atoms in el
         '''
         return _get_rho(self.inst, el)
-    
+
     def _fatom_eval(self, f, element, s):
         '''Smart (fast) evaluation of f_atom. Only evaluates f if not
         evaluated before.
@@ -1759,7 +1758,7 @@ class Sample:
         f - dictonary for lookup
         s - sintheta_over_lambda array
         '''
-        return _fatom_eval(inst, f, element, s)    
+        return _fatom_eval(inst, f, element, s)
 
 class UnitCell:
     '''Class containing the  unitcell.
@@ -1800,7 +1799,7 @@ class UnitCell:
                 np.cos(self.beta)**2  - np.cos(self.gamma)**2 +
                 2*np.cos(self.alpha)*np.cos(self.beta)*np.cos(self.gamma))
         return vol
-    
+
     def cart_coords(self, uc_x, uc_y, uc_z):
         '''Transform the uc coors uc_x, uc_y, uc_z to cartesian
         coordinates expressed in AA
@@ -1891,11 +1890,11 @@ class Slab:
         self.id = np.array([], dtype = np.str)
         self.el = np.array([], dtype = np.str)
         self.T_factor=T_factor
-        
+
         # TODO: Type checking and defaults!
         #self.inst = inst
         self.name = str(name)
-    
+
     def copy(self):
         '''Returns a copy of the object.
         '''
@@ -1965,7 +1964,7 @@ class Slab:
             setattr(self, 'get' + id + par, self._make_get_func(par, item))
 
         return AtomGroup(self, id)
-        
+
     def insert_atom(self,index,id,element, x, y, z, u = 0.0, oc = 1.0, m = 1.0):
         '''Add an atom to the slab.
 
@@ -2009,7 +2008,7 @@ class Slab:
             setattr(self, 'set' + id + par, self._make_set_func(par, item))
             setattr(self, 'get' + id + par, self._make_get_func(par, item))
         return AtomGroup(self, id)
-        
+
     def del_atom(self, id):
         '''Remove atom identified with id
         '''
@@ -2017,12 +2016,12 @@ class Slab:
             raise ValueError('Can not remove atom with id %s -'
                              'namedoes not exist')
         item = np.argwhere(self.id == id)[0][0]
-        
+
         for par in self.par_names:
                 for id in self.id:
                     delattr(self, 'set' + id + par)
                     delattr(self, 'get' + id + par)
-        
+
         if item < len(self.x) - 1:
             ar = getattr(self, 'id')
             setattr(self, 'id', np.r_[ar[:item], ar[item+1:]])
@@ -2034,7 +2033,7 @@ class Slab:
             setattr(self, 'y', np.r_[ar[:item], ar[item+1:]])
             ar = getattr(self, 'z')
             setattr(self, 'z', np.r_[ar[:item], ar[item+1:]])
-            
+
             for par in self.par_names:
                 ar = getattr(self, par)
                 setattr(self, par, np.r_[ar[:item], ar[item+1:]])
@@ -2064,7 +2063,7 @@ class Slab:
                     setattr(self, 'set' + id + par, self._make_set_func(par, np.where(self.id==id)[0][0]))
                     setattr(self, 'get' + id + par, self._make_get_func(par, np.where(self.id==id)[0][0]))
 
-            
+
 
     def find_atoms(self, expression):
         '''Find the atoms that satisfy the logical expression given in the
@@ -2102,8 +2101,8 @@ class Slab:
         returns: AtomGroup
         '''
         return self.find_atoms([True]*len(self.id))
-        
-    
+
+
     def set_c(self, c):
         '''Set the out-of-plane extension of the slab.
         Note that this is in the defined UC coords given in
@@ -2138,7 +2137,7 @@ class Slab:
         '''Makes it possible to check if id exist in this Slab by using
         the in operator. It is also possible if all atoms in an AtomGroup
         belongs to the slab.
-        
+
         returns True or False
         '''
         if type(id) == type(''):
@@ -2171,7 +2170,7 @@ class Slab:
             return getattr(self, par)[pos]/scale
 
         return get_par
-            
+
     def _extract_values(self):
         #B=8*pi*pi*u*u in A2
         #u in A
@@ -2181,8 +2180,8 @@ class Slab:
         elif self.T_factor=='u':
             return  self.x + self.dx1+self.dx2+self.dx3+self.dx4, self.y + self.dy1+self.dy2+self.dy3+self.dy4, self.z + self.dz1+ self.dz2+ self.dz3+self.dz4,\
                    self.el, (self.u)**0.5+self.du, (self.oc+self.doc)*self.m*self.slab_oc, self.c
-                   
-    def _extract_values_offspecular(self):    
+
+    def _extract_values_offspecular(self):
         ids=self.id
         ii=None#index for first water molecule
         for i in range(1,30):#water molecules will be added at the very end and wont exceed 10 usually
@@ -2197,11 +2196,11 @@ class Slab:
         elif self.T_factor=='u':
             return  self.x[0:ii] + self.dx1[0:ii]+self.dx2[0:ii]+self.dx3[0:ii]+self.dx4[0:ii], self.y[0:ii] + self.dy1[0:ii]+self.dy2[0:ii]+self.dy3[0:ii]+self.dy4[0:ii], self.z[0:ii] + self.dz1[0:ii]+ self.dz2[0:ii]+ self.dz3[0:ii]+self.dz4[0:ii],\
                    self.el[0:ii], self.u[0:ii]+self.du[0:ii], (self.oc[0:ii]+self.doc[0:ii])*self.m[0:ii]*self.slab_oc, self.c
-                   
+
     def _extract_values2(self):
         return  self.x + self.dx1+self.dx2+self.dx3+self.dx4, self.y + self.dy1+self.dy2+self.dy3+self.dy4, self.z + self.dz1+ self.dz2+ self.dz3+self.dz4,\
                    self.el, self.u+self.du, (self.oc+self.doc)*self.m*self.slab_oc, self.c
-                   
+
     def _extract_ids(self):
         'Extract the ids of the atoms'
         return [self.name + '.' + str(id) for id in self.id]
@@ -2209,7 +2208,7 @@ class Slab:
 class AtomGroup:
     par_names = ['dx', 'dy', 'dz', 'u', 'oc']
     def __init__(self, slab = None, id = None,matrix=[1,0,0,0,1,0,0,0,1]):
-        
+
         self.ids = []
         self.slabs = []
         # Variable for composition ...
@@ -2218,7 +2217,7 @@ class AtomGroup:
         self.sym=[]
         if slab != None and  id != None:
             self.add_atom(slab, id, matrix)
-        
+
     def _set_func(self, par):
         '''create a function that sets all atom paramater par'''
         #id_=list(np.copy(self.ids))
@@ -2250,7 +2249,7 @@ class AtomGroup:
         def set_pars(val):
             #print self.sym_file.shape
             for i in range(len(funcs)):
-                #the corresponding infomation stored in sym_row, id_order_in_sym_file is the ids of atoms with its order 
+                #the corresponding infomation stored in sym_row, id_order_in_sym_file is the ids of atoms with its order
                 #appearing the same as that in sym files, say, if I have a id1 at the first place, then the order is defined as 0
                 #which is order of id1's symmetry operations in sym file, thus the first row is the associated sym opts.
                 if par=='dx':
@@ -2282,7 +2281,7 @@ class AtomGroup:
             elif par=='dz':
                 funcs.append(getattr(slab, 'get' + id + 'dz3'))
             else:funcs.append(getattr(slab, 'get' + id + par))
-        
+
         def get_pars():
             if par=='dx':
                 return np.mean([func(self.sym[funcs.index(func)][0]+1.0e-30)  for func in funcs])
@@ -2308,7 +2307,7 @@ class AtomGroup:
             raise ValueError('The id %s is not a member of the slab'%id)
 
         self.ids.append(id)
-            
+
         #print self.sym_file
         self.slabs.append(slab)
         self.sym.append(matrix)
@@ -2349,7 +2348,7 @@ class AtomGroup:
             s = self._copy()
         else:
             s = self
-            
+
         def set_comp(comp):
             #print "Executing comp function"
             s.comp = float(comp)
@@ -2361,7 +2360,7 @@ class AtomGroup:
             s.oc = float(oc)
             s._setoc(s.comp*s.oc)
             other._setoc_((1 - s.comp)*s.oc)
-        
+
         def get_comp():
             return s.comp
 
@@ -2378,7 +2377,7 @@ class AtomGroup:
                 sf_set(val)
                 of_set(val)
             return _set_func
-        
+
         # Functions to couple the other parameters, set
         def create_get_func(par):
             sf_get = getattr(s, 'get' + par)
@@ -2413,11 +2412,11 @@ class AtomGroup:
                 delattr(other, 'set' + par)
 
         s.setcomp(1.0)
-        
+
         return s
-        
-        
-    
+
+
+
     def __xor__(self, other):
         '''Method to create set-get methods to use compositions
         in the atomic groups. Note that this does not affect
@@ -2428,7 +2427,7 @@ class AtomGroup:
         be removed.
         '''
         return self.comp_coupl(other, self_copy = True, exclusive = True)
-        
+
     def __ixor__(self, other):
         '''Method to create set-get methods to use compositions
         in the atomic groups. Note that this does not affect
@@ -2446,7 +2445,7 @@ class AtomGroup:
         and loose all its previous connections.
         '''
         return self.comp_coupl(other, self_copy = True, exclusive = False)
-        
+
     def __ior__(self, other):
         '''Method to create set-get methods to use compositions
         in the atomic groups. Note that this does not affect
@@ -2466,19 +2465,19 @@ class AtomGroup:
         [out.add_atom(slab, id) for slab, id in zip(slabs, ids)]
 
         s = self
-        
+
         def set_oc(oc):
             #print "Executing oc function"
             s.oc = float(oc)
             s.setoc(s.oc)
             other.setoc(s.oc)
-        
+
         def get_oc():
             return s.oc
 
         setattr(out, 'setoc', set_oc)
         setattr(out, 'getoc', get_oc)
-        
+
         return out
 
 class Instrument:
@@ -2506,7 +2505,7 @@ class Instrument:
         '''retrieves the intensity
         '''
         return self.inten
-        
+
     def set_wavel(self, wavel):
         '''Set the wavelength in AA
         '''
@@ -2539,7 +2538,7 @@ class Instrument:
     def set_alpha(self, alpha):
         '''Sets the freezed angle. The meaning of this angle varies depening
         of the geometry parameter.
-        
+
         geo =  "alpha_in fixed", alpha = alpha_in
         geo = "alpha_in eq alpha_out", alpha = alpha_in = alpha_out
         geo = "alpha_out fixed", alpha = alpha_out
@@ -2653,11 +2652,11 @@ def _get_rho(inst, el):
     '''
     rhos = [getattr(inst.rholib, elem) for elem in el]
     return rhos
-    
+
 def _fatom_eval(inst, f, element, s):
     '''Smart (fast) evaluation of f_atom. Only evaluates f if not
     evaluated before.
-    
+
     element - element string
     f - dictonary for lookup
     s - sintheta_over_lambda array
@@ -2690,7 +2689,7 @@ if __name__ == '__main__':
             self.new_var_module=new_var_module
             self.z_shift=z_shift
             self.domain_A,self.domain_B=self.create_equivalent_domains()
-        
+
         def create_equivalent_domains(self):
             new_domain_A=self.ref_domain.copy()
             new_domain_B=self.ref_domain.copy()
@@ -2702,7 +2701,7 @@ if __name__ == '__main__':
                 new_domain_B.del_atom(id)
 
             return new_domain_A,new_domain_B
-        
+
         def add_sorbates(self,domain,attach_atm_id=[['id1','id2']],el=['Pb'],id=[1],O_id=['_A'],r1=0.1,r2=None,alpha1=1.7,alpha2=None):
             #this function can add multiple sorbates
             #domain is a slab under consideration
@@ -2727,7 +2726,7 @@ if __name__ == '__main__':
                     domain.add_atom(id='Oi_1'+str(O_id[i]),element='O',x=point_sorbate_1[0],y=point_sorbate_1[1],z=point_sorbate_1[2],u=1.)
                     domain.add_atom(id='Oi_2'+str(O_id[i]),element='O',x=point_sorbate_2[0],y=point_sorbate_2[1],z=point_sorbate_2[2],u=1.)
             #return domain
-        
+
         def add_oxygen_pair(self,domain,O_id,ref_point,r,alpha):
             #add single oxygen pair to a ref_point,which does not stand for an atom, the xyz for this point will be set as
             #three fitting parameters.O_id will be attached at the end of each id for the oxygen
@@ -2751,7 +2750,7 @@ if __name__ == '__main__':
             domain.x[index_2]=ref_point[0]-x_shift
             domain.y[index_2]=ref_point[1]-y_shift
             domain.z[index_2]=ref_point[2]
-            
+
         def group_sorbates_2(self,domain,attach_atm_id,ids_to_be_attached,r,alpha,beta,gamma):
             #updating the sorbate position, to be dropped inside sim function
             #the same as the group_sorbates except more freedome for the attached sorbates
@@ -2779,7 +2778,7 @@ if __name__ == '__main__':
             domain.x[index_2]=ref_x+point2_x_shift
             domain.y[index_2]=ref_y+point2_y_shift
             domain.z[index_2]=ref_z+z_shift
-            
+
         def group_sorbates(self,domain,attach_atm_id,sorbate_ids,r1,alpha1,z_shift):
             #group the oxygen pair to the absorbate specified,attach_atm_id='Pb1',sorbate_ids=[]
             index_ref=np.where(domain.id==attach_atm_id)[0][0]
@@ -2791,7 +2790,7 @@ if __name__ == '__main__':
             O1_point,O2_point=self._cal_xyz_double(ref_point=[ref_x,ref_y,ref_z],r=r1,alpha=alpha1,z_shift=z_shift)
             domain.x[index_1],domain.y[index_1],domain.z[index_1]=O1_point[0],O1_point[1],O1_point[2]
             domain.x[index_2],domain.y[index_2],domain.z[index_2]=O2_point[0],O2_point[1],O2_point[2]
-            
+
         def updata_sorbates(self,domain,id1,r1,alpha1,z_shift,attach_atm_id=['id1','id2'],id2=[],r2=None,alpha2=None):
             #old version of updating,less freedome for Pb sorbates
             #group all sorbates to the first layer oxygen pair
@@ -2807,26 +2806,26 @@ if __name__ == '__main__':
             point2_x=domain.x[index_2]+domain.dx1[index_2]+domain.dx2[index_2]+domain.dx3[index_2]
             point2_y=domain.y[index_2]+domain.dy1[index_2]+domain.dy2[index_2]+domain.dy3[index_2]
             point2_z=domain.z[index_2]+domain.dz1[index_2]+domain.dz2[index_2]+domain.dz3[index_2]
-            
+
             point1=[point1_x,point1_y,point1_z]
             point2=[point2_x,point2_y,point2_z]
             point_sorbate=self._cal_xyz_single(point1,point2,r1,alpha1)
             domain.x[np.where(domain.id==id1)[0][0]]=point_sorbate[0]
             domain.y[np.where(domain.id==id1)[0][0]]=point_sorbate[1]
             domain.z[np.where(domain.id==id1)[0][0]]=point_sorbate[2]
-            
+
             if r2!=None:
                 point_sorbate_1,point_sorbate_2=self._cal_xyz_double(point_sorbate,r2,alpha2,z_shift)
-                
+
                 domain.x[np.where(domain.id==id2[0])[0][0]]=point_sorbate_1[0]
                 domain.y[np.where(domain.id==id2[0])[0][0]]=point_sorbate_1[1]
                 domain.z[np.where(domain.id==id2[0])[0][0]]=point_sorbate_1[2]
-                
+
                 domain.x[np.where(domain.id==id2[1])[0][0]]=point_sorbate_2[0]
                 domain.y[np.where(domain.id==id2[1])[0][0]]=point_sorbate_2[1]
                 domain.z[np.where(domain.id==id2[1])[0][0]]=point_sorbate_2[2]
             #return domain
-        
+
         def _cal_xyz_single(self,point1,point2,r,alpha):
             #point1=[x1,y1,z1],point2=[x2,y2,z2],r is a value, alpha is angle less than pi
             slope_pt1_pt2=(point1[1]-point2[1])/(point1[0]-point2[0])
@@ -2841,7 +2840,7 @@ if __name__ == '__main__':
             C=np.array([cent_point[1]-slope_new1*cent_point[0],point2[1]-slope_new2*point2[0]])
             xy=np.dot(inv(A),C)
             return [xy[0],xy[1],point1[2]+r*np.sin(alpha)]
-            
+
         def _cal_xyz_double(self,ref_point,r,alpha,z_shift=0.1):
         #ref_point=[x1,y1,z1],r is a positive value, alpha an angle less than pi, z_shift is positive value represent shift at z direction
             x_shift=r*np.cos(alpha)
@@ -2849,7 +2848,7 @@ if __name__ == '__main__':
             new_point1=[ref_point[0]+x_shift,ref_point[1]+y_shift,ref_point[2]+z_shift]
             new_point2=[2.*ref_point[0]-new_point1[0],2.*ref_point[1]-new_point1[1],ref_point[2]+z_shift]
             return new_point1,new_point2
-        
+
         def grouping_sequence_layer(self, domain=[], first_atom_id=[],sym_file={},id_match_in_sym={},layers_N=1,use_sym=False):
             #group the atoms at the same layer in one domain and the associated atoms in its chemically equivalent domain
             #so 4 atoms will group together if consider two chemical equivalent domain
@@ -2870,13 +2869,13 @@ if __name__ == '__main__':
                 atm_gp_list.append(temp_atm_gp)
 
             return atm_gp_list
-        
+
         def grouping_discrete_layer(self,domain=[],atom_ids=[],sym_file=None,id_match_in_sym=[],use_sym=False):
             atm_gp=model.AtomGroup(id_in_sym_file=id_match_in_sym,filename=sym_file,use_sym=use_sym)
             for i in range(len(domain)):
                 atm_gp.add_atom(domain[i],atom_ids[i])
             return atm_gp
-            
+
         def scale_opt(self,atm_gp_list,scale_factor,sign_values=None,flag='u',ref_v=1.):
             #scale the parameter from first layer atom to deeper layer atom
             #dx,dy,dz,u will decrease inward, oc decrease outward usually
@@ -2884,90 +2883,90 @@ if __name__ == '__main__':
             #atm_gp_list is a list of atom group to consider the scaling operation
             #scale_factor is list of values of scale factor, note accummulated product will be used for scaling
             #flag is the parameter symbol
-            #ref_v is the reference value to start off 
+            #ref_v is the reference value to start off
             if sign_values==None:
                 for i in range(len(atm_gp_list)):
                     atm_gp_list[i]._set_func(flag)(ref_v*reduce(mul,scale_factor[:i+1]))
             else:
                 for i in range(len(atm_gp_list)):
                     atm_gp_list[i]._set_func(flag)(ref_v*sign_values[i]*reduce(mul,scale_factor[:i+1]))
-        
+
         def set_new_vars(self,head_list=['u_Fe_'],N_list=[2]):
-        #set new vars 
+        #set new vars
         #head_list is a list of heading test for a new variable,N_list is the associated number of each set of new variable to be created
             for head,N in zip(head_list,N_list):
                 for i in range(N):
                     getattr(self.new_var_module,'new_var')(head+str(i+1),1.)
-                    
+
     ####################################################################
     unitcell = model.UnitCell(5.038, 5.434, 7.3707, 90, 90, 90)
     inst = model.Instrument(wavel = .833, alpha = 2.0)
     bulk = model.Slab(T_factor='B')
     domain0 =  model.Slab(c = 1.0,T_factor='B')
 
-    bulk.add_atom( "Fe2", "Fe", 0.00000e+00 ,     8.30000e-01 ,     8.55000e-01 ,     3.20000e-01 ,     1.00000e+00 ,     1.00000e+00 )    
-    bulk.add_atom( "Fe3", "Fe", 5.00000e-01 ,     3.30000e-01 ,     8.55000e-01 ,     3.20000e-01 ,     1.00000e+00 ,     1.00000e+00 )    
-    bulk.add_atom( "Fe4", "Fe", 5.00000e-01 ,     8.80000e-01 ,     6.45000e-01 ,     3.20000e-01 ,     1.00000e+00 ,     1.00000e+00 )    
-    bulk.add_atom( "Fe6", "Fe", 0.00000e+00 ,     3.79000e-01 ,     6.45000e-01 ,     3.20000e-01 ,     1.00000e+00 ,     1.00000e+00 )    
-    bulk.add_atom( "Fe8", "Fe", 0.00000e+00 ,     7.61000e-01 ,     3.55000e-01 ,     3.20000e-01 ,     1.00000e+00 ,     1.00000e+00 )    
-    bulk.add_atom( "Fe9", "Fe", 5.00000e-01 ,     2.60000e-01 ,     3.55000e-01 ,     3.20000e-01 ,     1.00000e+00 ,     1.00000e+00 )    
-    bulk.add_atom( "Fe10", "Fe", 5.00000e-01 ,     8.10000e-01 ,     1.45000e-01 ,     3.20000e-01 ,     1.00000e+00 ,     1.00000e+00 )    
-    bulk.add_atom( "Fe12", "Fe", 0.00000e+00 ,     3.10000e-01 ,     1.45000e-01 ,     3.20000e-01 ,     1.00000e+00 ,     1.00000e+00 )    
-    bulk.add_atom( "O1", "O",  6.53000e-01 ,     9.73000e-01 ,     9.03000e-01 ,     3.30000e-01 ,     1.00000e+00 ,     1.00000e+00 )    
-    bulk.add_atom( "O2", "O",  8.47000e-01 ,     4.73000e-01 ,     9.03000e-01 ,     3.30000e-01 ,     1.00000e+00 ,     1.00000e+00 )    
-    bulk.add_atom( "O3", "O",  3.06000e-01 ,     6.05000e-01 ,     7.50000e-01 ,     3.30000e-01 ,     1.00000e+00 ,     1.00000e+00 )    
-    bulk.add_atom( "O4", "O",  1.94000e-01 ,     1.04000e-01 ,     7.50000e-01 ,     3.30000e-01 ,     1.00000e+00 ,     1.00000e+00 )    
-    bulk.add_atom( "O5", "O",  8.47000e-01 ,     7.37000e-01 ,     5.97000e-01 ,     3.30000e-01 ,     1.00000e+00 ,     1.00000e+00 )    
-    bulk.add_atom( "O6", "O",  6.53000e-01 ,     2.36000e-01 ,     5.97000e-01 ,     3.30000e-01 ,     1.00000e+00 ,     1.00000e+00 )    
-    bulk.add_atom( "O7", "O",  3.47000e-01 ,     9.04000e-01 ,     4.03000e-01 ,     3.30000e-01 ,     1.00000e+00 ,     1.00000e+00 )    
-    bulk.add_atom( "O8", "O",  1.53000e-01 ,     4.03000e-01 ,     4.03000e-01 ,     3.30000e-01 ,     1.00000e+00 ,     1.00000e+00 )    
-    bulk.add_atom( "O9", "O",  6.94000e-01 ,     5.35000e-01 ,     2.50000e-01 ,     3.30000e-01 ,     1.00000e+00 ,     1.00000e+00 )    
-    bulk.add_atom( "O10", "O",  8.06000e-01 ,     3.50000e-02 ,     2.50000e-01 ,     3.30000e-01 ,     1.00000e+00 ,     1.00000e+00 )    
-    bulk.add_atom( "O11", "O",  1.53000e-01 ,     6.67000e-01 ,     9.70000e-02 ,     3.30000e-01 ,     1.00000e+00 ,     1.00000e+00 )    
+    bulk.add_atom( "Fe2", "Fe", 0.00000e+00 ,     8.30000e-01 ,     8.55000e-01 ,     3.20000e-01 ,     1.00000e+00 ,     1.00000e+00 )
+    bulk.add_atom( "Fe3", "Fe", 5.00000e-01 ,     3.30000e-01 ,     8.55000e-01 ,     3.20000e-01 ,     1.00000e+00 ,     1.00000e+00 )
+    bulk.add_atom( "Fe4", "Fe", 5.00000e-01 ,     8.80000e-01 ,     6.45000e-01 ,     3.20000e-01 ,     1.00000e+00 ,     1.00000e+00 )
+    bulk.add_atom( "Fe6", "Fe", 0.00000e+00 ,     3.79000e-01 ,     6.45000e-01 ,     3.20000e-01 ,     1.00000e+00 ,     1.00000e+00 )
+    bulk.add_atom( "Fe8", "Fe", 0.00000e+00 ,     7.61000e-01 ,     3.55000e-01 ,     3.20000e-01 ,     1.00000e+00 ,     1.00000e+00 )
+    bulk.add_atom( "Fe9", "Fe", 5.00000e-01 ,     2.60000e-01 ,     3.55000e-01 ,     3.20000e-01 ,     1.00000e+00 ,     1.00000e+00 )
+    bulk.add_atom( "Fe10", "Fe", 5.00000e-01 ,     8.10000e-01 ,     1.45000e-01 ,     3.20000e-01 ,     1.00000e+00 ,     1.00000e+00 )
+    bulk.add_atom( "Fe12", "Fe", 0.00000e+00 ,     3.10000e-01 ,     1.45000e-01 ,     3.20000e-01 ,     1.00000e+00 ,     1.00000e+00 )
+    bulk.add_atom( "O1", "O",  6.53000e-01 ,     9.73000e-01 ,     9.03000e-01 ,     3.30000e-01 ,     1.00000e+00 ,     1.00000e+00 )
+    bulk.add_atom( "O2", "O",  8.47000e-01 ,     4.73000e-01 ,     9.03000e-01 ,     3.30000e-01 ,     1.00000e+00 ,     1.00000e+00 )
+    bulk.add_atom( "O3", "O",  3.06000e-01 ,     6.05000e-01 ,     7.50000e-01 ,     3.30000e-01 ,     1.00000e+00 ,     1.00000e+00 )
+    bulk.add_atom( "O4", "O",  1.94000e-01 ,     1.04000e-01 ,     7.50000e-01 ,     3.30000e-01 ,     1.00000e+00 ,     1.00000e+00 )
+    bulk.add_atom( "O5", "O",  8.47000e-01 ,     7.37000e-01 ,     5.97000e-01 ,     3.30000e-01 ,     1.00000e+00 ,     1.00000e+00 )
+    bulk.add_atom( "O6", "O",  6.53000e-01 ,     2.36000e-01 ,     5.97000e-01 ,     3.30000e-01 ,     1.00000e+00 ,     1.00000e+00 )
+    bulk.add_atom( "O7", "O",  3.47000e-01 ,     9.04000e-01 ,     4.03000e-01 ,     3.30000e-01 ,     1.00000e+00 ,     1.00000e+00 )
+    bulk.add_atom( "O8", "O",  1.53000e-01 ,     4.03000e-01 ,     4.03000e-01 ,     3.30000e-01 ,     1.00000e+00 ,     1.00000e+00 )
+    bulk.add_atom( "O9", "O",  6.94000e-01 ,     5.35000e-01 ,     2.50000e-01 ,     3.30000e-01 ,     1.00000e+00 ,     1.00000e+00 )
+    bulk.add_atom( "O10", "O",  8.06000e-01 ,     3.50000e-02 ,     2.50000e-01 ,     3.30000e-01 ,     1.00000e+00 ,     1.00000e+00 )
+    bulk.add_atom( "O11", "O",  1.53000e-01 ,     6.67000e-01 ,     9.70000e-02 ,     3.30000e-01 ,     1.00000e+00 ,     1.00000e+00 )
     bulk.add_atom( "O12", "O",  3.47000e-01 ,     1.67000e-01 ,     9.70000e-02 ,     3.30000e-01 ,     1.00000e+00 ,     1.00000e+00 )
     #domain0 here is a reference domain, the atoms are ordered according to hight (z values)
-    #it is a super surface structure by stacking the surface slab on bulk slab, the repeat vector was counted 
-    domain0.add_atom( "O1_1_0", "O",  6.53000e-01 ,     1.11210e+00 ,     1.90300e+00 ,     3.30000e-01 ,     1.00000e+00 ,     1.00000e+00 )    
-    domain0.add_atom( "O1_2_0", "O",  8.47000e-01 ,     6.12100e-01 ,     1.90300e+00 ,     3.30000e-01 ,     1.00000e+00 ,     1.00000e+00 )    
-    domain0.add_atom( "Fe1_2_0", "Fe", 0.00000e+00 ,     9.69100e-01 ,     1.85500e+00 ,     3.20000e-01 ,     1.00000e+00 ,     1. )    
-    domain0.add_atom( "Fe1_3_0", "Fe", 5.00000e-01 ,     4.69100e-01 ,     1.85500e+00 ,     3.20000e-01 ,     1.00000e+00 ,     1. )    
-    domain0.add_atom( "O1_3_0", "O",  3.06000e-01 ,     7.44100e-01 ,     1.75000e+00 ,     3.30000e-01 ,     1.00000e+00 ,     1.00000e+00 )    
-    domain0.add_atom( "O1_4_0", "O",  1.94000e-01 ,     2.43100e-01 ,     1.75000e+00 ,     3.30000e-01 ,     1.00000e+00 ,     1.00000e+00 )    
-    domain0.add_atom( "Fe1_4_0", "Fe", 5.00000e-01 ,     1.01910e+00 ,     1.64500e+00 ,     3.20000e-01 ,     1.00000e+00 ,     1.00000e+00 )    
-    domain0.add_atom( "Fe1_6_0", "Fe", 0.00000e+00 ,     5.18100e-01 ,     1.64500e+00 ,     3.20000e-01 ,     1.00000e+00 ,     1.00000e+00 )    
-    domain0.add_atom( "O1_5_0", "O",  8.47000e-01 ,     8.76100e-01 ,     1.59700e+00 ,     3.30000e-01 ,     1.00000e+00 ,     1.00000e+00 )    
-    domain0.add_atom( "O1_6_0", "O",  6.53000e-01 ,     3.75100e-01 ,     1.59700e+00 ,     3.30000e-01 ,     1.00000e+00 ,     1.00000e+00 )    
-    domain0.add_atom( "O1_7_0", "O",  3.47000e-01 ,     1.04310e+00 ,     1.40300e+00 ,     3.30000e-01 ,     1.00000e+00 ,     1.00000e+00 )    
-    domain0.add_atom( "O1_8_0", "O",  1.53000e-01 ,     5.42100e-01 ,     1.40300e+00 ,     3.30000e-01 ,     1.00000e+00 ,     1.00000e+00 )    
-    domain0.add_atom( "Fe1_8_0", "Fe", 0.00000e+00 ,     9.00100e-01 ,     1.35500e+00 ,     3.20000e-01 ,     1.00000e+00 ,     1.00000e+00 )    
-    domain0.add_atom( "Fe1_9_0", "Fe", 5.00000e-01 ,     3.99100e-01 ,     1.35500e+00 ,     3.20000e-01 ,     1.00000e+00 ,     1.00000e+00 )    
-    domain0.add_atom( "O1_9_0", "O",  6.94000e-01 ,     6.74100e-01 ,     1.25000e+00 ,     3.30000e-01 ,     1.00000e+00 ,     1.00000e+00 )    
-    domain0.add_atom( "O1_10_0", "O",  8.06000e-01 ,     1.74100e-01 ,     1.25000e+00 ,     3.30000e-01 ,     1.00000e+00 ,     1.00000e+00 )    
-    domain0.add_atom( "Fe1_10_0", "Fe", 5.00000e-01 ,     9.49100e-01 ,     1.14500e+00 ,     3.20000e-01 ,     1.00000e+00 ,     1.00000e+00 )    
-    domain0.add_atom( "Fe1_12_0", "Fe", 0.00000e+00 ,     4.49100e-01 ,     1.14500e+00 ,     3.20000e-01 ,     1.00000e+00 ,     1.00000e+00 )    
-    domain0.add_atom( "O1_11_0", "O",  1.53000e-01 ,     8.06100e-01 ,     1.09700e+00 ,     3.30000e-01 ,     1.00000e+00 ,     1.00000e+00 )    
-    domain0.add_atom( "O1_12_0", "O",  3.47000e-01 ,     3.06100e-01 ,     1.09700e+00 ,     3.30000e-01 ,     1.00000e+00 ,     1.00000e+00 )    
+    #it is a super surface structure by stacking the surface slab on bulk slab, the repeat vector was counted
+    domain0.add_atom( "O1_1_0", "O",  6.53000e-01 ,     1.11210e+00 ,     1.90300e+00 ,     3.30000e-01 ,     1.00000e+00 ,     1.00000e+00 )
+    domain0.add_atom( "O1_2_0", "O",  8.47000e-01 ,     6.12100e-01 ,     1.90300e+00 ,     3.30000e-01 ,     1.00000e+00 ,     1.00000e+00 )
+    domain0.add_atom( "Fe1_2_0", "Fe", 0.00000e+00 ,     9.69100e-01 ,     1.85500e+00 ,     3.20000e-01 ,     1.00000e+00 ,     1. )
+    domain0.add_atom( "Fe1_3_0", "Fe", 5.00000e-01 ,     4.69100e-01 ,     1.85500e+00 ,     3.20000e-01 ,     1.00000e+00 ,     1. )
+    domain0.add_atom( "O1_3_0", "O",  3.06000e-01 ,     7.44100e-01 ,     1.75000e+00 ,     3.30000e-01 ,     1.00000e+00 ,     1.00000e+00 )
+    domain0.add_atom( "O1_4_0", "O",  1.94000e-01 ,     2.43100e-01 ,     1.75000e+00 ,     3.30000e-01 ,     1.00000e+00 ,     1.00000e+00 )
+    domain0.add_atom( "Fe1_4_0", "Fe", 5.00000e-01 ,     1.01910e+00 ,     1.64500e+00 ,     3.20000e-01 ,     1.00000e+00 ,     1.00000e+00 )
+    domain0.add_atom( "Fe1_6_0", "Fe", 0.00000e+00 ,     5.18100e-01 ,     1.64500e+00 ,     3.20000e-01 ,     1.00000e+00 ,     1.00000e+00 )
+    domain0.add_atom( "O1_5_0", "O",  8.47000e-01 ,     8.76100e-01 ,     1.59700e+00 ,     3.30000e-01 ,     1.00000e+00 ,     1.00000e+00 )
+    domain0.add_atom( "O1_6_0", "O",  6.53000e-01 ,     3.75100e-01 ,     1.59700e+00 ,     3.30000e-01 ,     1.00000e+00 ,     1.00000e+00 )
+    domain0.add_atom( "O1_7_0", "O",  3.47000e-01 ,     1.04310e+00 ,     1.40300e+00 ,     3.30000e-01 ,     1.00000e+00 ,     1.00000e+00 )
+    domain0.add_atom( "O1_8_0", "O",  1.53000e-01 ,     5.42100e-01 ,     1.40300e+00 ,     3.30000e-01 ,     1.00000e+00 ,     1.00000e+00 )
+    domain0.add_atom( "Fe1_8_0", "Fe", 0.00000e+00 ,     9.00100e-01 ,     1.35500e+00 ,     3.20000e-01 ,     1.00000e+00 ,     1.00000e+00 )
+    domain0.add_atom( "Fe1_9_0", "Fe", 5.00000e-01 ,     3.99100e-01 ,     1.35500e+00 ,     3.20000e-01 ,     1.00000e+00 ,     1.00000e+00 )
+    domain0.add_atom( "O1_9_0", "O",  6.94000e-01 ,     6.74100e-01 ,     1.25000e+00 ,     3.30000e-01 ,     1.00000e+00 ,     1.00000e+00 )
+    domain0.add_atom( "O1_10_0", "O",  8.06000e-01 ,     1.74100e-01 ,     1.25000e+00 ,     3.30000e-01 ,     1.00000e+00 ,     1.00000e+00 )
+    domain0.add_atom( "Fe1_10_0", "Fe", 5.00000e-01 ,     9.49100e-01 ,     1.14500e+00 ,     3.20000e-01 ,     1.00000e+00 ,     1.00000e+00 )
+    domain0.add_atom( "Fe1_12_0", "Fe", 0.00000e+00 ,     4.49100e-01 ,     1.14500e+00 ,     3.20000e-01 ,     1.00000e+00 ,     1.00000e+00 )
+    domain0.add_atom( "O1_11_0", "O",  1.53000e-01 ,     8.06100e-01 ,     1.09700e+00 ,     3.30000e-01 ,     1.00000e+00 ,     1.00000e+00 )
+    domain0.add_atom( "O1_12_0", "O",  3.47000e-01 ,     3.06100e-01 ,     1.09700e+00 ,     3.30000e-01 ,     1.00000e+00 ,     1.00000e+00 )
 
-    domain0.add_atom( "O1_0", "O",  6.53000e-01 ,     9.73000e-01 ,     9.03000e-01 ,     3.30000e-01 ,     1.00000e+00 ,     1.00000e+00 )    
-    domain0.add_atom( "O2_0", "O",  8.47000e-01 ,     4.73000e-01 ,     9.03000e-01 ,     3.30000e-01 ,     1.00000e+00 ,     1.00000e+00 )    
-    domain0.add_atom( "Fe2_0", "Fe", 0.00000e+00 ,     8.30000e-01 ,     8.55000e-01 ,     3.20000e-01 ,     1.00000e+00 ,     1. )    
-    domain0.add_atom( "Fe3_0", "Fe", 5.00000e-01 ,     3.30000e-01 ,     8.55000e-01 ,     3.20000e-01 ,     1.00000e+00 ,     1. )    
-    domain0.add_atom( "O3_0", "O",  3.06000e-01 ,     6.05000e-01 ,     7.50000e-01 ,     3.30000e-01 ,     1.00000e+00 ,     1.00000e+00 )    
-    domain0.add_atom( "O4_0", "O",  1.94000e-01 ,     1.04000e-01 ,     7.50000e-01 ,     3.30000e-01 ,     1.00000e+00 ,     1.00000e+00 )    
-    domain0.add_atom( "Fe4_0", "Fe", 5.00000e-01 ,     8.80000e-01 ,     6.45000e-01 ,     3.20000e-01 ,     1.00000e+00 ,     1.00000e+00 )    
-    domain0.add_atom( "Fe6_0", "Fe", 0.00000e+00 ,     3.79000e-01 ,     6.45000e-01 ,     3.20000e-01 ,     1.00000e+00 ,     1.00000e+00 )    
-    domain0.add_atom( "O5_0", "O",  8.47000e-01 ,     7.37000e-01 ,     5.97000e-01 ,     3.30000e-01 ,     1.00000e+00 ,     1.00000e+00 )    
-    domain0.add_atom( "O6_0", "O",  6.53000e-01 ,     2.36000e-01 ,     5.97000e-01 ,     3.30000e-01 ,     1.00000e+00 ,     1.00000e+00 )    
-    domain0.add_atom( "O7_0", "O",  3.47000e-01 ,     9.04000e-01 ,     4.03000e-01 ,     3.30000e-01 ,     1.00000e+00 ,     1.00000e+00 )    
-    domain0.add_atom( "O8_0", "O",  1.53000e-01 ,     4.03000e-01 ,     4.03000e-01 ,     3.30000e-01 ,     1.00000e+00 ,     1.00000e+00 )    
-    domain0.add_atom( "Fe8_0", "Fe", 0.00000e+00 ,     7.61000e-01 ,     3.55000e-01 ,     3.20000e-01 ,     1.00000e+00 ,     1.00000e+00 )    
-    domain0.add_atom( "Fe9_0", "Fe", 5.00000e-01 ,     2.60000e-01 ,     3.55000e-01 ,     3.20000e-01 ,     1.00000e+00 ,     1.00000e+00 )    
-    domain0.add_atom( "O9_0", "O",  6.94000e-01 ,     5.35000e-01 ,     2.50000e-01 ,     3.30000e-01 ,     1.00000e+00 ,     1.00000e+00 )    
-    domain0.add_atom( "O10_0", "O",  8.06000e-01 ,     3.50000e-02 ,     2.50000e-01 ,     3.30000e-01 ,     1.00000e+00 ,     1.00000e+00 )    
-    domain0.add_atom( "Fe10_0", "Fe", 5.00000e-01 ,     8.10000e-01 ,     1.45000e-01 ,     3.20000e-01 ,     1.00000e+00 ,     1.00000e+00 )    
-    domain0.add_atom( "Fe12_0", "Fe", 0.00000e+00 ,     3.10000e-01 ,     1.45000e-01 ,     3.20000e-01 ,     1.00000e+00 ,     1.00000e+00 )    
-    domain0.add_atom( "O11_0", "O",  1.53000e-01 ,     6.67000e-01 ,     9.70000e-02 ,     3.30000e-01 ,     1.00000e+00 ,     1.00000e+00 )    
-    domain0.add_atom( "O12_0", "O",  3.47000e-01 ,     1.67000e-01 ,     9.70000e-02 ,     3.30000e-01 ,     1.00000e+00 ,     1.00000e+00 )    
+    domain0.add_atom( "O1_0", "O",  6.53000e-01 ,     9.73000e-01 ,     9.03000e-01 ,     3.30000e-01 ,     1.00000e+00 ,     1.00000e+00 )
+    domain0.add_atom( "O2_0", "O",  8.47000e-01 ,     4.73000e-01 ,     9.03000e-01 ,     3.30000e-01 ,     1.00000e+00 ,     1.00000e+00 )
+    domain0.add_atom( "Fe2_0", "Fe", 0.00000e+00 ,     8.30000e-01 ,     8.55000e-01 ,     3.20000e-01 ,     1.00000e+00 ,     1. )
+    domain0.add_atom( "Fe3_0", "Fe", 5.00000e-01 ,     3.30000e-01 ,     8.55000e-01 ,     3.20000e-01 ,     1.00000e+00 ,     1. )
+    domain0.add_atom( "O3_0", "O",  3.06000e-01 ,     6.05000e-01 ,     7.50000e-01 ,     3.30000e-01 ,     1.00000e+00 ,     1.00000e+00 )
+    domain0.add_atom( "O4_0", "O",  1.94000e-01 ,     1.04000e-01 ,     7.50000e-01 ,     3.30000e-01 ,     1.00000e+00 ,     1.00000e+00 )
+    domain0.add_atom( "Fe4_0", "Fe", 5.00000e-01 ,     8.80000e-01 ,     6.45000e-01 ,     3.20000e-01 ,     1.00000e+00 ,     1.00000e+00 )
+    domain0.add_atom( "Fe6_0", "Fe", 0.00000e+00 ,     3.79000e-01 ,     6.45000e-01 ,     3.20000e-01 ,     1.00000e+00 ,     1.00000e+00 )
+    domain0.add_atom( "O5_0", "O",  8.47000e-01 ,     7.37000e-01 ,     5.97000e-01 ,     3.30000e-01 ,     1.00000e+00 ,     1.00000e+00 )
+    domain0.add_atom( "O6_0", "O",  6.53000e-01 ,     2.36000e-01 ,     5.97000e-01 ,     3.30000e-01 ,     1.00000e+00 ,     1.00000e+00 )
+    domain0.add_atom( "O7_0", "O",  3.47000e-01 ,     9.04000e-01 ,     4.03000e-01 ,     3.30000e-01 ,     1.00000e+00 ,     1.00000e+00 )
+    domain0.add_atom( "O8_0", "O",  1.53000e-01 ,     4.03000e-01 ,     4.03000e-01 ,     3.30000e-01 ,     1.00000e+00 ,     1.00000e+00 )
+    domain0.add_atom( "Fe8_0", "Fe", 0.00000e+00 ,     7.61000e-01 ,     3.55000e-01 ,     3.20000e-01 ,     1.00000e+00 ,     1.00000e+00 )
+    domain0.add_atom( "Fe9_0", "Fe", 5.00000e-01 ,     2.60000e-01 ,     3.55000e-01 ,     3.20000e-01 ,     1.00000e+00 ,     1.00000e+00 )
+    domain0.add_atom( "O9_0", "O",  6.94000e-01 ,     5.35000e-01 ,     2.50000e-01 ,     3.30000e-01 ,     1.00000e+00 ,     1.00000e+00 )
+    domain0.add_atom( "O10_0", "O",  8.06000e-01 ,     3.50000e-02 ,     2.50000e-01 ,     3.30000e-01 ,     1.00000e+00 ,     1.00000e+00 )
+    domain0.add_atom( "Fe10_0", "Fe", 5.00000e-01 ,     8.10000e-01 ,     1.45000e-01 ,     3.20000e-01 ,     1.00000e+00 ,     1.00000e+00 )
+    domain0.add_atom( "Fe12_0", "Fe", 0.00000e+00 ,     3.10000e-01 ,     1.45000e-01 ,     3.20000e-01 ,     1.00000e+00 ,     1.00000e+00 )
+    domain0.add_atom( "O11_0", "O",  1.53000e-01 ,     6.67000e-01 ,     9.70000e-02 ,     3.30000e-01 ,     1.00000e+00 ,     1.00000e+00 )
+    domain0.add_atom( "O12_0", "O",  3.47000e-01 ,     1.67000e-01 ,     9.70000e-02 ,     3.30000e-01 ,     1.00000e+00 ,     1.00000e+00 )
 
     #id list according to the order in the reference domain
     ref_id_list=["O1_1_0","O1_2_0","Fe1_2_0","Fe1_3_0","O1_3_0","O1_4_0","Fe1_4_0","Fe1_6_0","O1_5_0","O1_6_0","O1_7_0","O1_8_0","Fe1_8_0","Fe1_9_0","O1_9_0","O1_10_0","Fe1_10_0","Fe1_12_0","O1_11_0","O1_12_0",\
@@ -2991,7 +2990,7 @@ if __name__ == '__main__':
     domain_class_1.add_oxygen_pair(domain1B,O_id='_B1',ref_point=[0.5,0.5,1.703],r=0.1,alpha=0.)
     #set new variables
     domain_class_1.set_new_vars(head_list=['u_o_n','u_Fe_n','dx_n','dy_n','dz_n','oc_n','dx_sign_n','dy_sign_n','dz_sign_n'],N_list=[4,3,7,7,7,7,7,7,7])
-    #some other parameters to be used 
+    #some other parameters to be used
     rgh_domain1.new_var('r_Pb_O', 0.1)
     rgh_domain1.new_var('r_Pb_O2', 0.1)
     rgh_domain1.new_var('r_O_pair1', 0.1)
@@ -3062,13 +3061,13 @@ if __name__ == '__main__':
                             norm_sign(rgh_domain1.dx_sign_n4,0.01),norm_sign(rgh_domain1.dx_sign_n5,0.001),norm_sign(rgh_domain1.dx_sign_n6,0.0001),norm_sign(rgh_domain1.dx_sign_n7,0.00001)]
         domain_class_1.scale_opt(atm_gp_list_domain1[1:],scale_factor=scale_values_all_dx,sign_values=sign_values_all_dx,flag='dx',ref_v=ref_dx_domain1)
 
-    #scale dy value(0.1-1) 
+    #scale dy value(0.1-1)
         scale_values_all_dy=[rgh_domain1.dy_n2,rgh_domain1.dy_n3,rgh_domain1.dy_n4,rgh_domain1.dy_n5,rgh_domain1.dy_n6,rgh_domain1.dy_n7]
         sign_values_all_dy=[norm_sign(rgh_domain1.dy_sign_n2,0.1),norm_sign(rgh_domain1.dy_sign_n3,0.05),\
                             norm_sign(rgh_domain1.dy_sign_n4,0.01),norm_sign(rgh_domain1.dy_sign_n5,0.001),norm_sign(rgh_domain1.dy_sign_n6,0.0001),norm_sign(rgh_domain1.dy_sign_n7,0.00001)]
         domain_class_1.scale_opt(atm_gp_list_domain1[1:],scale_factor=scale_values_all_dy,sign_values=sign_values_all_dy,flag='dy',ref_v=ref_dy_domain1)
 
-    #scale dz value(0.1-1)    
+    #scale dz value(0.1-1)
         scale_values_all_dz=[rgh_domain1.dz_n2,rgh_domain1.dz_n3,rgh_domain1.dz_n4,rgh_domain1.dz_n5,rgh_domain1.dz_n6,rgh_domain1.dz_n7]
         sign_values_all_dz=[norm_sign(rgh_domain1.dz_sign_n1),norm_sign(rgh_domain1.dz_sign_n2),norm_sign(rgh_domain1.dz_sign_n3),\
                             norm_sign(rgh_domain1.dz_sign_n4),norm_sign(rgh_domain1.dz_sign_n5),norm_sign(rgh_domain1.dz_sign_n6),norm_sign(rgh_domain1.dz_sign_n7)]
@@ -3083,7 +3082,7 @@ if __name__ == '__main__':
         domain_class_1.updata_oxygen_pair(domain=domain1B,ids=['Os_1_B1','Os_2_B1'],ref_point=[rgh_domain1.ref_x_O_pair1,rgh_domain1.ref_y_O_pair1,rgh_domain1.ref_z_O_pair1-0.5],r=rgh_domain1.r_O_pair1,alpha=rgh_domain1.alpha_O_pair1)
 
         #roughness par
-        beta=rgh_domain1.beta    
+        beta=rgh_domain1.beta
         F = []
         domain['domain1A']['wt']=1.-rgh_domain1.domain_wt
         domain['domain1B']['wt']=rgh_domain1.domain_wt
