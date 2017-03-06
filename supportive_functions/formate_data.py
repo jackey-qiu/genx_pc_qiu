@@ -8,7 +8,7 @@ def qsi_correction(data_path='M:\\fwog\\members\\qiu05\\mica\\nQc_zr_mica_CTR_Ma
     data[:,I_column+1]=data[:,I_column+1]*(correction_factor*data[:,L_column])**2
     np.savetxt(data_path.replace('.dat','_Q_corrected.dat'),data,fmt='%.5e')
     return True
-    
+
 def l_correction(data_path='P:\\apps\\genx_pc_qiu\\dump_files\\temp_full_dataset.dat',L_column=[0,3],I_column=4,correction_factor=0.3125,l_shift=0):
     data=np.loadtxt(data_path)
     raxr_first=None
@@ -20,7 +20,7 @@ def l_correction(data_path='P:\\apps\\genx_pc_qiu\\dump_files\\temp_full_dataset
     data[raxr_first:len(data),I_column]=(data[raxr_first:len(data),3]/(data[raxr_first:len(data),3]+l_shift))**2*data[raxr_first:len(data),I_column]
     np.savetxt(data_path.replace('.dat','_l_corrected.dat'),data,fmt='%.5e')
     return True
-    
+
 bl_dl_muscovite={'3_0':{'segment':[[0,1],[1,9]],'info':[[2,1],[6,1]]},'2_0':{'segment':[[0,9]],'info':[[2,2.0]]},'2_1':{'segment':[[0,9]],'info':[[4,0.8609]]},'2_2':{'segment':[[0,9]],'info':[[2,1.7218]]},\
     '2_-1':{'segment':[[0,3.1391],[3.1391,9]],'info':[[4,3.1391],[2,3.1391]]},'1_1':{'segment':[[0,9]],'info':[[2,1.8609]]},'1_0':{'segment':[[0,3],[3,9]],'info':[[6,3],[2,3]]},'0_2':{'segment':[[0,9]],'info':[[2,1.7218]]},\
     '0_0':{'segment':[[0,20]],'info':[[2,2]]},'-1_0':{'segment':[[0,3],[3,9]],'info':[[6,-3],[2,-3]]},'0_-2':{'segment':[[0,9]],'info':[[2,-6.2782]]},\
@@ -45,11 +45,12 @@ def formate_CTR_data(file='M:\\fwog\\members\\qiu05\\1611 - ROBL20\\nQc_S0_Zr_0m
     np.savetxt(file+'_GenX_formate.dat',data_formated,fmt='%.5e')
     qsi_correction(file+'_GenX_formate.dat',L_column=0,I_column=4,correction_factor=np.pi*2/f_original[0,0])
     return None
-    
+
 def formate_RAXR_data(file_path='M:\\fwog\\members\\qiu05\\mica\\zr_mica_RAXR_L',E_range=[17934,18119]):
     full_data=np.zeros((1,8))
-    L_list=['041','053','061','075','088','115','145','171','231','261','285','321','355','424','455','561','625','731','915','1031','1115']
-    segment_list=[2,4,3,3,1,1,0,2,0,1,0,0,0,1,0,0,0,0,0,0,0]
+    L_list=['0041','0053','0061','0075','0088','0115','0145','0171','0231','0264','0285','0321','0355','0424','0455','0561','0625','0731','0915','1031','1115']
+
+    segment_list=[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
     #L_list=[L_list[0]]
     def _find_segment_index(data,segment_index):
         current_segment=0
@@ -63,9 +64,9 @@ def formate_RAXR_data(file_path='M:\\fwog\\members\\qiu05\\mica\\zr_mica_RAXR_L'
             else:
                 pass
         return index_container
-        
+
     for i in range(len(L_list)):
-        file=file_path+L_list[i]+'.ipg'
+        file=file_path+L_list[i]+'a_RAXR_R.ipg'
         data=np.loadtxt(file,comments='%')
         index_segment_all=_find_segment_index(data,segment_list[i])
         if E_range==None:
@@ -90,7 +91,7 @@ def formate_RAXR_data(file_path='M:\\fwog\\members\\qiu05\\mica\\zr_mica_RAXR_L'
         temp_data=np.append(temp_data,dL,axis=1)
         full_data=np.append(full_data,temp_data,axis=0)
     np.savetxt(file_path+'_GenX_formate.dat',full_data[1:],fmt='%.5e')
-    
+
 def formate_RAXR_data_APS(file_path='M:\\fwog\\members\\qiu05\\1608 - 13-IDC\\schmidt\\mica\\mica-zr_s2_shortt_1_RAXR_1st_spot1.ipg',E_range=[17934,18119]):
     full_data=np.zeros((1,8))
     L_list=[]
@@ -107,7 +108,7 @@ def formate_RAXR_data_APS(file_path='M:\\fwog\\members\\qiu05\\1608 - 13-IDC\\sc
             full_data=np.append(full_data,temp_data,axis=0)
     print L_list
     np.savetxt(file_path.replace('.ipg','_GenX_formate.dat'),full_data[1:],fmt='%.5e')
-    
+
 def formate_RAXR_data_ESRF(file_path='M:\\fwog\\members\\qiu05\\1611 - ROBL20\\S0_Zr_0mM_NaCl_Dry_RAXR_1st_spot1_R.ipg',E_range=[17934,18119],L_shift=0):
     #L_shift:after q correction, L should be corrected somehow. For example, it was L=0.3 while it is now L=0.255 after Q correction, then L_shift=-0.045
     full_data=np.zeros((1,8))
@@ -126,7 +127,7 @@ def formate_RAXR_data_ESRF(file_path='M:\\fwog\\members\\qiu05\\1611 - ROBL20\\S
     print L_list
     full_data[:,0]=full_data[:,0]+L_shift
     np.savetxt(file_path.replace('.ipg','_GenX_formate.dat'),full_data[1:],fmt='%.5e')
-    
+
 def scale_RAXS_data_to_CTR(file_ctr='M:\\fwog\\members\\qiu05\\1611 - ROBL20\\nQc_S0_Zr_0mM_NaCl_Dry_CTR_1st_spot1_R_GenX_formate_Q_corrected.dat',file_raxs='M:\\fwog\\members\\qiu05\\1611 - ROBL20\\S0_Zr_0mM_NaCl_Dry_RAXR_1st_spot1_R_GenX_formate.dat',E_col=0,L_col_raxs=3,E_ctr=16000):
     f_ctr=np.loadtxt(file_ctr)
     f_raxs=np.loadtxt(file_raxs)
@@ -160,12 +161,12 @@ def formate_F1F2_data(f1f2_file='M:\\fwog\\members\\qiu05\\mica\\axd_Zr_k.002.no
     f1f2_new=np.zeros((1,3))
     print E_list
     for i in range(len(f1f2)):
-        if round(f1f2[i,0],0) in E_list:
-            f1f2_new=np.append(f1f2_new,f1f2[i][np.newaxis,:],axis=0)
+        if round(f1f2[i,0]*1000,0) in E_list:
+            f1f2_new=np.append(f1f2_new,(f1f2[i]*[1000,1,1])[np.newaxis,:],axis=0)
     f1f2_new=f1f2_new[1:]
     np.savetxt(f1f2_file+'.formated',f1f2_new[:,[1,2,0]])
     return None
-    
+
 def formate_F1F2_data_ESRF(f1f2_file='M:\\fwog\\members\\qiu05\\1611 - ROBL20\\axd_Zr_k.002.nor',ipg_file='M:\\fwog\\members\\qiu05\\1611 - ROBL20\\S0_Zr_0mM_NaCl_Dry_RAXR_1st_spot1_R.ipg'):
     f1f2=np.loadtxt(f1f2_file)
     ipg=np.loadtxt(ipg_file,comments='%')
@@ -183,10 +184,8 @@ def formate_F1F2_data_ESRF(f1f2_file='M:\\fwog\\members\\qiu05\\1611 - ROBL20\\a
     f1f2_new=f1f2_new[1:]
     np.savetxt(f1f2_file+'.formated',f1f2_new[:,[1,2,0]])
     return None
-    
+
 if __name__=='__main__':
     formate_CTR_data()
     formate_RAXR_data(E_range=[17920,18160])
     formate_F1F2_data()
-    
-    
