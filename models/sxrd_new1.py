@@ -405,7 +405,7 @@ class Sample:
         ftot=0
         coherence=self.coherence
         fb = self.calc_fb(h, k, l)
-        f_surface=self.calc_fs
+        f_surface=self.calc_fs_muscovite
         f_layered_water=self.calc_f_layered_water_muscovite(h,k,l,self.domain['layered_water_pars'],height_offset)
         f_layered_sorbate=self.calc_f_layered_sorbate_muscovite(h,k,l,self.domain['layered_sorbate_pars'],height_offset)
         domains=self.domain['domains']
@@ -435,7 +435,7 @@ class Sample:
 
         coherence=self.coherence
         fb = self.calc_fb(h, k, l)
-        f_surface=self.calc_fs
+        f_surface=self.calc_fs_muscovite
         f_layered_water=self.calc_f_layered_water_muscovite(h,k,l,self.domain['layered_water_pars'],height_offset)
         f_layered_sorbate=self.calc_f_layered_sorbate_muscovite_RAXR(h,k,l,self.domain['layered_sorbate_pars'],height_offset,f1f2)
         #only consider one set of Fourier components in the whole strucutre
@@ -471,7 +471,7 @@ class Sample:
 
         coherence=self.coherence
         fb = self.calc_fb(h, k, l)
-        f_surface=self.calc_fs_RAXR
+        f_surface=self.calc_fs_RAXR_muscovite
         f_layered_water=self.calc_f_layered_water_muscovite(h,k,l,self.domain['layered_water_pars'],height_offset)
         f_layered_sorbate=self.calc_f_layered_sorbate_muscovite_RAXR(h,k,l,self.domain['layered_sorbate_pars'],height_offset,f1f2)
         domains=self.domain['domains']
@@ -1454,6 +1454,86 @@ class Sample:
         x, y, z, u, oc, el = self._surf_pars(slabs)
         #Note that the u here has been recalculated to represent for the Gaussian distribution width of the thermal vibration (ie sigma in Angstrom)
         f=self._get_f(el, dinv)
+        #print x, y,z
+        # Create all the atomic structure factors
+        #print f.shape, h.shape, oc.shape, x.shape, y.shape, z.shape,el.shape
+        #change mark 3
+        #delta_l=1
+        #if self.delta1==[]:delta_l=0
+        fs = np.sum(oc*f*np.exp(-2*np.pi**2*u**2*dinv[:,np.newaxis]**2)\
+            *np.sum([np.exp(2.0*np.pi*1.0J*(
+                 h[:,np.newaxis]*(sym_op.trans_x(x, y)+self.delta1) +
+                 k[:,np.newaxis]*(sym_op.trans_y(x, y)+self.delta2) +
+                 l[:,np.newaxis]*(z[np.newaxis, :]+1)))
+              for sym_op in self.surface_sym], 0)
+                    ,1)
+        """
+        for id in slabs[0].id:
+            if "Pb" in str(id):
+
+                print id, np.sum([np.exp(2.0*np.pi*1.0J*(\
+                    1*(sym_op.trans_x(x, y)+self.delta1) +\
+                    1*(sym_op.trans_y(x, y)+self.delta2) +\
+                    1.3*(z[np.newaxis, :]+1)))\
+                    for sym_op in self.surface_sym][0][0])#[np.where(slabs[0].id==id)[0][0]]
+        """
+        return fs
+
+    def calc_fs_muscovite(self, h, k, l,slabs):
+        '''Calculate the structure factors from the surface
+        '''
+        dinv = self.unit_cell.abs_hkl(h, k, l)
+        x, y, z, u, oc, el = self._surf_pars(slabs)
+        sub_space_index=[i for i in range(len(slabs[0].id)) if slabs[0].id[i][0:11]!='Freezed_el_']
+        x,y,z,u,oc,el=x[sub_space_index],y[sub_space_index],z[sub_space_index],u[sub_space_index],oc[sub_space_index],el[sub_space_index]
+        #Note that the u here has been recalculated to represent for the Gaussian distribution width of the thermal vibration (ie sigma in Angstrom)
+        f=self._get_f(el, dinv)
+        #print x, y,z
+        # Create all the atomic structure factors
+        #print f.shape, h.shape, oc.shape, x.shape, y.shape, z.shape,el.shape
+        #change mark 3
+        #delta_l=1
+        #if self.delta1==[]:delta_l=0
+        fs = np.sum(oc*f*np.exp(-2*np.pi**2*u**2*dinv[:,np.newaxis]**2)\
+            *np.sum([np.exp(2.0*np.pi*1.0J*(
+                 h[:,np.newaxis]*(sym_op.trans_x(x, y)+self.delta1) +
+                 k[:,np.newaxis]*(sym_op.trans_y(x, y)+self.delta2) +
+                 l[:,np.newaxis]*(z[np.newaxis, :]+1)))
+              for sym_op in self.surface_sym], 0)
+                    ,1)
+        """
+        for id in slabs[0].id:
+            if "Pb" in str(id):
+
+                print id, np.sum([np.exp(2.0*np.pi*1.0J*(\
+                    1*(sym_op.trans_x(x, y)+self.delta1) +\
+                    1*(sym_op.trans_y(x, y)+self.delta2) +\
+                    1.3*(z[np.newaxis, :]+1)))\
+                    for sym_op in self.surface_sym][0][0])#[np.where(slabs[0].id==id)[0][0]]
+        """
+        return fs
+
+    def calc_fs_RAXR_muscovite(self, h, k, l,slabs,f1f2,res_el='Zr'):
+        '''Calculate the structure factors from the surface with resonant element
+           In the normal case, hkl will be an array of same number (eg h=[1]*10,k=[1]*10,l=[1.3]*10,f1f2 has the same length as hkl, but it changes as a function of E)
+           Atomic form factor for the res_el will be corrected by those two correction items (f1 and f2)
+        '''
+        dinv = self.unit_cell.abs_hkl(h, k, l)
+        x, y, z, u, oc, el = self._surf_pars(slabs)
+        sub_space_index=[i for i in range(len(slabs[0].id)) if slabs[0].id[i][0:11]=='Freezed_el_']
+        #Note that the u here has been recalculated to represent for the Gaussian distribution width of the thermal vibration (ie sigma in Angstrom)
+        f=self._get_f(el, dinv)
+        shape=f.shape
+        f_offset=np.zeros(shape=shape)+0J
+        for i in range(shape[0]):
+            for j in range(shape[1]):
+                if res_el==el[j]:
+                    if j in sub_space_index:
+                        f[:,j]=f[:,j]*0
+                        f_offset[i][j]=f1f2[i][0]+1.0J*f1f2[i][1]
+                    else:
+                        f_offset[i][j]=f1f2[i][0]+1.0J*f1f2[i][1]
+        f=f+f_offset
         #print x, y,z
         # Create all the atomic structure factors
         #print f.shape, h.shape, oc.shape, x.shape, y.shape, z.shape,el.shape
