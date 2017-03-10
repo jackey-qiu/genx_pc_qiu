@@ -4,6 +4,10 @@
 ##PBS -l walltime=5:00:00
 ##PBS -l nodes=4:ppn=16
 ##PBS -j oe
+. /opt/modules-3.2.6/Modules/3.2.6/init/bash
+export MODULES_NO_OUTPUT=1
+module load /home/qiu05/own.modules
+export -n MODULES_NO_OUTPUT
 
 cd $HOME/temp_gx_files
 #file=*_Jun17.gx
@@ -16,8 +20,9 @@ do
     for gx in $file;do
 	if [ `ls $file | wc -l` != 0 ] ;
 	then
-        mpirun --mca mpi_warn_on_fork 0 -np 1 python $HOME/genx_pc_qiu/MPI_run_files/set_up_par.py $gx $i
-	mpirun --mca mpi_warn_on_fork 0 -np 64  python $HOME/genx_pc_qiu/MPI_run_files/GenX_run_multiple_mpi_new_3_raxr.py $gx 64 2>&1 |tee job.$PBS_JOBID.out
+        #eval "export `mpirun env | grep OMPI_MCA_orte_precondition_transports`"
+        mpiexec --mca mpi_warn_on_fork 0 -np 1 python $HOME/genx_pc_qiu/MPI_run_files/set_up_par.py $gx $i
+	mpiexec --mca mpi_warn_on_fork 0 -np 64  python $HOME/genx_pc_qiu/MPI_run_files/GenX_run_multiple_mpi_new_3_raxr.py $gx 64 2>&1 |tee job.$PBS_JOBID.out
 	else
 	sleep 1
 	fi;

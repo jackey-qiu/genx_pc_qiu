@@ -391,21 +391,24 @@ class Sample:
             #ftot=ftot+ftot_A_C+ftot_A_IC+ftot_B_IC+ftot_B_C
         return abs(ftot)*self.inst.inten
 
-    def calculate_structure_factor(self,h,k,x,y,index=None,fit_mode='MD',height_offset=0):
+    def calculate_structure_factor(self,h,k,x,y,index=None,fit_mode='MD',height_offset=0,version=1):
         if x[0]<100:#CTR data
-            return self.calc_f4_muscovite_CTR(h,k,x,height_offset)
+            return self.calc_f4_muscovite_CTR(h,k,x,height_offset,version)
         else:#RAXR data
             if fit_mode=='MI':
-                return self.calc_f4_muscovite_RAXR_MI(h,k,x,y,index,height_offset)
+                return self.calc_f4_muscovite_RAXR_MI(h,k,x,y,index,height_offset,version)
             elif fit_mode=='MD':
-                return self.calc_f4_muscovite_RAXR_MD(h,k,x,y,index,height_offset)
+                return self.calc_f4_muscovite_RAXR_MD(h,k,x,y,index,height_offset,version)
 
-    def calc_f4_muscovite_CTR(self, h, k, l,height_offset=0):
+    def calc_f4_muscovite_CTR(self, h, k, l,height_offset=0,version=1):
         #now the coherence is either true or force corresponding to coherent and incoherent summation of structure factor
         ftot=0
         coherence=self.coherence
         fb = self.calc_fb(h, k, l)
-        f_surface=self.calc_fs_muscovite
+        if version==1:
+            f_surface=self.calc_fs
+        elif version==1.1:
+            f_surface=self.calc_fs_muscovite
         f_layered_water=self.calc_f_layered_water_muscovite(h,k,l,self.domain['layered_water_pars'],height_offset)
         f_layered_sorbate=self.calc_f_layered_sorbate_muscovite(h,k,l,self.domain['layered_sorbate_pars'],height_offset)
         domains=self.domain['domains']
@@ -417,7 +420,7 @@ class Sample:
                 ftot=ftot+getattr(self.domain['global_vars'],'wt'+str(i+1))*abs(fb+f_surface(h,k,l,[domains[i]])+f_layered_water+f_layered_sorbate)
         return abs(ftot)*self.inst.inten
 
-    def calc_f4_muscovite_RAXR_MI(self,h,k,x,y,index,height_offset=0):
+    def calc_f4_muscovite_RAXR_MI(self,h,k,x,y,index,height_offset=0,version=1):
         h, k, l, E, E0, f1f2, a, b, c, resonant_el=h,k,y,x,self.domain['E0'],self.domain['F1F2'],self.domain['raxs_vars']['a'+str(index)],self.domain['raxs_vars']['b'+str(index)],self.domain['raxs_vars']['c'+str(index)],self.domain['el']
         ftot=0
 
@@ -435,7 +438,10 @@ class Sample:
 
         coherence=self.coherence
         fb = self.calc_fb(h, k, l)
-        f_surface=self.calc_fs_muscovite
+        if version==1:
+            f_surface=self.calc_fs
+        elif version==1.1:
+            f_surface=self.calc_fs_muscovite
         f_layered_water=self.calc_f_layered_water_muscovite(h,k,l,self.domain['layered_water_pars'],height_offset)
         f_layered_sorbate=self.calc_f_layered_sorbate_muscovite_RAXR(h,k,l,self.domain['layered_sorbate_pars'],height_offset,f1f2)
         #only consider one set of Fourier components in the whole strucutre
@@ -453,7 +459,7 @@ class Sample:
         ftot=np.exp(-a*(E-E0)**2/E0**2+b*(E-E0)/E0)*c*abs(ftot)
         return ftot*self.inst.inten
 
-    def calc_f4_muscovite_RAXR_MD(self,h,k,x,y,index,height_offset=0):
+    def calc_f4_muscovite_RAXR_MD(self,h,k,x,y,index,height_offset=0,version=1):
         h, k, l, E, E0, f1f2, a, b, c, resonant_el=h,k,y,x,self.domain['E0'],self.domain['F1F2'],self.domain['raxs_vars']['a'+str(index)],self.domain['raxs_vars']['b'+str(index)],self.domain['raxs_vars']['c'+str(index)],self.domain['el']
         ftot=0
 
@@ -471,7 +477,10 @@ class Sample:
 
         coherence=self.coherence
         fb = self.calc_fb(h, k, l)
-        f_surface=self.calc_fs_RAXR_muscovite
+        if version==1:
+            f_surface=self.calc_fs_RAXR
+        elif version==1.1:
+            f_surface=self.calc_fs_RAXR_muscovite
         f_layered_water=self.calc_f_layered_water_muscovite(h,k,l,self.domain['layered_water_pars'],height_offset)
         f_layered_sorbate=self.calc_f_layered_sorbate_muscovite_RAXR(h,k,l,self.domain['layered_sorbate_pars'],height_offset,f1f2)
         domains=self.domain['domains']
@@ -1484,8 +1493,12 @@ class Sample:
         '''
         dinv = self.unit_cell.abs_hkl(h, k, l)
         x, y, z, u, oc, el = self._surf_pars(slabs)
-        sub_space_index=[i for i in range(len(slabs[0].id)) if slabs[0].id[i][0:11]!='Freezed_el_']
-        x,y,z,u,oc,el=x[sub_space_index],y[sub_space_index],z[sub_space_index],u[sub_space_index],oc[sub_space_index],el[sub_space_index]
+        try:
+            if self.domain['freeze']:
+                sub_space_index=[i for i in range(len(slabs[0].id)) if slabs[0].id[i][0:11]!='Freezed_el_']
+                x,y,z,u,oc,el=x[sub_space_index],y[sub_space_index],z[sub_space_index],u[sub_space_index],oc[sub_space_index],el[sub_space_index]
+        except:
+            pass
         #Note that the u here has been recalculated to represent for the Gaussian distribution width of the thermal vibration (ie sigma in Angstrom)
         f=self._get_f(el, dinv)
         #print x, y,z
@@ -1528,10 +1541,13 @@ class Sample:
         for i in range(shape[0]):
             for j in range(shape[1]):
                 if res_el==el[j]:
-                    if j in sub_space_index:
-                        f[:,j]=f[:,j]*0
-                        f_offset[i][j]=f1f2[i][0]+1.0J*f1f2[i][1]
-                    else:
+                    try:
+                        if j in sub_space_index and self.domain['freeze']:
+                            f[:,j]=f[:,j]*0#set resonant element have no effect on the non-resonant structure factor
+                            f_offset[i][j]=f1f2[i][0]+1.0J*f1f2[i][1]
+                        else:
+                            f_offset[i][j]=f1f2[i][0]+1.0J*f1f2[i][1]
+                    except:
                         f_offset[i][j]=f1f2[i][0]+1.0J*f1f2[i][1]
         f=f+f_offset
         #print x, y,z

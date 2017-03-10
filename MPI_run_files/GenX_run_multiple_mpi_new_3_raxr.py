@@ -75,7 +75,9 @@ iter_list = [1]
 #   'logbars'
 #   'sintth4'
 # e.g.: fom_list = ['log','R1']  # performs all repetitions for 'log' and 'R1'
-fom_list = ['R1_weighted']
+#fom_list = ['R1_weighted']
+fom_list = ['diff']
+
 
 # diffev control parameters
 # needs to be a list of parameters combinations to use. 
@@ -97,7 +99,7 @@ pop_size = pop_num        # if use_pop_mult = False, population size
 
 # Generations
 use_max_generations = True       # absolute (T) or relative (F) maximum gen.
-max_generations=60      # if use_max_generations = True
+max_generations=100      # if use_max_generations = True
 max_generation_mult = 6          # if use_max_generations = False
 
 # Parallel processing

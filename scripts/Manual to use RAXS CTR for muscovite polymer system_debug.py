@@ -14,12 +14,13 @@ import supportive_functions.make_parameter_table_GenX_5_beta as make_grid
 ##==========================================<program begins from here>=========================================##
 COUNT_TIME=False
 if COUNT_TIME:t_0=datetime.now()
+VERSION=1.1#version number to make easier code update to compatible with gx files based on old version scripts
 
 ##<global handles>##
 RUN=False
 BATCH_PATH_HEAD,OUTPUT_FILE_PATH=batch_path.module_path_locator(),output_path.module_path_locator()
-F1F2=np.loadtxt(os.path.join(BATCH_PATH_HEAD,'Zr_K_edge_Aug17_2016.f1f2'))
-RAXR_EL,E0,NUMBER_RAXS_SPECTRA,RAXR_FIT_MODE='Zr',18007,21,'MD'
+F1F2=np.loadtxt(os.path.join(BATCH_PATH_HEAD,'Zr_K_edge_Aug17_2016.f1f2'))#the energy column should NOT have duplicate values after rounding up to 0 digit. If so, cut off rows of duplicate energy!
+RAXR_EL,E0,NUMBER_RAXS_SPECTRA,RAXR_FIT_MODE,FREEZE='Zr',18007,21,'MD',True#FREEZE=True will have resonant el make no influence on the non-resonant structure factor. And it will otherwise.
 NUMBER_DOMAIN,COHERENCE=2,True
 HEIGHT_OFFSET=-2.6685#if set to 0, the top atomic layer is at 2.6685 in fractional unit before relaxation
 XY_OFFSET=[0,0]#takes effect only for structural atoms (not include Gaussian atoms)
@@ -73,16 +74,23 @@ Domain1, Gaussian_groups,Gaussian_group_names=domain_creator.add_gaussian(domain
 for i in range(len(Gaussian_groups)):vars()[Gaussian_group_names[i]]=Gaussian_groups[i]
 rgh_gaussian=domain_creator.define_gaussian_vars(rgh=UserVars(),domain=Domain1,shape=GAUSSIAN_SHAPE)
 
-##<Freeze Elements>##
+'''WARNING! Choose one way to freeze element. Errors will appear if using both ways.'''
+##<Freeze Elements by specifing values>##
 U_RAXS_LIST=[]
 OC_RAXS_LIST=[]
 X_RAXS_LIST=[]
 Y_RAXS_LIST=[]
-Z_RAXS_LIST=[]
+Z_RAXS_LIST=np.array([])/unitcell.c - 1.
 el_freezed=RAXR_EL
 Domain1=domain_creator.add_freezed_els(domain=Domain1,el=el_freezed,u=U_RAXS_LIST,oc=OC_RAXS_LIST,x=X_RAXS_LIST,y=Y_RAXS_LIST,z=Z_RAXS_LIST)
-##<Adding absorbed water>##to be set## (no adsorbed water at the moment)
-#Domain1,absorbed_water_pair1_D1=domain_creator.add_oxygen_pair_muscovite(domain=Domain1,ids=['O1a_W_D1','O1b_W_D1'],coors=np.array([[0,0,2.2+HEIGHT_OFFSET],[0.5,0.5,2.2+HEIGHT_OFFSET]]))
+
+##<Freeze Elements using adding_gaussian function>##
+NUMBER_GAUSSIAN_PEAK_FREEZE, EL_GAUSSIAN_PEAK_FREEZE, FIRST_PEAK_HEIGHT_FREEZE=0,RAXR_EL,5
+GAUSSIAN_OCC_INIT_FREEZE, GAUSSIAN_LAYER_SPACING_FREEZE, GAUSSIAN_U_INIT_FREEZE=1,2,0.1
+GAUSSIAN_SHAPE_FREEZE, GAUSSIAN_RMS_FREEZE='Flat',2
+Domain1, Gaussian_groups_freeze,Gaussian_group_names_freeze=domain_creator.add_gaussian(domain=Domain1,el=EL_GAUSSIAN_PEAK_FREEZE,number=NUMBER_GAUSSIAN_PEAK_FREEZE,first_peak_height=FIRST_PEAK_HEIGHT_FREEZE,spacing=GAUSSIAN_LAYER_SPACING_FREEZE,u_init=GAUSSIAN_U_INIT_FREEZE,occ_init=GAUSSIAN_OCC_INIT_FREEZE,height_offset=HEIGHT_OFFSET,c=unitcell.c,domain_tag='_D1',shape=GAUSSIAN_SHAPE_FREEZE,gaussian_rms=GAUSSIAN_RMS_FREEZE,freeze_tag=True)
+for i in range(len(Gaussian_groups_freeze)):vars()[Gaussian_group_names_freeze[i]]=Gaussian_groups_freeze[i]
+rgh_gaussian_freeze=domain_creator.define_gaussian_vars(rgh=UserVars(),domain=Domain1,shape=GAUSSIAN_SHAPE_FREEZE)
 
 ##<Define atom groups>##
 #surface atoms
@@ -104,8 +112,8 @@ rgh_dls=domain_creator.define_diffused_layer_sorbate_vars(rgh=UserVars())#Diffus
 ##<make fit table file>##
 if not RUN:
     table_container=[]
-    rgh_instance_list=[rgh]+groups+sorbate_groups+Gaussian_groups+[rgh_gaussian]+[vars()['rgh_domain1_set'+str(i+1)] for i in range(NUMBER_SORBATE_LAYER)]+[rgh_dlw,rgh_dls]
-    rgh_instance_name_list=['rgh']+group_names+sorbate_group_names+Gaussian_group_names+['rgh_gaussian']+['rgh_domain1_set'+str(i+1) for i in range(NUMBER_SORBATE_LAYER)]+['rgh_dlw','rgh_dls']
+    rgh_instance_list=[rgh]+groups+sorbate_groups+Gaussian_groups+[rgh_gaussian]+[rgh_gaussian_freeze]+[vars()['rgh_domain1_set'+str(i+1)] for i in range(NUMBER_SORBATE_LAYER)]+[rgh_dlw,rgh_dls]
+    rgh_instance_name_list=['rgh']+group_names+sorbate_group_names+Gaussian_group_names+['rgh_gaussian']+['rgh_gaussian_freeze']+['rgh_domain1_set'+str(i+1) for i in range(NUMBER_SORBATE_LAYER)]+['rgh_dlw','rgh_dls']
     table_container=make_grid.set_table_input_all(container=table_container,rgh_instance_list=rgh_instance_list,rgh_instance_name_list=rgh_instance_name_list,par_file=os.path.join(BATCH_PATH_HEAD,'pars_ranges.txt'))
     #raxs pars
     table_container=make_grid.set_table_input_raxs(container=table_container,rgh_group_instance=rgh_raxs,rgh_group_instance_name='rgh_raxs',par_range={'a':[0,20],'b':[-5,5],'c':[0,1],'A':[0,2],'P':[0,1]},number_spectra=NUMBER_RAXS_SPECTRA,number_domain=1)
@@ -129,13 +137,15 @@ def Sim(data,VARS=VARS):
     ##<update gaussian peaks>##
     if NUMBER_GAUSSIAN_PEAK>0:
         domain_creator.update_gaussian(domain=Domain1,rgh=rgh_gaussian,groups=Gaussian_groups,el=EL_GAUSSIAN_PEAK,number=NUMBER_GAUSSIAN_PEAK,height_offset=HEIGHT_OFFSET,c=unitcell.c,domain_tag='_D1',shape=GAUSSIAN_SHAPE,print_items=False,use_cumsum=True)
+    if NUMBER_GAUSSIAN_PEAK_FREEZE>0:
+        domain_creator.update_gaussian(domain=Domain1,rgh=rgh_gaussian_freeze,groups=Gaussian_groups_freeze,el=EL_GAUSSIAN_PEAK_FREEZE,number=NUMBER_GAUSSIAN_PEAK_FREEZE,height_offset=HEIGHT_OFFSET,c=unitcell.c,domain_tag='_D1',shape=GAUSSIAN_SHAPE_FREEZE,print_items=False,use_cumsum=True,freeze_tag=True)
 
     ##<link groups>##
     [eval(each_command) for each_command in domain_creator.link_atom_group(gp_info=atom_group_info,gp_scheme=GROUP_SCHEME)]
 
     ##<format domains>##
     domain={'domains':[Domain1,Domain2],'layered_water_pars':layered_water_pars,'layered_sorbate_pars':layered_sorbate_pars,\
-            'global_vars':rgh,'raxs_vars':raxs_vars,'F1F2':F1F2,'E0':E0,'el':RAXR_EL}
+            'global_vars':rgh,'raxs_vars':raxs_vars,'F1F2':F1F2,'E0':E0,'el':RAXR_EL,'freeze':FREEZE}
     sample = model.Sample(inst, bulk, domain, unitcell,coherence=COHERENCE,surface_parms={'delta1':0.,'delta2':0.})
 
     ##<calculate structure factor>##
@@ -154,7 +164,7 @@ def Sim(data,VARS=VARS):
             rough = (1-rgh.beta)/((1-rgh.beta)**2 + 4*rgh.beta*np.sin(np.pi*(y-LB)/dL)**2)**0.5
         else:
             rough = (1-rgh.beta)/((1-rgh.beta)**2 + 4*rgh.beta*np.sin(np.pi*(x-LB)/dL)**2)**0.5
-        f=rough*abs(sample.calculate_structure_factor(h,k,x,y,index=i,fit_mode=RAXR_FIT_MODE,height_offset=HEIGHT_OFFSET*unitcell.c))
+        f=rough*abs(sample.calculate_structure_factor(h,k,x,y,index=i,fit_mode=RAXR_FIT_MODE,height_offset=HEIGHT_OFFSET*unitcell.c,version=VERSION))
         F.append(f*f)
         fom_scaler.append(1)
 
@@ -166,7 +176,7 @@ def Sim(data,VARS=VARS):
         domain_creator.print_structure_files_muscovite_new(domain_list=[Domain1,Domain2],z_shift=0.8+HEIGHT_OFFSET,number_gaussian=NUMBER_GAUSSIAN_PEAK,el=RAXR_EL,matrix_info=INFO_LIB,save_file=OUTPUT_FILE_PATH)
         create_plots.generate_plot_files(output_file_path=OUTPUT_FILE_PATH,sample=sample,rgh=rgh,data=data,fit_mode=RAXR_FIT_MODE,z_min=0,z_max=50,RAXR_HKL=[0,0,20],height_offset=HEIGHT_OFFSET*BASIS[2])
         #make sure the tab_file is saved in the dumped files directory before running this function
-        domain_creator.print_data_for_publication_B3_muscovite(N_sorbate=NUMBER_GAUSSIAN_PEAK+len(U_RAXS_LIST),domain=Domain1,z_shift=0.8+HEIGHT_OFFSET+0.8666,save_file=os.path.join(OUTPUT_FILE_PATH,'temp_publication_data_muscovite.xyz'),tab_file=os.path.join(OUTPUT_FILE_PATH,'best_fit_pars.tab'))
+        domain_creator.print_data_for_publication_B3_muscovite(N_sorbate=NUMBER_GAUSSIAN_PEAK+len(U_RAXS_LIST)+NUMBER_GAUSSIAN_PEAK_FREEZE,domain=Domain1,z_shift=0.8+HEIGHT_OFFSET+0.8666,save_file=os.path.join(OUTPUT_FILE_PATH,'temp_publication_data_muscovite.xyz'),tab_file=os.path.join(OUTPUT_FILE_PATH,'best_fit_pars.tab'))
 
         #then do this command inside shell to extract the errors for A and P: model.script_module.create_plots.append_errors_for_A_P(par_instance=model.parameters,dump_file=os.path.join(model.script_module.OUTPUT_FILE_PATH,'temp_plot_raxr_A_P_Q'),raxs_rgh='rgh_raxs')
         make_dummy_data,combine_data_sets=False,False

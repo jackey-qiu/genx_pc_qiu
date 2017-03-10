@@ -61,7 +61,7 @@ t_start_0=datetime.now()
 #iter_list = range(5)
 
 #print "the run starts @ %s"%(str(datetime.now()))
-iter_list = [1,2,3,4]
+iter_list = [1]
 #####################
 # figure of merit (FOM) to use
 # needs to be a list of strings, valid names are:
@@ -75,7 +75,9 @@ iter_list = [1,2,3,4]
 #   'logbars'
 #   'sintth4'
 # e.g.: fom_list = ['log','R1']  # performs all repetitions for 'log' and 'R1'
-fom_list = ['R1_weighted_2']
+fom_list = ['R1_weighted_2b']
+#fom_list=['chi2bars']
+#fom_list=['diff']
 
 # diffev control parameters
 # needs to be a list of parameters combinations to use. 
@@ -515,6 +517,7 @@ for pars in par_list:
                     opt.text_output('std='+str(std_val))
             	    #calculate the error bar for parameters
             	    n_elements = len(opt.start_guess)
+		    #opt.text_output('start_guesslength='+str(n_elements))
                     #print 'Number of elemets to calc errobars for ', n_elements
                     cum_N=0
                     for index in range(n_elements):

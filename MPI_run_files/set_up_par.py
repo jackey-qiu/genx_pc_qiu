@@ -16,6 +16,7 @@ import filehandling as io
 import glob
 import numpy as np
 
+print 'setting up pars'
 mod = model.Model()
 config = io.Config()
 opt = diffev.DiffEv()
@@ -35,7 +36,7 @@ for i in range(mod.parameters.get_len_rows()):
     if mod.parameters.get_value(i,0)=='rgh_raxs.setA'+str(spectra_index+1):
         row_to_be_set=i
 num_pars_each_roll=None
-if 'MI\n' in mod.get_script():
+if "'MI'\n" in mod.get_script():
     num_pars_each_roll=5
 else:
     num_pars_each_roll=3
