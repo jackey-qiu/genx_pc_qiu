@@ -174,7 +174,7 @@ def Sim(data,VARS=VARS):
     ##<print structure/plotting files>##
     if not RUN:
         domain_creator.print_structure_files_muscovite_new(domain_list=[Domain1,Domain2],z_shift=0.8+HEIGHT_OFFSET,number_gaussian=NUMBER_GAUSSIAN_PEAK,el=RAXR_EL,matrix_info=INFO_LIB,save_file=OUTPUT_FILE_PATH)
-        create_plots.generate_plot_files(output_file_path=OUTPUT_FILE_PATH,sample=sample,rgh=rgh,data=data,fit_mode=RAXR_FIT_MODE,z_min=0,z_max=50,RAXR_HKL=[0,0,20],height_offset=HEIGHT_OFFSET*BASIS[2])
+        create_plots.generate_plot_files(output_file_path=OUTPUT_FILE_PATH,sample=sample,rgh=rgh,data=data,fit_mode=RAXR_FIT_MODE,z_min=0,z_max=50,RAXR_HKL=[0,0,20],height_offset=HEIGHT_OFFSET*BASIS[2],version=VERSION)
         #make sure the tab_file is saved in the dumped files directory before running this function
         domain_creator.print_data_for_publication_B3_muscovite(N_sorbate=NUMBER_GAUSSIAN_PEAK+len(U_RAXS_LIST)+NUMBER_GAUSSIAN_PEAK_FREEZE,domain=Domain1,z_shift=0.8+HEIGHT_OFFSET+0.8666,save_file=os.path.join(OUTPUT_FILE_PATH,'temp_publication_data_muscovite.xyz'),tab_file=os.path.join(OUTPUT_FILE_PATH,'best_fit_pars.tab'))
 

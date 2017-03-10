@@ -271,7 +271,7 @@ def add_gaussian(domain,el='O',number=3,first_peak_height=2,spacing=10,u_init=0.
     #oc_list=[]
     if type(el)!=type([]):
         if type(number)==type([]):#for type of Double_Gaussian
-            el=el*number[0]+el*number[1]
+            el=[el]*number[0]+[el]*number[1]
         else:
             el=[el]*number
 
