@@ -288,7 +288,7 @@ def add_gaussian(domain,el='O',number=3,first_peak_height=2,spacing=10,u_init=0.
         oc_list=occ_init*np.exp(-0.5*gaussian_rms**-2*(np.array(height_list)*c-center*c)**2)
         #print spacing,number,delta_z
         #print height_list
-    elif shape=='Double_Gaussian':
+    elif shape=='Double_Gaussian':#make sure the number of each Gaussian peak cluster is an odd number
         #peak one
         center=1.6685+height_offset+first_peak_height[0]/c+spacing[0]/c/2
         delta_z=spacing[0]/c/float(number[0]-1)
