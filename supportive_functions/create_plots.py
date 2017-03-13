@@ -893,6 +893,8 @@ def overplot_raxr_e_density(dump_files=["temp_plot_RAXR_eden_e_fit_0mMNaCl","tem
     return fig
 
 def plot_all(path=module_path_locator(),make_offset_of_total_e=False):
+    #set make_offset_of_total_e to True if you want to have total e density replesented by total_e - resonant e in the case when the resonant els are freezed to have no influence on the CTR.
+    #At the same time, the total_e - raxs_e - water is actually total_e - 2*raxs_e -water
     PATH=path
     #which plots do you want to create
     plot_e_model,plot_e_FS,plot_ctr,plot_raxr,plot_AP_Q=1,1,1,1,0
@@ -932,28 +934,38 @@ def plot_all(path=module_path_locator(),make_offset_of_total_e=False):
             else:
                 pass
             ax.plot(np.array(edata[i][0,:]),edata[i][1,:],color='b',label="Total e density")
-            try:#some domain may have no raxr element
-                ax.plot(np.array(edata[i][0,:]),edata[i][2,:],color='g',label="RAXS element e profile (MD)")
-            except:
-                pass
+            ax.plot(np.array(edata[i][0,:]),edata[i][2,:],color='g',label="RAXS element e profile (MD)")
+
+            #try:#some domain may have no raxr element
+            #    ax.plot(np.array(edata[i][0,:]),edata[i][2,:],color='g',label="RAXS element e profile (MD)")
+            #except:
+            #    pass
             pyplot.title(labels[i],fontsize=11)
             if plot_e_FS:
                 if i==0:
                     ax.plot(data_eden_FS[0],list(np.array(data_eden_FS[2])[:,i]),color='r',label="RAXR imaging (MI)")
-                    ax.fill_between(data_eden_FS[0],list(np.array(data_eden_FS[2])[:,i]),color='m',alpha=0.6)
+                    #ax.fill_between(data_eden_FS[0],list(np.array(data_eden_FS[2])[:,i]),color='m',alpha=0.6)
                     #clip off negative part of the e density through Fourier thynthesis
-                    ax.fill_between(data_eden_FS[0],list(edata[i][1,:]-edata[i][3,:]-np.array(data_eden_FS[2])[:,i]*(np.array(data_eden_FS[2])[:,i]>0.01)),color='black',alpha=0.6,label="Total e - LayerWater - RAXR")
+                    #ax.fill_between(data_eden_FS[0],list(edata[i][1,:]-edata[i][3,:]-np.array(data_eden_FS[2])[:,i]*(np.array(data_eden_FS[2])[:,i]>0.01)),color='black',alpha=0.6,label="Total e - LayerWater - RAXR")
                     ax.fill_between(data_eden_FS[0],edata[i][3,:],color='blue',alpha=0.6,label="LayerWater")
-
                     ax.plot(data_eden_FS_sub[0],list(np.array(data_eden_FS_sub[2])[:,i]),color='black',label="RAXR imaging (MD)")
-                    ax.fill_between(data_eden_FS_sub[0],list(np.array(data_eden_FS_sub[2])[:,i]),color='c',alpha=0.6)
+                    #ax.fill_between(data_eden_FS_sub[0],list(np.array(data_eden_FS_sub[2])[:,i]),color='c',alpha=0.6)
                 elif i==N-1:
                     ax.plot(data_eden_FS[0],data_eden_FS[1],color='r',label="RAXR imaging (MI)")
-                    ax.fill_between(data_eden_FS[0],data_eden_FS[1],color='m',alpha=0.6)
-                    ax.fill_between(data_eden_FS[0],edata[i][1,:]-data_eden_FS[1],color='black',alpha=0.6,label="Total e - RAXR(MI)")
+                    #ax.fill_between(data_eden_FS[0],data_eden_FS[1],color='m',alpha=0.6)
+                    #ax.fill_between(data_eden_FS[0],edata[i][1,:]-data_eden_FS[1],color='black',alpha=0.6,label="Total e - RAXR(MI)")
                     ax.fill_between(data_eden_FS[0],edata[i][3,:],color='blue',alpha=0.6,label="LayerWater")
-                    ax.fill_between(data_eden_FS[0],list(edata[i][1,:]-edata[i][3,:]-np.array(data_eden_FS[1])*(np.array(data_eden_FS[1])>0.01)),color='black',alpha=0.6,label="Total e - LayerWater - RAXR")
-                    eden_temp=list(edata[i][1,:]-edata[i][3,:]-np.array(data_eden_FS[1])*(np.array(data_eden_FS[1])>0.01))
+                    if make_offset_of_total_e:
+                        ax.fill_between(data_eden_FS[0],list(edata[i][1,:]-edata[i][3,:]-2*edata[i][2,:]))
+                    else:
+                        ax.fill_between(data_eden_FS[0],list(edata[i][1,:]-edata[i][3,:]-edata[i][2,:]))
+                        #ax.fill_between(data_eden_FS[0],list(edata[i][1,:]-edata[i][3,:]-np.array(data_eden_FS[1])*(np.array(data_eden_FS[1])>0.01)),color='black',alpha=0.6,label="Total e - LayerWater - RAXR")
+                        #eden_temp=list(edata[i][1,:]-edata[i][3,:]-np.array(data_eden_FS[1])*(np.array(data_eden_FS[1])>0.01))
+                    eden_temp=None
+                    if make_offset_of_total_e:
+                        eden_temp=list(edata[i][1,:]-edata[i][3,:]-2*edata[i][2,:])
+                    else:
+                        eden_temp=list(edata[i][1,:]-edata[i][3,:]-edata[i][2,:])
                     eden_temp=(np.array(eden_temp)*(np.array(eden_temp)>0.01))[:,np.newaxis]
                     z_temp=np.array(data_eden_FS[0])[:,np.newaxis]
                     e_den_subtracted=np.append(z_temp,eden_temp,axis=1)
@@ -1002,7 +1014,7 @@ def plot_all(path=module_path_locator(),make_offset_of_total_e=False):
     pyplot.figure()
     print '##############Total e - raxr -layer water#################'
     gaussian_fit(e_den_subtracted,water_scaling=water_scaling)
-    pyplot.title('Total e - raxr -layer water')
+    pyplot.title('Total e - raxr (MD)-layer water')
     pyplot.figure()
     print '#########################RAXR (MI)########################'
     gaussian_fit(e_den_raxr_MI,zs=None,N=40,water_scaling=water_scaling)
@@ -1222,4 +1234,4 @@ def fit_e_density(path=module_path_locator(),fit_range=[1,40],zs=None,N=8):
 
 if __name__=="__main__":
 
-    plot_all()
+    plot_all(make_offset_of_total_e=False)
