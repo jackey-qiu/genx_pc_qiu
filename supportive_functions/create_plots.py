@@ -895,7 +895,7 @@ def overplot_raxr_e_density(dump_files=["temp_plot_RAXR_eden_e_fit_0mMNaCl","tem
 def plot_all(path=module_path_locator(),make_offset_of_total_e=False):
     PATH=path
     #which plots do you want to create
-    plot_e_model,plot_e_FS,plot_ctr,plot_raxr,plot_AP_Q=1,1,1,0,0
+    plot_e_model,plot_e_FS,plot_ctr,plot_raxr,plot_AP_Q=1,1,1,1,0
 
     #specify file paths (files are dumped files when setting running_mode=False in GenX script)
     e_file=os.path.join(PATH,"temp_plot_eden")#e density from model
