@@ -956,9 +956,9 @@ def plot_all(path=module_path_locator(),make_offset_of_total_e=False):
                     #ax.fill_between(data_eden_FS[0],edata[i][1,:]-data_eden_FS[1],color='black',alpha=0.6,label="Total e - RAXR(MI)")
                     ax.fill_between(data_eden_FS[0],edata[i][3,:],color='blue',alpha=0.6,label="LayerWater")
                     if make_offset_of_total_e:
-                        ax.fill_between(data_eden_FS[0],list(edata[i][1,:]-edata[i][3,:]-2*edata[i][2,:]))
+                        ax.fill_between(data_eden_FS[0],list(edata[i][1,:]-edata[i][3,:]-2*edata[i][2,:]),color='black',alpha=0.6,label="Total e - raxr (MD) - LayerWater")
                     else:
-                        ax.fill_between(data_eden_FS[0],list(edata[i][1,:]-edata[i][3,:]-edata[i][2,:]))
+                        ax.fill_between(data_eden_FS[0],list(edata[i][1,:]-edata[i][3,:]-edata[i][2,:]),color='black',alpha=0.6,label="Total e - raxr (MD) - LayerWater")
                         #ax.fill_between(data_eden_FS[0],list(edata[i][1,:]-edata[i][3,:]-np.array(data_eden_FS[1])*(np.array(data_eden_FS[1])>0.01)),color='black',alpha=0.6,label="Total e - LayerWater - RAXR")
                         #eden_temp=list(edata[i][1,:]-edata[i][3,:]-np.array(data_eden_FS[1])*(np.array(data_eden_FS[1])>0.01))
                     eden_temp=None

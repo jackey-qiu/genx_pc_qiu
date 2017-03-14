@@ -46,9 +46,9 @@ def formate_CTR_data(file='M:\\fwog\\members\\qiu05\\1611 - ROBL20\\nQc_S0_Zr_0m
     qsi_correction(file+'_GenX_formate.dat',L_column=0,I_column=4,correction_factor=np.pi*2/f_original[0,0])
     return None
 
-def formate_RAXR_data(file_path='M:\\fwog\\members\\qiu05\\mica\\zr_mica_RAXR_L',E_range=[17934,18119]):
+def formate_RAXR_data(file_path='M:\\fwog\\members\\qiu05\\1608 - 13-IDC\\schmidt\mica\\files for Li Th mica model\\th_mica_LiCl_',E_range=[16196,16546]):
     full_data=np.zeros((1,8))
-    L_list=['0041','0053','0061','0075','0088','0115','0145','0171','0231','0264','0285','0321','0355','0424','0455','0561','0625','0731','0915','1031','1115']
+    L_list=['0041a','0053a','0061b','0075a','0088a','0115a','0145a','0171a','0231a','0264a','0285a','0321a','0355a','0424a','0455a','0561a','0625a','0731a','0915a','1031a','1115a']
 
     segment_list=[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
     #L_list=[L_list[0]]
@@ -66,7 +66,7 @@ def formate_RAXR_data(file_path='M:\\fwog\\members\\qiu05\\mica\\zr_mica_RAXR_L'
         return index_container
 
     for i in range(len(L_list)):
-        file=file_path+L_list[i]+'a_RAXR_R.ipg'
+        file=file_path+L_list[i]+'_RAXR_R.ipg'
         data=np.loadtxt(file,comments='%')
         index_segment_all=_find_segment_index(data,segment_list[i])
         if E_range==None:
