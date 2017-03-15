@@ -11,8 +11,8 @@ import supportive_functions.create_plots as create_plots
 import pickle
 
 ##==========================================<program begins from here>=========================================##
-run=1
-N_el=40
+run=0
+N_el=90
 h,k,l,zs=[],[],[],[]
 water_scaling=None
 
@@ -26,6 +26,21 @@ if not run:#do this once to extract all necessary information
     e_data_formate=np.append(e_data_formate,e_data[:,1][:,np.newaxis],axis=1)
     e_data_formate=np.append(e_data_formate,np.zeros((len(e_data),3))+0.0001,axis=1)
     np.savetxt(os.path.join(PATH,"e_data_temp.dat"),e_data_formate)
+    ##formate AP values
+    AP_Q_file=os.path.join(PATH,"temp_plot_raxr_A_P_Q")
+    data_AP_Q=pickle.load(open(AP_Q_file,"rb"))
+    AP_data_formate_A=np.append(np.array(data_AP_Q[1][2])[:,np.newaxis],np.zeros((len(data_AP_Q[1][2]),3)),axis=1)
+    AP_data_formate_A=np.append(AP_data_formate_A,np.array(data_AP_Q[1][0])[:,np.newaxis],axis=1)
+    AP_data_formate_A=np.append(AP_data_formate_A,np.max(data_AP_Q[1][3],axis=1)[:,np.newaxis],axis=1)
+    AP_data_formate_A=np.append(AP_data_formate_A,np.zeros((len(data_AP_Q[1][2]),2))+0.0001,axis=1)
+
+    AP_data_formate_P=np.append(np.array(data_AP_Q[1][2])[:,np.newaxis],np.zeros((len(data_AP_Q[1][2]),3)),axis=1)
+    AP_data_formate_P=np.append(AP_data_formate_P,np.array(data_AP_Q[1][1])[:,np.newaxis],axis=1)
+    AP_data_formate_P=np.append(AP_data_formate_P,np.max(data_AP_Q[1][4],axis=1)[:,np.newaxis],axis=1)
+    AP_data_formate_P=np.append(AP_data_formate_P,np.zeros((len(data_AP_Q[1][2]),2))+0.0001,axis=1)
+
+    AP_data_formate=np.append(AP_data_formate_A,AP_data_formate_P,axis=0)
+    np.savetxt(os.path.join(PATH,"APQ_data_temp.dat"),AP_data_formate)
 
     ##extract hkl from ctr_data
     h,k,l=[],[],[]
@@ -60,16 +75,11 @@ if not run:#do this once to extract all necessary information
     print 'water_scaling=',water_scaling
 
 else:
-    h=np.array([0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,
-            0.0,0.0,0.0])
-    k=np.array([0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,
-            0.0,0.0,0.0])
-    l=np.array([0.345508,0.465508,0.545508,0.685508,0.815508,1.08551,1.38551,1.64551,2.24551
-            ,2.57551,2.78551,3.14551,3.48551,4.17551,4.48551,5.54551,6.18551,7.24551,9.08551
-            ,10.2455,11.0855])
-    zs=np.array([  2. ,   4.8,   7.6,  10.4,  13.2,  16. ,  18.8,  21.6,  24.4,
-        27.2,  30. ])
-    water_scaling= 0.376587994184
+    h=np.array([ 0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0 ])
+    k=np.array([ 0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0 ])
+    l=np.array([ 0.41,0.53,0.61,0.75,0.88,1.15,1.45,1.71,2.31,2.64,2.85,3.21,3.55,4.24,4.55,5.61,6.25,7.31,9.15,10.31,11.15 ])
+    zs=np.array([ 1.5,3.65,5.85,7.7,9.7,11.75,17.05,19.1,21.1,23.1,25.25,27.45,29.55,32.0,34.45,36.5,38.6,40.65,42.55,44.65,48.0,49.85 ])
+    water_scaling= 0.33266606
 
 ##cal q list
 q_list=np.array(create_plots.q_list_func(h,k,l))
@@ -80,7 +90,7 @@ rgh_oc=UserVars()
 rgh_dz=UserVars()
 for i in range(len(zs)):
     rgh_u.new_var('u'+str(i+1),0.2)
-    rgh_oc.new_var('oc'+str(i+1),1.)
+    rgh_oc.new_var('oc'+str(i+1),0.)
     rgh_dz.new_var('dz'+str(i+1),0.)
 
 def Sim(data):
@@ -89,7 +99,7 @@ def Sim(data):
     z_list=[]
     ##<Extract pars>##
     for i in range(len(zs)):
-        u_list.append(getattr(rgh_u,'getU'+str(i+1))())
+        u_list.append(getattr(rgh_u,'getU'+str(0+1))())
         oc_list.append(getattr(rgh_oc,'getOc'+str(i+1))())
         z_list.append(getattr(rgh_dz,'getDz'+str(i+1))()+zs[i])
 
@@ -97,16 +107,23 @@ def Sim(data):
     F,fom_scaler=[],[]
     i=0
     for data_set in data:
-        f=np.array([])
-        z = data_set.x
-        A,P,Q=create_plots.find_A_P_muscovite(q_list,z_list,oc_list,u_list)
-        f=np.array(create_plots.fourier_synthesis(q_list,P,A,z,N_el))/water_scaling
-        #f=create_plots.cal_e_density(z_list,oc_list,u_list,z_max=z[-1],water_scaling=water_scaling)
+        if data_set.x[-1]>10:
+            f=np.array([])
+            z = data_set.x
+            A,P,Q=create_plots.find_A_P_muscovite(q_list,z_list,oc_list,u_list)
+            f=np.array(create_plots.fourier_synthesis(q_list,P,A,z,N_el))/water_scaling
+            #f=create_plots.cal_e_density(z_list,oc_list,u_list,z_max=z[-1],water_scaling=water_scaling)
 
-        F.append(f)
-        fom_scaler.append(1)
+            F.append(f)
+            fom_scaler.append(1)
+        else:
+            f=np.array([])
+            q = data_set.x
+            A,P,Q=create_plots.find_A_P_muscovite(q_list,z_list,oc_list,u_list)
+            F.append(np.append(A,P))
+            fom_scaler.append(1)
 
-    print_items=False
+    print_items=0
     if print_items:
         print 'U_RAXS_LIST=['+','.join(map(lambda u:str(u**2),u_list))+']'
         print 'OC_RAXS_LIST=['+','.join(map(lambda oc:str(oc),oc_list))+']'
