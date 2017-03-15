@@ -34,7 +34,7 @@ if not run:#do this once to extract all necessary information
     AP_data_formate_A=np.append(AP_data_formate_A,np.max(data_AP_Q[1][3],axis=1)[:,np.newaxis],axis=1)
     AP_data_formate_A=np.append(AP_data_formate_A,np.zeros((len(data_AP_Q[1][2]),2))+0.0001,axis=1)
 
-    AP_data_formate_P=np.append(np.array(data_AP_Q[1][2])[:,np.newaxis],np.zeros((len(data_AP_Q[1][2]),3)),axis=1)
+    AP_data_formate_P=np.append(np.array(data_AP_Q[1][2])[:,np.newaxis]+3.5,np.zeros((len(data_AP_Q[1][2]),3)),axis=1)#here 3.5 is a arbitrary q offset, make sure it is larger than the maxium of q vlues
     AP_data_formate_P=np.append(AP_data_formate_P,np.array(data_AP_Q[1][1])[:,np.newaxis],axis=1)
     AP_data_formate_P=np.append(AP_data_formate_P,np.max(data_AP_Q[1][4],axis=1)[:,np.newaxis],axis=1)
     AP_data_formate_P=np.append(AP_data_formate_P,np.zeros((len(data_AP_Q[1][2]),2))+0.0001,axis=1)
