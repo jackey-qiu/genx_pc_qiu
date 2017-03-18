@@ -26,7 +26,7 @@ bl_dl_muscovite={'3_0':{'segment':[[0,1],[1,9]],'info':[[2,1],[6,1]]},'2_0':{'se
     '0_0':{'segment':[[0,20]],'info':[[2,2]]},'-1_0':{'segment':[[0,3],[3,9]],'info':[[6,-3],[2,-3]]},'0_-2':{'segment':[[0,9]],'info':[[2,-6.2782]]},\
     '-2_-2':{'segment':[[0,9]],'info':[[2,-6.2782]]},'-2_-1':{'segment':[[0,3.1391],[3.1391,9]],'info':[[4,-3.1391],[2,-3.1391]]},'-2_0':{'segment':[[0,9]],'info':[[2,-6]]},\
     '-2_1':{'segment':[[0,4.8609],[4.8609,9]],'info':[[4,-4.8609],[2,-6.8609]]},'-1_-1':{'segment':[[0,9]],'info':[[2,-4.1391]]},'-3_0':{'segment':[[0,1],[1,9]],'info':[[2,-1],[6,-1]]}}
-def formate_CTR_data(file='M:\\fwog\\members\\qiu05\\1611 - ROBL20\\nQc_S0_Zr_0mM_NaCl_Dry_CTR_1st_spot1_R',bragg_peaks=bl_dl_muscovite):
+def formate_CTR_data(file='/Users/cqiu/data/ESRF/March_2017/Qc_Zr_ClO4',bragg_peaks=bl_dl_muscovite):
     data_formated=None
     f_original=np.loadtxt(file,skiprows=1,comments='#')
     data_points=len(f_original)-1#the first row is not data but some q corr information
@@ -109,7 +109,7 @@ def formate_RAXR_data_APS(file_path='M:\\fwog\\members\\qiu05\\1608 - 13-IDC\\sc
     print L_list
     np.savetxt(file_path.replace('.ipg','_GenX_formate.dat'),full_data[1:],fmt='%.5e')
 
-def formate_RAXR_data_ESRF(file_path='M:\\fwog\\members\\qiu05\\1611 - ROBL20\\S0_Zr_0mM_NaCl_Dry_RAXR_1st_spot1_R.ipg',E_range=[17934,18119],L_shift=0):
+def formate_RAXR_data_ESRF(file_path='/Users/cqiu/data/ESRF/March_2017/Zr_ClO4_RAXR_R.ipg',E_range=[17934,18119],L_shift=0):
     #L_shift:after q correction, L should be corrected somehow. For example, it was L=0.3 while it is now L=0.255 after Q correction, then L_shift=-0.045
     full_data=np.zeros((1,8))
     L_list=[]
@@ -167,7 +167,7 @@ def formate_F1F2_data(f1f2_file='M:\\fwog\\members\\qiu05\\mica\\axd_Zr_k.002.no
     np.savetxt(f1f2_file+'.formated',f1f2_new[:,[1,2,0]])
     return None
 
-def formate_F1F2_data_ESRF(f1f2_file='M:\\fwog\\members\\qiu05\\1611 - ROBL20\\axd_Zr_k.002.nor',ipg_file='M:\\fwog\\members\\qiu05\\1611 - ROBL20\\S0_Zr_0mM_NaCl_Dry_RAXR_1st_spot1_R.ipg'):
+def formate_F1F2_data_ESRF(f1f2_file='/Users/cqiu/data/ESRF/March_2017/axd_Zr_k.002.nor',ipg_file='/Users/cqiu/data/ESRF/March_2017/Zr_ClO4_RAXR_R.ipg'):
     f1f2=np.loadtxt(f1f2_file)
     ipg=np.loadtxt(ipg_file,comments='%')
     E_list=[]
