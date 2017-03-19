@@ -109,7 +109,7 @@ def formate_RAXR_data_APS(file_path='M:\\fwog\\members\\qiu05\\1608 - 13-IDC\\sc
     print L_list
     np.savetxt(file_path.replace('.ipg','_GenX_formate.dat'),full_data[1:],fmt='%.5e')
 
-def formate_RAXR_data_ESRF(file_path='/Users/cqiu/data/ESRF/March_2017/Zr_ClO4_RAXR_R.ipg',E_range=[17934,18119],L_shift=0):
+def formate_RAXR_data_ESRF(file_path='/Users/cqiu/data/ESRF/March_2017/Zr_ClO4_RAXR_R.ipg',E_range=[17815,18265],L_shift=0):
     #L_shift:after q correction, L should be corrected somehow. For example, it was L=0.3 while it is now L=0.255 after Q correction, then L_shift=-0.045
     full_data=np.zeros((1,8))
     L_list=[]
@@ -167,7 +167,7 @@ def formate_F1F2_data(f1f2_file='M:\\fwog\\members\\qiu05\\mica\\axd_Zr_k.002.no
     np.savetxt(f1f2_file+'.formated',f1f2_new[:,[1,2,0]])
     return None
 
-def formate_F1F2_data_ESRF(f1f2_file='/Users/cqiu/data/ESRF/March_2017/axd_Zr_k.002.nor',ipg_file='/Users/cqiu/data/ESRF/March_2017/Zr_ClO4_RAXR_R.ipg'):
+def formate_F1F2_data_ESRF(f1f2_file="/Users/cqiu/data/ESRF/axd_Zr-A01-bkg_b.f1f2.ASC",ipg_file='/Users/cqiu/data/ESRF/March_2017/Zr_ClO4_RAXR_R.ipg'):
     f1f2=np.loadtxt(f1f2_file)
     ipg=np.loadtxt(ipg_file,comments='%')
     E_list=[]
