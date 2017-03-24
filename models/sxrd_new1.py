@@ -1373,7 +1373,7 @@ class Sample:
         e_data.append(np.array([list(e_data[0])[0],e_total]))
         pickle.dump([e_data,labels],open(os.path.join(file_path,"temp_plot_eden"),"wb"))
 
-    def plot_electron_density_muscovite(self,slabs,el_lib={'O':8,'Fe':26,'As':33,'Pb':82,'Sb':51,'P':15,'Cr':24,'Cd':48,'Cu':29,'Zn':30,'Al':13,'Si':14,'K':19,'Zr':40,"Th":90},z_min=0.,z_max=28.,N_layered_water=10,resolution=1000,file_path="D:\\",height_offset=0):
+    def plot_electron_density_muscovite(self,slabs,el_lib={'O':8,'Fe':26,'As':33,'Pb':82,'Sb':51,'P':15,'Cr':24,'Cd':48,'Cu':29,'Zn':30,'Al':13,'Si':14,'K':19,'Zr':40,"Th":90},z_min=0.,z_max=28.,N_layered_water=10,resolution=1000,file_path="D:\\",height_offset=0,version=1.0,freeze=False):
         #print dinv
         e_data=[]
         labels=[]
@@ -1446,7 +1446,13 @@ class Sample:
                 e_data.append(np.array([z_plot,np.array(eden)/eden_layer_water[-1]*0.25,np.array(eden_raxs)/eden_layer_water[-1]*0.25,np.array(eden_layer_water)/eden_layer_water[-1]*0.25]))
             elif domain_index==1:#domain2 has a 0.75 weighting factor
                 e_data.append(np.array([z_plot,np.array(eden)/eden_layer_water[-1]*0.75,np.array(eden_raxs)/eden_layer_water[-1]*0.75,np.array(eden_layer_water)/eden_layer_water[-1]*0.75]))
-            e_total=e_total+np.array(eden)
+            if version==1.0:
+                e_total=e_total+np.array(eden)
+            elif version==1.1:
+                if freeze:
+                    e_total=e_total+np.array(np.array(eden)-np.array(eden_raxs))
+                else:
+                    e_total=e_total+np.array(eden)
             e_total_raxs=e_total_raxs+np.array(eden_raxs)
             e_total_layer_water=e_total_layer_water+np.array(eden_layer_water)
         labels.append('Total electron density')
