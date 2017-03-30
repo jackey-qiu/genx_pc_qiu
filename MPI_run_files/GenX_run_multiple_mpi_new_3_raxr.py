@@ -12,6 +12,8 @@ sys.path.insert(0,genxpath)
 import model, time, fom_funcs
 import diffev
 import filehandling as io
+from shutil import copyfile
+import glob
 ##new in version 2##
 #errro bar for each par will be calculated before program being halted
 ##new in version 3##
@@ -143,7 +145,7 @@ def autosave():
     #print 'Updating the parameters'
     mod.parameters.set_value_pars(opt.best_vec)
     io.save_gx(outfile, mod, opt, config)
-    
+    #copyfile(outfile, "/home/qiu05/HOME/temp_model/model_ran/")    
 opt.set_autosave_func(autosave)
 
 par_list = [(trial,f,rm,i) for trial in create_trial for f in fom_list for rm in krkmPf_list \

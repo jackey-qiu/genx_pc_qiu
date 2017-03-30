@@ -13,17 +13,17 @@ import thread
 import time
 import random as random_mod
 import sys, os, pickle
-from global_vars import *
 
 if MPI_RUN:
-    __parallel_loaded__ = True
-    _cpu_count = size
     comm=MPI.COMM_WORLD
     size=comm.Get_size()
     rank=comm.Get_rank()
-    comm_group= comm.Split(color=rank/(size/split_jobs),key= rank)
+    comm_group= comm.Split(color=8,key= rank)
     size_group= comm_group.Get_size()
     rank_group= comm_group.Get_rank()
+
+    __parallel_loaded__ = True
+    _cpu_count = size
 else:
     __parallel_loaded__ = False
     _cpu_count = 1
@@ -60,7 +60,7 @@ class DiffEv:
     It also contains thread support which is activated by the start_fit
     function.
     '''
-    def __init__(self,split_jobs=1):
+    def __init__(self):
 
         # Mutation schemes implemented
         self.mutation_schemes = [self.best_1_bin, self.rand_1_bin,\
@@ -69,7 +69,7 @@ class DiffEv:
             self.model = model.Model()
         except:
             pass
-        self.split_jobs=split_jobs
+
         self.km = 0.7 # Mutation constant
         self.kr = 0.7 # Cross over constant
         self.pf = 0.5 # probablility for mutation
@@ -721,16 +721,8 @@ class DiffEv:
         setup for parallel proccesing. Creates a pool of workers with
         as many cpus there is available
         '''
-        if rank==0:
-            self.text_output("Starting a pool with %i workers ..."%\
+        self.text_output("Starting a pool with %i workers ..."%\
                             (size_group, ))
-        #comm=MPI.COMM_WORLD
-        #size=comm.Get_size()
-        #rank=comm.Get_rank()
-        #comm_group= comm.Split(color=rank/(size/self.split_jobs),key= rank)
-        #size_group= comm_group.Get_size()
-        #rank_group= comm_group.Get_rank()
-
         parallel_init(self.model.pickable_copy())
         time.sleep(0.1)
         #print "Starting a pool with ", self.processes, " workers ..."
@@ -758,6 +750,7 @@ class DiffEv:
         elif rank_group>remainder-1:
             left=remainder*(step_len+1)+(rank_group-remainder)*step_len
             right=remainder*(step_len+1)+(rank_group-remainder+1)*step_len-1
+
         fom_temp=[]
         for i in range(left,right+1):
             fom_temp.append(parallel_calc_fom(self.trial_vec[i]))

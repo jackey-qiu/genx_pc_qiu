@@ -12,6 +12,7 @@ sys.path.insert(0,genxpath)
 import model, time, fom_funcs
 import diffev
 import filehandling as io
+from shutil import copyfile
 ##new in version 2##
 #errro bar for each par will be calculated before program being halted
 ##new in version 3##
@@ -75,7 +76,7 @@ iter_list = [1]
 #   'logbars'
 #   'sintth4'
 # e.g.: fom_list = ['log','R1']  # performs all repetitions for 'log' and 'R1'
-fom_list = ['R1_weighted_2b']
+fom_list = ['R1_weighted_2']
 #fom_list=['chi2bars']
 #fom_list=['diff']
 
@@ -99,7 +100,7 @@ pop_size = pop_num        # if use_pop_mult = False, population size
 
 # Generations
 use_max_generations = True       # absolute (T) or relative (F) maximum gen.
-max_generations=pop_num*20      # if use_max_generations = True
+max_generations=pop_num*10      # if use_max_generations = True
 max_generation_mult = 6          # if use_max_generations = False
 
 # Parallel processing
@@ -143,7 +144,7 @@ def autosave():
     #print 'Updating the parameters'
     mod.parameters.set_value_pars(opt.best_vec)
     io.save_gx(outfile, mod, opt, config)
-    
+    #copyfile("~/temp_gx_files/*.gx", "~/HOME/temp_model/model_ran")
 opt.set_autosave_func(autosave)
 
 par_list = [(trial,f,rm,i) for trial in create_trial for f in fom_list for rm in krkmPf_list \

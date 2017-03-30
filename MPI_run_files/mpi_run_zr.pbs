@@ -8,16 +8,18 @@
 #export MODULES_NO_OUTPUT=1
 #module load /home/qiu05/own.modules
 #export -n MODULES_NO_OUTPUT
+sed -i -e 's/7/1/g' /home/qiu05/genx_pc_qiu/global_vars.py
 
-cd $HOME/temp_gx_files
-file=$(date +'*_%b%d.gx')
+cd $HOME/HOME/temp_model
+#file=$(date +'*_%b%d.gx')
+file='*_Mar29.gx'
 while  [ `ls $file | wc -l` != 0 ]
 do
     for gx in $file;do
 	if [ `ls $file | wc -l` != 0 ] ;
 	then
         #eval "export `mpirun env | grep OMPI_MCA_orte_precondition_transports`"
-	mpiexec --mca mpi_warn_on_fork 0 -np 256  python $HOME/genx_pc_qiu/MPI_run_files/GenX_run_multiple_mpi_new_3.py $gx 256 2>&1 |tee job.$PBS_JOBID.out 
+	mpiexec --mca mpi_warn_on_fork 0 -np 128  python $HOME/genx_pc_qiu/MPI_run_files/GenX_run_multiple_mpi_new_3.py $gx 128 2>&1 |tee job.$PBS_JOBID.out 
 	rm -f $gx;
 	else
 	sleep 1
@@ -27,3 +29,4 @@ done
 cd $HOME/genx_mpi_qiu
 rm -f *.o*
 rm -f *.e*
+cp ~/temp_gx_files/*.gx ~/HOME/temp_model/model_ran
