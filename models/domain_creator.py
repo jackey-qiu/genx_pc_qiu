@@ -1324,7 +1324,7 @@ def print_data_for_publication_B3_muscovite(N_sorbate=4,domain='',z_shift=1,save
                 oc_tag=domain.id[i]+'.setoc'
                 u_tag=domain.id[i]+'.setu'
                 z_num=domain.id[i].rsplit('_')[-2]
-                z_tag=['rgh_gaussian.setGaussian_z_offset'+z_num,'rgh_gaussian.Gaussian_Spacing','rgh_gaussian.Gaussian_Height']
+                z_tag=['rgh_gaussian.Gaussian_z_offset'+z_num,'rgh_gaussian.Gaussian_Spacing','rgh_gaussian.Gaussian_Height']
                 #extract oc error
                 temp_index,temp_value,oc_error=_find_index(lines_best_var,oc_tag)
                 #extract u error
@@ -1338,8 +1338,27 @@ def print_data_for_publication_B3_muscovite(N_sorbate=4,domain='',z_shift=1,save
                     pass
                 z_error+=_find_index(lines_best_var,z_tag[1])[2]+_find_index(lines_best_var,z_tag[2])[2]
             elif 'Freezed_el' in domain.id[i]:
-                oc_tag='Domain1.set'+domain.id[i]+'doc'
+                oc_tag='Domain1.set'+domain.id[i]+'oc'
                 oc_error=_find_index(lines_best_var,oc_tag)[2]
+                u_tag='Domain1.set'+domain.id[i]+'u'
+                u_error=_find_index(lines_best_var,u_tag)[2]
+
+                oc_tag='Domain1.set'+domain.id[i]+'oc'
+                u_tag='Domain1.set'+domain.id[i]+'u'
+                z_num=domain.id[i].rsplit('_')[-2]
+                z_tag=['rgh_gaussian_freeze.Gaussian_z_offset'+z_num,'rgh_gaussian_freeze.Gaussian_Spacing','rgh_gaussian_freeze.Gaussian_Height']
+                #extract oc error
+                temp_index,temp_value,oc_error=_find_index(lines_best_var,oc_tag)
+                #extract u error
+                temp_index,temp_value,u_error=_find_index(lines_best_var,u_tag)
+                #extract z error
+                z_error_temp=0.00
+                temp_z_error_return=_find_index(lines_best_var,z_tag[0])
+                if temp_z_error_return[1]!=0:
+                    z_error+=temp_z_error_return[2]
+                else:
+                    pass
+                z_error+=_find_index(lines_best_var,z_tag[1])[2]+_find_index(lines_best_var,z_tag[2])[2]
             else:
                 pass
 
