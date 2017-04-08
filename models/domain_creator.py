@@ -102,6 +102,7 @@ def combine_all_datasets(file='D://temp_full_dataset.dat',data=None):
 
 def define_global_vars(rgh,domain_number=2):
     rgh.new_var('beta',0)
+    rgh.new_var('mu',10)#water thickness
     for i in range(domain_number):
         rgh.new_var('wt'+str(i+1),1)
     return rgh

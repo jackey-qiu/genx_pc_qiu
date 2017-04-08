@@ -26,9 +26,9 @@ bl_dl_muscovite={'3_0':{'segment':[[0,1],[1,9]],'info':[[2,1],[6,1]]},'2_0':{'se
     '0_0':{'segment':[[0,20]],'info':[[2,2]]},'-1_0':{'segment':[[0,3],[3,9]],'info':[[6,-3],[2,-3]]},'0_-2':{'segment':[[0,9]],'info':[[2,-6.2782]]},\
     '-2_-2':{'segment':[[0,9]],'info':[[2,-6.2782]]},'-2_-1':{'segment':[[0,3.1391],[3.1391,9]],'info':[[4,-3.1391],[2,-3.1391]]},'-2_0':{'segment':[[0,9]],'info':[[2,-6]]},\
     '-2_1':{'segment':[[0,4.8609],[4.8609,9]],'info':[[4,-4.8609],[2,-6.8609]]},'-1_-1':{'segment':[[0,9]],'info':[[2,-4.1391]]},'-3_0':{'segment':[[0,1],[1,9]],'info':[[2,-1],[6,-1]]}}
-def formate_CTR_data(file='/Users/cqiu/data/ESRF/March_2017/Qc_Zr_ClO4',bragg_peaks=bl_dl_muscovite):
+def formate_CTR_data(file='/Users/cqiu/model_files/best fit Zr-mica model/Zr_files/nQc_mica-zr_s2_longt_1_CTR_1st_spot1',bragg_peaks=bl_dl_muscovite):
     data_formated=None
-    f_original=np.loadtxt(file,skiprows=1,comments='#')
+    f_original=np.loadtxt(file,skiprows=1,comments='%')
     data_points=len(f_original)-1#the first row is not data but some q corr information
     LB=np.array([2]*data_points)[:,np.newaxis]
     dL=np.array([2]*data_points)[:,np.newaxis]
