@@ -1164,7 +1164,7 @@ class Sample:
         f=self._get_f(np.array(['O']), dinv)[:,0]
         Auc=self.unit_cell.a*self.unit_cell.b*np.sin(self.unit_cell.gamma)
         q=2*np.pi*dinv
-        F_layered_water=f*(Auc*1*density_w)*np.exp(-0.5*q**2*u0**2)*np.exp(q*first_layer_height*1.0J)\
+        F_layered_water=f*(Auc*d_w*density_w)*np.exp(-0.5*q**2*u0**2)*np.exp(q*first_layer_height*1.0J)\
                         /(1-np.exp(-0.5*q**2*ubar**2)*np.exp(q*d_w*1.0J))
         return F_layered_water
 
@@ -1179,7 +1179,7 @@ class Sample:
             f=self._get_f(np.array(['O']), dinv)[:,0]
             Auc=self.unit_cell.a*self.unit_cell.b*np.sin(self.unit_cell.gamma)
             q=2*np.pi*dinv
-            F_layered_water=f*(Auc*1*density_w)*np.exp(-0.5*q**2*u0**2)*np.exp(q*(first_layer_height+53.6523273+height_offset)*1.0J)\
+            F_layered_water=f*(Auc*d_w*density_w)*np.exp(-0.5*q**2*u0**2)*np.exp(q*(first_layer_height+53.6523273+height_offset)*1.0J)\
                             /(1-np.exp(-0.5*q**2*ubar**2)*np.exp(q*d_w*1.0J))#54.3=20.1058*(1+1.6) offset height accouting for bulk and surface slab
             return F_layered_water
         else:
@@ -1195,7 +1195,7 @@ class Sample:
         f=self._get_f(np.array([el]), dinv)[:,0]
         Auc=self.unit_cell.a*self.unit_cell.b*np.sin(self.unit_cell.gamma)
         q=2*np.pi*dinv
-        F_layered_sorbate=f*(Auc*1*density_s)*np.exp(-0.5*q**2*u0_s**2)*np.exp(q*first_layer_height_s*1.0J)\
+        F_layered_sorbate=f*(Auc*d_s*density_s)*np.exp(-0.5*q**2*u0_s**2)*np.exp(q*first_layer_height_s*1.0J)\
                         /(1-np.exp(-0.5*q**2*ubar_s**2)*np.exp(q*d_s*1.0J))
 
         return F_layered_sorbate
@@ -1456,8 +1456,8 @@ class Sample:
             e_total_raxs=e_total_raxs+np.array(eden_raxs)
             e_total_layer_water=e_total_layer_water+np.array(eden_layer_water)
         labels.append('Total electron density')
-        #e_data.append(np.array([list(e_data[0])[0],e_total,e_total_raxs,e_total_layer_water]))
-        e_data.append(np.array([list(e_data[0])[0],e_total/e_total_layer_water[-1],e_total_raxs/e_total_layer_water[-1],e_total_layer_water/e_total_layer_water[-1]]))
+        e_data.append(np.array([list(e_data[0])[0],e_total,e_total_raxs,e_total_layer_water]))
+        #e_data.append(np.array([list(e_data[0])[0],e_total/e_total_layer_water[-1],e_total_raxs/e_total_layer_water[-1],e_total_layer_water/e_total_layer_water[-1]]))
         water_scaling=e_total_layer_water[-1]
         pickle.dump([e_data,labels],open(os.path.join(file_path,"temp_plot_eden"),"wb"))
         return water_scaling
