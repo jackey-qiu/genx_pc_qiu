@@ -23,13 +23,13 @@ BATCH_PATH_HEAD,OUTPUT_FILE_PATH=batch_path.module_path_locator(),output_path.mo
 F1F2=np.loadtxt(os.path.join(BATCH_PATH_HEAD,'Zr_K_edge.f1f2'))#the energy column should NOT have duplicate values after rounding up to 0 digit. If so, cut off rows of duplicate energy!
 RAXR_EL,E0,NUMBER_RAXS_SPECTRA,RAXR_FIT_MODE,FREEZE='Zr',18007,21,'MI',True#FREEZE=True will have resonant el make no influence on the non-resonant structure factor. And it will otherwise.
 NUMBER_DOMAIN,COHERENCE=2,True
-HEIGHT_OFFSET=-2.6685#if set to 0, the top atomic layer is at 2.6685 in fractional unit before relaxation
+HEIGHT_OFFSET=-2.6685#if set to 0, the top atomic layer is at 2.6685 in fractional unit before relaxation (should not be changed)
 XY_OFFSET=[0,0]#takes effect only for structural atoms (not include Gaussian atoms)
 GROUP_SCHEME=[[1,0]]#means group Domain1 and Domain2 for inplane and out of plane movement, set Domain2=Domain1 in side sim func
 
 ##<setting slabs>##
-wal=0.7749136#set this number right each time
-unitcell = model.UnitCell(5.1988, 9.0266, 20.04156, 90, 95.782, 90)#a,b,c,alpha,beta,gamma, correct c each time (use q-corrected c)
+wal=0.7749136#wavelength,set this number right each time (read it from nQc data file)
+unitcell = model.UnitCell(5.1988, 9.0266, 20.04156, 90, 95.782, 90)#a,b,c,alpha,beta,gamma, correct c each time (use q-corrected c),c=c_projected/sin(180-beta)
 inst = model.Instrument(wavel = wal, alpha = 2.0)
 bulk, Domain1, Domain2 = model.Slab(T_factor='u'), model.Slab(c = 1.0,T_factor='u'), model.Slab(c = 1.0,T_factor='u')
 domain_creator.add_atom_in_slab(bulk,os.path.join(BATCH_PATH_HEAD,'muscovite_001_bulk_u_corrected.str'),height_offset=HEIGHT_OFFSET)
@@ -168,7 +168,7 @@ def Sim(data,VARS=VARS):
 
     ##<format domains>##
     domain={'domains':[Domain1,Domain2],'layered_water_pars':layered_water_pars,'layered_sorbate_pars':layered_sorbate_pars,\
-            'global_vars':rgh,'raxs_vars':raxs_vars,'F1F2':F1F2,'E0':E0,'el':RAXR_EL,'freeze':FREEZE}
+            'global_vars':rgh,'raxs_vars':raxs_vars,'F1F2':F1F2,'E0':E0,'el':RAXR_EL,'freeze':FREEZE,'exp_factors':[exp_const,rgh.mu,re,auc]}
     sample = model.Sample(inst, bulk, domain, unitcell,coherence=COHERENCE,surface_parms={'delta1':0.,'delta2':0.})
 
     ##<calculate structure factor>##
@@ -211,7 +211,7 @@ def Sim(data,VARS=VARS):
             domain_creator.make_dummy_data(file=os.path.join(OUTPUT_FILE_PATH,'temp_dummy_data.dat'),data=data,I=F)
         if combine_data_sets:
             domain_creator.combine_all_datasets(file=os.path.join(OUTPUT_FILE_PATH,'temp_full_dataset.dat'),data=data)
-        convert_files.convert_best_pars_to_matlab_input_file(file_name=os.path.join(OUTPUT_FILE_PATH,'temp_matlab_param.dat'),domain=Domain1,layered_water=rgh_dlw)
+        convert_files.convert_best_pars_to_matlab_input_file(file_name=os.path.join(OUTPUT_FILE_PATH,'temp_matlab_param.dat'),domain=Domain1,layered_water=rgh_dlw,c=unitcell.c,rgh=rgh,scale=inst.get_inten())
     if COUNT_TIME:
         t_3=datetime.now()
         print "It took "+str(t_1-t_0)+" seconds to setup"

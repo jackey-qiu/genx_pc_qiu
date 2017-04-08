@@ -78,8 +78,14 @@ def generate_plot_files(output_file_path,sample,rgh,data,fit_mode, z_min=0,z_max
             A_list_Fourier_synthesis.append(sample.domain['raxs_vars'][A_key_list[0]])
             P_list_Fourier_synthesis.append(sample.domain['raxs_vars'][P_key_list[0]])
             rough = (1-rgh.beta)/((1-rgh.beta)**2 + 4*rgh.beta*np.sin(np.pi*(y-LB)/dL)**2)**0.5
-            f=rough*abs(sample.calculate_structure_factor(h,k,x,y,index=i,fit_mode=fit_mode,height_offset=height_offset,version=version))
-            f=f*f
+            q=np.pi*2*sample.unit_cell.abs_hkl(h,k,y)
+            try:
+                exp_const,rgh.mu,re,auc=sample.domain['exp_factors']
+                pre_factor=3e6*np.exp(-exp_const*rgh.mu/q)*(4*np.pi*re/auc)**2/q**2
+            except:
+                pre_factor=1
+            f=abs(sample.calculate_structure_factor(h,k,x,y,index=i,fit_mode=fit_mode,height_offset=height_offset,version=version))
+            f=rough*pre_factor*f*f
             label=str(int(h[0]))+'_'+str(int(k[0]))+'_'+str(y[0])
             plot_raxr_container_experiment[label]=np.concatenate((x[:,np.newaxis],I[:,np.newaxis],eI[:,np.newaxis]),axis=1)
             plot_raxr_container_model[label]=np.concatenate((x[:,np.newaxis],f[:,np.newaxis]),axis=1)
@@ -122,8 +128,14 @@ def generate_plot_files(output_file_path,sample,rgh,data,fit_mode, z_min=0,z_max
             LB_dumy=np.array(LB_dumy)
             dL_dumy=np.array(dL_dumy)
             rough_dumy = (1-rgh.beta)/((1-rgh.beta)**2 + 4*rgh.beta*np.sin(np.pi*(l_dumy-LB_dumy)/dL_dumy)**2)**0.5
+
             f_dumy=rough_dumy*abs(sample.calculate_structure_factor(h_dumy,k_dumy,l_dumy,None,index=0,fit_mode=fit_mode,height_offset=height_offset,version=version))
-            f_dumy=f_dumy*f_dumy
+            try:
+                exp_const,rgh.mu,re,auc=sample.domain['exp_factors']
+                pre_factor=3e6*np.exp(-exp_const*rgh.mu/q_dumy)*(4*np.pi*re/auc)**2/q_dumy**2
+            except:
+                pre_factor=1
+            f_dumy=rough_dumy*pre_factor*f_dumy*f_dumy
             c_projected_on_z=sample.unit_cell.vol()/(sample.unit_cell.a*sample.unit_cell.b*np.sin(sample.unit_cell.gamma))
             f_ctr=lambda q:(np.sin(q*c_projected_on_z/4))**2
             #f_ctr=lambda q:(np.sin(q*19.96/4))**2
