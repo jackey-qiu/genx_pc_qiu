@@ -36,7 +36,9 @@ domain_creator.add_atom_in_slab(bulk,os.path.join(BATCH_PATH_HEAD,'muscovite_001
 domain_creator.add_atom_in_slab(Domain1,os.path.join(BATCH_PATH_HEAD,'muscovite_001_surface_Al_u_corrected.str'),attach='_D1',height_offset=HEIGHT_OFFSET)
 domain_creator.add_atom_in_slab(Domain2,os.path.join(BATCH_PATH_HEAD,'muscovite_001_surface_Si_u_corrected.str'),attach='_D2',height_offset=HEIGHT_OFFSET)
 
-#experimental constants
+##<experimental constants>##
+L_max=17.34#maximum L value
+sig_eff=2*np.pi/(2*np.pi/(unitcell.c*np.sin(np.pi-unitcell.beta))*L_max)/5.66#intrinsic width (due to sig) with resolution width
 re = 2.818e-5#electron radius
 kvect=2*np.pi/wal#k vector
 Egam = 6.626*(10**-34)*3*(10**8)/wal*10**10/1.602*10**19#energy in ev
@@ -103,7 +105,7 @@ rgh_gaussian_freeze=domain_creator.define_gaussian_vars(rgh=UserVars(),domain=Do
 
 ##<Define atom groups>##
 #surface atoms
-group_number=5##to be set##(number of groups to be considered for model fit)
+group_number=15##to be set##(number of groups to be considered for model fit)
 groups,group_names,atom_group_info=domain_creator.setup_atom_group_muscovite(domain=[Domain1,Domain2],group_number=group_number)
 for i in range(len(groups)):vars()[group_names[i]]=groups[i]
 #sorbate_atoms
@@ -168,7 +170,7 @@ def Sim(data,VARS=VARS):
 
     ##<format domains>##
     domain={'domains':[Domain1,Domain2],'layered_water_pars':layered_water_pars,'layered_sorbate_pars':layered_sorbate_pars,\
-            'global_vars':rgh,'raxs_vars':raxs_vars,'F1F2':F1F2,'E0':E0,'el':RAXR_EL,'freeze':FREEZE,'exp_factors':[exp_const,rgh.mu,re,auc]}
+            'global_vars':rgh,'raxs_vars':raxs_vars,'F1F2':F1F2,'E0':E0,'el':RAXR_EL,'freeze':FREEZE,'exp_factors':[exp_const,rgh.mu,re,auc],'sig_eff':sig_eff}
     sample = model.Sample(inst, bulk, domain, unitcell,coherence=COHERENCE,surface_parms={'delta1':0.,'delta2':0.})
 
     ##<calculate structure factor>##

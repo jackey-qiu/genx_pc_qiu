@@ -1387,6 +1387,11 @@ class Sample:
             raxs_el=slabs['el']
             slab=[slabs['domains'][domain_index]]
             x, y, z, u, oc, el = self._surf_pars(slab)
+            try:
+                sig_eff=slabs['sig_eff']
+            except:
+                sig_eff=0.203
+            u=(u**2+sig_eff**2)**0.5
 
             index_raxs=np.where(np.array(el)==raxs_el)[0]
             z_raxs=np.array([(z[i]+1.)*self.unit_cell.c for i in index_raxs])
@@ -1411,7 +1416,7 @@ class Sample:
             for i in range(N_layered_water):
                 #z_layered_water.append(layered_water[3]+54.3+height_offset+i*layered_water[2])#first layer is offseted by 1 accordingly
                 z_layered_water.append(layered_water[3]+i*layered_water[2])
-                sigma_layered_water.append((layered_water[0]**2+i*layered_water[1]**2)**0.5)
+                sigma_layered_water.append((layered_water[0]**2+i*layered_water[1]**2+sig_eff**2)**0.5)
             #consider the e density of layered sorbate
             layered_sorbate,z_layered_sorbate,sigma_layered_sorbate,sorbate_damping_factors,d_s,sorbate_density=None,[],[],[],None,None
             layered_sorbate_keys=['u0_s','ubar_s','d_s','first_layer_height_s','density_s','oc_damping_factor']
@@ -1421,7 +1426,7 @@ class Sample:
             damping_factor=layered_sorbate[-1]
             for i in range(N_layered_water):#assume the number of sorbate layer equal to that for water layers
                 z_layered_sorbate.append(layered_sorbate[3]+i*layered_sorbate[2])#first layer is offseted by 1 accordingly
-                sigma_layered_sorbate.append((layered_sorbate[0]**2+i*layered_sorbate[1]**2)**0.5)
+                sigma_layered_sorbate.append((layered_sorbate[0]**2+i*layered_sorbate[1]**2+sig_eff**2)**0.5)
                 sorbate_damping_factors.append(damping_factor*i)#first layer no damping, second will be damped with a factor of exp(-damping_factor), third will exp(-2*damping_factor) and so on.
             #print u,f,z
             for i in range(resolution):
@@ -1434,8 +1439,8 @@ class Sample:
                 bulk_water=0
                 if z_each>0:
                     bulk_water=1
-                eden[-1]=eden[-1]+np.sum(10*wt*water_density*layered_water[2]*(2*np.pi*np.array(sigma_layered_water)**2)**-0.5*np.exp(-0.5/np.array(sigma_layered_water)**2*(z_each-np.array(z_layered_water))**2))+(.33-0.16233394)*wt*bulk_water
-                eden_layer_water.append(np.sum(10*wt*water_density*layered_water[2]*(2*np.pi*np.array(sigma_layered_water)**2)**-0.5*np.exp(-0.5/np.array(sigma_layered_water)**2*(z_each-np.array(z_layered_water))**2))+(.33-0.16233394)*wt*bulk_water)
+                eden[-1]=eden[-1]+np.sum(10*wt*water_density*layered_water[2]*(2*np.pi*np.array(sigma_layered_water)**2)**-0.5*np.exp(-0.5/np.array(sigma_layered_water)**2*(z_each-np.array(z_layered_water))**2))+(.33-0.16233394)*wt*bulk_water*0
+                eden_layer_water.append(np.sum(10*wt*water_density*layered_water[2]*(2*np.pi*np.array(sigma_layered_water)**2)**-0.5*np.exp(-0.5/np.array(sigma_layered_water)**2*(z_each-np.array(z_layered_water))**2))+(.33-0.16233394)*wt*bulk_water*0)
                 #eden[-1]=eden[-1]+np.sum(10*wt*water_density*(np.exp(-0.5/np.array(sigma_layered_water)**2*(z_each-np.array(z_layered_water))**2)))
                 eden[-1]=eden[-1]+np.sum(el_lib[raxs_el]*wt*sorbate_density*np.exp(-np.array(sorbate_damping_factors))*(2*np.pi*np.array(sigma_layered_sorbate)**2)**-0.5*np.exp(-0.5/np.array(sigma_layered_sorbate)**2*(z_each-np.array(z_layered_sorbate))**2))
 
@@ -1443,10 +1448,11 @@ class Sample:
 
             labels.append('Domain'+str(domain_index+1))
             #e_data.append(np.array([z_plot,eden,eden_raxs,eden_layer_water]))
+            normalized_factor=3.03#3.03:1 electron per 3.03 cubic A
             if domain_index==0:#domain1 has a 0.25 weighting factor
-                e_data.append(np.array([z_plot,np.array(eden)/eden_layer_water[-1]*0.25,np.array(eden_raxs)/eden_layer_water[-1]*0.25,np.array(eden_layer_water)/eden_layer_water[-1]*0.25]))
+                e_data.append(np.array([z_plot,np.array(eden)*normalized_factor*0.25,np.array(eden_raxs)*normalized_factor*0.25,np.array(eden_layer_water)*normalized_factor*0.25]))
             elif domain_index==1:#domain2 has a 0.75 weighting factor
-                e_data.append(np.array([z_plot,np.array(eden)/eden_layer_water[-1]*0.75,np.array(eden_raxs)/eden_layer_water[-1]*0.75,np.array(eden_layer_water)/eden_layer_water[-1]*0.75]))
+                e_data.append(np.array([z_plot,np.array(eden)*normalized_factor*0.75,np.array(eden_raxs)*normalized_factor*0.75,np.array(eden_layer_water)*normalized_factor*0.75]))
             if version==1.0:
                 e_total=e_total+np.array(eden)
             elif version==1.1:
@@ -1458,8 +1464,9 @@ class Sample:
             e_total_layer_water=e_total_layer_water+np.array(eden_layer_water)
         labels.append('Total electron density')
         #e_data.append(np.array([list(e_data[0])[0],e_total,e_total_raxs,e_total_layer_water]))
-        e_data.append(np.array([list(e_data[0])[0],e_total/e_total_layer_water[-1],e_total_raxs/e_total_layer_water[-1],e_total_layer_water/e_total_layer_water[-1]]))
-        water_scaling=e_total_layer_water[-1]
+        e_data.append(np.array([list(e_data[0])[0],e_total*normalized_factor,e_total_raxs*normalized_factor,e_total_layer_water*normalized_factor]))
+
+        water_scaling=0.33
         pickle.dump([e_data,labels],open(os.path.join(file_path,"temp_plot_eden"),"wb"))
         return water_scaling
 
