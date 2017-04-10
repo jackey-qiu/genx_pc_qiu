@@ -77,8 +77,8 @@ def generate_plot_files(output_file_path,sample,rgh,data,fit_mode, z_min=0,z_max
             A_key_list.sort(),P_key_list.sort()
             A_list_Fourier_synthesis.append(sample.domain['raxs_vars'][A_key_list[0]])
             P_list_Fourier_synthesis.append(sample.domain['raxs_vars'][P_key_list[0]])
-            rough = (1-rgh.beta)/((1-rgh.beta)**2 + 4*rgh.beta*np.sin(np.pi*(y-LB)/dL)**2)**0.5
             q=np.pi*2*sample.unit_cell.abs_hkl(h,k,y)
+            rough = (1-rgh.beta)**2/(1+rgh.beta**2 - 2*rgh.beta*np.cos(q*sample.unit_cell.c*np.sin(np.pi-sample.unit_cell.beta)/2))
             try:
                 exp_const,rgh.mu,re,auc=sample.domain['exp_factors']
                 pre_factor=3e6*np.exp(-exp_const*rgh.mu/q)*(4*np.pi*re/auc)**2/q**2
@@ -110,7 +110,9 @@ def generate_plot_files(output_file_path,sample,rgh,data,fit_mode, z_min=0,z_max
             h_dumy=np.array([h[0]]*N)
             k_dumy=np.array([k[0]]*N)
             q_dumy=np.pi*2*sample.unit_cell.abs_hkl(h_dumy,k_dumy,l_dumy)
+            rough_dumy = (1-rgh.beta)**2/(1+rgh.beta**2 - 2*rgh.beta*np.cos(q_dumy*sample.unit_cell.c*np.sin(np.pi-sample.unit_cell.beta)/2))
             q_data=np.pi*2*sample.unit_cell.abs_hkl(h,k,l)
+
             LB_dumy=[]
             dL_dumy=[]
             f_dumy=[]
@@ -127,9 +129,8 @@ def generate_plot_files(output_file_path,sample,rgh,data,fit_mode, z_min=0,z_max
                         dL_dumy.append(bl_dl[key]['info'][n][0])
             LB_dumy=np.array(LB_dumy)
             dL_dumy=np.array(dL_dumy)
-            rough_dumy = (1-rgh.beta)/((1-rgh.beta)**2 + 4*rgh.beta*np.sin(np.pi*(l_dumy-LB_dumy)/dL_dumy)**2)**0.5
 
-            f_dumy=rough_dumy*abs(sample.calculate_structure_factor(h_dumy,k_dumy,l_dumy,None,index=0,fit_mode=fit_mode,height_offset=height_offset,version=version))
+            f_dumy=abs(sample.calculate_structure_factor(h_dumy,k_dumy,l_dumy,None,index=0,fit_mode=fit_mode,height_offset=height_offset,version=version))
             try:
                 exp_const,rgh.mu,re,auc=sample.domain['exp_factors']
                 pre_factor=3e6*np.exp(-exp_const*rgh.mu/q_dumy)*(4*np.pi*re/auc)**2/q_dumy**2
@@ -137,7 +138,7 @@ def generate_plot_files(output_file_path,sample,rgh,data,fit_mode, z_min=0,z_max
                 pre_factor=1
             f_dumy=rough_dumy*pre_factor*f_dumy*f_dumy
             c_projected_on_z=sample.unit_cell.vol()/(sample.unit_cell.a*sample.unit_cell.b*np.sin(sample.unit_cell.gamma))
-            f_ctr=lambda q:(np.sin(q*c_projected_on_z/4))**2
+            f_ctr=lambda q:(q*np.sin(q*c_projected_on_z/4))**2
             #f_ctr=lambda q:(np.sin(q*19.96/4))**2
             f_dumy_norm=f_dumy*f_ctr(q_dumy)
             label=str(int(h[0]))+str(int(k[0]))+'L'
@@ -989,7 +990,7 @@ def plot_all(path=module_path_locator(),make_offset_of_total_e=False,fit_e_profi
             if i==N-1:pyplot.xlabel('Z(Angstrom)',axes=ax,fontsize=12)
             pyplot.ylabel('E_density',axes=ax,fontsize=12)
             pyplot.ylim(ymin=0)
-            pyplot.xlim(xmin=-5)
+            #pyplot.xlim(xmin=-5)
             pyplot.legend(fontsize=11,ncol=1)
         fig.tight_layout()
         fig.savefig(e_file+".png",dpi=300)

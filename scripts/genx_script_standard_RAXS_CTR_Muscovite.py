@@ -180,11 +180,11 @@ def Sim(data,VARS=VARS):
         if x[0]>100:
             i+=1
             q=np.pi*2*unitcell.abs_hkl(h,k,y)
-            rough = (1-rgh.beta)/((1-rgh.beta)**2 + 4*rgh.beta*np.sin(np.pi*(y-LB)/dL)**2)**0.5
+            rough = (1-rgh.beta)**2/(1+rgh.beta**2 - 2*rgh.beta*np.cos(q*unitcell.c*np.sin(np.pi-unitcell.beta)/2))
             pre_factor=np.exp(-exp_const*rgh.mu/q)*(4*np.pi*re/auc)**2/q**2
         else:
             q=np.pi*2*unitcell.abs_hkl(h,k,x)
-            rough = (1-rgh.beta)/((1-rgh.beta)**2 + 4*rgh.beta*np.sin(np.pi*(x-LB)/dL)**2)**0.5
+            rough = (1-rgh.beta)**2/(1+rgh.beta**2 - 2*rgh.beta*np.cos(q*unitcell.c*np.sin(np.pi-unitcell.beta)/2))
             pre_factor=np.exp(-exp_const*rgh.mu/q)*(4*np.pi*re/auc)**2/q**2
         f=abs(sample.calculate_structure_factor(h,k,x,y,index=i,fit_mode=RAXR_FIT_MODE,height_offset=HEIGHT_OFFSET*unitcell.c,version=VERSION))
         F.append(3e6*pre_factor*rough*f*f)
