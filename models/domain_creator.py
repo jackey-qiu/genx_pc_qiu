@@ -168,6 +168,98 @@ def setup_atom_group_muscovite(domain=[],group_number=5):
             group_names.append(gp_info[i]['ref_group_names'][j]+tag)
     return groups,group_names,gp_info
 
+def setup_atom_group_muscovite_2(domain=[]):
+    Domain1,Domain2=domain
+    ref_id_list_Al_top=[['O4_3_0','O4_4_0','O3_3_0','O3_4_0','O5_3_0','O5_4_0'],\
+                        ['Al1_3_0','Al1_4_0','Al2_3_0','Al2_4_0'],\
+                        ['O1_3_0','O1_4_0','O2_3_0','O2_4_0','O6_3_0','O6_4_0'],\
+                        ['Al3_3_0','Al3_4_0','Al3_5_0','Al3_6_0'],\
+                        ['O6_5_0','O6_6_0','O2_5_0','O2_6_0','O1_5_0','O1_6_0'],\
+                        ['Al2_5_0','Al2_6_0','Al1_5_0','Al1_6_0'],\
+                        ['O5_5_0','O5_6_0','O4_5_0','O4_6_0','O3_5_0','O3_6_0'],\
+                        ['K_3_0','K_4_0']]
+
+    ref_id_list_Al_mid=[['O4_7_0','O4_8_0','O3_7_0','O3_8_0','O5_8_0','O5_7_0'],\
+                        ['Al1_7_0','Al1_8_0','Al2_8_0','Al2_7_0'],\
+                        ['O1_7_0','O1_8_0','O2_8_0','O2_7_0','O6_8_0','O6_7_0'],\
+                        ['Al3_7_0','Al3_8_0','Al3_1_1','Al3_2_1'],\
+                        ['O6_2_1','O6_1_1','O2_2_1','O2_1_1','O1_1_1','O1_2_1'],\
+                        ['Al2_2_1','Al2_1_1','Al1_1_1','Al1_2_1'],\
+                        ['O5_2_1','O5_1_1','O4_1_1','O4_2_1','O3_1_1','O3_2_1'],\
+                        ['K_2_1','K_1_1']]
+
+    ref_id_list_Al_bot=[['O4_3_1','O4_4_1','O3_3_1','O3_4_1','O5_3_1','O5_4_1'],\
+                        ['Al1_3_1','Al1_4_1','Al2_3_1','Al2_4_1'],\
+                        ['O1_3_1','O1_4_1','O2_3_1','O2_4_1','O6_3_1','O6_4_1'],\
+                        ['Al3_3_1','Al3_4_1','Al3_5_1','Al3_6_1'],\
+                        ['O6_5_1','O6_6_1','O2_5_1','O2_6_1','O1_5_1','O1_6_1'],\
+                        ['Al2_5_1','Al2_6_1','Al1_5_1','Al1_6_1'],\
+                        ['O5_5_1','O5_6_1','O4_5_1','O4_6_1','O3_5_1','O3_6_1'],\
+                        ['K_3_1','K_4_1']]
+
+    ref_id_list_Si_top=[['O4_3_0','O4_4_0','O3_3_0','O3_4_0','O5_3_0','O5_4_0'],\
+                        ['Si1_3_0','Si1_4_0','Si2_3_0','Si2_4_0'],\
+                        ['O1_3_0','O1_4_0','O2_3_0','O2_4_0','O6_3_0','O6_4_0'],\
+                        ['Al3_3_0','Al3_4_0','Al3_5_0','Al3_6_0'],\
+                        ['O6_5_0','O6_6_0','O2_5_0','O2_6_0','O1_5_0','O1_6_0'],\
+                        ['Si2_5_0','Si2_6_0','Si1_5_0','Si1_6_0'],\
+                        ['O5_5_0','O5_6_0','O4_5_0','O4_6_0','O3_5_0','O3_6_0'],\
+                        ['K_3_0','K_4_0']]
+
+    ref_id_list_Si_mid=[['O4_7_0','O4_8_0','O3_7_0','O3_8_0','O5_8_0','O5_7_0'],\
+                        ['Si1_7_0','Si1_8_0','Si2_8_0','Si2_7_0'],\
+                        ['O1_7_0','O1_8_0','O2_8_0','O2_7_0','O6_8_0','O6_7_0'],\
+                        ['Al3_7_0','Al3_8_0','Al3_1_1','Al3_2_1'],\
+                        ['O6_2_1','O6_1_1','O2_2_1','O2_1_1','O1_1_1','O1_2_1'],\
+                        ['Si2_2_1','Si2_1_1','Si1_1_1','Si1_2_1'],\
+                        ['O5_2_1','O5_1_1','O4_1_1','O4_2_1','O3_1_1','O3_2_1'],\
+                        ['K_2_1','K_1_1']]
+
+    ref_id_list_Si_bot=[['O4_3_1','O4_4_1','O3_3_1','O3_4_1','O5_3_1','O5_4_1'],\
+                        ['Si1_3_1','Si1_4_1','Si2_3_1','Si2_4_1'],\
+                        ['O1_3_1','O1_4_1','O2_3_1','O2_4_1','O6_3_1','O6_4_1'],\
+                        ['Al3_3_1','Al3_4_1','Al3_5_1','Al3_6_1'],\
+                        ['O6_5_1','O6_6_1','O2_5_1','O2_6_1','O1_5_1','O1_6_1'],\
+                        ['Si2_5_1','Si2_6_1','Si1_5_1','Si1_6_1'],\
+                        ['O5_5_1','O5_6_1','O4_5_1','O4_6_1','O3_5_1','O3_6_1'],\
+                        ['K_3_1','K_4_1']]
+    ref_id_list_Si=[ref_id_list_Si_top,ref_id_list_Si_mid,ref_id_list_Si_bot]
+    ref_id_list_Al=[ref_id_list_Al_top,ref_id_list_Al_mid,ref_id_list_Al_bot]
+
+    ref_group_names=['gp_Otop','gp_AlSi_1','gp_Octt','gp_AlAl_2','gp_Octa','gp_AlSi_3','gp_Obas','gp_K']
+    atm_groups=[]
+    atm_group_names=[]
+    for k in range(3):
+        layer_tag='_layer_'+str(k+1)
+        temp_groups=[]
+        ref_ids_Si=ref_id_list_Si[k]
+        ref_ids_Al=ref_id_list_Al[k]
+        for i in range(len(ref_group_names)):
+            group_name=ref_group_names[i]+layer_tag
+            atm_group_names.append(group_name)
+            for j in range(len(ref_ids_Si[i])):
+                temp_atom_group=model.AtomGroup()
+                ids_Si,ids_Al=ref_ids_Si[i],ref_ids_Al[i]
+                for m in range(len(ids_Si)):
+                    temp_atom_group.add_atom(slab=Domain1,id=ids_Al[m]+'_D1', matrix=[1,0,0,0,1,0,0,0,1])
+                for m in range(len(ids_Si)):
+                    temp_atom_group.add_atom(slab=Domain2,id=ids_Si[m]+'_D2', matrix=[1,0,0,0,1,0,0,0,1])
+            atm_groups.append(temp_atom_group)
+    return atm_group_names,atm_groups
+
+def setup_atom_group_2(vars):#group Al and Si layer relaxation to the associated coordianted oxygens based on Sang Soo Lee's Matlab script
+    vars['gp_AlSi_1_layer_1'].setdz(0.75*vars['gp_Otop_layer_1'].getdz()+0.25*vars['gp_Octt_layer_1'].getdz())
+    vars['gp_AlAl_2_layer_1'].setdz(0.5*vars['gp_Octt_layer_1'].getdz()+0.5*vars['gp_Octa_layer_1'].getdz())
+    vars['gp_AlSi_3_layer_1'].setdz(0.25*vars['gp_Octa_layer_1'].getdz()+0.75*vars['gp_Obas_layer_1'].getdz())
+
+    vars['gp_AlSi_1_layer_2'].setdz(0.75*vars['gp_Otop_layer_2'].getdz()+0.25*vars['gp_Octt_layer_2'].getdz())
+    vars['gp_AlAl_2_layer_2'].setdz(0.5*vars['gp_Octt_layer_2'].getdz()+0.5*vars['gp_Octa_layer_2'].getdz())
+    vars['gp_AlSi_3_layer_2'].setdz(0.25*vars['gp_Octa_layer_2'].getdz()+0.75*vars['gp_Obas_layer_2'].getdz())
+
+    vars['gp_AlSi_1_layer_3'].setdz(0.75*vars['gp_Otop_layer_3'].getdz()+0.25*vars['gp_Octt_layer_3'].getdz())
+    vars['gp_AlAl_2_layer_3'].setdz(0.5*vars['gp_Octt_layer_3'].getdz()+0.5*vars['gp_Octa_layer_3'].getdz())
+    vars['gp_AlSi_3_layer_3'].setdz(0.25*vars['gp_Octa_layer_3'].getdz()+0.75*vars['gp_Obas_layer_3'].getdz())
+
 def setup_atom_group(gp_info=[]):
     groups,group_names=[],[]
     for i in range(len(gp_info)):

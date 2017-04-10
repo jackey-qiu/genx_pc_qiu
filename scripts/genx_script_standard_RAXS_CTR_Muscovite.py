@@ -105,9 +105,14 @@ rgh_gaussian_freeze=domain_creator.define_gaussian_vars(rgh=UserVars(),domain=Do
 
 ##<Define atom groups>##
 #surface atoms
-group_number=15##to be set##(number of groups to be considered for model fit)
+#old stuff (to be deleted)
+group_number=1##to be set##(number of groups to be considered for model fit)
 groups,group_names,atom_group_info=domain_creator.setup_atom_group_muscovite(domain=[Domain1,Domain2],group_number=group_number)
 for i in range(len(groups)):vars()[group_names[i]]=groups[i]
+#group atom layers using methosd from Sang Soo Lee Matlab script
+names,layer_groups=domain_creator.setup_atom_group_muscovite_2(domain=[Domain1,Domain2])
+for i in range(len(layer_groups)):vars()[names[i]]=layer_groups[i]
+
 #sorbate_atoms
 sorbate_id_list_domain1,sorbate_group_names_domain1=domain_creator.generate_sorbate_ids(Domain1,NUMBER_SORBATE_LAYER,INFO_LIB['sorbate_el'],NUMBER_EL_MOTIF,symmetry=SYMMETRY,level=CAP)
 sorbate_atom_group_info=[{'domain':Domain1,'ref_id_list':sorbate_id_list_domain1,'ref_group_names':sorbate_group_names_domain1,'ref_sym_list':[],'domain_tag':''}]
@@ -136,19 +141,6 @@ if COUNT_TIME:t_1=datetime.now()
 VARS=vars()
 def Sim(data,VARS=VARS):
 
-
-    """
-    Gaussian_O_2_D1.setu(Gaussian_O_1_D1.getu())
-    Gaussian_O_4_D1.setu(Gaussian_O_1_D1.getu())
-    Gaussian_O_6_D1.setu(Gaussian_O_1_D1.getu())
-    Gaussian_O_8_D1.setu(Gaussian_O_1_D1.getu())
-    Gaussian_O_10_D1.setu(Gaussian_O_1_D1.getu())
-    Gaussian_O_11_D1.setu(Gaussian_O_1_D1.getu())
-    Gaussian_Zr_5_D1.setu(Gaussian_Zr_3_D1.getu())
-    Gaussian_Zr_7_D1.setu(Gaussian_Zr_3_D1.getu())
-    Gaussian_Zr_9_D1.setu(Gaussian_Zr_3_D1.getu())
-    """
-
     ##<update the basis info>##
     INFO_LIB['basis']=np.array([unitcell.a, unitcell.b, unitcell.c])
     ##<Extract pars>##
@@ -166,7 +158,8 @@ def Sim(data,VARS=VARS):
         domain_creator.update_gaussian(domain=Domain1,rgh=rgh_gaussian_freeze,groups=Gaussian_groups_freeze,el=EL_GAUSSIAN_PEAK_FREEZE,number=NUMBER_GAUSSIAN_PEAK_FREEZE,height_offset=HEIGHT_OFFSET,c=unitcell.c,domain_tag='_D1',shape=GAUSSIAN_SHAPE_FREEZE,print_items=False,use_cumsum=True,freeze_tag=True)
 
     ##<link groups>##
-    [eval(each_command) for each_command in domain_creator.link_atom_group(gp_info=atom_group_info,gp_scheme=GROUP_SCHEME)]
+    #[eval(each_command) for each_command in domain_creator.link_atom_group(gp_info=atom_group_info,gp_scheme=GROUP_SCHEME)]
+    domain_creator.setup_atom_group_2(VARS)
 
     ##<format domains>##
     domain={'domains':[Domain1,Domain2],'layered_water_pars':layered_water_pars,'layered_sorbate_pars':layered_sorbate_pars,\
