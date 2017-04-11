@@ -910,7 +910,7 @@ def plot_all(path=module_path_locator(),make_offset_of_total_e=False,fit_e_profi
     #At the same time, the total_e - raxs_e - water is actually total_e - 2*raxs_e -water
     PATH=path
     #which plots do you want to create
-    plot_e_model,plot_e_FS,plot_ctr,plot_raxr,plot_AP_Q=1,0,1,0,0
+    plot_e_model,plot_e_FS,plot_ctr,plot_raxr,plot_AP_Q=1,1,1,0,0
 
     #specify file paths (files are dumped files when setting running_mode=False in GenX script)
     e_file=os.path.join(PATH,"temp_plot_eden")#e density from model
@@ -946,8 +946,8 @@ def plot_all(path=module_path_locator(),make_offset_of_total_e=False,fit_e_profi
                     pass
             else:
                 pass
-            ax.plot(np.array(edata[i][0,:]),edata[i][1,:],color='b',label="Total e density")
-            ax.plot(np.array(edata[i][0,:]),edata[i][2,:],color='g')
+            ax.plot(np.array(edata[i][0,:]),edata[i][1,:],color='black',label="Total e density")
+            ax.plot(np.array(edata[i][0,:]),edata[i][2,:],color='blue')
             ax.fill_between(np.array(edata[i][0,:]),edata[i][2,:],alpha=0.5,color='m',label="RAXS element e profile (MD)")
             #try:#some domain may have no raxr element
             #    ax.plot(np.array(edata[i][0,:]),edata[i][2,:],color='g',label="RAXS element e profile (MD)")
@@ -960,14 +960,14 @@ def plot_all(path=module_path_locator(),make_offset_of_total_e=False,fit_e_profi
                     #ax.fill_between(data_eden_FS[0],list(np.array(data_eden_FS[2])[:,i]),color='m',alpha=0.6)
                     #clip off negative part of the e density through Fourier thynthesis
                     #ax.fill_between(data_eden_FS[0],list(edata[i][1,:]-edata[i][3,:]-np.array(data_eden_FS[2])[:,i]*(np.array(data_eden_FS[2])[:,i]>0.01)),color='black',alpha=0.6,label="Total e - LayerWater - RAXR")
-                    ax.fill_between(data_eden_FS[0],edata[i][3,:],color='blue',alpha=0.4,label="LayerWater")
+                    ax.fill_between(data_eden_FS[0],edata[i][3,:],color='green',alpha=0.4,label="LayerWater")
                     ax.plot(data_eden_FS_sub[0],list(np.array(data_eden_FS_sub[2])[:,i]),color='black',label="RAXR imaging (MD)")
                     #ax.fill_between(data_eden_FS_sub[0],list(np.array(data_eden_FS_sub[2])[:,i]),color='c',alpha=0.6)
                 elif i==N-1:
                     ax.plot(data_eden_FS[0],data_eden_FS[1],color='r',label="RAXR imaging (MI)")
                     #ax.fill_between(data_eden_FS[0],data_eden_FS[1],color='m',alpha=0.6)
                     #ax.fill_between(data_eden_FS[0],edata[i][1,:]-data_eden_FS[1],color='black',alpha=0.6,label="Total e - RAXR(MI)")
-                    ax.fill_between(data_eden_FS[0],edata[i][3,:],color='blue',alpha=0.4,label="LayerWater")
+                    ax.fill_between(data_eden_FS[0],edata[i][3,:],color='green',alpha=0.4,label="LayerWater")
                     '''
                     if make_offset_of_total_e:
                         ax.fill_between(data_eden_FS[0],list(edata[i][1,:]-edata[i][3,:]-2*edata[i][2,:]),color='black',alpha=0.6,label="Total e - raxr (MD) - LayerWater")
@@ -990,7 +990,7 @@ def plot_all(path=module_path_locator(),make_offset_of_total_e=False,fit_e_profi
             if i==N-1:pyplot.xlabel('Z(Angstrom)',axes=ax,fontsize=12)
             pyplot.ylabel('E_density',axes=ax,fontsize=12)
             pyplot.ylim(ymin=0)
-            #pyplot.xlim(xmin=-5)
+            pyplot.xlim(xmin=-7.4)
             pyplot.legend(fontsize=11,ncol=1)
         fig.tight_layout()
         fig.savefig(e_file+".png",dpi=300)

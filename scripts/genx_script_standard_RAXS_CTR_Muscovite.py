@@ -206,7 +206,7 @@ def Sim(data,VARS=VARS):
             domain_creator.make_dummy_data(file=os.path.join(OUTPUT_FILE_PATH,'temp_dummy_data.dat'),data=data,I=F)
         if combine_data_sets:
             domain_creator.combine_all_datasets(file=os.path.join(OUTPUT_FILE_PATH,'temp_full_dataset.dat'),data=data)
-        convert_files.convert_best_pars_to_matlab_input_file(file_name=os.path.join(OUTPUT_FILE_PATH,'temp_matlab_param.dat'),domain=Domain1,layered_water=rgh_dlw,c=unitcell.c,rgh=rgh,scale=inst.get_inten())
+        convert_files.convert_best_pars_to_matlab_input_file(file_name=os.path.join(OUTPUT_FILE_PATH,'temp_matlab_param.dat'),domain=Domain1,layered_water=rgh_dlw,c=unitcell.c,rgh=rgh,scale=inst.get_inten(),vars=VARS)
     if COUNT_TIME:
         t_3=datetime.now()
         print "It took "+str(t_1-t_0)+" seconds to setup"
