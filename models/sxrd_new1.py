@@ -1450,9 +1450,9 @@ class Sample:
             #e_data.append(np.array([z_plot,eden,eden_raxs,eden_layer_water]))
             normalized_factor=3.03#3.03:1 electron per 3.03 cubic A
             if domain_index==0:#domain1 has a 0.25 weighting factor
-                e_data.append(np.array([z_plot,np.array(eden)*normalized_factor*0.25,np.array(eden_raxs)*normalized_factor*0.25,np.array(eden_layer_water)*normalized_factor*0.25]))
+                e_data.append(np.array([z_plot,np.array(eden)*normalized_factor,np.array(eden_raxs)*normalized_factor,np.array(eden_layer_water)*normalized_factor]))
             elif domain_index==1:#domain2 has a 0.75 weighting factor
-                e_data.append(np.array([z_plot,np.array(eden)*normalized_factor*0.75,np.array(eden_raxs)*normalized_factor*0.75,np.array(eden_layer_water)*normalized_factor*0.75]))
+                e_data.append(np.array([z_plot,np.array(eden)*normalized_factor,np.array(eden_raxs)*normalized_factor,np.array(eden_layer_water)*normalized_factor]))
             if version==1.0:
                 e_total=e_total+np.array(eden)
             elif version==1.1:

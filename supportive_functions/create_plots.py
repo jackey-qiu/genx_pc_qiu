@@ -103,7 +103,7 @@ def generate_plot_files(output_file_path,sample,rgh,data,fit_mode, z_min=0,z_max
             eI=data_set.error
             #make dumy hkl and f to make the plot look smoother
             if l[0]>0:
-                l_dumy=np.arange(0.05,l[-1]+0.1,0.1)
+                l_dumy=np.arange(0.22,l[-1]+0.1,0.1)
             else:
                 l_dumy=np.arange(l[0],l[-1]+0.1,0.1)
             N=len(l_dumy)
@@ -910,7 +910,7 @@ def plot_all(path=module_path_locator(),make_offset_of_total_e=False,fit_e_profi
     #At the same time, the total_e - raxs_e - water is actually total_e - 2*raxs_e -water
     PATH=path
     #which plots do you want to create
-    plot_e_model,plot_e_FS,plot_ctr,plot_raxr,plot_AP_Q=1,1,1,0,0
+    plot_e_model,plot_e_FS,plot_ctr,plot_raxr,plot_AP_Q=1,1,1,1,0
 
     #specify file paths (files are dumped files when setting running_mode=False in GenX script)
     e_file=os.path.join(PATH,"temp_plot_eden")#e density from model
