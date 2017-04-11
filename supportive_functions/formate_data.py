@@ -92,6 +92,33 @@ def formate_RAXR_data(file_path='M:\\fwog\\members\\qiu05\\1608 - 13-IDC\\schmid
         full_data=np.append(full_data,temp_data,axis=0)
     np.savetxt(file_path+'_GenX_formate.dat',full_data[1:],fmt='%.5e')
 
+
+def split_RAXR_data_file(file='M:\\fwog\\members\\qiu05\\1608 - 13-IDC\\schmidt\\mica\\mica-zr_s2_longt_1_RAXR_1st_spot1.ipg'):
+
+    L_container=[]
+    L_label_container=[]
+    data=np.loadtxt(file,comments='%')
+    index_container=[0]
+    for i in range(len(data)):
+        if i!=len(data)-1:
+            if data[i+1,0]<data[i,0]:
+                index_container.append(i+1)
+    index_container.append(len(data))
+    sub_data_sets=[]
+    for i in range(len(index_container)-1):
+        start,end=index_container[i],index_container[i+1]
+        sub_data_sets.append(data[start:end,:])
+    for each_data_set in sub_data_sets:
+        L=round(each_data_set[0,1],2)
+        L_container.append(L)
+        temp_L_number=sum([1 for each_L in L_container if each_L==L])
+        L_label_container.append("_L"+str(L).replace(".","")+"_"+str(temp_L_number))
+        header='1             2           3            4            5           6            7                8          9                 10          11              12          13             14           15                   16    17                  18            19                  20          21        22         23         24           25             26         27            28          29        30               31          32       33          34           35        36           37            38\n\
+        file_number   L           epoch        Energy       Monitor     Signal_Best  sigSignal_Best   Signal_0d  mse_sSignal_0d    Signal      sigSignal       Signaly     sigSignaly     Background   ccd_num_back_ccd_px  time  time_corr_factor    xbar          ybar                HH          KK        LL         theta      ttheta       chi            phi        transm        alpha       beta      azimuth          mu          nu       fwhm_x      fwhm_y       samx      samy            accept_option   specscan#'
+        np.savetxt(file.replace(".ipg","_"+L_label_container[-1]+".ipg"),each_data_set,fmt='%10.5f',header=header,comments='%')
+
+    return L_container,L_label_container
+
 def formate_RAXR_data_APS(file_path='M:\\fwog\\members\\qiu05\\1608 - 13-IDC\\schmidt\\mica\\mica-zr_s2_shortt_1_RAXR_1st_spot1.ipg',E_range=[17934,18119]):
     full_data=np.zeros((1,8))
     L_list=[]

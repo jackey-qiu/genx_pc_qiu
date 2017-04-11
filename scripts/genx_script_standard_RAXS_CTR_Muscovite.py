@@ -32,9 +32,9 @@ wal=0.7749136#wavelength,set this number right each time (read it from nQc data 
 unitcell = model.UnitCell(5.1988, 9.0266, 20.04156, 90, 95.782, 90)#a,b,c,alpha,beta,gamma, correct c each time (use q-corrected c),c=c_projected/sin(180-beta)
 inst = model.Instrument(wavel = wal, alpha = 2.0)
 bulk, Domain1, Domain2 = model.Slab(T_factor='u'), model.Slab(c = 1.0,T_factor='u'), model.Slab(c = 1.0,T_factor='u')
-domain_creator.add_atom_in_slab(bulk,os.path.join(BATCH_PATH_HEAD,'muscovite_001_bulk_u_corrected.str'),height_offset=HEIGHT_OFFSET)
-domain_creator.add_atom_in_slab(Domain1,os.path.join(BATCH_PATH_HEAD,'muscovite_001_surface_Al_u_corrected.str'),attach='_D1',height_offset=HEIGHT_OFFSET)
-domain_creator.add_atom_in_slab(Domain2,os.path.join(BATCH_PATH_HEAD,'muscovite_001_surface_Si_u_corrected.str'),attach='_D2',height_offset=HEIGHT_OFFSET)
+domain_creator.add_atom_in_slab(bulk,os.path.join(BATCH_PATH_HEAD,'muscovite_001_bulk_u_corrected_new.str'),height_offset=HEIGHT_OFFSET)
+domain_creator.add_atom_in_slab(Domain1,os.path.join(BATCH_PATH_HEAD,'muscovite_001_surface_Al_u_corrected_new.str'),attach='_D1',height_offset=HEIGHT_OFFSET)
+domain_creator.add_atom_in_slab(Domain2,os.path.join(BATCH_PATH_HEAD,'muscovite_001_surface_Si_u_corrected_new.str'),attach='_D2',height_offset=HEIGHT_OFFSET)
 
 ##<experimental constants>##
 L_max=17.34#maximum L value
