@@ -781,7 +781,7 @@ def plot_multiple_e_profiles(file_head=module_path_locator(),dump_files=['temp_p
     return fig
 
 
-def plot_multiple_e_profiles_2(file_head=module_path_locator(),dump_files=['temp_plot_eden_0NaCl','temp_plot_eden_1NaCl','temp_plot_eden_10NaCl','temp_plot_eden_100NaCl'],label_marks=['0mM NaCl','1mM NaCl','10mM NaCl','100mM NaCl'],color_type=5):
+def plot_multiple_e_profiles_2(file_head=module_path_locator(),dump_files=['temp_plot_eden_0NaCl_new','temp_plot_eden_1NaCl_new','temp_plot_eden_10NaCl_new','temp_plot_eden_100NaCl_new'],label_marks=['0mM NaCl','1mM NaCl','10mM NaCl','100mM NaCl'],color_type=5):
     colors=set_color(len(dump_files),color_type)
     fig=pyplot.figure(figsize=(6,6))
     ax1=fig.add_subplot(1,1,1)
@@ -800,9 +800,9 @@ def plot_multiple_e_profiles_2(file_head=module_path_locator(),dump_files=['temp
         ax1.fill_between(np.array(edata[-1][0,:]),edata[-1][2,:]*0+i*3,edata[-1][2,:]+i*3,where=edata[-1][2,:]>(edata[-1][2,:]*0+0.00000001),color=colors[i],alpha=0.6)
     ax1.legend(fontsize=12)
     #ax2.legend(fontsize=12)
-    ax1.set_ylim(-10,18)
-    ax1.plot([2.5,2.5],[2.2,12],':',color='black')
-    ax1.plot([4.3,4.3],[2.2,12],':',color='black')
+    ax1.set_ylim(0,18)
+    ax1.plot([2.5,2.5],[0,12],':',color='black')
+    ax1.plot([4.3,4.3],[0,12],':',color='black')
     fig.tight_layout()
     fig.savefig(os.path.join(file_head,'multiple_eprofiles2.png'),dpi=300)
     return fig
@@ -910,7 +910,7 @@ def plot_all(path=module_path_locator(),make_offset_of_total_e=False,fit_e_profi
     #At the same time, the total_e - raxs_e - water is actually total_e - 2*raxs_e -water
     PATH=path
     #which plots do you want to create
-    plot_e_model,plot_e_FS,plot_ctr,plot_raxr,plot_AP_Q=1,1,1,1,0
+    plot_e_model,plot_e_FS,plot_ctr,plot_raxr,plot_AP_Q=1,0,1,1,1
 
     #specify file paths (files are dumped files when setting running_mode=False in GenX script)
     e_file=os.path.join(PATH,"temp_plot_eden")#e density from model

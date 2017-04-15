@@ -240,21 +240,21 @@ for pars in par_list:
 
         if rank==0:#rank 0 will be in charge of all I/O
             print 'doing spectra '+str(spectra)
-            
+
         #set the fit parameters and the data to be fit
         for ii in range(mod.parameters.get_len_rows()):#clear the fit parameters first
             mod.parameters.set_value(ii,2,False)
-            
+
         for each in mod.data.items:#clear to-be-used datasets
             each.use=False
-            
+
         for ii in range(mod.parameters.get_len_rows()):#set the fit parameters
             each=mod.parameters.get_value(ii,0)
             if each=='rgh_raxs.setA'+str(rank/(size/split_jobs)*len(spectras)+spectra+1):
-                if "MI" in mod.get_script():#if it is a model-independent fit
+                if "\"MI\"" in mod.get_script() or "\'MI\'" in mod.get_script():#if it is a model-independent fit
                     [mod.parameters.set_value(ii+i,2,True) for i in range(5)]
-                elif "MD" in mod.get_script():#if it is a model-dependent fit
-                    [mod.parameters.set_value(ii+i,2,True) for i in range(2)]
+                elif "\"MD\"" in mod.get_script() or "\'MD\'" in mod.get_script():#if it is a model-dependent fit
+                    [mod.parameters.set_value(ii+i,2,True) for i in range(3)]
         mod.data.items[(rank/(size/split_jobs))*len(spectras)+1+spectra].use=True#set the to-be-used dataset (first RAXR dataset is the second dataset)
         comm_group.Barrier()#wait for every processoer to have the same setup before moving on
         # Sets up the fitting ...
@@ -556,7 +556,7 @@ for pars in par_list:
 
         if rank_group==0:
             t2 = time.time()
-            
+
             print 'Fitting finsihed for comm'+str(rank/(size/split_jobs))+'!'
             print 'Time to fit: ', (t2-t1)/60., ' min'
 
@@ -614,8 +614,11 @@ if rank==0:
             if each=='rgh_raxs.setA'+str(i*len(spectras)+spectras[-1]+1):
                 end_temp=ii+4
                 for grid_index in range(start_temp,end_temp+1):
-                    for k in range(5):
-                        mod_temp.parameters.set_value(grid_index,k,each_mod[grid_index][k])
+                    for k in range(6):
+                        if k==2:
+                            mod_temp.parameters.set_value(grid_index,k,False)
+                        else:
+                            mod_temp.parameters.set_value(grid_index,k,each_mod[grid_index][k])
                 break
 
     io.save_gx(infile.replace(".gx","combined_ran.gx"),mod_temp,opt,config)
