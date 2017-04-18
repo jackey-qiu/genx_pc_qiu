@@ -132,8 +132,8 @@ def generate_plot_files(output_file_path,sample,rgh,data,fit_mode, z_min=0,z_max
 
             f_dumy=abs(sample.calculate_structure_factor(h_dumy,k_dumy,l_dumy,None,index=0,fit_mode=fit_mode,height_offset=height_offset,version=version))
             try:
-                exp_const,rgh.mu,re,auc=sample.domain['exp_factors']
-                pre_factor=3e6*np.exp(-exp_const*rgh.mu/q_dumy)*(4*np.pi*re/auc)**2/q_dumy**2
+                exp_const,mu,re,auc=sample.domain['exp_factors']
+                pre_factor=3e6*np.exp(-exp_const*mu/q_dumy)*(4*np.pi*re/auc)**2/q_dumy**2
             except:
                 pre_factor=1
             f_dumy=rough_dumy*pre_factor*f_dumy*f_dumy

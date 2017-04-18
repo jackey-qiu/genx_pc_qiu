@@ -1177,10 +1177,11 @@ class Sample:
             u0,ubar,d_w,first_layer_height,density_w=args['u0_w'],args['ubar_w'],args['d_w'],args['first_layer_height_w'],args['density_w']
             dinv = self.unit_cell.abs_hkl(h, k, l)
             f=self._get_f(np.array(['O']), dinv)[:,0]
+            f_H=self._get_f(np.array(['H']), dinv)[:,0]
             Auc=self.unit_cell.a*self.unit_cell.b*np.sin(self.unit_cell.gamma)
             q=2*np.pi*dinv
             #here the first layer height is referenced to 0, which is the height of top most atom layer before relaxation in the surface slab
-            F_layered_water=f*(Auc*d_w*density_w)*np.exp(-0.5*q**2*u0**2)*np.exp(q*(first_layer_height)*1.0J)\
+            F_layered_water=(f+2*f_H)*(Auc*d_w*density_w)*np.exp(-0.5*q**2*u0**2)*np.exp(q*(first_layer_height)*1.0J)\
                             /(1-np.exp(-0.5*q**2*ubar**2)*np.exp(q*d_w*1.0J))#54.3=20.1058*(1+1.6) offset height accouting for bulk and surface slab
             return F_layered_water
         else:
