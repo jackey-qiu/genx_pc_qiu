@@ -26,7 +26,7 @@ bl_dl_muscovite={'3_0':{'segment':[[0,1],[1,9]],'info':[[2,1],[6,1]]},'2_0':{'se
     '0_0':{'segment':[[0,20]],'info':[[2,2]]},'-1_0':{'segment':[[0,3],[3,9]],'info':[[6,-3],[2,-3]]},'0_-2':{'segment':[[0,9]],'info':[[2,-6.2782]]},\
     '-2_-2':{'segment':[[0,9]],'info':[[2,-6.2782]]},'-2_-1':{'segment':[[0,3.1391],[3.1391,9]],'info':[[4,-3.1391],[2,-3.1391]]},'-2_0':{'segment':[[0,9]],'info':[[2,-6]]},\
     '-2_1':{'segment':[[0,4.8609],[4.8609,9]],'info':[[4,-4.8609],[2,-6.8609]]},'-1_-1':{'segment':[[0,9]],'info':[[2,-4.1391]]},'-3_0':{'segment':[[0,1],[1,9]],'info':[[2,-1],[6,-1]]}}
-def formate_CTR_data(file='/Users/cqiu/model_files/best fit Zr-mica model/Zr_files/nQc_mica-zr_s2_longt_1_CTR_1st_spot1',bragg_peaks=bl_dl_muscovite):
+def formate_CTR_data(file='M:\\fwog\\members\\qiu05\\1704_APS_13IDC\\mica\\nQc_s2_100mM_RbCl_Zr_1_CTR_1st_spot1',bragg_peaks=bl_dl_muscovite):
     data_formated=None
     f_original=np.loadtxt(file,skiprows=1,comments='%')
     data_points=len(f_original)-1#the first row is not data but some q corr information
@@ -93,7 +93,7 @@ def formate_RAXR_data(file_path='M:\\fwog\\members\\qiu05\\1608 - 13-IDC\\schmid
     np.savetxt(file_path+'_GenX_formate.dat',full_data[1:],fmt='%.5e')
 
 
-def split_RAXR_data_file(file='M:\\fwog\\members\\qiu05\\1608 - 13-IDC\\schmidt\\mica\\mica-zr_s2_longt_1_RAXR_1st_spot1.ipg'):
+def split_RAXR_data_file(file='M:\\fwog\\members\qiu05\\1704_APS_13IDC\\mica\\s2_100mM_RbCl_Zr_1_RAXR_Rb_1st_spot1.ipg'):
 
     L_container=[]
     L_label_container=[]
@@ -119,7 +119,7 @@ def split_RAXR_data_file(file='M:\\fwog\\members\\qiu05\\1608 - 13-IDC\\schmidt\
 
     return L_container,L_label_container
 
-def formate_RAXR_data_APS(file_path='M:\\fwog\\members\\qiu05\\1608 - 13-IDC\\schmidt\\mica\\mica-zr_s2_shortt_1_RAXR_1st_spot1.ipg',E_range=[17934,18119]):
+def formate_RAXR_data_APS(file_path='M:\\fwog\\members\qiu05\\1704_APS_13IDC\\mica\\s2_100mM_RbCl_Zr_1_RAXR_Rb_1st_spot1.ipg',E_range=[14999,15500]):
     full_data=np.zeros((1,8))
     L_list=[]
     data=np.loadtxt(file_path,comments='%')
@@ -176,7 +176,7 @@ def scale_RAXS_data_to_CTR(file_ctr='M:\\fwog\\members\\qiu05\\1611 - ROBL20\\nQ
         f_raxs[i,5]=f_raxs[i,5]*scaling#scaling error
     np.savetxt(file_raxs.replace('.dat','_scaled_to_CTR.data'),f_raxs,fmt='%.5e')
 
-def formate_F1F2_data(f1f2_file='M:\\fwog\\members\\qiu05\\mica\\axd_Zr_k.002.nor',ipg_file='M:\\fwog\\members\\qiu05\\mica\\zr_mica_RAXR_L321.ipg'):
+def formate_F1F2_data(f1f2_file='M:\\fwog\\members\\qiu05\\1704_APS_13IDC\\escan\\axd_Zr-k_edge_S2.003.nor',ipg_file='M:\\fwog\\members\\qiu05\\1704_APS_13IDC\\mica\\s2_100mM_RbCl_Zr_1_RAXR_Zr_1st_spot1__L041_1.ipg'):
     f1f2=np.loadtxt(f1f2_file)
     ipg=np.loadtxt(ipg_file,comments='%')
     E_list=[]
@@ -192,6 +192,15 @@ def formate_F1F2_data(f1f2_file='M:\\fwog\\members\\qiu05\\mica\\axd_Zr_k.002.no
             f1f2_new=np.append(f1f2_new,(f1f2[i]*[1000,1,1])[np.newaxis,:],axis=0)
     f1f2_new=f1f2_new[1:]
     np.savetxt(f1f2_file+'.formated',f1f2_new[:,[1,2,0]])
+    #now drop duplicate points
+    data_new=np.loadtxt(f1f2_file+'.formated')
+    energy=[]
+    data_sub=[]
+    for i in range(len(data_new)):
+        if round(data_new[i,2],0) not in energy:
+            energy.append(round(data_new[i,2],0))
+            data_sub.append(list(data_new[i]))
+    np.savetxt(f1f2_file+'.formated',data_sub,fmt=['%.6e','%.6e','%i'])
     return None
 
 def formate_F1F2_data_ESRF(f1f2_file="/Users/cqiu/data/ESRF/axd_Zr-A01-bkg_b.f1f2.ASC",ipg_file='/Users/cqiu/data/ESRF/March_2017/Zr_ClO4_RAXR_R.ipg'):
