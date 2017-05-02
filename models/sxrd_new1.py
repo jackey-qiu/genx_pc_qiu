@@ -1271,7 +1271,7 @@ class Sample:
         ftot = fs + fb
         return ftot*self.inst.inten
 
-    def fourier_synthesis(self,HKL_list,P_list,A_list,z_min=0.,z_max=20.,el_lib={'O':8,'Fe':26,'As':33,'Pb':82,'Sb':51,'Zr':40,"Th":90},resonant_el='Pb',resolution=1000,water_scaling=1):
+    def fourier_synthesis(self,HKL_list,P_list,A_list,z_min=0.,z_max=20.,el_lib={'O':8,'Fe':26,'As':33,'Pb':82,'Sb':51,'Zr':40,"Th":90,"Rb":37},resonant_el='Pb',resolution=1000,water_scaling=1):
         ZR=el_lib[resonant_el]
         q_list = self.unit_cell.abs_hkl(np.array(HKL_list[0]), np.array(HKL_list[1]), np.array(HKL_list[2]))#a list of 1/d for each hkl set
         q_list_sorted=copy.copy(q_list)
@@ -1375,7 +1375,7 @@ class Sample:
         e_data.append(np.array([list(e_data[0])[0],e_total]))
         pickle.dump([e_data,labels],open(os.path.join(file_path,"temp_plot_eden"),"wb"))
 
-    def plot_electron_density_muscovite(self,slabs,el_lib={'O':8,'Fe':26,'As':33,'Pb':82,'Sb':51,'P':15,'Cr':24,'Cd':48,'Cu':29,'Zn':30,'Al':13,'Si':14,'K':19,'Zr':40,"Th":90},z_min=0.,z_max=28.,N_layered_water=10,resolution=1000,file_path="D:\\",height_offset=0,version=1.0,freeze=False):
+    def plot_electron_density_muscovite(self,slabs,el_lib={'O':8,'Fe':26,'As':33,'Pb':82,'Sb':51,'P':15,'Cr':24,'Cd':48,'Cu':29,'Zn':30,'Al':13,'Si':14,'K':19,'Zr':40,"Th":90,"Rb":37},z_min=0.,z_max=28.,N_layered_water=10,resolution=1000,file_path="D:\\",height_offset=0,version=1.0,freeze=False):
         #print dinv
         e_data=[]
         labels=[]

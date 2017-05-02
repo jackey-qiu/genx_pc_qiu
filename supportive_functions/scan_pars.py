@@ -1,14 +1,14 @@
 import os,sys
-sys.path.append('P://apps//genx_pc_qiu')
-sys.path.append('P://apps//genx_pc_qiu//models')
-sys.path.append('P://apps//genx_pc_qiu//lib')
+sys.path.append('..')
+sys.path.append('../models')
+sys.path.append('../lib')
 import numpy as np
 
 import model,diffev
 import filehandling as io
 
-path='P:\\My stuff\\Models\\CTR models\\Zr models for final publication\\refit results\\GenX'
-file_path_raxr_mi=os.path.join(path,'MD_RAXR_refit_Zr_0mM_NaCl_6O_run1_Apr3_best_1_bin_R1_weighted_2_kr0.90_km0.90_pf0.80_run1_ran_merged.gx')
+path='/Users/cqiu/model_files/ran_files'
+file_path_raxr_mi=os.path.join(path,'Scaling_fit_MD_RAXR_Zr_mica_100mM_NaCl_run2_Apr29_combined_ran.gx')
 scan_number=50
 error_bar_level=1.05
 
