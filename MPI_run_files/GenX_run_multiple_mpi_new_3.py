@@ -100,7 +100,7 @@ pop_size = pop_num        # if use_pop_mult = False, population size
 
 # Generations
 use_max_generations = True       # absolute (T) or relative (F) maximum gen.
-max_generations=pop_num*10      # if use_max_generations = True
+max_generations=pop_num*20      # if use_max_generations = True
 max_generation_mult = 6          # if use_max_generations = False
 
 # Parallel processing
@@ -507,34 +507,37 @@ for pars in par_list:
 
             opt.autosave()
 	if gen%opt.autosave_interval==0:
-	    
-	    std_val=std(opt.fom_log[:,1][-200:])
-	    if std_val<0.000001:
-		if rank==0:
-		    opt.text_output('std='+str(std_val))
-	        break
-            else:
-		if rank==0:
-                    opt.text_output('std='+str(std_val))
-            	    #calculate the error bar for parameters
-            	    n_elements = len(opt.start_guess)
-		    #opt.text_output('start_guesslength='+str(n_elements))
-                    #print 'Number of elemets to calc errobars for ', n_elements
-                    cum_N=0
-                    for index in range(n_elements):
-                        # calculate the error
-                        # TODO: Check the error bar buisness again and how to treat
-                        # Chi2
-                        #print "senor",self.fom_error_bars_level
-                        try:
-                            (error_low, error_high) = opt.calc_error_bar(index, 1.05)
-                        except:
-                            break
-                        error_str = '(%.3e, %.3e)'%(error_low, error_high)
-                        while mod.parameters.get_value(index+cum_N,2)!=True:
-                            cum_N=cum_N+1
-                        mod.parameters.set_value(index+cum_N,5,error_str)
-	            opt.autosave()
+	    if open("run_or_break").readlines()[0].startswith("break"):
+	       #open("run_or_break","w").write("run")
+		break
+	    else:
+	    	std_val=std(opt.fom_log[:,1][-200:])
+	   	if std_val<0.000001:
+		    if rank==0:
+		        opt.text_output('std='+str(std_val))
+	            break
+                else:
+		    if rank==0:
+                        opt.text_output('std='+str(std_val))
+            	        #calculate the error bar for parameters
+            	        n_elements = len(opt.start_guess)
+		        #opt.text_output('start_guesslength='+str(n_elements))
+                        #print 'Number of elemets to calc errobars for ', n_elements
+                        cum_N=0
+                        for index in range(n_elements):
+                            # calculate the error
+                            # TODO: Check the error bar buisness again and how to treat
+                            # Chi2
+                            #print "senor",self.fom_error_bars_level
+                            try:
+                                (error_low, error_high) = opt.calc_error_bar(index, 1.05)
+                            except:
+                                break
+                            error_str = '(%.3e, %.3e)'%(error_low, error_high)
+                            while mod.parameters.get_value(index+cum_N,2)!=True:
+                                cum_N=cum_N+1
+                            mod.parameters.set_value(index+cum_N,5,error_str)
+	                opt.autosave()
 
 	    
     if rank==0:

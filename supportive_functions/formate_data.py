@@ -1,4 +1,5 @@
 import numpy as np
+import os
 
 def qsi_correction(data_path='M:\\fwog\\members\\qiu05\\mica\\nQc_zr_mica_CTR_May19_GenX_formate.dat',L_column=0,I_column=4,correction_factor=0.3125):
     #correction_factor=2pi/c_project, where c-project=volume/a*b
@@ -26,7 +27,7 @@ bl_dl_muscovite={'3_0':{'segment':[[0,1],[1,9]],'info':[[2,1],[6,1]]},'2_0':{'se
     '0_0':{'segment':[[0,20]],'info':[[2,2]]},'-1_0':{'segment':[[0,3],[3,9]],'info':[[6,-3],[2,-3]]},'0_-2':{'segment':[[0,9]],'info':[[2,-6.2782]]},\
     '-2_-2':{'segment':[[0,9]],'info':[[2,-6.2782]]},'-2_-1':{'segment':[[0,3.1391],[3.1391,9]],'info':[[4,-3.1391],[2,-3.1391]]},'-2_0':{'segment':[[0,9]],'info':[[2,-6]]},\
     '-2_1':{'segment':[[0,4.8609],[4.8609,9]],'info':[[4,-4.8609],[2,-6.8609]]},'-1_-1':{'segment':[[0,9]],'info':[[2,-4.1391]]},'-3_0':{'segment':[[0,1],[1,9]],'info':[[2,-1],[6,-1]]}}
-def formate_CTR_data(file='M:\\fwog\\members\\qiu05\\1704_APS_13IDC\\mica\\nQc_s2_100mM_RbCl_Zr_1_CTR_1st_spot1',bragg_peaks=bl_dl_muscovite):
+def formate_CTR_data(file='M:\\fwog\\members\\qiu05\\1704_APS_13IDC\\mica\\nQc_sb4_100mM_LiCl_Zr_1_CTR_1st_spot1',bragg_peaks=bl_dl_muscovite):
     data_formated=None
     f_original=np.loadtxt(file,skiprows=1,comments='%')
     data_points=len(f_original)-1#the first row is not data but some q corr information
@@ -119,7 +120,36 @@ def split_RAXR_data_file(file='M:\\fwog\\members\qiu05\\1704_APS_13IDC\\mica\\s2
 
     return L_container,L_label_container
 
-def formate_RAXR_data_APS(file_path='M:\\fwog\\members\qiu05\\1704_APS_13IDC\\mica\\s2_100mM_RbCl_Zr_1_RAXR_Rb_1st_spot1.ipg',E_range=[14999,15500]):
+def split_RAXR_data_file_fr_GenX_output(file='P:\\apps\\genx_pc_qiu\\dump_files\\temp_full_dataset.dat',name_head='raxr_data_0NaCl_Zr_mica'):
+    #delete the CTR data first
+    #file is created using domain_creator.combine_all_datasets()
+    L_container=[]
+    L_label_container=[]
+    data=np.loadtxt(file,comments='#')
+    index_container=[]
+    L_container=[]
+    for i in range(len(data)):
+        if i!=len(data)-1:
+            if data[i,3] not in L_container:
+                index_container.append(i)
+                L_container.append(data[i,3])
+    index_container.append(len(data))
+    sub_data_sets=[]
+    for i in range(len(index_container)-1):
+        start,end=index_container[i],index_container[i+1]
+        sub_data_sets.append(data[start:end,:])
+    for i in range(len(sub_data_sets)):
+        each_data_set=sub_data_sets[i]
+        each_data_set[:,0]=each_data_set[:,0]/1000.
+        each_data_set[:,-2]=1
+        L=L_container[i]
+        L_label_container.append("_L"+str(round(L,2)).replace(".",""))
+        header='1             2           3            4            5           6            7                8       \nEngergy       H           K            L            I           Ierr         monitor_dummy    BL'
+        np.savetxt(os.path.dirname(file)+'\\'+name_head+L_label_container[-1]+".ipg",each_data_set,fmt='%10.5f',header=header,comments='%')
+
+    return L_container,L_label_container
+
+def formate_RAXR_data_APS(file_path='M:\\fwog\\members\qiu05\\1704_APS_13IDC\\mica\\sb4_100mM_LiCl_Zr_1_RAXR_1st_spot1.ipg',E_range=[17759,18306]):
     full_data=np.zeros((1,8))
     L_list=[]
     data=np.loadtxt(file_path,comments='%')

@@ -783,7 +783,7 @@ def plot_multiple_e_profiles(file_head=module_path_locator(),dump_files=['temp_p
     return fig
 
 
-def plot_multiple_e_profiles_2(file_head=module_path_locator(),dump_files=['temp_plot_eden_0NaCl_new','temp_plot_eden_1NaCl_new','temp_plot_eden_10NaCl_new','temp_plot_eden_100NaCl_new'],label_marks=['0mM NaCl','1mM NaCl','10mM NaCl','100mM NaCl'],color_type=5):
+def plot_multiple_e_profiles_2(file_head=module_path_locator(),dump_files=['temp_plot_eden_0NaCl_0502','temp_plot_eden_1NaCl_0502','temp_plot_eden_10NaCl_0502','temp_plot_eden_100NaCl_0502'],label_marks=['0mM NaCl','1mM NaCl','10mM NaCl','100mM NaCl'],color_type=5):
     colors=set_color(len(dump_files),color_type)
     fig=pyplot.figure(figsize=(6,6))
     ax1=fig.add_subplot(1,1,1)
@@ -907,7 +907,7 @@ def overplot_raxr_e_density(dump_files=["temp_plot_RAXR_eden_e_fit_0mMNaCl","tem
     #fig.savefig(os.path.join(os.path.join(module_path_locator(),'temp_raxr_e_profiles_overlapping_profile.png'),dpi=300))
     return fig
 
-def plot_all(path=module_path_locator(),make_offset_of_total_e=False,fit_e_profile=False):
+def plot_all(path=module_path_locator(),make_offset_of_total_e=False,fit_e_profile=0):
     #set make_offset_of_total_e to True if you want to have total e density replesented by total_e - resonant e in the case when the resonant els are freezed to have no influence on the CTR.
     #At the same time, the total_e - raxs_e - water is actually total_e - 2*raxs_e -water
     PATH=path
@@ -980,9 +980,9 @@ def plot_all(path=module_path_locator(),make_offset_of_total_e=False,fit_e_profi
                     '''
                     eden_temp=None
                     if make_offset_of_total_e:
-                        eden_temp=list(edata[i][1,:]-edata[i][3,:]-2*edata[i][2,:])
+                        eden_temp=list(edata[i][1,:]-edata[i][3,:]-2*edata[i][2,:]*0)
                     else:
-                        eden_temp=list(edata[i][1,:]-edata[i][3,:]-edata[i][2,:])
+                        eden_temp=list(edata[i][1,:]-edata[i][3,:]-edata[i][2,:]*0)
                     eden_temp=(np.array(eden_temp)*(np.array(eden_temp)>0.01))[:,np.newaxis]
                     z_temp=np.array(data_eden_FS[0])[:,np.newaxis]
                     e_den_subtracted=np.append(z_temp,eden_temp,axis=1)
@@ -1030,9 +1030,10 @@ def plot_all(path=module_path_locator(),make_offset_of_total_e=False,fit_e_profi
     #now plot the subtracted e density and print out the gaussian fit results
     if fit_e_profile:
         pyplot.figure()
-        print '##############Total e - raxr -layer water#################'
-        gaussian_fit(e_den_subtracted,water_scaling=water_scaling)
-        pyplot.title('Total e - raxr (MD)-layer water')
+        print '##############Total e -layer water#################'
+        gaussian_fit(e_den_subtracted,zs=[2.3,7.3,11],water_scaling=water_scaling)
+        pyplot.title('Total e - layer water')
+        '''
         pyplot.figure()
         print '#########################RAXR (MI)########################'
         gaussian_fit(e_den_raxr_MI,zs=None,N=40,water_scaling=water_scaling)
@@ -1043,6 +1044,7 @@ def plot_all(path=module_path_locator(),make_offset_of_total_e=False,fit_e_profi
         pyplot.title('RAXR (MD)')
         pyplot.show()
         #return e_den_subtracted,data_eden_FS
+        '''
     return water_scaling
 
 def gaussian_fit(data,fit_range=[1,40],zs=None,N=8,water_scaling=1):
@@ -1086,12 +1088,15 @@ def gaussian_fit(data,fit_range=[1,40],zs=None,N=8,water_scaling=1):
         #print '%3.3f\t%3.3f\t%3.3f'%(ctrs[i/2],abs(popt[i])/N*(abs(popt[i+1])*np.sqrt(np.pi*2)*5.199*9.027)*4,abs(popt[i+1])**2)
     combinded_set=np.reshape(np.array(combinded_set),(len(combinded_set)/3,3)).transpose()
     #combinded_set=combinded_set.transpose()
+    #normalized to full surface unit cell
     print 'total_occupancy=',np.sum(combinded_set[1,:]/4)
-    print 'OC_RAXS_LIST=np.array([',','.join([str(each) for each in combinded_set[1,:]]),'])'
-    print 'U_RAXS_LIST=np.array([',','.join([str(each) for each in combinded_set[2,:]]),'])'
+    #normalized to half unit cell (oc and u have been added to 1 to be used in Matlab input par file)
+    print 'OC_RAXS_LIST=np.array([',','.join([str(each/8.+1.) for each in combinded_set[1,:]]),'])'
+    #the u not U(u**2)
+    print 'U_RAXS_LIST=np.array([',','.join([str(each**0.5+1) for each in combinded_set[2,:]]),'])'
     print 'X_RAXS_LIST=[0.5]*',len(combinded_set[1,:])
     print 'Y_RAXS_LIST=[0.5]*',len(combinded_set[1,:])
-    print 'Z_RAXS_LIST=np.array([',','.join([str(each) for each in combinded_set[0,:]]),'])'
+    print 'Z_RAXS_LIST=np.array([',','.join([str(each+1) for each in combinded_set[0,:]]),'])'
 
 
     fit = func([x,ctrs], *popt)

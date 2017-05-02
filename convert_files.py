@@ -10,10 +10,14 @@ def convert_best_pars_to_matlab_input_file(file_name=None,domain=None,layered_wa
     f=open(file_name,'w')
     f.write('% Param No. Best-Fit     Opt(1,2)             FIT    Initial      Std Dev\n\n')
     index_gaussian_peaks=[np.where(domain.id==each_id)[0][0] for each_id in domain.id if 'Gaussian_' in each_id]
+    index_freeze_peaks=[np.where(domain.id==each_id)[0][0] for each_id in domain.id if 'Freezed_' in each_id]
+    z_freeze=[z_new[each_index] for each_index in index_freeze_peaks]
     z_gaussian=[z_new[each_index] for each_index in index_gaussian_peaks]
     #for each_index in index_gaussian_peaks:
     u_gaussian=[data[4][each_index] for each_index in index_gaussian_peaks]
+    u_freeze=[data[4][each_index] for each_index in index_freeze_peaks]
     oc_gaussian=[data[5][each_index]/4.0/2.0 for each_index in index_gaussian_peaks]#occ normalized to the half surface unit cell
+    oc_freeze=[data[5][each_index]/4.0/2.0 for each_index in index_freeze_peaks]
     ref_height_offset=0
     try:
         beta=rgh.beta+1
@@ -62,4 +66,8 @@ def convert_best_pars_to_matlab_input_file(file_name=None,domain=None,layered_wa
         f.write('%i    %10.6f    %6.4f    %6.4f    %i    %10.7f    %10.6f\n'%(46+i*3   ,    z_gaussian[i+3]+1+ref_height_offset  ,   0.0010  ,   0.5  ,   1   ,  z_gaussian[i+3]+1   ,  0.00))
         f.write('%i    %10.6f    %6.4f    %6.4f    %i    %10.7f    %10.6f\n'%(47+i*3   ,    oc_gaussian[i+3]+1  ,   0.0010  ,   0.5  ,   1   ,  oc_gaussian[i+3]+1   ,  0.00))
         f.write('%i    %10.6f    %6.4f    %6.4f    %i    %10.7f    %10.6f\n'%(48+i*3   ,    u_gaussian[i+3]+1  ,   0.0010  ,   0.5  ,   1   ,  u_gaussian[i+3]+1   ,  0.00))
+    #now write the freeze RAXR element
+    f.write('occ_ra=['+';'.join(map(lambda i:str(i),oc_freeze))+'];\n')
+    f.write('pos_ra=['+';'.join(map(lambda i:str(i),np.array(z_freeze)+ref_height_offset))+'];\n')
+    f.write('u_ra=['+';'.join(map(lambda i:str(i),u_freeze))+'];\n')
     f.close()
