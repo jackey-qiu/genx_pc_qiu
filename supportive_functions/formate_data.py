@@ -27,7 +27,7 @@ bl_dl_muscovite={'3_0':{'segment':[[0,1],[1,9]],'info':[[2,1],[6,1]]},'2_0':{'se
     '0_0':{'segment':[[0,20]],'info':[[2,2]]},'-1_0':{'segment':[[0,3],[3,9]],'info':[[6,-3],[2,-3]]},'0_-2':{'segment':[[0,9]],'info':[[2,-6.2782]]},\
     '-2_-2':{'segment':[[0,9]],'info':[[2,-6.2782]]},'-2_-1':{'segment':[[0,3.1391],[3.1391,9]],'info':[[4,-3.1391],[2,-3.1391]]},'-2_0':{'segment':[[0,9]],'info':[[2,-6]]},\
     '-2_1':{'segment':[[0,4.8609],[4.8609,9]],'info':[[4,-4.8609],[2,-6.8609]]},'-1_-1':{'segment':[[0,9]],'info':[[2,-4.1391]]},'-3_0':{'segment':[[0,1],[1,9]],'info':[[2,-1],[6,-1]]}}
-def formate_CTR_data(file='M:\\fwog\\members\\qiu05\\1704_APS_13IDC\\mica\\nQc_sb4_100mM_LiCl_Zr_1_CTR_1st_spot1',bragg_peaks=bl_dl_muscovite):
+def formate_CTR_data(file='M:\\fwog\\members\\qiu05\\1704_APS_13IDC\\mica\\nQc_s6_100mM_CH5N_1_CTR_1st_spot1',bragg_peaks=bl_dl_muscovite):
     data_formated=None
     f_original=np.loadtxt(file,skiprows=1,comments='%')
     data_points=len(f_original)-1#the first row is not data but some q corr information
@@ -149,7 +149,7 @@ def split_RAXR_data_file_fr_GenX_output(file='P:\\apps\\genx_pc_qiu\\dump_files\
 
     return L_container,L_label_container
 
-def formate_RAXR_data_APS(file_path='M:\\fwog\\members\qiu05\\1704_APS_13IDC\\mica\\sb4_100mM_LiCl_Zr_1_RAXR_1st_spot1.ipg',E_range=[17759,18306]):
+def formate_RAXR_data_APS(file_path='M:\\fwog\\members\qiu05\\1704_APS_13IDC\\mica\\s6_100mM_CH5N_Zr_1_RAXR_1st_spot1.ipg',E_range=[17759,18306]):
     full_data=np.zeros((1,8))
     L_list=[]
     data=np.loadtxt(file_path,comments='%')
@@ -163,7 +163,11 @@ def formate_RAXR_data_APS(file_path='M:\\fwog\\members\qiu05\\1704_APS_13IDC\\mi
                 temp_data=[[np.around(data[i,3]*1000,0),0,0,np.around(data[i,1],2),data[i,5]/data[i,4]/data[i,26],data[i,6]/data[i,4]/data[i,26],2,2]]
         if temp_data!=[] and np.around(data[i,3]*1000,0)>E_range[0] and np.around(data[i,3]*1000,0)<E_range[1]:
             full_data=np.append(full_data,temp_data,axis=0)
-    print L_list
+    for i in range(len(full_data[1:])):
+        each_segment=full_data[1:][i]
+        if i!=(len(full_data[1:])-1) and each_segment[0]==full_data[1:][i+1,0]:
+            print each_segment[0],each_segment[3]#manually delete those duplicate points in the output file
+    #print L_list
     np.savetxt(file_path.replace('.ipg','_GenX_formate.dat'),full_data[1:],fmt='%.5e')
 
 def formate_RAXR_data_ESRF(file_path='/Users/cqiu/data/ESRF/March_2017/Zr_ClO4_RAXR_R.ipg',E_range=[17815,18265],L_shift=0):

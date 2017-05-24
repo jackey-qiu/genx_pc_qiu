@@ -2,8 +2,9 @@ import numpy as num
 import numpy as np
 from matplotlib import pyplot
 import matplotlib as mpt
-import pickle
+import pickle,glob
 import sys,os,inspect
+from matplotlib import rc
 from matplotlib import pyplot
 from scipy.optimize import curve_fit
 import matplotlib.pyplot as plt
@@ -575,6 +576,176 @@ def plot_CTR_multiple_model_muscovite_2(file_head=module_path_locator(),dump_fil
     fig.savefig(os.path.join(file_head,'multiple_ctrs.png'),dpi=300)
     return fig
 
+def plot_CTR_multiple_model_muscovite_matlab_outputs(file_head=module_path_locator(),c_projected=[19.9347,19.9597,19.9167,19.9803],dump_files=[['ctr_data_0mM_NaCl.dat','bestfit_ctr_results_0mM_NaCl.dat'],['ctr_data_1mM_NaCl.dat','bestfit_ctr_results_1mM_NaCl.dat'],['ctr_data_10mM_NaCl.dat','bestfit_ctr_results_10mM_NaCl.dat'],['ctr_data_100mM_NaCl.dat','bestfit_ctr_results_100mM_NaCl.dat']],labels=['0NaCl','1mM NaCl','10mM NaCl','100mM NaCl'],markers=['o']*20,fontsize=13,lw=1.5,color_type=[1,5]):
+    hfont = {'fontname':['times new roman','Helvetica'][0]}
+    colors=set_color(len(dump_files)*2,color_type[0])
+    colors_2=set_color(len(dump_files)*2,color_type[0])
+    objects=[]
+    for i in range(len(dump_files)):
+        objects.append([np.loadtxt(os.path.join(file_head,dump_files[i][0])),np.loadtxt(os.path.join(file_head,dump_files[i][1]))])
+    fig=pyplot.figure(figsize=(5,4))
+    ax=fig.add_subplot(1,1,1)
+    ax.set_yscale('log')
+    def _find_index_of_near_bragg_peak(q_list=[],l_bragg=[0,2,4,6,8,10,12,14,16],c=19.9347):
+        index_list=[0]
+        q_bragg=np.array(l_bragg)*np.pi*2/c
+        for i in range(len(q_list)):
+            if i!=len(q_list)-1:
+                for q in q_bragg:
+                    if q_list[i]<q and q_list[i+1]>q:
+                        index_list.append(i+1)
+                        break
+        index_list.append(len(q_list))
+        return index_list
+    for i in range(len(objects)):
+        object_data=objects[i][0]
+        object_model=objects[i][1]
+        index_list=_find_index_of_near_bragg_peak(object_model[:,0],c=c_projected[i])
+        ax.scatter(object_data[:,0],object_data[:,1]*(100**i),marker=markers[i],s=20,facecolors='none',edgecolors=colors_2[i],alpha=0.4,label='Data_'+labels[i])
+        ax.errorbar(object_data[:,0],object_data[:,1]*(100**i),yerr=object_data[:,2]*(100**i),fmt=None,alpha=0.4,ecolor=colors_2[i])
+        for j in range(len(index_list)-1):
+            l,=ax.plot(object_model[index_list[j]:index_list[j+1],0],object_model[index_list[j]:index_list[j+1],1]*(100**i),color=colors[i],lw=lw,label='Model_'+labels[i])
+        pyplot.xlabel(r'$\rm{q\ (\AA^{-1})}$',axes=ax,fontsize=fontsize,**hfont)
+        pyplot.ylabel(r'$\rm{Intensity}$',axes=ax,fontsize=fontsize,**hfont)
+        #pyplot.title('(00L)',weight=4,size=fontsize,clip_on=True)
+    #ax.legend(prop={'size':fontsize})
+
+    for xtick in ax.xaxis.get_major_ticks():
+        xtick.label.set_fontsize(fontsize)
+    for ytick in ax.yaxis.get_major_ticks():
+        ytick.label.set_fontsize(fontsize)
+    for l in ax.get_xticklines() + ax.get_yticklines():
+        l.set_markersize(5)
+        l.set_markeredgewidth(2)
+    for label in ax.get_xticklabels() :
+        label.set_fontproperties(hfont['fontname'])
+        label.set_fontsize(12)
+    for label in ax.get_yticklabels() :
+        label.set_fontproperties(hfont['fontname'])
+        label.set_fontsize(12)
+    ax.plot([0.35,0.35],[0,100],':',color='black')
+    ax.plot([0.87,0.87],[0,100],':',color='black')
+    pyplot.xlim((0,6))
+    fig.tight_layout()
+    fig.savefig(os.path.join(file_head,'multiple_ctrs.png'),dpi=300)
+    return fig
+
+def plot_RAXR_matlab_output_single_data_set(file_head='M:\\fwog\\members\\qiu05\\mica\\Zr_files_fit',glob_head='mica_zr_0NaCl_MD_May04_fit',L_list=[0.41,0.53,0.61,0.75,0.88,1.15,1.45,1.71,2.31,2.64,2.85,3.21,3.55,4.24,4.55,5.61,6.25,7.31,9.15,10.31,11.15],c_projected=19.9597,offset=8,start_plot=0,num_plots=21):
+    #file_head for 0mM NaCl:'M:\\fwog\\members\\qiu05\\mica\\Zr_files_fit',glob_head:'mica_zr_0NaCl_MD_May04_fit'
+    #file_head for 1mM NaCl:'M:\\fwog\\members\qiu05\\1608 - 13-IDC\\schmidt\\mica\\Zr_files\\1mM_NaCl_Zr_mica', glob_head:'mica_zr_1mM_NaCl_MD_May03_fit'
+    #file_head for 10mM NaCl:'M:\\fwog\\members\qiu05\\1608 - 13-IDC\\schmidt\\mica\\Zr_files\\10mM_NaCl_Zr_mica', glob_head:'mica_zr_10mM_NaCl_MD_May04_fit'
+    #file_head for 100mM NaCl:'M:\\fwog\\members\qiu05\\1608 - 13-IDC\\schmidt\\mica\\Zr_files\\100mM_NaCl_Zr_mica', glob_head:'mica_zr_100mM_NaCl_MD_1peak_May04_fit','mica_zr_100mM_NaCl_MD_May04_fit'
+    hfont = {'fontname':['times new roman','Helvetica'][0]}
+    files=glob.glob(os.path.join(file_head,glob_head)+'*_norm2')
+    files_sorted=[]
+    index_list=[]
+    for each_file in files:
+        index_list.append(int(each_file.split('_')[-2]))
+    for i in range(1,len(files)+1):
+        for j in range(len(index_list)):
+            if i==index_list[j]:
+                files_sorted.append(files[index_list[j]-1])
+                break
+    fig=pyplot.figure(figsize=(7,9))
+    ax=fig.add_subplot(1,1,1)
+    y_lim_max=170
+    y_lim_min=0
+    for i in range(len(files_sorted)):
+        if i in range(start_plot,num_plots+start_plot):
+            file=files_sorted[i]
+            data=np.loadtxt(file)
+            avg=np.average(data[:,1])
+            ax.scatter(data[:,0],data[:,1]-avg+i*offset,facecolors='none')
+            ax.errorbar(data[:,0],data[:,1]-avg+i*offset,yerr=data[:,2],fmt=None)
+            ax.plot(data[:,0],data[:,3]-avg+i*offset)
+            ax.annotate('q='+str(round(L_list[i]*np.pi*2/c_projected,3))+' (+'+str(i*offset)+')',xy=(18.13,data[:,3][-1]-avg+i*offset),xytext=(18.13,data[:,3][-1]-avg+i*offset),fontsize=10,**hfont)
+            y_lim_max=data[:,3][-1]-avg+i*offset+offset
+            if i==start_plot:
+                y_lim_min=data[:,3][-1]-avg+i*offset-offset
+    for label in ax.get_xticklabels() :
+        label.set_fontproperties(hfont['fontname'])
+        label.set_fontsize(12)
+    for label in ax.get_yticklabels() :
+        label.set_fontproperties(hfont['fontname'])
+        label.set_fontsize(12)
+    pyplot.xlim((17.9,18.2))
+    pyplot.ylim((y_lim_min,y_lim_max))
+    pyplot.xlabel(r'$\rm{Energy(keV)}$',axes=ax,fontsize=13,**hfont)
+    pyplot.ylabel(r'$\rm{Intensity}$',axes=ax,fontsize=13,**hfont)
+    fig.tight_layout()
+    fig.savefig(os.path.join(file_head,'multiple_raxrs.png'),dpi=300)
+    return fig
+
+def plot_RAXR_matlab_output_multiple_data_sets(file_heads=['M:\\fwog\\members\\qiu05\\mica\\Zr_files_fit','M:\\fwog\\members\qiu05\\1608 - 13-IDC\\schmidt\\mica\\Zr_files\\1mM_NaCl_Zr_mica','M:\\fwog\\members\qiu05\\1608 - 13-IDC\\schmidt\\mica\\Zr_files\\10mM_NaCl_Zr_mica','M:\\fwog\\members\qiu05\\1608 - 13-IDC\\schmidt\\mica\\Zr_files\\100mM_NaCl_Zr_mica'],glob_heads=['mica_zr_0NaCl_MD_May04_fit','mica_zr_1mM_NaCl_MD_May03_fit','mica_zr_10mM_NaCl_MD_May04_fit','mica_zr_100mM_NaCl_MD_May04_fit'],L_list=[0.41,0.53,0.61,0.75,0.88,1.15,1.45,1.71,2.31,2.64,2.85,3.21,3.55,4.24,4.55,5.61,6.25,7.31,9.15,10.31,11.15],c_projected=19.9597,offset=8,start_plot=0,num_plots=3,color_type=1):
+    #file_head for 0mM NaCl:'M:\\fwog\\members\\qiu05\\mica\\Zr_files_fit',glob_head:'mica_zr_0NaCl_MD_May04_fit'
+    #file_head for 1mM NaCl:'M:\\fwog\\members\qiu05\\1608 - 13-IDC\\schmidt\\mica\\Zr_files\\1mM_NaCl_Zr_mica', glob_head:'mica_zr_1mM_NaCl_MD_May03_fit'
+    #file_head for 10mM NaCl:'M:\\fwog\\members\qiu05\\1608 - 13-IDC\\schmidt\\mica\\Zr_files\\10mM_NaCl_Zr_mica', glob_head:'mica_zr_10mM_NaCl_MD_May04_fit'
+    #file_head for 100mM NaCl:'M:\\fwog\\members\qiu05\\1608 - 13-IDC\\schmidt\\mica\\Zr_files\\100mM_NaCl_Zr_mica', glob_head:'mica_zr_100mM_NaCl_MD_1peak_May04_fit','mica_zr_100mM_NaCl_MD_May04_fit'
+    hfont = {'fontname':['times new roman','Helvetica'][0]}
+    colors=set_color(num_plots*2,color_type)
+    fig=pyplot.figure(figsize=(4,6))
+    y_lim_max=170
+    y_lim_min=0
+    for q_plot in range(num_plots):
+        ax=fig.add_subplot(num_plots,1,q_plot+1)
+        for i_plot in range(len(file_heads)):
+            file_head=file_heads[i_plot]
+            glob_head=glob_heads[i_plot]
+            files=glob.glob(os.path.join(file_head,glob_head)+'*_norm2')
+            files_sorted=[]
+            index_list=[]
+            for each_file in files:
+                index_list.append(int(each_file.split('_')[-2]))
+            for i in range(1,len(files)+1):
+                for j in range(len(index_list)):
+                    if i==index_list[j]:
+                        files_sorted.append(files[index_list[j]-1])
+                        break
+
+            i=q_plot+start_plot
+            file=files_sorted[i]
+            data=np.loadtxt(file)
+            avg=np.average(data[:,1])
+            ax.scatter(data[:,0],data[:,1]-avg+i_plot*offset,facecolors='none',edgecolors=colors[i_plot],alpha=0.5)
+            ax.errorbar(data[:,0],data[:,1]-avg+i_plot*offset,yerr=data[:,2],fmt=None,alpha=0.5,ecolor=colors[i_plot])
+            ax.plot(data[:,0],data[:,3]-avg+i_plot*offset,color=colors[i_plot])
+            #ax.annotate('(+'+str(i_plot*offset)+')',xy=(18.13,data[:,3][-1]-avg+i_plot*offset),xytext=(18.13,data[:,3][-1]-avg+i_plot*offset),fontsize=10,**hfont)
+            if i_plot==0:
+                ax.annotate(r'$\rm{(+0)}$',xy=(18.13,data[:,3][-1]-avg+i_plot*offset),xytext=(18.13,data[:,3][-1]-avg+i_plot*offset),fontsize=10,**hfont)
+            elif i_plot==1:
+                ax.annotate(r'$\rm{(+8)}$',xy=(18.13,data[:,3][-1]-avg+i_plot*offset),xytext=(18.13,data[:,3][-1]-avg+i_plot*offset),fontsize=10,**hfont)
+            elif i_plot==2:
+                ax.annotate(r'$\rm{(+16)}$',xy=(18.13,data[:,3][-1]-avg+i_plot*offset),xytext=(18.13,data[:,3][-1]-avg+i_plot*offset),fontsize=10,**hfont)
+            elif i_plot==3:
+                ax.annotate(r'$\rm{(+24)}$',xy=(18.13,data[:,3][-1]-avg+i_plot*offset),xytext=(18.13,data[:,3][-1]-avg+i_plot*offset),fontsize=10,**hfont)
+            y_lim_max=data[:,3][-1]-avg+i_plot*offset+offset*1.5
+            if i_plot==0:
+                print i,i_plot
+                y_lim_min=data[:,3][-1]-avg+i_plot*offset-offset
+
+        pyplot.xlim((17.9,18.17))
+        pyplot.ylim((y_lim_min,y_lim_max+9))
+        q_value=str(round(L_list[q_plot+start_plot]*np.pi*2/c_projected,3))
+        if q_plot==0:
+            ax.annotate(r'$\rm{q=0.129\ \AA^{-1}}$',xy=(18.,y_lim_max),xytext=(18.,y_lim_max),fontsize=10,**hfont)
+        elif q_plot==1:
+            ax.annotate(r'$\rm{q=0.167\ \AA^{-1}}$',xy=(18.,y_lim_max),xytext=(18.,y_lim_max),fontsize=10,**hfont)
+        elif q_plot==2:
+            ax.annotate(r'$\rm{q=0.192\ \AA^{-1}}$',xy=(18.,y_lim_max),xytext=(18.,y_lim_max),fontsize=10,**hfont)
+        if q_plot==num_plots-1:pyplot.xlabel(r'$\rm{Energy(keV)}$',axes=ax,fontsize=13,**hfont)
+        pyplot.ylabel(r'$\rm{Intensity}$',axes=ax,fontsize=13,**hfont)
+        for label in ax.get_xticklabels() :
+            label.set_fontproperties(hfont['fontname'])
+            label.set_fontsize(12)
+        for label in ax.get_yticklabels() :
+            label.set_fontproperties(hfont['fontname'])
+            label.set_fontsize(12)
+        #pyplot.title('q='+str(round(L_list[q_plot+start_plot]*np.pi*2/c_projected,3))+r'$\rm{\ \AA^{-1}}$',fontsize=10,**hfont)
+    #pyplot.rcParams.update({'font.size': 10})
+    fig.tight_layout()
+    fig.savefig(os.path.join(file_heads[0],'multiple_raxrs_multiple_data.png'),dpi=300)
+    return fig
+
 def plotting_modelB(object=[],fig=None,index=[2,3,1],color=['0.35','r','c','m','k'],l_dashes=[()],lw=3,label=['Experimental data','Model fit'],title=['10L'],marker=['o'],legend=True,fontsize=10):
     #overlapping the experimental and modeling fit CTR profiles,the data used are exported using GenX,first need to read the data using loadtxt(file,skiprows=3)
     #object=[data1,data2,data3],multiple dataset with the first one of experimental data and the others model datasets
@@ -592,12 +763,6 @@ def plotting_modelB(object=[],fig=None,index=[2,3,1],color=['0.35','r','c','m','
         pyplot.ylabel(r'$|F_{HKL}|$',axes=ax,fontsize=12)
     #settings for demo showing
     pyplot.title('('+title[0]+')',position=(0.5,0.86),weight=4,size=10,clip_on=True)
-    if title[0]=='0 0 L':
-        pyplot.ylim((0,1000))
-        #pyplot.xlim((0,20))
-    elif title[0]=='3 0 L':
-        pyplot.ylim((1,10000))
-    else:pyplot.ylim((1,10000))
     #pyplot.ylim((1,1000))
     #settings for publication
     #pyplot.title('('+title[0]+')',position=(0.5,1.001),weight=4,size=10,clip_on=True)
@@ -634,14 +799,17 @@ def plotting_modelB(object=[],fig=None,index=[2,3,1],color=['0.35','r','c','m','
         if index[2] in [1,4,7]:
             pyplot.ylabel(r'$|normalized F_{HKL}|$',axes=ax,fontsize=12)
     #settings for demo showing
-    pyplot.title('('+title[0]+')',position=(0.5,0.86),weight=4,size=10,clip_on=True)
-    if title[0]=='0 0 L':
+    if index[0]==2 and index[1]==1:
         pass
-        #pyplot.ylim((0,10000))
-        #pyplot.xlim((0,20))
-    elif title[0]=='3 0 L':
-        pyplot.ylim((1,10000))
-    else:pyplot.ylim((1,10000))
+    else:
+        if title[0]=='0 0 L':
+            pyplot.ylim((1,100000))
+            #pyplot.xlim((0,20))
+        elif title[0]=='3 0 L':
+            pyplot.ylim((10,1000))
+        elif title[0] in ['2 1 L','2 -1 L']:
+            pyplot.ylim((10,10000))
+        else:pyplot.ylim((10,50000))
     #pyplot.ylim((1,1000))
     #settings for publication
     #pyplot.title('('+title[0]+')',position=(0.5,1.001),weight=4,size=10,clip_on=True)
@@ -783,7 +951,7 @@ def plot_multiple_e_profiles(file_head=module_path_locator(),dump_files=['temp_p
     return fig
 
 
-def plot_multiple_e_profiles_2(file_head=module_path_locator(),dump_files=['temp_plot_eden_0NaCl_0502','temp_plot_eden_1NaCl_0502','temp_plot_eden_10NaCl_0502','temp_plot_eden_100NaCl_0502'],label_marks=['0mM NaCl','1mM NaCl','10mM NaCl','100mM NaCl'],color_type=5):
+def plot_multiple_e_profiles_2(file_head=module_path_locator(),dump_files=['temp_plot_eden_0NaCl_0502','temp_plot_eden_1NaCl_0502','temp_plot_eden_10NaCl_0502','temp_plot_eden_100NaCl_0502'],label_marks=['0mM NaCl','1mM NaCl','10mM NaCl','100mM NaCl'],color_type=1):
     colors=set_color(len(dump_files),color_type)
     fig=pyplot.figure(figsize=(6,6))
     ax1=fig.add_subplot(1,1,1)
@@ -807,6 +975,42 @@ def plot_multiple_e_profiles_2(file_head=module_path_locator(),dump_files=['temp
     ax1.plot([4.3,4.3],[0,12],':',color='black')
     fig.tight_layout()
     fig.savefig(os.path.join(file_head,'multiple_eprofiles2.png'),dpi=300)
+    return fig
+
+def plot_multiple_e_profiles_matlab_output(file_head=module_path_locator(),dump_files=[['total_e_profile_0mM_NaCl','mica_zr_0mM_NaCl_MD_May04_rho'],['total_e_profile_1mM_NaCl','mica_zr_1mM_NaCl_MD_May04_rho'],['total_e_profile_10mM_NaCl','mica_zr_10mM_NaCl_MD_May04_rho'],['total_e_profile_100mM_NaCl','mica_zr_100mM_NaCl_MD_May04_rho']],label_marks=['0 mM NaCl','1 mM NaCl','10 mM NaCl','100 mM NaCl'],color_type=5):
+    colors=set_color(len(dump_files)*2,color_type)
+    fig=pyplot.figure(figsize=(4,5))
+    ax1=fig.add_subplot(1,1,1)
+    hfont = {'fontname':['times new roman','Helvetica'][0]}
+    pyplot.ylabel(r"$\rm{Normalized\ Electron\ Density}$",fontsize=12,**hfont)
+    pyplot.xlabel(r"$\rm{Height\ from\ the\ Surface(\AA)}$",fontsize=12,**hfont)
+    #pyplot.title('Total e profile',fontsize=12)
+
+    #ax2=fig.add_subplot(2,1,2)
+    #pyplot.ylabel("E_density",fontsize=12)
+    #pyplot.xlabel("Z(Angstrom)",fontsize=12)
+    #pyplot.title('Zr e profile',fontsize=12)
+    for i in range(len(dump_files)):
+        edata=np.loadtxt(os.path.join(file_head,dump_files[i][0]))
+        ra_data=np.loadtxt(os.path.join(file_head,dump_files[i][1]))
+        #labels=data_eden[0],data_eden[1]
+        ax1.plot(np.array(edata[:,0]),edata[:,1]+i*5,color=colors[i],label=label_marks[i],lw=2)
+        ax1.fill_between(ra_data[:,0],np.array([0]*len(ra_data))+i*5,ra_data[:,1]+i*5,color=colors[i],alpha=0.6)
+        ax1.annotate(label_marks[i],xy=(20,edata[:,1][-1]+i*5+1.5),xytext=(20,edata[:,1][-1]+i*5+1.5),fontsize=10,**hfont)
+    #ax1.legend(fontsize=10)
+    #ax2.legend(fontsize=12)
+    ax1.set_ylim(0,22)
+    ax1.set_xlim(-5,35)
+    ax1.plot([2.5,2.5],[0,20],':',color='black')
+    for label in ax1.get_xticklabels() :
+        label.set_fontproperties(hfont['fontname'])
+        label.set_fontsize(12)
+    for label in ax1.get_yticklabels() :
+        label.set_fontproperties(hfont['fontname'])
+        label.set_fontsize(12)
+    #ax1.plot([4.3,4.3],[0,20],':',color='black')
+    fig.tight_layout()
+    fig.savefig(os.path.join(file_head,'multiple_eprofiles3.png'),dpi=300)
     return fig
 
 def plot_multiple_APQ_profiles(file_head=module_path_locator(),dump_files=['temp_plot_raxr_A_P_Q_0NaCl','temp_plot_raxr_A_P_Q_1NaCl','temp_plot_raxr_A_P_Q_10NaCl','temp_plot_raxr_A_P_Q_100NaCl'],labels=['free of NaCl','1 mM NaCl','10 mM NaCl','100 mM NaCl'],color_type=5):
@@ -912,7 +1116,7 @@ def plot_all(path=module_path_locator(),make_offset_of_total_e=False,fit_e_profi
     #At the same time, the total_e - raxs_e - water is actually total_e - 2*raxs_e -water
     PATH=path
     #which plots do you want to create
-    plot_e_model,plot_e_FS,plot_ctr,plot_raxr,plot_AP_Q=1,1,1,1,1
+    plot_e_model,plot_e_FS,plot_ctr,plot_raxr,plot_AP_Q=0,0,1,0,0
 
     #specify file paths (files are dumped files when setting running_mode=False in GenX script)
     e_file=os.path.join(PATH,"temp_plot_eden")#e density from model
@@ -950,7 +1154,7 @@ def plot_all(path=module_path_locator(),make_offset_of_total_e=False,fit_e_profi
                 pass
             ax.plot(np.array(edata[i][0,:]),edata[i][1,:],color='black',label="Total e density")
             ax.plot(np.array(edata[i][0,:]),edata[i][2,:],color='blue')
-            ax.fill_between(np.array(edata[i][0,:]),edata[i][2,:],alpha=0.5,color='m',label="RAXS element e profile (MD)")
+            ax.fill_between(np.array(edata[i][0,:]),edata[i][2,:],alpha=0.6,color='m',label="RAXS element e profile (MD)")
             #try:#some domain may have no raxr element
             #    ax.plot(np.array(edata[i][0,:]),edata[i][2,:],color='g',label="RAXS element e profile (MD)")
             #except:
@@ -969,7 +1173,7 @@ def plot_all(path=module_path_locator(),make_offset_of_total_e=False,fit_e_profi
                     ax.plot(data_eden_FS[0],data_eden_FS[1],color='r',label="RAXR imaging (MI)")
                     #ax.fill_between(data_eden_FS[0],data_eden_FS[1],color='m',alpha=0.6)
                     #ax.fill_between(data_eden_FS[0],edata[i][1,:]-data_eden_FS[1],color='black',alpha=0.6,label="Total e - RAXR(MI)")
-                    ax.fill_between(data_eden_FS[0],edata[i][3,:],color='green',alpha=0.4,label="LayerWater")
+                    ax.plot(data_eden_FS[0],edata[i][3,:],color='green',alpha=1,ls='-',lw=1.5,label="LayerWater")
                     '''
                     if make_offset_of_total_e:
                         ax.fill_between(data_eden_FS[0],list(edata[i][1,:]-edata[i][3,:]-2*edata[i][2,:]),color='black',alpha=0.6,label="Total e - raxr (MD) - LayerWater")
@@ -988,7 +1192,7 @@ def plot_all(path=module_path_locator(),make_offset_of_total_e=False,fit_e_profi
                     e_den_subtracted=np.append(z_temp,eden_temp,axis=1)
                     e_den_raxr_MI=np.append(np.array(data_eden_FS[0])[:,np.newaxis],(np.array(data_eden_FS[1])*(np.array(data_eden_FS[1])>0.01))[:,np.newaxis],axis=1)
                     ax.plot(data_eden_FS_sub[0],data_eden_FS_sub[1],color='black',label="RAXR imaging (MD)")
-                    ax.fill_between(data_eden_FS_sub[0],data_eden_FS_sub[1],color='c',alpha=0.6)
+                    #ax.fill_between(data_eden_FS_sub[0],data_eden_FS_sub[1],color='m',alpha=0.6)
             if i==N-1:pyplot.xlabel('Z(Angstrom)',axes=ax,fontsize=12)
             pyplot.ylabel('E_density',axes=ax,fontsize=12)
             pyplot.ylim(ymin=0)
