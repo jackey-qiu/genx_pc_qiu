@@ -2922,7 +2922,7 @@ class domain_creator(domain_creator_water,domain_creator_sorbate,domain_creator_
                 elif (key[1],index[1]) in r0_container.keys():
                     r0=r0_container[(key[1],index[1])]
                 elif ((index[1]=='O')&(key[1]=='O')):
-                    if sum([each in key[0] for each in waiver_atoms])==1 and sum([eachcase in center_atom_id for eachcase in waiver_atoms])==1:
+                    if sum([each in key[0] for each in waiver_atoms])==1 or sum([eachcase in center_atom_id for eachcase in waiver_atoms])==1:
                         r0=-10
                     else:
                         if dist<O_cutoff_limit:
@@ -2945,6 +2945,10 @@ class domain_creator(domain_creator_water,domain_creator_sorbate,domain_creator_
                         else:#ignore it if the distance bw cation and Hydrogen is less than 2.5 but higher than 2. A
                             r0=0.677
                             dist=20
+                if sum([eachcase in center_atom_id for eachcase in waiver_atoms])==1 or sum([eachcase in key[0] for eachcase in waiver_atoms])==1:#atoms being waived wont be considered for BV constraint
+                    r0=0
+                    dist=20
+                    #print center_atom_id,key[0],'sensor here'
                 sum_check=0
                 for atm in coordinated_atms:
                     if atm in key[0]:
