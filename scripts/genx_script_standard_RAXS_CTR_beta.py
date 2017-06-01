@@ -90,9 +90,9 @@ SORBATE_NUMBER_HL_EXTRA=[[2],[2],[2],[2],[2],[2],[2]]
 SORBATE_NUMBER_FL=[[2],[2],[2],[2],[2],[2],[2],[0]]
 SORBATE_NUMBER_FL_EXTRA=[[2],[2],[2],[2],[2],[2],[2]]
 
-GROUPING_SCHEMES=[]
-GROUPING_DEPTH=[6]
-commands_surface=domain_creator.generate_commands_for_surface_atom_grouping(np.array(GROUPING_SCHEMES)+1,domain_creator.translate_domain_type(GROUPING_SCHEMES,half_layer+full_layer),GROUPING_DEPTH)
+GROUPING_SCHEMES=[[1,0]]#domain tag of first domain is 0
+GROUPING_DEPTH=[[0,10]]#means I will group top 10 (range(0,10)) layers of domain1 and domain2 together
+commands_surface=domain_creator.generate_commands_for_surface_atom_grouping_new(np.array(GROUPING_SCHEMES)+1,domain_creator.translate_domain_type(GROUPING_SCHEMES,half_layer+full_layer),GROUPING_DEPTH)
 commands_other=\
    [
 

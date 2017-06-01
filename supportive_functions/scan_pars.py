@@ -1,14 +1,14 @@
 import os,sys
-sys.path.append('..')
-sys.path.append('../models')
-sys.path.append('../lib')
+sys.path.append('P://apps//genx_pc_qiu')
+sys.path.append('P://apps//genx_pc_qiu//models')
+sys.path.append('P://apps//genx_pc_qiu//lib')
 import numpy as np
 
 import model,diffev
 import filehandling as io
 
-path='/Users/cqiu/model_files/ran_files'
-file_path_raxr_mi=os.path.join(path,'Scaling_fit_MD_RAXR_Zr_mica_100mM_NaCl_run2_Apr29_combined_ran.gx')
+path='P://temp_model'
+file_path_raxr_mi=os.path.join(path,'Pb_3domains_cmp_1_1_2_waterpair_bv_constrained_run1_May30_ran.gx')
 scan_number=50
 error_bar_level=1.05
 

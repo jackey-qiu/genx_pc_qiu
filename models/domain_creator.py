@@ -808,6 +808,90 @@ def generate_commands_for_surface_atom_grouping(domain_index_pair=[[1,2],[3,4]],
                 command_list.append('gp_'+HL_L[j]+'_D'+str(domain_index_pair[i][0])+'.setoc('+'gp_'+HL_S[j]+'_D'+str(domain_index_pair[i][1])+'.getoc())')
 
     return command_list
+    
+def generate_commands_for_surface_atom_grouping_new(domain_index_pair=[[1,2],[3,4]],domain_type_pair=[['HL','HL'],['FL_S','FL_L']],grouping_depth=[[0,10],[0,10]],group_oc=False):
+    command_list=[]
+    HL=['O1O2_O7O8','Fe2Fe3_Fe8Fe9','O3O4_O9O10','Fe4Fe6_Fe10Fe12','O5O6_O11O12','O7O8_O1O2','Fe8Fe9_Fe2Fe3','O9O10_O3O4','Fe10Fe12_Fe4Fe6','O11O12_O5O6']
+    HL_L=['O1O2_O7O8','Fe2Fe3_Fe8Fe9','O3O4_O9O10','Fe4Fe6_Fe10Fe12','O5O6_O11O12','O7O8_O1O2','Fe8Fe9_Fe2Fe3','O9O10_O3O4','Fe10Fe12_Fe4Fe6','O11O12_O5O6']
+    HL_S=['O7O8_O1O2','Fe8Fe9_Fe2Fe3','O9O10_O3O4','Fe10Fe12_Fe4Fe6','O11O12_O5O6','O1O2_O7O8','Fe2Fe3_Fe8Fe9','O3O4_O9O10','Fe4Fe6_Fe10Fe12','O5O6_O11O12']
+    FL_S=['O5O6_O11O12','O7O8_O1O2','Fe8Fe9_Fe2Fe3','O9O10_O3O4','Fe10Fe12_Fe4Fe6','O11O12_O5O6','O1O2_O7O8','Fe2Fe3_Fe8Fe9','O3O4_O9O10','Fe4Fe6_Fe10Fe12']
+    FL_L=['O11O12_O5O6','O1O2_O7O8','Fe2Fe3_Fe8Fe9','O3O4_O9O10','Fe4Fe6_Fe10Fe12','O5O6_O11O12','O7O8_O1O2','Fe8Fe9_Fe2Fe3','O9O10_O3O4','Fe10Fe12_Fe4Fe6']
+    for i in range(len(domain_index_pair)):
+        if domain_type_pair[i]==['HL','HL']:
+            for j in range(grouping_depth[i][0],grouping_depth[i][1]):
+                command_list.append('gp_'+HL[j]+'_D'+str(domain_index_pair[i][0])+'.setdx('+'gp_'+HL[j]+'_D'+str(domain_index_pair[i][1])+'.getdx())')
+                command_list.append('gp_'+HL[j]+'_D'+str(domain_index_pair[i][0])+'.setdy('+'gp_'+HL[j]+'_D'+str(domain_index_pair[i][1])+'.getdy())')
+                command_list.append('gp_'+HL[j]+'_D'+str(domain_index_pair[i][0])+'.setdz('+'gp_'+HL[j]+'_D'+str(domain_index_pair[i][1])+'.getdz())')
+                if group_oc:
+                    command_list.append('gp_'+HL[j]+'_D'+str(domain_index_pair[i][0])+'.setoc('+'gp_'+HL[j]+'_D'+str(domain_index_pair[i][1])+'.getoc())')
+                command_list.append('gp_'+HL[j]+'_D'+str(domain_index_pair[i][0])+'.setu('+'gp_'+HL[j]+'_D'+str(domain_index_pair[i][1])+'.getu())')
+        elif domain_type_pair[i]==['FL_S','FL_S']:
+            for j in range(grouping_depth[i][0],grouping_depth[i][1]):
+                command_list.append('gp_'+FL_S[j]+'_D'+str(domain_index_pair[i][0])+'.setdx('+'gp_'+FL_S[j]+'_D'+str(domain_index_pair[i][1])+'.getdx())')
+                command_list.append('gp_'+FL_S[j]+'_D'+str(domain_index_pair[i][0])+'.setdy('+'gp_'+FL_S[j]+'_D'+str(domain_index_pair[i][1])+'.getdy())')
+                command_list.append('gp_'+FL_S[j]+'_D'+str(domain_index_pair[i][0])+'.setdz('+'gp_'+FL_S[j]+'_D'+str(domain_index_pair[i][1])+'.getdz())')
+                if group_oc:
+                    command_list.append('gp_'+FL_S[j]+'_D'+str(domain_index_pair[i][0])+'.setoc('+'gp_'+FL_S[j]+'_D'+str(domain_index_pair[i][1])+'.getoc())')
+                command_list.append('gp_'+FL_S[j]+'_D'+str(domain_index_pair[i][0])+'.setu('+'gp_'+FL_S[j]+'_D'+str(domain_index_pair[i][1])+'.getu())')
+        elif domain_type_pair[i]==['FL_L','FL_L']:
+            for j in range(grouping_depth[i][0],grouping_depth[i][1]):
+                command_list.append('gp_'+FL_L[j]+'_D'+str(domain_index_pair[i][0])+'.setdx('+'gp_'+FL_L[j]+'_D'+str(domain_index_pair[i][1])+'.getdx())')
+                command_list.append('gp_'+FL_L[j]+'_D'+str(domain_index_pair[i][0])+'.setdy('+'gp_'+FL_L[j]+'_D'+str(domain_index_pair[i][1])+'.getdy())')
+                command_list.append('gp_'+FL_L[j]+'_D'+str(domain_index_pair[i][0])+'.setdz('+'gp_'+FL_L[j]+'_D'+str(domain_index_pair[i][1])+'.getdz())')
+                if group_oc:
+                    command_list.append('gp_'+FL_L[j]+'_D'+str(domain_index_pair[i][0])+'.setoc('+'gp_'+FL_L[j]+'_D'+str(domain_index_pair[i][1])+'.getoc())')
+                command_list.append('gp_'+FL_L[j]+'_D'+str(domain_index_pair[i][0])+'.setu('+'gp_'+FL_L[j]+'_D'+str(domain_index_pair[i][1])+'.getu())')
+        elif domain_type_pair[i]==['FL_S','FL_L']:
+            for j in range(grouping_depth[i][0],grouping_depth[i][1]):
+                command_list.append('gp_'+FL_S[j]+'_D'+str(domain_index_pair[i][0])+'.setdx('+'-gp_'+FL_L[j]+'_D'+str(domain_index_pair[i][1])+'.getdx())')
+                command_list.append('gp_'+FL_S[j]+'_D'+str(domain_index_pair[i][0])+'.setdy('+'gp_'+FL_L[j]+'_D'+str(domain_index_pair[i][1])+'.getdy())')
+                command_list.append('gp_'+FL_S[j]+'_D'+str(domain_index_pair[i][0])+'.setdz('+'gp_'+FL_L[j]+'_D'+str(domain_index_pair[i][1])+'.getdz())')
+                if group_oc:
+                    command_list.append('gp_'+FL_S[j]+'_D'+str(domain_index_pair[i][0])+'.setoc('+'gp_'+FL_L[j]+'_D'+str(domain_index_pair[i][1])+'.getoc())')
+                command_list.append('gp_'+FL_S[j]+'_D'+str(domain_index_pair[i][0])+'.setu('+'gp_'+FL_L[j]+'_D'+str(domain_index_pair[i][1])+'.getu())')
+        elif domain_type_pair[i]==['FL_L','FL_S']:
+            for j in range(grouping_depth[i][0],grouping_depth[i][1]):
+                command_list.append('gp_'+FL_L[j]+'_D'+str(domain_index_pair[i][0])+'.setdx('+'-gp_'+FL_S[j]+'_D'+str(domain_index_pair[i][1])+'.getdx())')
+                command_list.append('gp_'+FL_L[j]+'_D'+str(domain_index_pair[i][0])+'.setdy('+'gp_'+FL_S[j]+'_D'+str(domain_index_pair[i][1])+'.getdy())')
+                command_list.append('gp_'+FL_L[j]+'_D'+str(domain_index_pair[i][0])+'.setdz('+'gp_'+FL_S[j]+'_D'+str(domain_index_pair[i][1])+'.getdz())')
+                if group_oc:
+                    command_list.append('gp_'+FL_L[j]+'_D'+str(domain_index_pair[i][0])+'.setoc('+'gp_'+FL_S[j]+'_D'+str(domain_index_pair[i][1])+'.getoc())')
+                command_list.append('gp_'+FL_L[j]+'_D'+str(domain_index_pair[i][0])+'.setu('+'gp_'+FL_S[j]+'_D'+str(domain_index_pair[i][1])+'.getu())')
+
+        elif domain_type_pair[i]==['HL_S','HL_S']:
+            for j in range(grouping_depth[i][0],grouping_depth[i][1]):
+                command_list.append('gp_'+HL_S[j]+'_D'+str(domain_index_pair[i][0])+'.setdx('+'gp_'+HL_S[j]+'_D'+str(domain_index_pair[i][1])+'.getdx())')
+                command_list.append('gp_'+HL_S[j]+'_D'+str(domain_index_pair[i][0])+'.setdy('+'gp_'+HL_S[j]+'_D'+str(domain_index_pair[i][1])+'.getdy())')
+                command_list.append('gp_'+HL_S[j]+'_D'+str(domain_index_pair[i][0])+'.setdz('+'gp_'+HL_S[j]+'_D'+str(domain_index_pair[i][1])+'.getdz())')
+                if group_oc:
+                    command_list.append('gp_'+HL_S[j]+'_D'+str(domain_index_pair[i][0])+'.setoc('+'gp_'+HL_S[j]+'_D'+str(domain_index_pair[i][1])+'.getoc())')
+                command_list.append('gp_'+HL_S[j]+'_D'+str(domain_index_pair[i][0])+'.setu('+'gp_'+HL_S[j]+'_D'+str(domain_index_pair[i][1])+'.getu())')
+        elif domain_type_pair[i]==['HL_L','HL_L']:
+            for j in range(grouping_depth[i][0],grouping_depth[i][1]):
+                command_list.append('gp_'+HL_L[j]+'_D'+str(domain_index_pair[i][0])+'.setdx('+'gp_'+HL_L[j]+'_D'+str(domain_index_pair[i][1])+'.getdx())')
+                command_list.append('gp_'+HL_L[j]+'_D'+str(domain_index_pair[i][0])+'.setdy('+'gp_'+HL_L[j]+'_D'+str(domain_index_pair[i][1])+'.getdy())')
+                command_list.append('gp_'+HL_L[j]+'_D'+str(domain_index_pair[i][0])+'.setdz('+'gp_'+HL_L[j]+'_D'+str(domain_index_pair[i][1])+'.getdz())')
+                if group_oc:
+                    command_list.append('gp_'+HL_L[j]+'_D'+str(domain_index_pair[i][0])+'.setoc('+'gp_'+HL_L[j]+'_D'+str(domain_index_pair[i][1])+'.getoc())')
+                command_list.append('gp_'+HL_L[j]+'_D'+str(domain_index_pair[i][0])+'.setu('+'gp_'+HL_L[j]+'_D'+str(domain_index_pair[i][1])+'.getu())')
+        elif domain_type_pair[i]==['HL_S','HL_L']:
+            for j in range(grouping_depth[i][0],grouping_depth[i][1]):
+                command_list.append('gp_'+HL_S[j]+'_D'+str(domain_index_pair[i][0])+'.setdx('+'-gp_'+HL_L[j]+'_D'+str(domain_index_pair[i][1])+'.getdx())')
+                command_list.append('gp_'+HL_S[j]+'_D'+str(domain_index_pair[i][0])+'.setdy('+'gp_'+HL_L[j]+'_D'+str(domain_index_pair[i][1])+'.getdy())')
+                command_list.append('gp_'+HL_S[j]+'_D'+str(domain_index_pair[i][0])+'.setdz('+'gp_'+HL_L[j]+'_D'+str(domain_index_pair[i][1])+'.getdz())')
+                if group_oc:
+                    command_list.append('gp_'+HL_S[j]+'_D'+str(domain_index_pair[i][0])+'.setoc('+'gp_'+HL_L[j]+'_D'+str(domain_index_pair[i][1])+'.getoc())')
+                command_list.append('gp_'+HL_S[j]+'_D'+str(domain_index_pair[i][0])+'.setu('+'gp_'+HL_L[j]+'_D'+str(domain_index_pair[i][1])+'.getu())')
+        elif domain_type_pair[i]==['HL_L','HL_S']:
+            for j in range(grouping_depth[i][0],grouping_depth[i][1]):
+                command_list.append('gp_'+HL_L[j]+'_D'+str(domain_index_pair[i][0])+'.setdx('+'-gp_'+HL_S[j]+'_D'+str(domain_index_pair[i][1])+'.getdx())')
+                command_list.append('gp_'+HL_L[j]+'_D'+str(domain_index_pair[i][0])+'.setdy('+'gp_'+HL_S[j]+'_D'+str(domain_index_pair[i][1])+'.getdy())')
+                command_list.append('gp_'+HL_L[j]+'_D'+str(domain_index_pair[i][0])+'.setdz('+'gp_'+HL_S[j]+'_D'+str(domain_index_pair[i][1])+'.getdz())')
+                if group_oc:
+                    command_list.append('gp_'+HL_L[j]+'_D'+str(domain_index_pair[i][0])+'.setoc('+'gp_'+HL_S[j]+'_D'+str(domain_index_pair[i][1])+'.getoc())')
+                command_list.append('gp_'+HL_L[j]+'_D'+str(domain_index_pair[i][0])+'.setu('+'gp_'+HL_S[j]+'_D'+str(domain_index_pair[i][1])+'.getu())')
+
+    return command_list
 
 def generate_commands_for_surface_atom_grouping_muscovit(domain_index_pair=[[1,2],[3,4]],pick_up_index=[[1],[2],[3],[4]],FL_Al=range(19),FL_Si=range(19,19+9),grouping_depth=[18,18]):
     command_list=[]

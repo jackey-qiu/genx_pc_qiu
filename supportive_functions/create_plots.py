@@ -752,17 +752,17 @@ def plotting_modelB(object=[],fig=None,index=[2,3,1],color=['0.35','r','c','m','
 
     ax=fig.add_subplot(index[0],index[1],index[2])
     ax.set_yscale('log')
-    ax.scatter(object[0][:,0],object[0][:,1],marker='o',s=20,facecolors='none',edgecolors=color[0],label=label[0])
+    ax.scatter(object[0][:,0],object[0][:,1],marker='o',s=10,facecolors='none',edgecolors=color[0],label=label[0])
     ax.errorbar(object[0][:,0],object[0][:,1],yerr=object[0][:,2],fmt=None,ecolor=color[0])
     for i in range(len(object)-1):#first item is experiment data (L, I, err) while the second one is simulated result (L, I_s)
-        l,=ax.plot(object[i+1][:,0],object[i+1][:,1],color=color[i+1],lw=lw,label=label[i+1])
+        l,=ax.plot(object[i+1][:,0],object[i+1][:,1],color=color[i+1],lw=1,label=label[i+1])
         l.set_dashes(l_dashes[i])
     if index[2] in [7,8,9]:
         pyplot.xlabel('L(r.l.u)',axes=ax,fontsize=12)
     if index[2] in [1,4,7]:
-        pyplot.ylabel(r'$|F_{HKL}|$',axes=ax,fontsize=12)
+        pyplot.ylabel(r'$\rm{|F_{HKL}|}$',axes=ax,fontsize=12)
     #settings for demo showing
-    pyplot.title('('+title[0]+')',position=(0.5,0.86),weight=4,size=10,clip_on=True)
+    pyplot.title('('+title[0]+')',position=(0.5,0.82),weight=4,size=10,clip_on=True)
     #pyplot.ylim((1,1000))
     #settings for publication
     #pyplot.title('('+title[0]+')',position=(0.5,1.001),weight=4,size=10,clip_on=True)
@@ -795,7 +795,7 @@ def plotting_modelB(object=[],fig=None,index=[2,3,1],color=['0.35','r','c','m','
             l,=ax.plot(object[i+1][:,0],object[i+1][:,2],color=color[i+1],lw=lw,label=label[i+1])
             l.set_dashes(l_dashes[i])
         if index[2] in [7,8,9]:
-            pyplot.xlabel('L(r.l.u)',axes=ax,fontsize=12)
+            pyplot.xlabel(r'$\rm{L(r.l.u)}$',axes=ax,fontsize=12)
         if index[2] in [1,4,7]:
             pyplot.ylabel(r'$|normalized F_{HKL}|$',axes=ax,fontsize=12)
     #settings for demo showing
@@ -803,10 +803,18 @@ def plotting_modelB(object=[],fig=None,index=[2,3,1],color=['0.35','r','c','m','
         pass
     else:
         if title[0]=='0 0 L':
-            pyplot.ylim((1,100000))
+            pyplot.ylim((10,10000))
+            xtick_labels=ax.get_xticks().tolist()
+            x_tick_new=[]
+            for each in xtick_labels:
+                if each in [1.0,2.0,3.,4.,5.]:
+                    x_tick_new.append(int(each))
+                else:
+                    x_tick_new.append('')
+            ax.set_xticklabels(x_tick_new)
             #pyplot.xlim((0,20))
         elif title[0]=='3 0 L':
-            pyplot.ylim((10,1000))
+            pyplot.ylim((10,5000))
         elif title[0] in ['2 1 L','2 -1 L']:
             pyplot.ylim((10,10000))
         else:pyplot.ylim((10,50000))
@@ -841,7 +849,7 @@ def plotting_many_modelB(save_file='D://pic.png',head='C:\\Users\\jackey\\Google
     #fig=pyplot.figure(figsize=(10,9))
     #settings for publication
     #fig=pyplot.figure(figsize=(10,7))
-    fig=pyplot.figure(figsize=(8,8))
+    fig=pyplot.figure(figsize=(8,6))
     object_sets=[pickle.load(open(os.path.join(head,file))) for file in object_files]#each_item=[00L,02L,10L,11L,20L,22L,30L,2-1L,21L]
     object=[]
     for i in range(len(object_sets[0])):
