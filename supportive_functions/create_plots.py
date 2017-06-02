@@ -843,7 +843,7 @@ def plotting_modelB(object=[],fig=None,index=[2,3,1],color=['0.35','r','c','m','
 
     #ax.set_ylim([1,10000])
 #object files are returned from genx when switch the plot on
-def plotting_many_modelB(save_file='D://pic.png',head='C:\\Users\\jackey\\Google Drive\\useful codes\\plotting\\',object_files=['temp_plot_O1O2','temp_plot_O5O6','temp_plot_O1O3','temp_plot_O5O7','temp_plot_O1O4','temp_plot_O5O8'],index=[3,3],color=['0.6','b','b','g','g','r','r'],lw=1.5,l_dashes=[(2,2,2,2),(None,None),(2,2,2,2),(None,None),(2,2,2,2),(None,None)],label=['Experimental data','Model1 results','Model2 results','Model3','Model4','Model5','Model6'],marker=['p'],title=['0 0 L','0 2 L','1 0 L','1 1 L','2 0 L','2 2 L','3 0 L','2 -1 L','2 1 L'],legend=[False,False,False,False,False,False,False,False,False],fontsize=10):
+def plotting_many_modelB(save_file='D://pic.png',head='P:\\My stuff\\Manuscripts\\hematite rcut\\v10\dump_files\\',object_files=['temp_plot_O1O3_O5O7','temp_plot_O1O3_O5O8','temp_plot_O1O4_O5O7','temp_plot_O1O4_O5O8'],index=[3,3],color=['blue','#e41a1c','#4daf4a','#984ea3','#ff7f00'],lw=1.5,l_dashes=[(None,None),(None,None),(None,None),(None,None),(None,None),(None,None)],label=['Experimental data','Model1 results','Model2 results','Model3','Model4','Model5','Model6'],marker=['p'],title=['0 0 L','0 2 L','1 0 L','1 1 L','2 0 L','2 2 L','3 0 L','2 -1 L','2 1 L'],legend=[False,False,False,False,False,False,False,False,False],fontsize=10):
     #plotting model results simultaneously, object_files=[file1,file2,file3] file is the path of a dumped data/model file
     #setting for demo show
     #fig=pyplot.figure(figsize=(10,9))
@@ -1124,7 +1124,7 @@ def plot_all(path=module_path_locator(),make_offset_of_total_e=False,fit_e_profi
     #At the same time, the total_e - raxs_e - water is actually total_e - 2*raxs_e -water
     PATH=path
     #which plots do you want to create
-    plot_e_model,plot_e_FS,plot_ctr,plot_raxr,plot_AP_Q=0,0,1,0,0
+    plot_e_model,plot_e_FS,plot_ctr,plot_raxr,plot_AP_Q=1,1,1,1,0
 
     #specify file paths (files are dumped files when setting running_mode=False in GenX script)
     e_file=os.path.join(PATH,"temp_plot_eden")#e density from model
