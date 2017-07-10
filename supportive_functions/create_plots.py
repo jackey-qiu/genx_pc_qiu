@@ -576,7 +576,7 @@ def plot_CTR_multiple_model_muscovite_2(file_head=module_path_locator(),dump_fil
     fig.savefig(os.path.join(file_head,'multiple_ctrs.png'),dpi=300)
     return fig
 
-def plot_CTR_multiple_model_muscovite_matlab_outputs(file_head=module_path_locator(),c_projected=[19.9347,19.9597,19.9167,19.9803],dump_files=[['ctr_data_0mM_NaCl.dat','bestfit_ctr_results_0mM_NaCl.dat'],['ctr_data_1mM_NaCl.dat','bestfit_ctr_results_1mM_NaCl.dat'],['ctr_data_10mM_NaCl.dat','bestfit_ctr_results_10mM_NaCl.dat'],['ctr_data_100mM_NaCl.dat','bestfit_ctr_results_100mM_NaCl.dat']],labels=['0NaCl','1mM NaCl','10mM NaCl','100mM NaCl'],markers=['o']*20,fontsize=13,lw=1.5,color_type=[1,5]):
+def plot_CTR_multiple_model_muscovite_matlab_outputs(file_head=module_path_locator(),c_projected=[19.9347,19.9597,19.9167,19.9803],dump_files=[['ctr_data_0mM_NaCl.dat','bestfit_ctr_results_0mM_NaCl.dat'],['ctr_data_1mM_NaCl.dat','bestfit_ctr_results_1mM_NaCl.dat'],['ctr_data_10mM_NaCl.dat','bestfit_ctr_results_10mM_NaCl.dat'],['ctr_data_100mM_NaCl.dat','bestfit_ctr_results_100mM_NaCl.dat']],labels=['0NaCl','1mM NaCl','10mM NaCl','100mM NaCl'],markers=['.']*10,fontsize=13,lw=0.5,color_type=[1,5]):
     hfont = {'fontname':['times new roman','Helvetica'][0]}
     colors=set_color(len(dump_files)*2,color_type[0])
     colors_2=set_color(len(dump_files)*2,color_type[0])
@@ -599,10 +599,14 @@ def plot_CTR_multiple_model_muscovite_matlab_outputs(file_head=module_path_locat
         return index_list
     for i in range(len(objects)):
         object_data=objects[i][0]
+        max_q=5.588
+        print max_q
         object_model=objects[i][1]
+        index_use=np.where(object_model[:,0]<max_q)[0]
+        object_model=np.append(object_model[index_use,0][:,np.newaxis],object_model[index_use,1][:,np.newaxis],axis=1)
         index_list=_find_index_of_near_bragg_peak(object_model[:,0],c=c_projected[i])
-        ax.scatter(object_data[:,0],object_data[:,1]*(100**i),marker=markers[i],s=20,facecolors='none',edgecolors=colors_2[i],alpha=0.4,label='Data_'+labels[i])
-        ax.errorbar(object_data[:,0],object_data[:,1]*(100**i),yerr=object_data[:,2]*(100**i),fmt=None,alpha=0.4,ecolor=colors_2[i])
+        ax.scatter(object_data[:,0],object_data[:,1]*(100**i),marker=markers[i],s=10,facecolors='none',edgecolors=colors_2[i],alpha=0.8,label='Data_'+labels[i])
+        ax.errorbar(object_data[:,0],object_data[:,1]*(100**i),yerr=object_data[:,2]*(100**i),fmt=None,alpha=0.8,ecolor=colors_2[i])
         for j in range(len(index_list)-1):
             l,=ax.plot(object_model[index_list[j]:index_list[j+1],0],object_model[index_list[j]:index_list[j+1],1]*(100**i),color=colors[i],lw=lw,label='Model_'+labels[i])
         pyplot.xlabel(r'$\rm{q\ (\AA^{-1})}$',axes=ax,fontsize=fontsize,**hfont)
@@ -752,7 +756,7 @@ def plotting_modelB(object=[],fig=None,index=[2,3,1],color=['0.35','r','c','m','
 
     ax=fig.add_subplot(index[0],index[1],index[2])
     ax.set_yscale('log')
-    ax.scatter(object[0][:,0],object[0][:,1],marker='o',s=10,facecolors='none',edgecolors=color[0],label=label[0])
+    ax.scatter(object[0][:,0],object[0][:,1],marker='o',s=3,facecolors='none',edgecolors=color[0],label=label[0])
     ax.errorbar(object[0][:,0],object[0][:,1],yerr=object[0][:,2],fmt=None,ecolor=color[0])
     for i in range(len(object)-1):#first item is experiment data (L, I, err) while the second one is simulated result (L, I_s)
         l,=ax.plot(object[i+1][:,0],object[i+1][:,1],color=color[i+1],lw=1,label=label[i+1])
@@ -984,10 +988,14 @@ def plot_multiple_e_profiles_2(file_head=module_path_locator(),dump_files=['temp
     fig.tight_layout()
     fig.savefig(os.path.join(file_head,'multiple_eprofiles2.png'),dpi=300)
     return fig
+dump_file_1=[['total_e_profile_0mM_NaCl','mica_zr_0mM_NaCl_MD_May04_rho'],['total_e_profile_1mM_NaCl','mica_zr_1mM_NaCl_MD_May04_rho'],['total_e_profile_10mM_NaCl','mica_zr_10mM_NaCl_MD_May04_rho'],['total_e_profile_100mM_NaCl','mica_zr_100mM_NaCl_MD_May04_rho']]
+label_1=['0 mM NaCl','1 mM NaCl','10 mM NaCl','100 mM NaCl']
+dump_file_2=[['total_e_profile_100mM_LiCl','mica_zr_100mM_LiCl_MD_Jun12_rho'],['total_e_profile_100mM_NaCl','mica_zr_100mM_NaCl_MD_May04_rho'],['total_e_profile_100mM_RbCl_Jun29','Zr_mica_zr_100mM_RbCl_MD_Jun29_rho'],['total_e_profile_100mM_RbCl_Jun29','mica_Rb_100mM_RbCl_MD_Jun29_rho'],['total_e_profile_32mM_CaCl2_APS_Jun29','mica_zr_32mM_CaCl2_MD_Jun29_rho_APS'],['total_e_profile_32mM_MgCl2_ESRF','mica_zr_32mM_MgCl2_MD_Jun29_rho_ESRF'],['total_e_profile_100mM_NH4Cl','mica_zr_100mM_NH4Cl_MD_Jun27_rho']]
+label_2=['100 mM LiCl (3.4 Zr/AUC)','100 mM NaCl (3.4 Zr/AUC)','100 mM RbCl(3.2 Zr/AUC)','100 mM RbCl(2.4 Rb/AUC)','32 mM CaCl2 (5.1 Zr/AUC)','32 mM MgCl2 (3.7 Zr/AUC)','100 mM NH4Cl (2.4 Zr/AUC)']
+def plot_multiple_e_profiles_matlab_output(file_head=module_path_locator(),dump_files=dump_file_2,label_marks=label_2,color_type=1):
 
-def plot_multiple_e_profiles_matlab_output(file_head=module_path_locator(),dump_files=[['total_e_profile_0mM_NaCl','mica_zr_0mM_NaCl_MD_May04_rho'],['total_e_profile_1mM_NaCl','mica_zr_1mM_NaCl_MD_May04_rho'],['total_e_profile_10mM_NaCl','mica_zr_10mM_NaCl_MD_May04_rho'],['total_e_profile_100mM_NaCl','mica_zr_100mM_NaCl_MD_May04_rho']],label_marks=['0 mM NaCl','1 mM NaCl','10 mM NaCl','100 mM NaCl'],color_type=5):
-    colors=set_color(len(dump_files)*2,color_type)
-    fig=pyplot.figure(figsize=(4,5))
+    colors=set_color(len(dump_files),color_type)
+    fig=pyplot.figure(figsize=(4,8))
     ax1=fig.add_subplot(1,1,1)
     hfont = {'fontname':['times new roman','Helvetica'][0]}
     pyplot.ylabel(r"$\rm{Normalized\ Electron\ Density}$",fontsize=12,**hfont)
@@ -1004,12 +1012,12 @@ def plot_multiple_e_profiles_matlab_output(file_head=module_path_locator(),dump_
         #labels=data_eden[0],data_eden[1]
         ax1.plot(np.array(edata[:,0]),edata[:,1]+i*5,color=colors[i],label=label_marks[i],lw=2)
         ax1.fill_between(ra_data[:,0],np.array([0]*len(ra_data))+i*5,ra_data[:,1]+i*5,color=colors[i],alpha=0.6)
-        ax1.annotate(label_marks[i],xy=(20,edata[:,1][-1]+i*5+1.5),xytext=(20,edata[:,1][-1]+i*5+1.5),fontsize=10,**hfont)
+        ax1.annotate(label_marks[i],xy=(17,edata[:,1][-1]+i*5+1.5),xytext=(16,edata[:,1][-1]+i*5+1.5),fontsize=10,**hfont)
     #ax1.legend(fontsize=10)
     #ax2.legend(fontsize=12)
-    ax1.set_ylim(0,22)
-    ax1.set_xlim(-5,35)
-    ax1.plot([2.5,2.5],[0,20],':',color='black')
+    ax1.set_ylim(0,37)
+    ax1.set_xlim(-5,50)
+    ax1.plot([2.5,2.5],[0,32],':',color='black')
     for label in ax1.get_xticklabels() :
         label.set_fontproperties(hfont['fontname'])
         label.set_fontsize(12)
@@ -1019,6 +1027,63 @@ def plot_multiple_e_profiles_matlab_output(file_head=module_path_locator(),dump_
     #ax1.plot([4.3,4.3],[0,20],':',color='black')
     fig.tight_layout()
     fig.savefig(os.path.join(file_head,'multiple_eprofiles3.png'),dpi=300)
+    return fig
+files_AFM=['P:\\My stuff\\Data\\AFM zr on mica 001 various conditions\\Zr-mica of 0mM NaCl\\processed images\\height_dist_data',\
+           'P:\\My stuff\\Data\\AFM zr on mica 001 various conditions\\Zr-mica of 1mM NaCl\\processed ones\\height_dist_data',\
+           'P:\\My stuff\\Data\\AFM zr on mica 001 various conditions\\Zr-mica of 10mM NaCl\\processed ones\\height_dist_data',\
+           'P:\\My stuff\\Data\\AFM zr on mica 001 various conditions\\Zr-mica of 100mM NaCl\\processed ones\\height_dist_data']
+def plot_AFM_height_distribution(files=files_AFM,labels=['0 mM NaCl','1 mM NaCl', '10 mM NaCl', '100 mM NaCl'],zero_height_offset=2.8,color_type=1):
+    colors=set_color(len(files),color_type)
+    fig=pyplot.figure(figsize=(5,2))
+    ax1=fig.add_subplot(1,1,1)
+    hfont = {'fontname':['times new roman','Helvetica'][0]}
+    pyplot.ylabel(r"$\rm{Distribution}$",fontsize=10,**hfont)
+    pyplot.xlabel(r"$\rm{Height (\AA)}$",fontsize=10,**hfont)
+    for i in range(len(files)):
+        data1=np.loadtxt(files[i],skiprows=3)
+        if i!=2:
+            data1[:,0]=data1[:,0]*1e10-zero_height_offset
+        else:
+            data1[:,0]=data1[:,0]*1e10
+        data1[:,1]=data1[:,1]/num.max(data1[:,1])
+        ax1.plot(data1[:,0],data1[:,1],color=colors[i],label=labels[i])
+    for label in ax1.get_xticklabels() :
+        label.set_fontproperties(hfont['fontname'])
+        label.set_fontsize(10)
+    for label in ax1.get_yticklabels() :
+        label.set_fontproperties(hfont['fontname'])
+        label.set_fontsize(10)
+    l=pyplot.legend(fontsize=10)
+    pyplot.setp(l.texts,family='times new roman')
+    fig.tight_layout()
+    fig.savefig(os.path.join(module_path_locator(),'AFM_height_distribution.png'),dpi=300)
+
+    return fig
+
+files_AFM=['P:\\My stuff\\Data\\AFM zr on mica 001 various conditions\\Zr-mica of 0mM NaCl\\processed images\\facet_profile',\
+           'P:\\My stuff\\Data\\AFM zr on mica 001 various conditions\\Zr-mica of 1mM NaCl\\processed ones\\waviness_profile',\
+           'P:\\My stuff\\Data\\AFM zr on mica 001 various conditions\\Zr-mica of 10mM NaCl\\processed ones\\facet_profile',\
+           'P:\\My stuff\\Data\\AFM zr on mica 001 various conditions\\Zr-mica of 100mM NaCl\\processed ones\\facet_profile']
+def plot_AFM_facet_profiles(files=files_AFM,labels=[r"$\rm{0\ mM\ NaCl\ (Avg=5.4 \pm 0.5\ nm)}$",r"$\rm{1\ mM\ NaCl\ (Avg=5.1 \pm 0.1\ nm)}$", r"$\rm{10\ mM\ NaCl\ (Avg=7.3 \pm 0.6\ nm)}$", r"$\rm{100\ mM\ NaCl\ (Avg=8.6 \pm 0.5\ nm)}$"],color_type=1):
+    colors=set_color(len(files),color_type)
+    fig=pyplot.figure(figsize=(5,8))
+
+    hfont = {'fontname':['times new roman','Helvetica'][0]}
+
+    for i in range(len(files)):
+        ax1=fig.add_subplot(4,1,4-i)
+        data1=np.loadtxt(files[i],skiprows=3)
+        data1[:,0]=data1[:,0]*1e9
+        data1[:,1]=data1[:,1]*1e9
+        ax1.plot(data1[:,0],data1[:,1],color=colors[i])
+        l=pyplot.title(labels[i],fontsize=12)
+        #pyplot.setp(l.texts,family='times new roman')
+        pyplot.ylabel(r"$\rm{Height (nm)}$",fontsize=12,**hfont)
+        if i==0:
+            pyplot.xlabel(r"$\rm{Length (nm)}$",fontsize=12,**hfont)
+    fig.tight_layout()
+    fig.savefig(os.path.join(module_path_locator(),'AFM_facet_profiles.png'),dpi=300)
+
     return fig
 
 def plot_multiple_APQ_profiles(file_head=module_path_locator(),dump_files=['temp_plot_raxr_A_P_Q_0NaCl','temp_plot_raxr_A_P_Q_1NaCl','temp_plot_raxr_A_P_Q_10NaCl','temp_plot_raxr_A_P_Q_100NaCl'],labels=['free of NaCl','1 mM NaCl','10 mM NaCl','100 mM NaCl'],color_type=5):
@@ -1243,14 +1308,15 @@ def plot_all(path=module_path_locator(),make_offset_of_total_e=False,fit_e_profi
     if fit_e_profile:
         pyplot.figure()
         print '##############Total e -layer water#################'
-        gaussian_fit(e_den_subtracted,zs=[2.3,7.3,11],water_scaling=water_scaling)
+        gaussian_fit(e_den_subtracted,zs=None,water_scaling=water_scaling)
         pyplot.title('Total e - layer water')
-        '''
+
         pyplot.figure()
         print '#########################RAXR (MI)########################'
         gaussian_fit(e_den_raxr_MI,zs=None,N=40,water_scaling=water_scaling)
         pyplot.title('RAXR (MI)')
         pyplot.figure()
+        '''
         print '#########################RAXR (MD)########################'
         gaussian_fit(np.append([data_eden_FS_sub[0]],[data_eden_FS_sub[1]*(np.array(data_eden_FS_sub[1])>0)],axis=0).transpose(),zs=None,N=40,water_scaling=water_scaling)
         pyplot.title('RAXR (MD)')

@@ -1,7 +1,7 @@
 import numpy as np
 import os
 
-def convert_best_pars_to_matlab_input_file(file_name=None,domain=None,layered_water=None,c=20.04156,rgh=None,scale=1,vars=None):
+def convert_best_pars_to_matlab_input_file(file_name=None,domain=None,layered_water=None,c=20.04156,rgh=None,scale=1,vars=None,freeze=True,z_raxr=40):
     data=domain._extract_values()
     z=np.array(data[2])*c*np.sin((180-95.787)/180.*np.pi)
     c_projected=c*np.sin((180-95.787)/180.*np.pi)
@@ -10,14 +10,23 @@ def convert_best_pars_to_matlab_input_file(file_name=None,domain=None,layered_wa
     f=open(file_name,'w')
     f.write('% Param No. Best-Fit     Opt(1,2)             FIT    Initial      Std Dev\n\n')
     index_gaussian_peaks=[np.where(domain.id==each_id)[0][0] for each_id in domain.id if 'Gaussian_' in each_id]
+    index_gaussian_peaks=[each for each in index_gaussian_peaks if data[5][each]!=0]#drop peaks of 0 occupancy
     index_freeze_peaks=[np.where(domain.id==each_id)[0][0] for each_id in domain.id if 'Freezed_' in each_id]
+    index_freeze_peaks=[each for each in index_freeze_peaks if data[5][each]!=0]#drop peaks of 0 occupancy
     z_freeze=[z_new[each_index] for each_index in index_freeze_peaks]
     z_gaussian=[z_new[each_index] for each_index in index_gaussian_peaks]
+    if not freeze:
+        z_gaussian=z_gaussian+z_freeze
     #for each_index in index_gaussian_peaks:
     u_gaussian=[data[4][each_index] for each_index in index_gaussian_peaks]
     u_freeze=[data[4][each_index] for each_index in index_freeze_peaks]
+    if not freeze:
+        u_gaussian=u_gaussian+u_freeze
     oc_gaussian=[data[5][each_index]/4.0/2.0 for each_index in index_gaussian_peaks]#occ normalized to the half surface unit cell
     oc_freeze=[data[5][each_index]/4.0/2.0 for each_index in index_freeze_peaks]
+    if not freeze:
+        oc_gaussian=oc_gaussian+list(np.array(oc_freeze)*z_raxr/8.)
+
     ref_height_offset=0
     try:
         beta=rgh.beta+1
@@ -29,12 +38,13 @@ def convert_best_pars_to_matlab_input_file(file_name=None,domain=None,layered_wa
         relaxation_top=[vars['gp_K_layer_1'].getdz(),vars['gp_Obas_layer_1'].getdz(),vars['gp_Octa_layer_1'].getdz(),vars['gp_Octt_layer_1'].getdz(),vars['gp_Otop_layer_1'].getdz()]
         relaxation_mid=[vars['gp_K_layer_2'].getdz(),vars['gp_Obas_layer_2'].getdz(),vars['gp_Octa_layer_2'].getdz(),vars['gp_Octt_layer_1'].getdz(),vars['gp_Otop_layer_2'].getdz()]
         relaxation_bot=[vars['gp_K_layer_3'].getdz(),vars['gp_Obas_layer_3'].getdz(),vars['gp_Octa_layer_3'].getdz(),vars['gp_Octt_layer_3'].getdz(),vars['gp_Otop_layer_3'].getdz()]
-        ref_height_offset=vars['gp_Otop_layer_1'].getdz()*c_projected
+        ref_height_offset=-vars['gp_Otop_layer_1'].getdz()*c_projected
     else:
         relaxation_top=[0]*5
         relaxation_mid=[0]*5
         relaxation_bot=[0]*5
-    f.write('%i    %10.6f    %6.4f    %6.4f    %i    %10.7f    %10.6f\n'%(1   ,    scale  ,   0.0010  ,   1.0000  ,   1   ,  scale   ,  0.00))
+    #if the scaling factor is 3e6 in both GenX and Matlab script then the scale_of_Matlab=1/4/scale_of_GenX
+    f.write('%i    %10.6f    %6.4f    %6.4f    %i    %10.7f    %10.6f\n'%(1   ,    1./(scale*4.)  ,   0.0010  ,   1.0000  ,   1   ,  1./(scale*4.)   ,  0.00))
     f.write('%i    %10.6f    %6.4f    %6.4f    %i    %10.7f    %10.6f\n'%(2   ,    beta  ,   0.0010  ,   0.1  ,   0   ,  beta   ,  0.00))
     f.write('%i    %10.6f    %6.4f    %6.4f    %i    %10.7f    %10.6f\n'%(3   ,    MU  ,   0.0010  ,   5  ,   0   ,  MU   ,  0.00))
     #water layered

@@ -12,7 +12,7 @@ import pickle
 
 ##==========================================<program begins from here>=========================================##
 run=0
-N_el=90
+N_el=40
 h,k,l,zs=[],[],[],[]
 water_scaling=None
 
@@ -79,7 +79,7 @@ else:
     k=np.array([ 0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0 ])
     l=np.array([ 0.41,0.53,0.61,0.75,0.88,1.15,1.45,1.71,2.31,2.64,2.85,3.21,3.55,4.24,4.55,5.61,6.25,7.31,9.15,10.31,11.15 ])
     zs=np.array([ 1.5,3.65,5.85,7.7,9.7,11.75,17.05,19.1,21.1,23.1,25.25,27.45,29.55,32.0,34.45,36.5,38.6,40.65,42.55,44.65,48.0,49.85 ])
-    water_scaling= 0.33266606
+    water_scaling= 0.33
 
 ##cal q list
 q_list=np.array(create_plots.q_list_func(h,k,l))
@@ -112,7 +112,7 @@ def Sim(data):
             z = data_set.x
             A,P,Q=create_plots.find_A_P_muscovite(q_list,z_list,oc_list,u_list)
             f=np.array(create_plots.fourier_synthesis(q_list,P,A,z,N_el))/water_scaling
-            #f=create_plots.cal_e_density(z_list,oc_list,u_list,z_max=z[-1],water_scaling=water_scaling)
+            #f=create_plots.cal_e_density(z_list,oc_list,u_list,z_min=z[0],z_max=z[-1],water_scaling=water_scaling)
 
             F.append(f)
             fom_scaler.append(1)
@@ -127,7 +127,7 @@ def Sim(data):
     if print_items:
         print 'U_RAXS_LIST=['+','.join(map(lambda u:str(u**2),u_list))+']'
         print 'OC_RAXS_LIST=['+','.join(map(lambda oc:str(oc),oc_list))+']'
-        print 'Z_RAXS_LIST=['+','.join(map(lambda z:str(z/20.1058-1),z_list))+']'
+        print 'Z_RAXS_LIST=['+','.join(map(lambda z:str(z),z_list))+']'
         print 'X_RAXS_LIST=[0]*'+str(len(u_list))
         print 'Y_RAXS_LIST=[0]*'+str(len(u_list))
 

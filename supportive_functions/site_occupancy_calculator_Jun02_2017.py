@@ -8,6 +8,7 @@ import matplotlib.pyplot as pyplot
 import copy
 import pickle
 from mpl_toolkits.axes_grid.inset_locator import inset_axes
+from matplotlib.font_manager import FontProperties
 
 f1=lambda p1,p2:np.sqrt(np.sum((p1-p2)**2))
 
@@ -368,6 +369,7 @@ def build_super_lattice(coordinate_container=[[2.24191,3.146286,7.7466057],[0.27
 
 def make_single_UC(coordinate_container=np.array([[2.24191,3.146286,7.7466057],[0.27709,0.429286,7.7466057],[ 1.768338,1.488916,7.6507866],[ 0.745624,4.21135,7.6507866]]),colors=['r','b','g','black'],ax_handle=None):
     hfont = {'fontname':['times new roman','Helvetica'][1]}
+    
     if ax_handle==None:
         fig=pyplot.figure(figsize=(8,5))
         ax=fig.add_subplot(111)
@@ -380,18 +382,22 @@ def make_single_UC(coordinate_container=np.array([[2.24191,3.146286,7.7466057],[
     #ax.xaxis.grid(True,linestyle='-',which='major')
     #ax.set_xticklabels([])
     #ax.set_yticklabels([])
+    font0=FontProperties()
+    font1=font0.copy()
+    font1.set_style('normal')
+    font1.set_family('sans-serif')
     ax.set_xlim([0,5.038])
     ax.set_ylim([0,5.434])
     ax.plot([coordinate_container[0][0],coordinate_container[1][0]],[coordinate_container[0][1],coordinate_container[1][1]],ls=':',color='black')
-    es1=ax.annotate(r'ES1',xy=((coordinate_container[0][0]+coordinate_container[1][0])/2.-0.65,(coordinate_container[0][1]+coordinate_container[1][1])/2.))
+    es1=ax.annotate(r'$\rm{E_{1H}}$',xy=((coordinate_container[0][0]+coordinate_container[1][0])/2.-0.65,(coordinate_container[0][1]+coordinate_container[1][1])/2.),fontname='Helvetica')
     es1.set_rotation(50)
     ax.plot([coordinate_container[2][0],coordinate_container[3][0]],[coordinate_container[2][1],coordinate_container[3][1]],ls=':',color='black')
-    es2=ax.annotate(r'ES2',xy=((coordinate_container[2][0]+coordinate_container[3][0])/2.-0.2,(coordinate_container[2][1]+coordinate_container[3][1])/2.+0.5))
+    es2=ax.annotate(r'$\rm{E_{2H}}$',xy=((coordinate_container[2][0]+coordinate_container[3][0])/2.-0.2,(coordinate_container[2][1]+coordinate_container[3][1])/2.+0.5),family='sansserif')
     es2.set_rotation(-70)
     for i in range(len(coordinate_container)):
         ax.scatter([coordinate_container[i][0]],[coordinate_container[i][1]],marker='o',color=colors[i],s=80)
-    ax.set_xlabel(r'a($\rm{\AA}$)',fontsize=12)
-    ax.set_ylabel(r'b($\rm{\AA}$)',fontsize=12)
+    ax.set_xlabel(r'as($\rm{\AA}$)',fontsize=12)
+    ax.set_ylabel(r'bs($\rm{\AA}$)',fontsize=12)
     try:
         pylab.savefig('test.png',bbox_inches='tight')
     except:
@@ -494,11 +500,11 @@ def plot_one_fullset(f_shell=print_fancy_radical_plot,f_bar_plot=bar_plot,f_uc=m
     #ax_snapshot=fig.add_subplot(2,2,3)
     #ax_super=fig.add_subplot(2,2,4)
     ax_bar=pyplot.subplot2grid((2, 3), (0, 1), colspan=2)
-    ax_shell=fig.add_subplot(2,3,4)
+    ax_UC=fig.add_subplot(2,3,4)
     #ax_bar=fig.add_subplot(2,2,1)
     ax_snapshot=fig.add_subplot(2,3,5)
     ax_super=fig.add_subplot(2,3,6)
-    ax_UC=fig.add_subplot(2,3,1)
+    ax_shell=fig.add_subplot(2,3,1)
     f_shell(ax_handle=ax_shell)
     f_bar_plot(ax_handle=ax_bar)
     f_uc(ax_handle=ax_UC)

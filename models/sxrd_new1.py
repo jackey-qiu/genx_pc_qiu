@@ -410,7 +410,10 @@ class Sample:
         elif version==1.1:
             f_surface=self.calc_fs_muscovite
         f_layered_water=self.calc_f_layered_water_muscovite(h,k,l,self.domain['layered_water_pars'],height_offset)
-        f_layered_sorbate=self.calc_f_layered_sorbate_muscovite(h,k,l,self.domain['layered_sorbate_pars'],height_offset)
+        if self.domain['freeze']:#the raxs el has no effect on the structure factor
+            f_layered_sorbate=0
+        else:
+            f_layered_sorbate=self.calc_f_layered_sorbate_muscovite(h,k,l,self.domain['layered_sorbate_pars'],height_offset)
         domains=self.domain['domains']
         if coherence:
             for i in range(len(domains)):

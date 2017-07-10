@@ -177,19 +177,25 @@ def Sim(data,VARS=VARS):
         y = data_set.extra_data['Y']
         LB = data_set.extra_data['LB']
         dL = data_set.extra_data['dL']
-        if x[0]>100:
-            i+=1
-            q=np.pi*2*unitcell.abs_hkl(h,k,y)
-            rough = (1-rgh.beta)**2/(1+rgh.beta**2 - 2*rgh.beta*np.cos(q*unitcell.c*np.sin(np.pi-unitcell.beta)/2))
-            pre_factor=np.exp(-exp_const*rgh.mu/q)*(4*np.pi*re/auc)**2/q**2
+        if data_set.use:
+            if x[0]>100:
+                i+=1
+                q=np.pi*2*unitcell.abs_hkl(h,k,y)
+                rough = (1-rgh.beta)**2/(1+rgh.beta**2 - 2*rgh.beta*np.cos(q*unitcell.c*np.sin(np.pi-unitcell.beta)/2))
+                pre_factor=np.exp(-exp_const*rgh.mu/q)*(4*np.pi*re/auc)**2/q**2
+            else:
+                q=np.pi*2*unitcell.abs_hkl(h,k,x)
+                rough = (1-rgh.beta)**2/(1+rgh.beta**2 - 2*rgh.beta*np.cos(q*unitcell.c*np.sin(np.pi-unitcell.beta)/2))
+                pre_factor=np.exp(-exp_const*rgh.mu/q)*(4*np.pi*re/auc)**2/q**2
+            f=abs(sample.calculate_structure_factor(h,k,x,y,index=i,fit_mode=RAXR_FIT_MODE,height_offset=HEIGHT_OFFSET*unitcell.c,version=VERSION))
+            F.append(3e6*pre_factor*rough*f*f)
+            fom_scaler.append(1)
         else:
-            q=np.pi*2*unitcell.abs_hkl(h,k,x)
-            rough = (1-rgh.beta)**2/(1+rgh.beta**2 - 2*rgh.beta*np.cos(q*unitcell.c*np.sin(np.pi-unitcell.beta)/2))
-            pre_factor=np.exp(-exp_const*rgh.mu/q)*(4*np.pi*re/auc)**2/q**2
-        f=abs(sample.calculate_structure_factor(h,k,x,y,index=i,fit_mode=RAXR_FIT_MODE,height_offset=HEIGHT_OFFSET*unitcell.c,version=VERSION))
-        F.append(3e6*pre_factor*rough*f*f)
-        fom_scaler.append(1)
-
+            if x[0]>100:
+                i+=1
+            f=np.zeros(len(y))
+            F.append(f)
+            fom_scaler.append(1)
     if COUNT_TIME:
         t_2=datetime.now()
 
@@ -206,7 +212,8 @@ def Sim(data,VARS=VARS):
             domain_creator.make_dummy_data(file=os.path.join(OUTPUT_FILE_PATH,'temp_dummy_data.dat'),data=data,I=F)
         if combine_data_sets:
             domain_creator.combine_all_datasets(file=os.path.join(OUTPUT_FILE_PATH,'temp_full_dataset.dat'),data=data)
-        convert_files.convert_best_pars_to_matlab_input_file(file_name=os.path.join(OUTPUT_FILE_PATH,'temp_matlab_param.dat'),domain=Domain1,layered_water=rgh_dlw,c=unitcell.c,rgh=rgh,scale=inst.get_inten(),vars=VARS)
+        atm_number={'Zr':40}
+        convert_files.convert_best_pars_to_matlab_input_file(file_name=os.path.join(OUTPUT_FILE_PATH,'temp_matlab_param.dat'),domain=Domain1,layered_water=rgh_dlw,c=unitcell.c,rgh=rgh,scale=inst.get_inten(),vars=VARS,freeze=FREEZE,z_raxr=atm_number[RAXR_EL])
     if COUNT_TIME:
         t_3=datetime.now()
         print "It took "+str(t_1-t_0)+" seconds to setup"

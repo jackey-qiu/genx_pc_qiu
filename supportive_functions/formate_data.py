@@ -27,7 +27,7 @@ bl_dl_muscovite={'3_0':{'segment':[[0,1],[1,9]],'info':[[2,1],[6,1]]},'2_0':{'se
     '0_0':{'segment':[[0,20]],'info':[[2,2]]},'-1_0':{'segment':[[0,3],[3,9]],'info':[[6,-3],[2,-3]]},'0_-2':{'segment':[[0,9]],'info':[[2,-6.2782]]},\
     '-2_-2':{'segment':[[0,9]],'info':[[2,-6.2782]]},'-2_-1':{'segment':[[0,3.1391],[3.1391,9]],'info':[[4,-3.1391],[2,-3.1391]]},'-2_0':{'segment':[[0,9]],'info':[[2,-6]]},\
     '-2_1':{'segment':[[0,4.8609],[4.8609,9]],'info':[[4,-4.8609],[2,-6.8609]]},'-1_-1':{'segment':[[0,9]],'info':[[2,-4.1391]]},'-3_0':{'segment':[[0,1],[1,9]],'info':[[2,-1],[6,-1]]}}
-def formate_CTR_data(file='M:\\fwog\\members\\qiu05\\1704_APS_13IDC\\mica\\nQc_s6_100mM_CH5N_1_CTR_1st_spot1',bragg_peaks=bl_dl_muscovite):
+def formate_CTR_data(file='M:\\fwog\\members\\qiu05\\1704_APS_13IDC\\mica\\nQc_s2_100mM_RbCl_Zr_1_CTR_2nd_spot1',bragg_peaks=bl_dl_muscovite):
     data_formated=None
     f_original=np.loadtxt(file,skiprows=1,comments='%')
     data_points=len(f_original)-1#the first row is not data but some q corr information
@@ -94,7 +94,7 @@ def formate_RAXR_data(file_path='M:\\fwog\\members\\qiu05\\1608 - 13-IDC\\schmid
     np.savetxt(file_path+'_GenX_formate.dat',full_data[1:],fmt='%.5e')
 
 
-def split_RAXR_data_file(file='M:\\fwog\\members\qiu05\\1704_APS_13IDC\\mica\\s2_100mM_RbCl_Zr_1_RAXR_Rb_1st_spot1.ipg'):
+def split_RAXR_data_file(file='M:\\fwog\\members\\qiu05\\1704_APS_13IDC\\mica\\100mM_NH4Cl_Zr_mica\\s5_100mM_NH4Cl_Zr_1_RAXR_2nd_spot1.ipg'):
 
     L_container=[]
     L_label_container=[]
@@ -113,14 +113,14 @@ def split_RAXR_data_file(file='M:\\fwog\\members\qiu05\\1704_APS_13IDC\\mica\\s2
         L=round(each_data_set[0,1],2)
         L_container.append(L)
         temp_L_number=sum([1 for each_L in L_container if each_L==L])
-        L_label_container.append("_L"+str(L).replace(".","")+"_"+str(temp_L_number))
+        L_label_container.append("L"+str(L).replace(".","")+"_"+str(temp_L_number))
         header='1             2           3            4            5           6            7                8          9                 10          11              12          13             14           15                   16    17                  18            19                  20          21        22         23         24           25             26         27            28          29        30               31          32       33          34           35        36           37            38\n\
         file_number   L           epoch        Energy       Monitor     Signal_Best  sigSignal_Best   Signal_0d  mse_sSignal_0d    Signal      sigSignal       Signaly     sigSignaly     Background   ccd_num_back_ccd_px  time  time_corr_factor    xbar          ybar                HH          KK        LL         theta      ttheta       chi            phi        transm        alpha       beta      azimuth          mu          nu       fwhm_x      fwhm_y       samx      samy            accept_option   specscan#'
         np.savetxt(file.replace(".ipg","_"+L_label_container[-1]+".ipg"),each_data_set,fmt='%10.5f',header=header,comments='%')
 
     return L_container,L_label_container
 
-def split_RAXR_data_file_fr_GenX_output(file='P:\\apps\\genx_pc_qiu\\dump_files\\temp_full_dataset.dat',name_head='raxr_data_0NaCl_Zr_mica'):
+def split_RAXR_data_file_fr_GenX_output(file='P:\\apps\\genx_pc_qiu\\dump_files\\temp_full_dataset.dat',name_head='raxr_data_100mM_NH4Cl_Zr_mica'):
     #delete the CTR data first
     #file is created using domain_creator.combine_all_datasets()
     L_container=[]
@@ -149,7 +149,50 @@ def split_RAXR_data_file_fr_GenX_output(file='P:\\apps\\genx_pc_qiu\\dump_files\
 
     return L_container,L_label_container
 
-def formate_RAXR_data_APS(file_path='M:\\fwog\\members\qiu05\\1704_APS_13IDC\\mica\\s6_100mM_CH5N_Zr_1_RAXR_1st_spot1.ipg',E_range=[17759,18306]):
+def split_CTR_RAXR_data_file_fr_GenX_output(file='P:\\apps\\genx_pc_qiu\\dump_files\\temp_full_dataset.dat',name_head='100mM_RbZr_mica_Rb_APS',c_projected=19.9573,wal=0.95371828):
+    #file is created using domain_creator.combine_all_datasets()
+    def _find_CTR_index(data):
+        index_container=[]
+        for i in range(len(data)):
+            if data[i][3]==0:
+                index_container.append(i)
+            else:
+                pass
+        return index_container[0],index_container[-1]
+    L_container=[]
+    L_label_container=[]
+    data=np.loadtxt(file,comments='#')
+    CTR_index_l,CTR_index_r=_find_CTR_index(data)
+    index_container=[]
+    L_container=[]
+    for i in range(CTR_index_r+1,len(data)):
+        if i!=len(data)-1:
+            if data[i,3] not in L_container:
+                index_container.append(i)
+                L_container.append(data[i,3])
+    index_container.append(len(data))
+    sub_data_sets=[]
+    for i in range(len(index_container)-1):
+        start,end=index_container[i],index_container[i+1]
+        sub_data_sets.append(data[start:end,:])
+    for i in range(len(sub_data_sets)):
+        each_data_set=sub_data_sets[i]
+        each_data_set[:,0]=each_data_set[:,0]/1000.
+        each_data_set[:,-2]=1
+        L=L_container[i]
+        L_label_container.append("_L"+str(round(L,2)).replace(".",""))
+        header='1             2           3            4            5           6            7                8       \nEngergy       H           K            L            I           Ierr         monitor_dummy    BL'
+        np.savetxt(os.path.dirname(file)+'\\RAXR_'+name_head+L_label_container[-1]+".ipg",each_data_set,fmt='%10.5f',header=header,comments='%')
+    CTR_data=np.zeros((0,5))
+    CTR_data=np.append(CTR_data,[[c_projected,wal,np.pi*2/c_projected*data[CTR_index_l][0],np.pi*2/c_projected*data[CTR_index_r][0],4.363323e-5]],axis=0)
+    for i in range(CTR_index_l,CTR_index_r+1):
+        CTR_data=np.append(CTR_data,[[i+1,data[i,0],np.pi*2/c_projected*data[i,0],data[i,4],data[i,5]]],axis=0)
+    np.savetxt(os.path.dirname(file)+'\\CTR_'+name_head,CTR_data,fmt='%10.7f',comments='%')
+    return L_container,L_label_container,CTR_index_l,CTR_index_r
+
+#E_range=[17807,18265] for Zr
+#E_range=[14999,15500] for Rb
+def formate_RAXR_data_APS(file_path='M:\\fwog\\members\\qiu05\\1704_APS_13IDC\mica\\s2_100mM_RbCl_Zr_1_Rb_RAXR_2nd_spot1.ipg',E_range=[14999,15500]):
     full_data=np.zeros((1,8))
     L_list=[]
     data=np.loadtxt(file_path,comments='%')
@@ -170,11 +213,15 @@ def formate_RAXR_data_APS(file_path='M:\\fwog\\members\qiu05\\1704_APS_13IDC\\mi
     #print L_list
     np.savetxt(file_path.replace('.ipg','_GenX_formate.dat'),full_data[1:],fmt='%.5e')
 
-def formate_RAXR_data_ESRF(file_path='/Users/cqiu/data/ESRF/March_2017/Zr_ClO4_RAXR_R.ipg',E_range=[17815,18265],L_shift=0):
+def formate_RAXR_data_ESRF(file_path='M:\\fwog\\members\\qiu05\\1703_ROBL20\\S5_Zr_100mMMgCl2_RAXR_2nd_point_R_2.ipg',E_range=[17807,18265],L_shift=0):
     #L_shift:after q correction, L should be corrected somehow. For example, it was L=0.3 while it is now L=0.255 after Q correction, then L_shift=-0.045
     full_data=np.zeros((1,8))
     L_list=[]
     data=np.loadtxt(file_path,comments='%')
+    if data[0,3]<1000:
+        data[:,3]=data[:,3]*1000
+    else:
+        pass
     for i in range(len(data)):
         temp_data=[]
         if i!=(len(data)-1) and data[i,0]>data[i+1,0]:
@@ -185,8 +232,11 @@ def formate_RAXR_data_ESRF(file_path='/Users/cqiu/data/ESRF/March_2017/Zr_ClO4_R
                 temp_data=[[np.around(data[i,3],0),0,0,np.around(data[i,1],2),data[i,5]/data[i,4],data[i,6]/data[i,4],2,2]]
         if temp_data!=[] and np.around(data[i,3],0)>E_range[0] and np.around(data[i,3],0)<E_range[1]:
             full_data=np.append(full_data,temp_data,axis=0)
-    print L_list
     full_data[:,0]=full_data[:,0]+L_shift
+    for i in range(len(full_data[1:])):
+        each_segment=full_data[1:][i]
+        if i!=(len(full_data[1:])-1) and each_segment[0]==full_data[1:][i+1,0]:
+            print each_segment[0],each_segment[3]#manually delete those duplicate points in the output file
     np.savetxt(file_path.replace('.ipg','_GenX_formate.dat'),full_data[1:],fmt='%.5e')
 
 def scale_RAXS_data_to_CTR(file_ctr='M:\\fwog\\members\\qiu05\\1611 - ROBL20\\nQc_S0_Zr_0mM_NaCl_Dry_CTR_1st_spot1_R_GenX_formate_Q_corrected.dat',file_raxs='M:\\fwog\\members\\qiu05\\1611 - ROBL20\\S0_Zr_0mM_NaCl_Dry_RAXR_1st_spot1_R_GenX_formate.dat',E_col=0,L_col_raxs=3,E_ctr=16000):
@@ -210,14 +260,14 @@ def scale_RAXS_data_to_CTR(file_ctr='M:\\fwog\\members\\qiu05\\1611 - ROBL20\\nQ
         f_raxs[i,5]=f_raxs[i,5]*scaling#scaling error
     np.savetxt(file_raxs.replace('.dat','_scaled_to_CTR.data'),f_raxs,fmt='%.5e')
 
-def formate_F1F2_data(f1f2_file='M:\\fwog\\members\\qiu05\\1704_APS_13IDC\\escan\\axd_Zr-k_edge_S2.003.nor',ipg_file='M:\\fwog\\members\\qiu05\\1704_APS_13IDC\\mica\\s2_100mM_RbCl_Zr_1_RAXR_Zr_1st_spot1__L041_1.ipg'):
+def formate_F1F2_data(f1f2_file='M:\\fwog\\members\\qiu05\\1704_APS_13IDC\\escan\\axd_Zr-k_edge_S2.003.nor',ipg_file='M:\\fwog\\members\\qiu05\\1703_ROBL20\\model_files_Zr_mica_32mM_MgCl2\\S5_Zr_100mMMgCl2_RAXR_2nd_point_R_L041_1.ipg'):
     f1f2=np.loadtxt(f1f2_file)
     ipg=np.loadtxt(ipg_file,comments='%')
     E_list=[]
     for i in range(len(ipg)):
         if ipg[i,0]<ipg[i-1,0] and i!=0:
             break
-        E_list.append(round(ipg[i,3]*1000,0))
+        E_list.append(round(ipg[i,3]*1,0))
 
     f1f2_new=np.zeros((1,3))
     print E_list
@@ -236,6 +286,34 @@ def formate_F1F2_data(f1f2_file='M:\\fwog\\members\\qiu05\\1704_APS_13IDC\\escan
             data_sub.append(list(data_new[i]))
     np.savetxt(f1f2_file+'.formated',data_sub,fmt=['%.6e','%.6e','%i'])
     return None
+
+def formate_F1F2_data_new(f1f2_file='M:\\fwog\\members\\qiu05\\1704_APS_13IDC\\escan\\axd_Zr-k_edge_S2.003.nor',E_col=0,f1_col=1,f2_col=2):
+    f1f2=np.loadtxt(f1f2_file)
+    if f1f2[0,E_col]<1000:
+        scale=1000
+    else:
+        scale=1
+    if scale==1000:
+        for i in range(len(f1f2)):
+            f1f2[i,E_col]=f1f2[i,E_col]*scale
+    E_bounds=[int(np.round(f1f2[0,E_col])),int(np.round(f1f2[-1,E_col]))]
+    index_container=[0]
+    for each in range(E_bounds[0],E_bounds[1]+1):
+        offset=10
+        for i in range(index_container[-1],len(f1f2)):
+            if abs(f1f2[i,0]-each)<offset:
+                offset=abs(f1f2[i,0]-each)
+            else:
+                index_container.append(i)
+                break
+    index_container=index_container[1:]
+    f1f2_new=np.zeros((len(index_container),0))
+    f1f2_new=np.append(f1f2_new,f1f2[index_container,f1_col][:,np.newaxis],axis=1)
+    f1f2_new=np.append(f1f2_new,f1f2[index_container,f2_col][:,np.newaxis],axis=1)
+    f1f2_new=np.append(f1f2_new,np.round(f1f2[index_container,E_col][:,np.newaxis]),axis=1)
+    np.savetxt(f1f2_file+'.formated',f1f2_new,fmt=['%.6e','%.6e','%i'])
+    return f1f2_new[:,2]
+
 
 def formate_F1F2_data_ESRF(f1f2_file="/Users/cqiu/data/ESRF/axd_Zr-A01-bkg_b.f1f2.ASC",ipg_file='/Users/cqiu/data/ESRF/March_2017/Zr_ClO4_RAXR_R.ipg'):
     f1f2=np.loadtxt(f1f2_file)

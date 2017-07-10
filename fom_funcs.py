@@ -246,6 +246,21 @@ def R1_weighted_2(simulations, data):
             return_list.append(1.0/denom*abs(np.sqrt(np.abs(dataset.y)) - np.sqrt(np.abs(sim)))/np.sqrt(np.abs(dataset.y)))
     return return_list
 
+
+def chi2bars_2(simulations, data):
+    ''' Weighted chi squared
+    '''
+    return_list=[]
+    N = np.sum([len(dataset.y)*dataset.use for dataset in data])
+    for (dataset,sim) in zip(data,simulations):
+        if dataset.x[0]>100:
+            scaler=np.average(dataset.y[6:-6]/sim[6:-6])
+            return_list.append((dataset.y - sim*scaler)**2/dataset.error**2)
+        else:
+            return_list.append((dataset.y - sim)**2/dataset.error**2)
+    return return_list
+chi2bars_2.__div_dof__ = True
+
 def R1_weighted_2b(simulations, data):
         ''' Crystallographic R-factor (R1)
         '''
