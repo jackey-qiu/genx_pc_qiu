@@ -6,6 +6,9 @@ import pylab
 from pylab import imshow,show,get_cmap
 import matplotlib.pyplot as pyplot
 import copy
+import pickle
+from mpl_toolkits.axes_grid.inset_locator import inset_axes
+
 f1=lambda p1,p2:np.sqrt(np.sum((p1-p2)**2))
 
 def _find_shortest_length(coors=np.array([[0.292, 0.471, 7.69],[2.227, 3.188, 7.69],[1.724, 1.507, 7.681],[0.795, 4.224, 7.681]])):
@@ -58,23 +61,30 @@ def _find_length_distribution(coors=np.array([[2.445,3.337,7.471],[0.071,0.62,7.
     seperators=[round(np.min(each_set)-0.01,2) for each_set in temp_group]
     return dist_box_unique,seperators
 
+#Pb on cmp-rcut hematite case: coors=np.array([[2.24191,3.146286,7.7466057],[0.27709,0.429286,7.7466057],[ 1.768338,1.488916,7.6507866],[ 0.745624,4.21135,7.6507866]]),basis=np.array([5.038,5.434,0]), cluster_range=0.3,sep_range=None,ax_handle=None
+#Pb on cmp-rcut hematite case: seperators=[1.68,2.84,3.72,4.65,5.42,5.86,6.47,7.18,7.79,8.2,9.04,10.08]
+#Sb on cmp-rcut hematite case:coors=np.array([[2.445,3.337,7.471],[0.071,0.62,7.471]])
 #plot 5by5 super grid with different shells identified
-def print_fancy_radical_plot(coors=np.array([[2.445,3.337,7.471],[0.071,0.62,7.471]]),basis=np.array([5.038,5.434,0]), cluster_range=0.3,sep_range=None):
+def print_fancy_radical_plot(coors=np.array([[2.24191,3.146286,7.7466057],[0.27709,0.429286,7.7466057],[ 1.768338,1.488916,7.6507866],[ 0.745624,4.21135,7.6507866]]),basis=np.array([5.038,5.434,0]), cluster_range=0.3,sep_range=12,ax_handle=None):
     seperators=_find_length_distribution(coors,basis,cluster_range)[1]
     if sep_range!=None:
         seperators=_find_length_distribution(coors,basis,cluster_range)[1][0:sep_range]
     #seperators[0]=seperators[0]-0.5
-    #seperators=[1.68,2.84,3.72,4.65,5.42,5.86,6.47,7.18,7.79,8.2,9.04,10.08]
-    
+
+    seperators=[2.84,3.72,4.65,5.42,5.86,6.47,7.18,7.79,8.2,9.04,10.08]
+
     y_grids=np.array([-3,-2,-1,0,1,2,3,4])*basis[1]
     x_grids=np.array([-3,-2,-1,0,1,2,3,4])*basis[0]
-    fig=pyplot.figure(figsize=(8,5))
-    ax=fig.add_subplot(111)
+    if ax_handle==None:
+        fig=pyplot.figure(figsize=(8,5))
+        ax=fig.add_subplot(111)
+    else:
+        ax=ax_handle
     ax.set_aspect(1)
     ax.set_yticks(y_grids,minor=False)
     ax.set_xticks(x_grids,minor=False)
-    ax.yaxis.grid(True,linestyle='-',which='major')
-    ax.xaxis.grid(True,linestyle='-',which='major')
+    ax.yaxis.grid(True,linestyle=':',which='major',alpha=0.5)
+    ax.xaxis.grid(True,linestyle=':',which='major',alpha=0.5)
     ax.set_xticklabels(range(8))
     ax.set_yticklabels(range(8))
     ax.set_xlim([min(x_grids),max(x_grids)])
@@ -85,10 +95,13 @@ def print_fancy_radical_plot(coors=np.array([[2.445,3.337,7.471],[0.071,0.62,7.4
         for j in range(-3,4):
             for k in range(len(coors)):
                 each=coors[k]+basis*[i,j,0]
-                ax.scatter([each[0]],[each[1]],marker='.',color=colors[k],s=10)
+                ax.scatter([each[0]],[each[1]],marker='o',color=colors[k],s=6,alpha=0.4)
     for i in range(len(seperators)):
         sep=seperators[i]
-        ax.add_artist(pyplot.Circle((coors[0][0],coors[0][1]),sep,color='g',fill=False,lw=0.8))
+        if sep==5.42:
+            ax.add_artist(pyplot.Circle((coors[0][0],coors[0][1]),sep,color='m',fill=False,lw=0.8,ls=':'))
+        else:
+            ax.add_artist(pyplot.Circle((coors[0][0],coors[0][1]),sep,color='g',fill=False,lw=0.8,ls='-'))
         dx,dy=(seperators[-1]+2-sep)*np.cos(angles[i]),(seperators[-1]+2-sep)*np.sin(angles[i])
         dx2,dy2=(seperators[-1]+3-sep)*np.cos(angles[i]),(seperators[-1]+3-sep)*np.sin(angles[i])
         """
@@ -98,17 +111,32 @@ def print_fancy_radical_plot(coors=np.array([[2.445,3.337,7.471],[0.071,0.62,7.4
                   size=20, va="center", ha="center",
                   arrowprops=dict(arrowstyle="<|-",
                                   connectionstyle="arc3,rad=0",
-                                  fc="w"), 
+                                  fc="w"),
                   )
         """
-        ax.add_patch(mpt.patches.FancyArrow(coors[0][0]+sep*np.cos(angles[i]),coors[0][1]+sep*np.sin(angles[i]),dx,dy,width=0.01,head_width=0.5,head_length=0.5,overhang=0,color='black',length_includes_head=True))
-        if angles[i]>np.pi:
-            pyplot.text(coors[0][0]+sep*np.cos(angles[i])+dx2,coors[0][1]+sep*np.sin(angles[i])+dy2,str(sep)+r'$\AA$',fontsize=12,va='center',ha='center',rotation=angles[i]*180/np.pi+90)
+        if sep==5.42:
+            ax.add_patch(mpt.patches.FancyArrow(coors[0][0]+sep*np.cos(angles[i]),coors[0][1]+sep*np.sin(angles[i]),dx,dy,width=0.01,head_width=0.5,head_length=0.5,overhang=0,color='r',length_includes_head=True))
         else:
-            pyplot.text(coors[0][0]+sep*np.cos(angles[i])+dx2,coors[0][1]+sep*np.sin(angles[i])+dy2,str(sep)+r'$\AA$',fontsize=12,va='center',ha='center',rotation=angles[i]*180/np.pi-90)
-    fig.savefig("D://temp_pic.png",dpi=300)
-    return fig
-    
+            ax.add_patch(mpt.patches.FancyArrow(coors[0][0]+sep*np.cos(angles[i]),coors[0][1]+sep*np.sin(angles[i]),dx,dy,width=0.01,head_width=0.5,head_length=0.5,overhang=0,color='black',length_includes_head=True))
+
+
+        if angles[i]>np.pi:
+            if sep==5.42:
+                ax.text(coors[0][0]+sep*np.cos(angles[i])+dx2,coors[0][1]+sep*np.sin(angles[i])+dy2,str(sep)+r'$\AA$',fontsize=10,va='center',ha='center',rotation=angles[i]*180/np.pi+90,color='r')
+            else:
+                ax.text(coors[0][0]+sep*np.cos(angles[i])+dx2,coors[0][1]+sep*np.sin(angles[i])+dy2,str(sep)+r'$\AA$',fontsize=10,va='center',ha='center',rotation=angles[i]*180/np.pi+90)
+        else:
+            if sep==5.42:
+                ax.text(coors[0][0]+sep*np.cos(angles[i])+dx2,coors[0][1]+sep*np.sin(angles[i])+dy2,str(sep)+r'$\AA$',fontsize=10,va='center',ha='center',rotation=angles[i]*180/np.pi-90,color='r')
+            else:
+                ax.text(coors[0][0]+sep*np.cos(angles[i])+dx2,coors[0][1]+sep*np.sin(angles[i])+dy2,str(sep)+r'$\AA$',fontsize=10,va='center',ha='center',rotation=angles[i]*180/np.pi-90)
+
+    try:
+        fig.savefig("D://temp_pic.png",dpi=300)
+    except:
+        pass
+    return ax
+
 #two sites for Sb: [2.445,3.337,7.471],[0.071,0.62,7.471](total site occ=72.5% normalized to HL based on CTR fitting results and occ=58% when normalized to full surface)
 #four sites for Pb based on latest fit: [0.286, 0.519, 7.765],[2.233 ,3.238, 7.765],[0.79 ,4.121 ,7.612],[1.724, 1.397, 7.612] (first site type has occ=21% (28% normalized to HL), second site type has occ=26.1% (34.9% normalized to HL), cleanHL=27.7%, cleanFl=25.3%, with total site occ=63% (normalized to HL))
 #four sites based on IS and OS:IS [2.21522e+00,3.21226e+00,7.68327e+00],[0.30383,4.95327e-01,7.68335e+00](31% normalized to HL only) and OS [0.79132,4.266,7.69153e+00],[1.72768e+00,1.54921e+00,7.69153e+00] (~100% after normalizing to FL only)
@@ -135,7 +163,7 @@ def cal_random_occ(grid_size=[20,20],asym_coors=np.array([[2.445,3.337,7.471],[0
         T_F_index=(np.array(probability_accumulated)-index_raw)>0
         #print index_raw,T_F_index,probability,np.where(T_F_index==True)
         return np.where(T_F_index==True)[0][0]
-        
+
     for i in range(grid_size[0]):
         for j in range(grid_size[1]):
             grid[(i,j)]=[[False]*N_sites,asym_coors+basis*[i,j,0]]
@@ -196,7 +224,7 @@ def cal_random_occ(grid_size=[20,20],asym_coors=np.array([[2.445,3.337,7.471],[0
             occupied_sites=occupied_sites+float(vars()['site_'+chr(65+i)])
         print "total site occupancy=",occupied_sites/(total_sites/N_sites)
         return grid,grid_container,occupied_sites/(total_sites/N_sites)
-    
+
 #grid_container is a list of different snapshots(second term returned from the previous function) of grid being saved in the process of site assignment
 #grid_index is the center index for the final output
 #x y_range define the range the smart output will cover, dont sample indexes over boundary
@@ -204,7 +232,7 @@ def cal_random_occ(grid_size=[20,20],asym_coors=np.array([[2.445,3.337,7.471],[0
 #The cut-off was used to calculate a average site distance within the cutoff range
 #r is the searching range to calculate the sites with N_neighbor neighbors for drawing a circle
 
-def smart_output(grid_container=[],grid_index=(10,10),x_range=[-10,10],y_range=[-10,10],add_circle=True,r=4.,cut_off=5,N_neighbor=7):
+def smart_output(grid_container=[],grid_index=(10,10),x_range=[-10,10],y_range=[-10,10],add_circle=True,r=4.,cut_off=5,N_neighbor=7,ax_handle=None):
     N_sites=len(grid_container[0][grid_container[0].keys()[0]][0])
     for n in range(len(grid_container)):
         grid=grid_container[n]
@@ -212,21 +240,38 @@ def smart_output(grid_container=[],grid_index=(10,10),x_range=[-10,10],y_range=[
         y_indexs=range(y_range[0],y_range[1])[::-1]
         x_grids=(grid_index[0]+np.array(x_indexs))*5.038
         y_grids=(grid_index[1]+np.array(y_indexs))*5.434
-        fig=pyplot.figure()
+        fig=pyplot.figure(figsize=(8,5))
         ax=fig.add_subplot(111)
-        ax.set_aspect(1)
+        if ax_handle==None:
+            fig=pyplot.figure(figsize=(8,5))
+            ax=fig.add_subplot(111)
+        else:
+            ax=ax_handle
+        ax.set_aspect('equal')
         ax.set_yticks(y_grids,minor=False)
         ax.set_xticks(x_grids,minor=False)
-        ax.yaxis.grid(True,linestyle='-',which='major')
-        ax.xaxis.grid(True,linestyle='-',which='major')
-        ax.set_xticklabels(grid_index[0]+np.array(x_indexs))
-        ax.set_yticklabels(grid_index[1]+np.array(y_indexs))
+        ax.yaxis.grid(True,linestyle=':',which='major',alpha=0.5)
+        ax.xaxis.grid(True,linestyle=':',which='major',alpha=0.5)
+        x_indexs_tick=[]
+        for each in x_indexs:
+            if not each%3:
+                x_indexs_tick.append(each+grid_index[0])
+            else:
+                x_indexs_tick.append('')
+        y_indexs_tick=[]
+        for each in y_indexs:
+            if not each%3:
+                y_indexs_tick.append(each+grid_index[1])
+            else:
+                y_indexs_tick.append('')
+        ax.set_xticklabels(np.array(x_indexs_tick))
+        ax.set_yticklabels(np.array(y_indexs_tick))
         ax.set_xlim([0,max(x_grids)+5.038])
         ax.set_ylim([0,max(y_grids)+5.434])
         distance_container={}
         for i in range(N_sites):
             distance_container['site'+chr(65+i)]=[0,0,0]
-        colors=['blue','r','g','k']#should expand this items when you have more than four sites within each cell
+        colors=['r','b','g','black']#should expand this items when you have more than four sites within each cell
         markers=['o','o','o','o']#and this also
         def _generate_grid(grid):
             grid_container=[]
@@ -236,12 +281,12 @@ def smart_output(grid_container=[],grid_index=(10,10),x_range=[-10,10],y_range=[
                 if grid[0]<(max(x_indexs)+grid_index[0]) and grid[0]>=0 and grid[1]<(max(y_indexs)+grid_index[1]) and grid[1]>=0:
                     grid_container.append(tuple(grid))
             return grid_container
-            
+
         for y in y_indexs:
             for x in x_indexs:
                 for i in range(N_sites):
                     if grid[tuple(np.array(grid_index)+(x,y))][0][i]:
-                        ax.scatter([grid[tuple(np.array(grid_index)+(x,y))][1][i][0]],[grid[tuple(np.array(grid_index)+(x,y))][1][i][1]],marker=markers[i],color=colors[i],s=50)
+                        ax.scatter([grid[tuple(np.array(grid_index)+(x,y))][1][i][0]],[grid[tuple(np.array(grid_index)+(x,y))][1][i][1]],marker=markers[i],color=colors[i],s=10,alpha=0.5)
                         if add_circle:
                             current_point=np.array(grid[tuple(np.array(grid_index)+(x,y))][1][i])
                             sub_grid=_generate_grid([x+grid_index[0],y+grid_index[1]])
@@ -258,7 +303,10 @@ def smart_output(grid_container=[],grid_index=(10,10),x_range=[-10,10],y_range=[
                             distance_container['site'+chr(65+i)]=distance_container['site'+chr(65+i)]+np.array([int(distance_container_temp!=[]),len(distance_container_temp),sum(distance_container_temp)])
                             if len(coordinates)>=N_neighbor:
                                 ax.add_artist(pyplot.Circle((grid[tuple(np.array(grid_index)+(x,y))][1][i][0],grid[tuple(np.array(grid_index)+(x,y))][1][i][1]),r,color=colors[i],fill=False,lw=4))
-        pylab.savefig('test'+str(n)+'.png',bbox_inches='tight')
+        try:
+            pylab.savefig('test'+str(n)+'.png',bbox_inches='tight')
+        except:
+            pass
         print "Cut-off distance limit for circles=",r," A"
         print "Cut-off distance limit for site distance calculation=",cut_off," A\n"
         N_neighbors=0
@@ -270,57 +318,97 @@ def smart_output(grid_container=[],grid_index=(10,10),x_range=[-10,10],y_range=[
             print key, " has ", distance_container[key][1]," neighbour sites in total with average site distance of ", distance_container[key][2]/distance_container[key][1], " A"
             print "The average coordination number for ",key," is", float(distance_container[key][1]/distance_container[key][0]),"\n"
         print "The average site distance is " ,  distance_accumulated/N_neighbors, "A"
-            
+
     return distance_container
-    
-def build_super_lattice(coordinate_container=[[2.18,3.25,7.74],[0.337,0.534,7.74],[1.703,1.513,7.66],[0.81,4.24,7.66]],colors=['blue','r','g','k'],x_range=[0,20],y_range=[0,20],roll_order=[1,3,2],direction='r'):
-        
+#for Pb -cmp case:coordinate_container=[[2.24191,3.146286,7.7466057],[0.27709,0.429286,7.7466057],[ 1.768338,1.488916,7.6507866],[ 0.745624,4.21135,7.6507866]],colors=['r','b','g','black'],x_range=[0,20],y_range=[0,20],roll_order=[1,3],direction='r',ax_handle=None,fill_all=False
+def build_super_lattice(coordinate_container=[[2.445,3.337,7.471],[0.071,0.62,7.471]],colors=['r','b'],x_range=[0,20],y_range=[0,20],roll_order=[1,3],direction='r',ax_handle=None,fill_all=1):
+
     x_indexs=range(x_range[0],x_range[1])
     y_indexs=range(y_range[0],y_range[1])[::-1]
     x_grids=(np.array(x_indexs))*5.038
     y_grids=(np.array(y_indexs))*5.434
-    fig=pyplot.figure()
-    ax=fig.add_subplot(111)
-    ax.set_aspect(1)
+    if ax_handle==None:
+        fig=pyplot.figure(figsize=(8,5))
+        ax=fig.add_subplot(111)
+    else:
+        ax=ax_handle
+    ax.set_aspect('equal')
     ax.set_yticks(y_grids,minor=False)
     ax.set_xticks(x_grids,minor=False)
-    ax.yaxis.grid(True,linestyle='-',which='major')
-    ax.xaxis.grid(True,linestyle='-',which='major')
-    ax.set_xticklabels(np.array(x_indexs))
-    ax.set_yticklabels(np.array(y_indexs))
+    ax.yaxis.grid(True,linestyle=':',which='major',alpha=0.5)
+    ax.xaxis.grid(True,linestyle=':',which='major',alpha=0.5)
+    x_indexs_tick=[]
+    for each in x_indexs:
+        if each in [1,4,7,10,13,16,19]:
+            x_indexs_tick.append(each)
+        else:
+            x_indexs_tick.append('')
+    y_indexs_tick=[]
+    for each in y_indexs:
+        if each in [1,4,7,10,13,16,19]:
+            y_indexs_tick.append(each)
+        else:
+            y_indexs_tick.append('')
+
+    ax.set_xticklabels(np.array(x_indexs_tick))
+    ax.set_yticklabels(np.array(y_indexs_tick))
     ax.set_xlim([0,max(x_grids)+5.038])
     ax.set_ylim([0,max(y_grids)+5.434])
-            
-    for y in y_indexs:
-        for x in x_indexs:
-            if direction=='r':#in row direction
-                index=roll_order[x%len(roll_order)]
-                ax.scatter([coordinate_container[index][0]+x*5.038],[coordinate_container[index][1]+y*5.434],marker='o',color=colors[index],s=50)
-            elif direction=='c':#in column direction
-                index=roll_order[y%len(roll_order)]
-                ax.scatter([coordinate_container[index][0]+x*5.038],[coordinate_container[index][1]+y*5.434],marker='o',color=colors[index],s=50)
-    pylab.savefig('test.png',bbox_inches='tight')
-            
+
+    if not fill_all:
+        for y in y_indexs:
+            for x in x_indexs:
+                if direction=='r':#in row direction
+                    index=roll_order[x%len(roll_order)]
+                    ax.scatter([coordinate_container[index][0]+x*5.038],[coordinate_container[index][1]+y*5.434],marker='o',color=colors[index],s=10)
+                elif direction=='c':#in column direction
+                    index=roll_order[y%len(roll_order)]
+                    ax.scatter([coordinate_container[index][0]+x*5.038],[coordinate_container[index][1]+y*5.434],marker='o',color=colors[index],s=10)
+    else:
+        for y in y_indexs:
+            for x in x_indexs:
+                for i in range(len(coordinate_container)):
+                    ax.scatter([coordinate_container[i][0]+x*5.038],[coordinate_container[i][1]+y*5.434],marker='o',color=colors[i],s=10,alpha=0.5)
+    try:
+        pylab.savefig('test.png',bbox_inches='tight')
+    except:
+        pass
+
     return True
 
-def make_single_UC(coordinate_container=[[2.18,3.25,7.74],[0.337,0.534,7.74],[1.703,1.513,7.66],[0.81,4.24,7.66]],colors=['blue','r','g','k']):
-    fig=pyplot.figure()
-    ax=fig.add_subplot(111)
+def make_single_UC(coordinate_container=np.array([[2.24191,3.146286,7.7466057],[0.27709,0.429286,7.7466057],[ 1.768338,1.488916,7.6507866],[ 0.745624,4.21135,7.6507866]]),colors=['r','b','g','black'],ax_handle=None):
+    hfont = {'fontname':['times new roman','Helvetica'][1]}
+    if ax_handle==None:
+        fig=pyplot.figure(figsize=(8,5))
+        ax=fig.add_subplot(111)
+    else:
+        ax=ax_handle
     ax.set_aspect(1)
     #ax.set_yticks(y_grids,minor=False)
     #ax.set_xticks(x_grids,minor=False)
     #ax.yaxis.grid(True,linestyle='-',which='major')
     #ax.xaxis.grid(True,linestyle='-',which='major')
-    ax.set_xticklabels([])
-    ax.set_yticklabels([])
+    #ax.set_xticklabels([])
+    #ax.set_yticklabels([])
     ax.set_xlim([0,5.038])
     ax.set_ylim([0,5.434])
+    ax.plot([coordinate_container[0][0],coordinate_container[1][0]],[coordinate_container[0][1],coordinate_container[1][1]],ls=':',color='black')
+    es1=ax.annotate(r'ES1',xy=((coordinate_container[0][0]+coordinate_container[1][0])/2.-0.65,(coordinate_container[0][1]+coordinate_container[1][1])/2.))
+    es1.set_rotation(50)
+    ax.plot([coordinate_container[2][0],coordinate_container[3][0]],[coordinate_container[2][1],coordinate_container[3][1]],ls=':',color='black')
+    es2=ax.annotate(r'ES2',xy=((coordinate_container[2][0]+coordinate_container[3][0])/2.-0.2,(coordinate_container[2][1]+coordinate_container[3][1])/2.+0.5))
+    es2.set_rotation(-70)
     for i in range(len(coordinate_container)):
-        ax.scatter([coordinate_container[i][0]],[coordinate_container[i][1]],marker='o',color=colors[i],s=200)
-    pylab.savefig('test.png',bbox_inches='tight')
+        ax.scatter([coordinate_container[i][0]],[coordinate_container[i][1]],marker='o',color=colors[i],s=80)
+    ax.set_xlabel(r'a($\rm{\AA}$)',fontsize=12)
+    ax.set_ylabel(r'b($\rm{\AA}$)',fontsize=12)
+    try:
+        pylab.savefig('test.png',bbox_inches='tight')
+    except:
+        pass
     return True
-    
-#xlabels=np.arange(2.0,7.0,0.2)    
+
+#xlabels=np.arange(2.0,7.0,0.2)
 coverage_finer=[[2, 2, 2, 2, 2, 2, 2, 1.76, 1.8, 1.75, 1.75, 1.475, 1.495, 1.605, 1.55, 1.57, 0.99, 0.995, 0.775, 0.75, 0.755, 0.785, 0.815, 0.78, 0.78], [2, 2, 2, 2, 2, 1.745, 1.745, 1.755, 1.75, 1.76, 1.775, 1.76, 1.765, 1.74, 1.745, 1.535, 0.99, 0.985, 0.79, 0.77, 0.81, 0.81, 0.76, 0.69, 0.66], [1.75, 1.755, 1.7425, 1.7475, 1.76, 1.5325, 1.5475, 1.1225, 1.1225, 1.0275, 0.8925, 0.84, 0.8475, 0.8475, 0.7775, 0.6825, 0.6025, 0.57, 0.515, 0.4425, 0.4175, 0.41, 0.415, 0.3725, 0.3575]]
 #xlabels=np.arange(2.0,10.0,0.5))
 coverage_medium_fine=[[2, 2, 2, 1.765, 1.765, 1.495, 1.59, 0.805, 0.77, 0.765, 0.785, 0.495, 0.51, 0.455, 0.44, 0.435], [2, 2, 1.775, 1.77, 1.725, 1.815, 1.59, 0.795, 0.815, 0.825, 0.65, 0.505, 0.505, 0.445, 0.48, 0.425], [1.745, 1.755, 1.535, 1.1275, 0.8825, 0.84, 0.6875, 0.525, 0.4125, 0.4175, 0.345, 0.27, 0.2775, 0.2675, 0.2425, 0.225]]
@@ -329,38 +417,47 @@ coverage_coaser=[[2, 2, 2, 1.75, 1.755, 1.515, 1.44, 0.79], [2, 2, 1.755, 1.76, 
 #for sb case xlabels=np.arange(3.5,10,0.5)
 coverage_sb=[[2, 1.555/2, 1.545/2, 1.515/2, 0.79/2, 0.79/2, 0.785/2, 0.785/2,0.76/2, 0.6/2, 0.5/2, 0.49/2, 0.44/2]]
 #for sb case xlabels=[3.6, 5.03, 5.42, 7.4, 7.88, 8.48, 11.01](calculated from _find_length_distribution())
+xlabels_sb_2=[3.6, 5.03, 5.42, 7.4, 7.88, 8.48, 11.01]
 coverage_sb_2=[[2, 0.7625, 0.485, 0.3975, 0.3125, 0.2625, 0.215]]
 #based on the new run with two edge-sharing sites on HL (not OS on FL)
 occ_pb_new=[[1.75, 1.1125, 0.84, 0.5775, 0.4425, 0.42, 0.3475, 0.2725, 0.2575, 0.2475, 0.225]]
 dist_pb_new=[2.84,3.72,4.65,5.42,5.86,6.47,7.18,7.79,8.2,9.04,10.08]
 coors_pb_new=np.array([[2.18,3.25,7.74],[0.337,0.534,7.74],[1.703,1.513,7.66],[0.81,4.24,7.66]])
-def bar_plot(coverage=occ_pb_new,colors=['b','r','g'],labels=['Half layer termination','Full layer termination','Mixture of half and full layer termination'],xlabels=dist_pb_new):
+def bar_plot(coverage=occ_pb_new,colors=['b','r','g'],labels=['Half layer termination','Full layer termination','Mixture of half and full layer termination'],xlabels=dist_pb_new,ax_handle=None):
     #make a bar plot of coverage at different cutoff limits for different termination patterns
-    fig=pyplot.figure(figsize=(10,8))
-    ax=fig.add_subplot(1,1,1)
+    if ax_handle==None:
+        fig=pyplot.figure(figsize=(8,5))
+        ax=fig.add_subplot(111)
+    else:
+        ax=ax_handle
     for i in range(len(coverage)):
         x=np.array(range(len(coverage[i])))+0.8/len(coverage)*i
-        rec=pyplot.bar(x,np.array(coverage[i])*100,width=0.8/len(coverage),color=colors[i],label=labels[i],align='center',alpha=0.8)
-        p=pyplot.plot(x,np.array(coverage[i])*100+2,'--d'+colors[i],lw=2,markersize=7)
+        rec=ax.bar(x,np.array(coverage[i]),width=0.8/len(coverage),color=colors[i],label=labels[i],align='center',alpha=0.8)
+        #p=pyplot.plot(x,np.array(coverage[i])*100+2,'--d'+colors[i],lw=2,markersize=7)
         #ax.legend()
-    #l1,=ax.plot([-1,100],[58,58],'b',lw=3)
-    l2,=ax.plot([-1,100],[58.6,58.6],'r',lw=3)
+    #l2,=ax.plot([-1,100],[73,73],'r',lw=3)
+    l2,=ax.plot([-1,100],[0.59,0.59],'r',lw=3)
+    ax.annotate(r'0.59 Pb/A$\rm{_U}$$\rm{_C}$ based on bestfit model',xy=(3.5,.67))
+    #ax.annotate(r'Sb coverage=73% based on bestfit model',xy=(1.5,78))
     #l3,=ax.plot([-1,100],[50,50],'g',lw=3)
     for l in [l2]:
         l.set_dashes((6,6))
     ax.set_xlim(-0.8,len(coverage[0]))
-    ax.set_ylim(0,200)
-    ax.set_ylabel('Simulated site coverage (%)',fontsize=12)
-    ax.set_xlabel(r'Cutoff Pb-Pb distance ($\AA$)',fontsize=12)
+    ax.set_ylim(0,2)
+    ax.set_ylabel(r'Simulated site coverage (Pb/A$\rm{_U}$$\rm{_C}$)',fontsize=12)
+    ax.set_xlabel(r'Cutoff Pb-Pb distance ($\rm{\AA}$)',fontsize=12)
     ax.set_xticks(np.array(range(len(coverage[0])))+0.4-0.4/len(coverage))
     xtick=ax.set_xticklabels(xlabels)
     #pyplot.setp(xtick,fontsize=10)
-    
-    fig.savefig("D://temp_pic.png",dpi=300)
+    #ax.set_aspect((len(coverage[0])+0.8)/200)
+    try:
+        fig.savefig("D://temp_pic.png",dpi=300)
+    except:
+        pass
     pyplot.show()
 
-    return fig
-    
+    return ax
+
 
 def batch_process(asym_coors=[np.array([[2.21522e+00,3.21226e+00,7.68327e+00],[0.30383,4.95327e-01,7.68335e+00]]),np.array([[0.79132,4.266,7.69153e+00],[1.72768e+00,1.54921e+00,7.69153e+00]]),np.array([[2.21522e+00,3.21226e+00,7.68327e+00],[0.30383,4.95327e-01,7.68335e+00],[0.79132,4.266,7.69153e+00],[1.72768e+00,1.54921e+00,7.69153e+00]])],dist_limits=np.arange(2.0,6.0,0.5),probability=[1,1]):
     #process cal_random_occ in batch with specified sequence of asym_coors (three items for HL, FL and HL&FL respectively) and dist_limit
@@ -372,7 +469,7 @@ def batch_process(asym_coors=[np.array([[2.21522e+00,3.21226e+00,7.68327e+00],[0
             coverage[-1].append(occ)
     bar_plot(coverage,xlabels=dist_limits)
     return coverage
-    
+
 def create_xyz_super_grid(grid,el='Sb',file="D://super_grid.xyz",distal_oxygens=np.array([[[1.56,1.59,8.11],[2.95,3.53,9.35],[0.69,3.96,8.35]],[[0.962,-1.124,8.11],[-0.426,0.813,9.35],[1.828,1.24,8.35]]]),x_range=[0,5],y_range=[0,5],basis=np.array([5.038,5.434,7.3707])):
     f=open(file,'w')
     N=0
@@ -400,13 +497,74 @@ def create_xyz_super_grid(grid,el='Sb',file="D://super_grid.xyz",distal_oxygens=
                         else:
                             f.write('%-5s   %7.5e   %7.5e   %7.5e\n' % ('O',distal_xyz[0],distal_xyz[1],distal_xyz[2]))
     f.close()
+#for Pb-cmp case
+def plot_one_fullset(f_shell=print_fancy_radical_plot,f_bar_plot=bar_plot,f_uc=make_single_UC,f_snapshot=smart_output,f_super_lattice=build_super_lattice,grid_file='P:\\My stuff\\Scripts\\grid.p'):
+    grid=[pickle.load(open(grid_file,'rb'))]
+    fig=pyplot.figure(figsize=(10,8))
+    #ax_shell=fig.add_subplot(2,2,1)
+    #ax_bar=fig.add_subplot(2,2,2)
+    #ax_snapshot=fig.add_subplot(2,2,3)
+    #ax_super=fig.add_subplot(2,2,4)
+    ax_bar=pyplot.subplot2grid((2, 3), (0, 1), colspan=2)
+    ax_shell=fig.add_subplot(2,3,1)
+    #ax_bar=fig.add_subplot(2,2,1)
+    ax_snapshot=fig.add_subplot(2,3,5)
+    ax_super=fig.add_subplot(2,3,6)
+    ax_UC=fig.add_subplot(2,3,4)
+    f_shell(ax_handle=ax_shell)
+    f_bar_plot(ax_handle=ax_bar)
+    f_uc(ax_handle=ax_UC)
+    f_snapshot(grid_container=grid,ax_handle=ax_snapshot)
+    f_super_lattice(ax_handle=ax_super)
+    fig.tight_layout()
+    fig.savefig("D://temp_pic.png",dpi=300)
+    return fig
+#for Sb-cmp case
+def plot_one_fullset_Sb(f_shell=print_fancy_radical_plot,f_bar_plot=bar_plot,f_uc=make_single_UC,f_snapshot=smart_output,f_super_lattice=build_super_lattice,grid_file='P:\\My stuff\\Scripts\\grid_sb.p'):
+    grid=[pickle.load(open(grid_file,'rb'))]
+    fig=pyplot.figure(figsize=(10,8))
 
-                    
+    ax_bar=pyplot.subplot2grid((2, 3), (0, 0), colspan=2)
+    ax_shell=fig.add_subplot(2,3,4)
+
+    ax_snapshot=fig.add_subplot(2,3,5)
+    ax_super=fig.add_subplot(2,3,6)
+
+    f_shell(ax_handle=ax_shell)
+    f_bar_plot(ax_handle=ax_bar)
+
+    f_snapshot(grid_container=grid,ax_handle=ax_snapshot)
+    f_super_lattice(ax_handle=ax_super)
+
+    fig.savefig("D://temp_pic.png",dpi=300)
+    return fig
+
+
+def plot_one_fullset_Sb2(f_shell=print_fancy_radical_plot,f_bar_plot=bar_plot,f_uc=make_single_UC,f_snapshot=smart_output,f_super_lattice=build_super_lattice,grid_file='P:\\My stuff\\Scripts\\grid_sb.p'):
+    grid=[pickle.load(open(grid_file,'rb'))]
+    fig=pyplot.figure(figsize=(10,4))
+
+    ax_bar=pyplot.subplot2grid((1, 3), (0, 0), colspan=2)
+    #ax_shell=fig.add_subplot(2,3,4)
+
+    ax_snapshot=fig.add_subplot(1,3,3)
+    #ax_super=fig.add_subplot(2,3,6)
+
+    #f_shell(ax_handle=ax_shell)
+    f_bar_plot(ax_handle=ax_bar)
+
+    f_snapshot(grid_container=grid,ax_handle=ax_snapshot)
+    #f_super_lattice(ax_handle=ax_super)
+    fig.tight_layout()
+    fig.savefig("D://temp_pic.png",dpi=300)
+    return fig
+
+
 if __name__=="__main__":
     from images2gif import writeGif
     from PIL import Image
     import os
-    
+
     #smart_output(cal_random_occ()[1][0:100])
     #file names in order
     file_names=['test'+str(i)+'.png' for i in range(100)]
@@ -414,4 +572,3 @@ if __name__=="__main__":
     filename = "simulation_of_site_occupancy.GIF"
     #write a gif file from a collection of image files
     writeGif(filename, images, duration=0.2)
-    

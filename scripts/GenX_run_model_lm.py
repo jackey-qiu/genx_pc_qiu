@@ -115,12 +115,13 @@ def fit_function(x,*pars):
     return np.sqrt(np.array(fom_flatten)*2)#to make sure cost is the fom value calcuated in GenX
 
 print "fitting started now"
-popt, pcov = curve_fit(fit_function, x, np.array(y)*0.,p0=pars_init,method="trf",loss="linear",bounds=bounds,max_nfev=1000,verbose=2)
+popt, pcov = curve_fit(fit_function, x, np.array(y)*0.,p0=pars_init,method="trf",loss="linear",bounds=bounds,max_nfev=1000,verbose=2,ftol=1e-8)
 
 #cal the standard deviation of fit parameter values
 perr = np.sqrt(np.diag(pcov))
 print "Model refinement completed sucessfully"
-
+print 'Fitting results summary'
+print 'par      bestfit value       error'
 #now update the error column in the file
 n_elements = mod.parameters.get_len_rows()
 index_container=[]
@@ -129,4 +130,5 @@ for index in range(n_elements):
         index_container.append(index)
 for i in range(len(perr)):
     mod.parameters.set_value(index_container[i],5,str(perr[i]))
+    print mod.parameters.get_value(index_container[i],0),mod.parameters.get_value(index_container[i],1),mod.parameters.get_value(index_container[i],5)
 autosave()

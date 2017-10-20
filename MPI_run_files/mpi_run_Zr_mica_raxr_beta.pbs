@@ -14,17 +14,18 @@ sed -i -e 's/1/7/g' /home/qiu05/genx_pc_qiu/global_vars.py
 cd $HOME/HOME/temp_model
 #file=*_Jun17.gx
 #file=$(date +'*_%b%d.gx')
-file='*_Mar30.gx'
+file='*_Jul15.gx'
 
 for gx in $file;do
 	if [ `ls $file | wc -l` != 0 ] ;
 	then
         #eval "export `mpirun env | grep OMPI_MCA_orte_precondition_transports`"
         #mpiexec --mca mpi_warn_on_fork 0 -np 1 python $HOME/genx_pc_qiu/MPI_run_files/set_up_par.py $gx $i
-	mpiexec --mca mpi_warn_on_fork 0 -np 252  python $HOME/genx_pc_qiu/MPI_run_files/GenX_run_multiple_mpi_new_3_raxr_BETA.py $gx 64 2>&1 |tee job.$PBS_JOBID.out
+	mpiexec --mca mpi_warn_on_fork 0 -np 126  python $HOME/genx_pc_qiu/MPI_run_files/GenX_run_multiple_mpi_new_3_raxr_BETA.py $gx 64 2>&1 |tee job.$PBS_JOBID.out
 	else
 	sleep 1
 	fi;
+	rm -f $gx
 done
 
 #cp ~/temp_gx_files/*.gx ~/HOME/temp_model/model_ran

@@ -76,8 +76,8 @@ iter_list = [1]
 #   'logbars'
 #   'sintth4'
 # e.g.: fom_list = ['log','R1']  # performs all repetitions for 'log' and 'R1'
-fom_list = ['R1_weighted_2']
-#fom_list=['chi2bars']
+#fom_list = ['R1_weighted_2']
+fom_list=['chi2bars_2']
 #fom_list=['diff']
 
 # diffev control parameters
@@ -100,7 +100,7 @@ pop_size = pop_num        # if use_pop_mult = False, population size
 
 # Generations
 use_max_generations = True       # absolute (T) or relative (F) maximum gen.
-max_generations=pop_num*20      # if use_max_generations = True
+max_generations=pop_num*50      # if use_max_generations = True
 max_generation_mult = 6          # if use_max_generations = False
 
 # Parallel processing
@@ -512,7 +512,7 @@ for pars in par_list:
 		break
 	    else:
 	    	std_val=std(opt.fom_log[:,1][-200:])
-	   	if std_val<0.000001:
+	   	if std_val<0:
 		    if rank==0:
 		        opt.text_output('std='+str(std_val))
 	            break

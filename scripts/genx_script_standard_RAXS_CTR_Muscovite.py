@@ -15,7 +15,7 @@ import convert_files
 ##==========================================<program begins from here>=========================================##
 COUNT_TIME=False
 if COUNT_TIME:t_0=datetime.now()
-VERSION=1.1#version number to make easier code update to compatible with gx files based on old version scripts
+VERSION=1.2#version number to make easier code update to compatible with gx files based on old version scripts
 
 ##<global handles>##
 RUN=1
@@ -163,7 +163,7 @@ def Sim(data,VARS=VARS):
 
     ##<format domains>##
     domain={'domains':[Domain1,Domain2],'layered_water_pars':layered_water_pars,'layered_sorbate_pars':layered_sorbate_pars,\
-            'global_vars':rgh,'raxs_vars':raxs_vars,'F1F2':F1F2,'E0':E0,'el':RAXR_EL,'freeze':FREEZE,'exp_factors':[exp_const,rgh.mu,re,auc],'sig_eff':sig_eff}
+            'global_vars':rgh,'raxs_vars':raxs_vars,'F1F2':F1F2,'E0':E0,'el':RAXR_EL,'freeze':FREEZE,'exp_factors':[exp_const,rgh.mu,re,auc,rgh.ra_conc],'sig_eff':sig_eff}
     sample = model.Sample(inst, bulk, domain, unitcell,coherence=COHERENCE,surface_parms={'delta1':0.,'delta2':0.})
 
     ##<calculate structure factor>##

@@ -50,6 +50,169 @@ f2=lambda p1,p2:np.sqrt(np.sum((p1-p2)**2))
 #anonymous function f3 is to calculate the coordinates of basis with magnitude of 1.,p1 and p2 are coordinates for two known points, the
 #direction of the basis is pointing from p1 to p2
 f3=lambda p1,p2:(1./f2(p1,p2))*(p2-p1)+p1
+
+##make a pick index list specifying the type of full layer (0 for short and 1 for long slab)
+##this function will return a list of indexes list to be passed to pick_full_layer
+def make_pick_index(full_layer_pick,pick,half_layer_cases=8,full_layer_cases=8):
+    pick_index_all=[]
+    for i in range(len(full_layer_pick)):
+        pick_index=[1]*full_layer_cases
+        if full_layer_pick[i]!=None:
+            #pick_index[pick[i][0]-half_layer_cases]=full_layer_pick[i]
+            for j in pick[i]:
+                pick_index[j-half_layer_cases]=full_layer_pick[i]
+            pick_index_all.append(pick_index)
+        else:
+            pass
+    return pick_index_all
+
+def make_pick_index_half_layer(half_layer_pick,pick,half_layer_cases=8):
+    pick_index_all=[]
+    for i in range(len(half_layer_pick)):
+        pick_index=[2]*half_layer_cases
+        if half_layer_pick[i]!=None:
+            #pick_index[pick[i][0]]=half_layer_pick[i]
+            for j in pick[i]:
+                pick_index[j]=half_layer_pick[i]
+            pick_index_all.append(pick_index)
+        else:
+            pass
+    return pick_index_all
+##pick the full layer cases according to the type of full layers(pick_index is a list of list created from make_pick_index)
+def pick_full_layer(LFL=[],SFL=[],pick_index=[]):
+    FL_all=[]
+    for pick in pick_index:
+        FL=[]
+        for i in range(len(pick)):
+            if pick[i]==0:
+                FL.append(SFL[i])
+            elif pick[i]==1:
+                FL.append(LFL[i])
+        FL_all.append(FL)
+    return FL_all
+
+def pick_half_layer(LHL=[],SHL=[],pick_index=[]):
+    HL_all=[]
+    for pick in pick_index:
+        HL=[]
+        for i in range(len(pick)):
+            if pick[i]==2:
+                HL.append(SHL[i])
+            elif pick[i]==3:
+                HL.append(LHL[i])
+        HL_all.append(HL)
+    return HL_all
+##pick functions
+def pick(pick_list,pick_index):
+    picked_box=[]
+    for each in pick_index:
+        picked_box.append(pick_list[each[0]])
+    return picked_box
+
+def pick_act(pick_list,pick_index):
+    picked_box=[]
+    for each in pick_index:
+        temp_box=[]
+        for i in range(len(each)):
+            temp_box=temp_box+pick_list[each[i]]
+        picked_box.append(temp_box)
+    return picked_box
+
+def deep_pick(pick_list,sym_site_index='sym_site_index',pick_index='pickup_index'):
+    picked_box=[]
+    for i in range(len(pick_index)):
+        temp_box_j=[]
+        for j in range(len(pick_index[i])):
+            for k in sym_site_index[i][j]:
+                temp_box_j.append(pick_list[pick_index[i][j]][k])
+        picked_box.append(temp_box_j)
+    return picked_box
+
+#function to group the Fourier components (FC) from different domains in each RAXR spectra
+#domain_index=[0,1] means setting the FC for domain2 (1+1) same as domain1 (0+1)
+#domain_index=3 means setting the FC for domain2 and domain3 same as domain1, in this case the number indicate the number of total domains
+def set_RAXR(domain_index=[],number_spectra=0):
+    domains=None
+    if type(domain_index)!=type([]):
+        domains=range(domain_index)
+    else:
+        domains=domain_index
+    for i in range(number_spectra):
+        for j in domains[1:]:
+            eval('rgh_raxr'+'.setA_D'+str(j+1)+'_'+str(i+1)+'(rgh_raxr'+'.getA_D'+str(domains[0]+1)+'_'+str(i+1)+'())')
+            eval('rgh_raxr'+'.setP_D'+str(j+1)+'_'+str(i+1)+'(rgh_raxr'+'.getP_D'+str(domains[0]+1)+'_'+str(i+1)+'())')
+
+#freeze A and B in the process of model fitting
+def set_RAXR_AB(number_spectra=0):
+    spectra=None
+    if type(number_spectra)!=type([]):
+        spectra=range(number_spectra)
+    else:
+        spectra=number_spectra
+    for i in spectra:
+        eval('rgh_raxr'+'.setA'+str(i+1)+'(1.)')
+        eval('rgh_raxr'+'.setB'+str(i+1)+'(0.)')
+
+#function to group outer-sphere pars from different domains (to be placed inside sim function)
+def set_OS(domain_names=['domain5','domain4']):
+    eval('rgh_'+domain_names[0]+'.setCt_offset_dx_OS(rgh_'+domain_names[1]+'.getCt_offset_dx_OS())')
+    eval('rgh_'+domain_names[0]+'.setCt_offset_dy_OS(rgh_'+domain_names[1]+'.getCt_offset_dy_OS())')
+    eval('rgh_'+domain_names[0]+'.setCt_offset_dz_OS(rgh_'+domain_names[1]+'.getCt_offset_dz_OS())')
+    eval('rgh_'+domain_names[0]+'.setTop_angle_OS(rgh_'+domain_names[1]+'.getTop_angle_OS())')
+    eval('rgh_'+domain_names[0]+'.setR0_OS(rgh_'+domain_names[1]+'.getR0_OS())')
+    eval('rgh_'+domain_names[0]+'.setPhi_OS(rgh_'+domain_names[1]+'.getPhi_OS())')
+
+#function to group bidentate pars from different domains (to be placed inside sim function)
+def set_BD(domain_names=[2,1],sorbate_sets=1,distal_oxygen_number=1,sorbate='Pb'):
+    for i in range(sorbate_sets):
+        eval('rgh_domain'+str(domain_names[0]+1)+'.setOffset_BD_'+str(i*2)+'(rgh_domain'+str(domain_names[1]+1)+'.getOffset_BD_'+str(i*2)+'())')
+        eval('rgh_domain'+str(domain_names[0]+1)+'.setOffset2_BD_'+str(i*2)+'(rgh_domain'+str(domain_names[1]+1)+'.getOffset2_BD_'+str(i*2)+'())')
+        eval('rgh_domain'+str(domain_names[0]+1)+'.setAngle_offset_BD_'+str(i*2)+'(rgh_domain'+str(domain_names[1]+1)+'.getAngle_offset_BD_'+str(i*2)+'())')
+        eval('rgh_domain'+str(domain_names[0]+1)+'.setR_BD_'+str(i*2)+'(rgh_domain'+str(domain_names[1]+1)+'.getR_BD_'+str(i*2)+'())')
+        eval('rgh_domain'+str(domain_names[0]+1)+'.setPhi_BD_'+str(i*2)+'(rgh_domain'+str(domain_names[1]+1)+'.getPhi_BD_'+str(i*2)+'())')
+        eval('rgh_domain'+str(domain_names[0]+1)+'.setTop_angle_BD_'+str(i*2)+'(rgh_domain'+str(domain_names[1]+1)+'.getTop_angle_BD_'+str(i*2)+'())')
+        eval('gp_'+sorbate+'_set'+str(i+1)+'_D'+str(domain_names[0]+1)+'.setoc'+'(gp_'+sorbate+'_set'+str(i+1)+'_D'+str(domain_names[1]+1)+'.getoc())')
+        eval('gp_'+sorbate+'_set'+str(i+1)+'_D'+str(domain_names[0]+1)+'.setu'+'(gp_'+sorbate+'_set'+str(i+1)+'_D'+str(domain_names[1]+1)+'.getu())')
+        for j in range(distal_oxygen_number):
+            eval('gp_HO'+str(j+1)+'_set'+str(i+1)+'_D'+str(domain_names[0]+1)+'.setoc'+'(gp_HO'+str(j+1)+'_set'+str(i+1)+'_D'+str(domain_names[1]+1)+'.getoc())')
+            eval('gp_HO'+str(j+1)+'_set'+str(i+1)+'_D'+str(domain_names[0]+1)+'.setu'+'(gp_HO'+str(j+1)+'_set'+str(i+1)+'_D'+str(domain_names[1]+1)+'.getu())')
+
+#function to group water pairs togeter from different domains
+#domain_names is list of index of domains counting from 0 and number sets is the number of water pair counting from 1
+def set_water_pair(domain_names=[3,2],number_sets=2):
+    for i in range(number_sets):
+        eval('gp_waters_set'+str(i+1)+'_D'+str(domain_names[0]+1)+'.setoc(gp_waters_set'+str(i+1)+'_D'+str(domain_names[1]+1)+'.getoc())')
+        eval('gp_waters_set'+str(i+1)+'_D'+str(domain_names[0]+1)+'.setu(gp_waters_set'+str(i+1)+'_D'+str(domain_names[1]+1)+'.getu())')
+        eval('gp_waters_set'+str(i+1)+'_D'+str(domain_names[0]+1)+'.setdy(gp_waters_set'+str(i+1)+'_D'+str(domain_names[1]+1)+'.getdy())')
+        eval('rgh_domain'+str(domain_names[0]+1)+'.setV_shift_W_'+str(i+1)+'(rgh_domain'+str(domain_names[1]+1)+'.getV_shift_W_'+str(i+1)+'())')
+        eval('rgh_domain'+str(domain_names[0]+1)+'.setAlpha_W_'+str(i+1)+'(180-rgh_domain'+str(domain_names[1]+1)+'.getAlpha_W_'+str(i+1)+'())')
+
+#function to group tridentate pars specifically for distal oxygens from different domains (to be placed inside sim function)
+def set_TD(domain_names=['domain2','domain1']):
+    eval('rgh_'+domain_names[0]+'.setTheta1_1_TD(rgh_'+domain_names[1]+'.getTheta1_1_TD())')
+    eval('rgh_'+domain_names[0]+'.setTheta1_2_TD(rgh_'+domain_names[1]+'.getTheta1_2_TD())')
+    eval('rgh_'+domain_names[0]+'.setTheta1_3_TD(rgh_'+domain_names[1]+'.getTheta1_3_TD())')
+    eval('rgh_'+domain_names[0]+'.setPhi1_1_TD(rgh_'+domain_names[1]+'.getPhi1_1_TD())')
+    eval('rgh_'+domain_names[0]+'.setPhi1_2_TD(rgh_'+domain_names[1]+'.getPhi1_2_TD())')
+    eval('rgh_'+domain_names[0]+'.setPhi1_3_TD(rgh_'+domain_names[1]+'.getPhi1_3_TD())')
+    eval('rgh_'+domain_names[0]+'.setR1_1_TD(rgh_'+domain_names[1]+'.getR1_1_TD())')
+    eval('rgh_'+domain_names[0]+'.setR1_2_TD(rgh_'+domain_names[1]+'.getR1_2_TD())')
+    eval('rgh_'+domain_names[0]+'.setR1_3_TD(rgh_'+domain_names[1]+'.getR1_3_TD())')
+
+#function to group Hydrogen pars from the same domain (to be placed inside sim function)
+def set_H(domain_name='domain1',tag=['W_1_2_1','W_1_1_1']):
+    eval('rgh_'+domain_name+'.setPhi_H_'+tag[0]+'(180-rgh_'+domain_name+'.getPhi_H_'+tag[1]+'())')
+    eval('rgh_'+domain_name+'.setR_H_'+tag[0]+'(rgh_'+domain_name+'.getR_H_'+tag[1]+'())')
+    eval('rgh_'+domain_name+'.setTheta_H_'+tag[0]+'(rgh_'+domain_name+'.getTheta_H_'+tag[1]+'())')
+
+#function to group distal oxygens based on adding in wild, N is the number of distal oxygens (to be placed inside sim function)
+def set_distal_wild(domain_name=['domain2','domain1'],tag='BD',N=2):
+    for i in range(N):
+        eval('rgh_'+domain_name[0]+'.setPhi1_'+str(i)+'_'+tag+'(180-rgh_'+domain_name[1]+'.getPhi1_'+str(i)+'_'+tag+'())')
+        eval('rgh_'+domain_name[0]+'.setR1_'+str(i)+'_'+tag+'(rgh_'+domain_name[1]+'.getR1_'+str(i)+'_'+tag+'())')
+        eval('rgh_'+domain_name[0]+'.setTheta1_'+str(i)+'_'+tag+'(rgh_'+domain_name[1]+'.getTheta1_'+str(i)+'_'+tag+'())')
+
+
 #calcualte the error for pb complex structure
 def output_errors(edge_length=2.7,top_angle=70,error_top_angle=1,error_theta=1,error_delta1=0.02,error_delta2=0.03):
     sin_alpha_left=np.sin(np.deg2rad(top_anagle-error_top_angle)/2.)
@@ -103,6 +266,7 @@ def combine_all_datasets(file='D://temp_full_dataset.dat',data=None):
 def define_global_vars(rgh,domain_number=2):
     rgh.new_var('beta',0)
     rgh.new_var('mu',10)#water thickness
+    rgh.new_var('ra_conc',0.0)#resonant el concentration in M
     for i in range(domain_number):
         rgh.new_var('wt'+str(i+1),1)
     return rgh
@@ -808,7 +972,7 @@ def generate_commands_for_surface_atom_grouping(domain_index_pair=[[1,2],[3,4]],
                 command_list.append('gp_'+HL_L[j]+'_D'+str(domain_index_pair[i][0])+'.setoc('+'gp_'+HL_S[j]+'_D'+str(domain_index_pair[i][1])+'.getoc())')
 
     return command_list
-    
+
 def generate_commands_for_surface_atom_grouping_new(domain_index_pair=[[1,2],[3,4]],domain_type_pair=[['HL','HL'],['FL_S','FL_L']],grouping_depth=[[0,10],[0,10]],group_oc=False):
     command_list=[]
     HL=['O1O2_O7O8','Fe2Fe3_Fe8Fe9','O3O4_O9O10','Fe4Fe6_Fe10Fe12','O5O6_O11O12','O7O8_O1O2','Fe8Fe9_Fe2Fe3','O9O10_O3O4','Fe10Fe12_Fe4Fe6','O11O12_O5O6']

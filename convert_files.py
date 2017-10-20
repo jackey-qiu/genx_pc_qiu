@@ -9,8 +9,10 @@ def convert_best_pars_to_matlab_input_file(file_name=None,domain=None,layered_wa
     z_new=list(z-z[0])#first atom is mica surface, now mica surface has a z value of 0
     f=open(file_name,'w')
     f.write('% Param No. Best-Fit     Opt(1,2)             FIT    Initial      Std Dev\n\n')
-    index_gaussian_peaks=[np.where(domain.id==each_id)[0][0] for each_id in domain.id if 'Gaussian_' in each_id]
-    index_gaussian_peaks=[each for each in index_gaussian_peaks if data[5][each]!=0]#drop peaks of 0 occupancy
+    index_gaussian_peaks_old=[np.where(domain.id==each_id)[0][0] for each_id in domain.id if 'Gaussian_' in each_id]
+    index_gaussian_peaks=[each for each in index_gaussian_peaks_old if data[5][each]!=0]#drop peaks of 0 occupancy
+    if len(index_gaussian_peaks)<3:
+        index_gaussian_peaks=index_gaussian_peaks+[index_gaussian_peaks_old[i] for i in range(len(index_gaussian_peaks),3)]
     index_freeze_peaks=[np.where(domain.id==each_id)[0][0] for each_id in domain.id if 'Freezed_' in each_id]
     index_freeze_peaks=[each for each in index_freeze_peaks if data[5][each]!=0]#drop peaks of 0 occupancy
     z_freeze=[z_new[each_index] for each_index in index_freeze_peaks]

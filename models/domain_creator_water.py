@@ -9,7 +9,7 @@ import domain_creator
 """functions in this class
 adding_oxygen: add one molecule in the frame of spherical sphere (r, theta, phi should be specified)
 add_oxygen_pair: add two waters, the associated postions are determined by a ref point (not an atom position)r (in angstrom), and alpha
-add_oxygen_pair2: add two waters, the ref point is determined by an atom postion, so also specify the v_shift magnitude 
+add_oxygen_pair2: add two waters, the ref point is determined by an atom postion, so also specify the v_shift magnitude
 add_oxygen_pair_sphere: the added water will be on one of the sphere point (the sphere defined by the ref atom position + r), and alpha_list and theta_list need to be specified
 add_oxygen_triple_linear: same as add_oxygen_pair, but the ref_ps will be occupied by an oxygen
 add_oxygen_triple_circle: the three waters will be placed on the circle defined by a ref_point and r
@@ -26,7 +26,7 @@ f1=lambda x1,y1,z1,x2,y2,z2:np.array([[np.dot(x2,x1),np.dot(x2,y1),np.dot(x2,z1)
 #f2 calculate the distance b/ p1 and p2
 f2=lambda p1,p2:np.sqrt(np.sum((p1-p2)**2))
 
-#anonymous function f3 is to calculate the coordinates of basis with magnitude of 1.,p1 and p2 are coordinates for two known points, the 
+#anonymous function f3 is to calculate the coordinates of basis with magnitude of 1.,p1 and p2 are coordinates for two known points, the
 #direction of the basis is pointing from p1 to p2
 f3=lambda p1,p2:(1./f2(p1,p2))*(p2-p1)+p1
 
@@ -43,7 +43,7 @@ def extract_component(domain,id,name_list):
     temp=[vars(domain)[name][index] for name in name_list]
     for i in range(len(name_list)):
         print name_list[i]+'=',temp[i]
-        
+
 #set coor to atom with id in domain
 def set_coor(domain,id,coor):
     index=np.where(domain.id==id)[0][0]
@@ -82,7 +82,7 @@ class domain_creator_water():
         self.polyhedra_list=[]
         self.new_var_module=new_var_module
         self.domain_A,self.domain_B=self.create_equivalent_domains_2()
-    
+
     def build_super_cell(self,ref_domain,rem_atom_ids=None):
     #build a super cell based on the ref_domain, the super cell is actually two domains stacking together in x direction
     #rem_atom_ids is a list of atom ids you want to remove before building a super cell
@@ -90,14 +90,14 @@ class domain_creator_water():
         if rem_atom_ids!=None:
             for i in rem_atom_ids:
                 super_cell.del_atom(i)
-                
+
         def _extract_coor(domain,id):
             index=np.where(domain.id==id)[0][0]
             x=domain.x[index]+domain.dx1[index]+domain.dx2[index]+domain.dx3[index]
             y=domain.y[index]+domain.dy1[index]+domain.dy2[index]+domain.dy3[index]
             z=domain.z[index]+domain.dz1[index]+domain.dz2[index]+domain.dz3[index]
             return np.array([x,y,z])
-            
+
         for id in super_cell.id:
             index=np.where(ref_domain.id==id)[0][0]
             super_cell.add_atom(id=str(id)+'_+x',element=ref_domain.el[index], x=_extract_coor(ref_domain,id)[0]+1.0, y=_extract_coor(ref_domain,id)[1], z=_extract_coor(ref_domain,id)[2], u = ref_domain.u[index], oc = ref_domain.oc[index], m = ref_domain.m[index])
@@ -108,9 +108,9 @@ class domain_creator_water():
             super_cell.add_atom(id=str(id)+'_+x+y',element=ref_domain.el[index], x=_extract_coor(ref_domain,id)[0]+1.0, y=_extract_coor(ref_domain,id)[1]+1., z=_extract_coor(ref_domain,id)[2], u = ref_domain.u[index], oc = ref_domain.oc[index], m = ref_domain.m[index])
             super_cell.add_atom(id=str(id)+'_-x+y',element=ref_domain.el[index], x=_extract_coor(ref_domain,id)[0]-1.0, y=_extract_coor(ref_domain,id)[1]+1., z=_extract_coor(ref_domain,id)[2], u = ref_domain.u[index], oc = ref_domain.oc[index], m = ref_domain.m[index])
             super_cell.add_atom(id=str(id)+'_-x-y',element=ref_domain.el[index], x=_extract_coor(ref_domain,id)[0]-1.0, y=_extract_coor(ref_domain,id)[1]-1., z=_extract_coor(ref_domain,id)[2], u = ref_domain.u[index], oc = ref_domain.oc[index], m = ref_domain.m[index])
-        
+
         return super_cell
-        
+
     def create_equivalent_domains(self):
         new_domain_A=self.ref_domain.copy()
         new_domain_B=self.ref_domain.copy()
@@ -136,7 +136,7 @@ class domain_creator_water():
         new_domain_A.id=map(lambda x:x+self.domain_tag+'A',new_domain_A.id)
         new_domain_B.id=map(lambda x:x+self.domain_tag+'B',new_domain_B.id)
         return new_domain_A.copy(),new_domain_B.copy()
-	
+
     def adding_oxygen(self,domain,o_id,sorbate_coor,r,theta,phi):
         #sorbate_coor and r are in angstrom
         #the sorbate_coor is the origin of a sphere, oxygen added a point determined by r theta and phi
@@ -154,8 +154,8 @@ class domain_creator_water():
             domain.x[o_index]=o_coor[0]
             domain.y[o_index]=o_coor[1]
             domain.z[o_index]=o_coor[2]
-            
-            
+
+
     def add_oxygen_pair(self,domain,O_ids,ref_point,r,alpha):
         #add single oxygen pair to a ref_point,which does not stand for an atom, the xyz for this point will be set as
         #three fitting parameters.
@@ -167,7 +167,7 @@ class domain_creator_water():
         try:
             index_1=np.where(domain.id==O_ids[0])[0][0]
             index_2=np.where(domain.id==O_ids[1])[0][0]
-        except:   
+        except:
             point1=np.array([ref_pt[0]-x_shift,ref_pt[1]-y_shift,ref_pt[2]])
             point2=np.array([ref_pt[0]+x_shift,ref_pt[1]+y_shift,ref_pt[2]])
             domain.add_atom(id=O_ids[0],element='O',x=point1[0],y=point1[1],z=point1[2])
@@ -239,7 +239,7 @@ class domain_creator_water():
             domain.x[O_index1],domain.y[O_index1],domain.z[O_index1]=point1[0],point1[1],point1[2]
             domain.x[O_index2],domain.y[O_index2],domain.z[O_index2]=point2[0],point2[1],point2[2]
         return np.append([point1],[point2],axis=0)
-        
+
     def add_oxygen_pair_muscovite(self,domain,ref_id,O_ids,v_shift,basis=np.array([5.038,5.434,7.3707])):
     #v_shift and r are in unit of angstrom, and phi in degree
     #use coordinates during fitting rather than freezing the ref to the bulk position
@@ -268,7 +268,7 @@ class domain_creator_water():
             domain.x[O_index1],domain.y[O_index1],domain.z[O_index1]=point1[0],point1[1],point1[2]
             domain.x[O_index2],domain.y[O_index2],domain.z[O_index2]=point2[0],point2[1],point2[2]
         return np.append([point1],[point2],axis=0)
-        
+
     def cal_geometry_pars_from_coors(self,domain,ref_ids,sorbate_ids):
         def _shift_in_unit_cell(coors):
             [x,y,z]=coors
@@ -283,7 +283,7 @@ class domain_creator_water():
                 elif y>5.434:
                     y=y-5.434
             return np.array([x,y,z])
-            
+
         basis=np.array([5.038,5.434,7.3707])
         ref_coors=[_shift_in_unit_cell(domain_creator.extract_coor(domain,ref_id)*basis) for ref_id in ref_ids]
         sorbate_coors=[_shift_in_unit_cell(domain_creator.extract_coor(domain,sorbate_id)*basis) for sorbate_id in sorbate_ids]
@@ -294,7 +294,7 @@ class domain_creator_water():
         vec_sorbate=sorbate_coors[1]-sorbate_coors[0]
         alpha=np.arccos(np.dot(vec_ref,vec_sorbate)/f2(vec_ref,np.array([0,0,0]))/f2(vec_sorbate,np.array([0,0,0])))/np.pi*180.
         return v_shift,alpha,y_shift
-        
+
     def add_single_oxygen(self,domain,ref_id,O_id,v_shift):
     #v_shift and r are in unit of angstrom
     #use coordinates during fitting rather than freezing the ref to the bulk position
@@ -315,7 +315,30 @@ class domain_creator_water():
         if O_index!=None:
             domain.x[O_index],domain.y[O_index],domain.z[O_index]=ref_point[0],ref_point[1],ref_point[2]
         return np.array([ref_point])
-        
+
+
+    def add_single_oxygen_2(self,domain,ref_id,O_id,v_shift):
+        #v_shift and r are in unit of angstrom
+        #use coordinates during fitting rather than freezing the ref to the bulk position
+        #here only add one water molecule each time (not a couple), so dont need r and alpha
+        #water coordinates will have 0 for x and y
+            basis=np.array([5.038,5.434,7.3707])*[0,0,1]
+            ref_point=None
+            if len(ref_id)==1:
+                ref_point=(domain_creator.extract_coor(domain,ref_id)+[0,0,v_shift/basis[-1]])
+            if len(ref_id)==2:
+                ref_point1=domain_creator.extract_coor(domain,ref_id[0])*basis
+                ref_point2=domain_creator.extract_coor(domain,ref_id[1])*basis
+                ref_point=((ref_point1+ref_point2)/2+[0,0,v_shift])/[1,1,basis[-1]]
+            O_index=None
+            try:
+                O_index=np.where(domain.id==O_id)[0][0]
+            except:
+                domain.add_atom( O_id, "O",  ref_point[0] ,ref_point[1], ref_point[2] ,4.,     1.00000e+00 ,     1.00000e+00 )
+            if O_index!=None:
+                domain.x[O_index],domain.y[O_index],domain.z[O_index]=ref_point[0],ref_point[1],ref_point[2]
+            return np.array([ref_point])
+
     def add_oxygen_pair_sphere(self,domain,o_id_list=[],sorbate_id='O_1',r=1.,theta_list=[],phi_list=[]):
         #sorbate_coor and r are in angstrom
         #the sorbate_coor is the origin of a sphere, oxygen added at point determined by r theta and phi
@@ -347,7 +370,7 @@ class domain_creator_water():
             domain.x[o2_index]=o2_coor[0]
             domain.y[o2_index]=o2_coor[1]
             domain.z[o2_index]=o2_coor[2]
-            
+
     def add_oxygen_triple_linear(self,domain,O_ids,ref_point,r,alpha):
         #add single oxygen pair to a ref_point,which itself stands for an atom, the xyz for this point will be set as
         #three fitting parameters.O_id will be attached at the end of each id for the oxygen
@@ -358,7 +381,7 @@ class domain_creator_water():
             index_1=np.where(domain.id==O_ids[0])[0][0]
             index_2=np.where(domain.id==O_ids[1])[0][0]
             index_3=np.where(domain.id==O_ids[1])[0][0]
-        except:   
+        except:
             point1=np.array([ref_pt[0]-x_shift,ref_pt[1]-y_shift,ref_pt[2]])
             point2=np.array([ref_pt[0]+x_shift,ref_pt[1]+y_shift,ref_pt[2]])
             domain.add_atom(id=O_ids[0],element='O',x=point1[0],y=point1[1],z=point1[2],u=1.)
@@ -370,7 +393,7 @@ class domain_creator_water():
             domain.x[index_1],domain.y[index_1],domain.z[index_1]=point1[0],point1[1],point1[2]
             domain.x[index_2],domain.y[index_2],domain.z[index_2]=point2[0],point2[1],point2[2]
             domain.x[index_3],domain.y[index_3],domain.z[index_3]=ref_point[0],ref_point[1],ref_point[2]
-      
+
     def add_oxygen_triple_circle(self,domain,O_ids,ref_point,r,alpha1,alpha2,alpha3):
         #add triple oxygen to a ref_point,which itself stands for an atom, the xyz for this point will be set as
         #three fitting parameters.O_id will be attached at the end of each id for the oxygen
@@ -385,7 +408,7 @@ class domain_creator_water():
             index_1=np.where(domain.id==O_ids[0])[0][0]
             index_2=np.where(domain.id==O_ids[1])[0][0]
             index_3=np.where(domain.id==O_ids[1])[0][0]
-        except:   
+        except:
             point1=np.array(ref_point[0]+x_shift1,ref_point[1]+y_shift1,ref_point[2])
             point2=np.array(ref_point[0]+x_shift2,ref_point[1]+y_shift2,ref_point[2])
             point3=np.array(ref_point[0]+x_shift3,ref_point[1]+y_shift3,ref_point[2])
@@ -399,5 +422,3 @@ class domain_creator_water():
             domain.x[index_1],domain.y[index_1],domain.z[index_1]=point1[0],point1[1],point1[2]
             domain.x[index_2],domain.y[index_2],domain.z[index_2]=point2[0],point2[1],point2[2]
             domain.x[index_3],domain.y[index_3],domain.z[index_3]=point3[0],point3[1],point3[2]
-
-

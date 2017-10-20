@@ -82,10 +82,18 @@ def generate_plot_files(output_file_path,sample,rgh,data,fit_mode, z_min=0,z_max
                 A_list_Fourier_synthesis[-1]=0
             q=np.pi*2*sample.unit_cell.abs_hkl(h,k,y)
             rough = (1-rgh.beta)**2/(1+rgh.beta**2 - 2*rgh.beta*np.cos(q*sample.unit_cell.c*np.sin(np.pi-sample.unit_cell.beta)/2))
-            try:
-                exp_const,rgh.mu,re,auc=sample.domain['exp_factors']
+            #try:
+            #    exp_const,rgh.mu,re,auc=sample.domain['exp_factors']
+            #    pre_factor=3e6*np.exp(-exp_const*rgh.mu/q)*(4*np.pi*re/auc)**2/q**2
+            #except:
+            #    pre_factor=1
+            if version>=1.2:
+                exp_const,mu,re,auc,ra_conc=sample.domain['exp_factors']
                 pre_factor=3e6*np.exp(-exp_const*rgh.mu/q)*(4*np.pi*re/auc)**2/q**2
-            except:
+            elif version>=1.1:
+                exp_const,mu,re,auc=sample.domain['exp_factors']
+                pre_factor=3e6*np.exp(-exp_const*rgh.mu/q)*(4*np.pi*re/auc)**2/q**2
+            else:
                 pre_factor=1
             f=abs(sample.calculate_structure_factor(h,k,x,y,index=i,fit_mode=fit_mode,height_offset=height_offset,version=version))
             f=rough*pre_factor*f*f
@@ -134,10 +142,18 @@ def generate_plot_files(output_file_path,sample,rgh,data,fit_mode, z_min=0,z_max
             dL_dumy=np.array(dL_dumy)
 
             f_dumy=abs(sample.calculate_structure_factor(h_dumy,k_dumy,l_dumy,None,index=0,fit_mode=fit_mode,height_offset=height_offset,version=version))
-            try:
+            #try:
+            #    exp_const,mu,re,auc=sample.domain['exp_factors']
+            #    pre_factor=3e6*np.exp(-exp_const*mu/q_dumy)*(4*np.pi*re/auc)**2/q_dumy**2
+            #except:
+            #    pre_factor=1
+            if version>=1.2:
+                exp_const,mu,re,auc,ra_conc=sample.domain['exp_factors']
+                pre_factor=3e6*np.exp(-exp_const*mu/q_dumy)*(4*np.pi*re/auc)**2/q_dumy**2
+            elif version>=1.1:
                 exp_const,mu,re,auc=sample.domain['exp_factors']
                 pre_factor=3e6*np.exp(-exp_const*mu/q_dumy)*(4*np.pi*re/auc)**2/q_dumy**2
-            except:
+            else:
                 pre_factor=1
             f_dumy=rough_dumy*pre_factor*f_dumy*f_dumy
             c_projected_on_z=sample.unit_cell.vol()/(sample.unit_cell.a*sample.unit_cell.b*np.sin(sample.unit_cell.gamma))
@@ -756,10 +772,10 @@ def plotting_modelB(object=[],fig=None,index=[2,3,1],color=['0.35','r','c','m','
 
     ax=fig.add_subplot(index[0],index[1],index[2])
     ax.set_yscale('log')
-    ax.scatter(object[0][:,0],object[0][:,1],marker='o',s=3,facecolors='none',edgecolors=color[0],label=label[0])
-    ax.errorbar(object[0][:,0],object[0][:,1],yerr=object[0][:,2],fmt=None,ecolor=color[0])
+    ax.scatter(object[0][:,0],object[0][:,1],marker='o',s=3,facecolors='none',edgecolors=color[0],label=label[0],alpha=0.5)
+    ax.errorbar(object[0][:,0],object[0][:,1],yerr=object[0][:,2],fmt=None,ecolor=color[0],alpha=0.5)
     for i in range(len(object)-1):#first item is experiment data (L, I, err) while the second one is simulated result (L, I_s)
-        l,=ax.plot(object[i+1][:,0],object[i+1][:,1],color=color[i+1],lw=1,label=label[i+1])
+        l,=ax.plot(object[i+1][:,0],object[i+1][:,1],color=color[i+1],lw=lw,label=label[i+1])
         l.set_dashes(l_dashes[i])
     if index[2] in [7,8,9]:
         pyplot.xlabel('L(r.l.u)',axes=ax,fontsize=12)
@@ -807,7 +823,7 @@ def plotting_modelB(object=[],fig=None,index=[2,3,1],color=['0.35','r','c','m','
         pass
     else:
         if title[0]=='0 0 L':
-            pyplot.ylim((10,10000))
+            pyplot.ylim((1,50000))
             xtick_labels=ax.get_xticks().tolist()
             x_tick_new=[]
             for each in xtick_labels:
@@ -818,10 +834,10 @@ def plotting_modelB(object=[],fig=None,index=[2,3,1],color=['0.35','r','c','m','
             ax.set_xticklabels(x_tick_new)
             #pyplot.xlim((0,20))
         elif title[0]=='3 0 L':
-            pyplot.ylim((10,5000))
+            pyplot.ylim((1,5000))
         elif title[0] in ['2 1 L','2 -1 L']:
-            pyplot.ylim((10,10000))
-        else:pyplot.ylim((10,50000))
+            pyplot.ylim((1,10000))
+        else:pyplot.ylim((1,50000))
     #pyplot.ylim((1,1000))
     #settings for publication
     #pyplot.title('('+title[0]+')',position=(0.5,1.001),weight=4,size=10,clip_on=True)
@@ -874,6 +890,33 @@ def plotting_many_modelB(save_file='D://pic.png',head='P:\\My stuff\\Manuscripts
         ob=object[i]
         plotting_modelB(object=ob,fig=fig,index=[index[0],index[1],i+1],color=color,l_dashes=l_dashes,lw=lw,label=label,title=[title[order]],marker=marker,legend=legend[order],fontsize=fontsize)
         #plotting_modelB(object=ob,fig=fig,index=[1,1,i+1],color=color,l_dashes=l_dashes,lw=lw,label=label,title=[title[order]],marker=marker,legend=legend[order],fontsize=fontsize)
+    fig.tight_layout()
+    fig.savefig(save_file,dpi=300)
+    return fig
+
+def plotting_many_modelB_2(save_file='D://pic.png',fig_size=(8,6),head='P:\\My stuff\\Manuscripts\\hematite rcut\\pb on cmp rcut v10\dump_files\\',object_files=['temp_plot_O1O3_O5O7','temp_plot_O1O3_O1O4_no_water_Oct12'],index=[3,3],color=['blue','green','red','#984ea3','#ff7f00'],lw=2.,l_dashes=[(None,None),(None,None),(None,None),(None,None),(None,None),(None,None)],label=['Experimental data','Model1 results','Model2 results','Model3','Model4','Model5','Model6'],marker=['p'],title=['0 0 L','0 2 L','1 0 L','1 1 L','2 0 L','2 2 L','3 0 L','2 -1 L','2 1 L'],legend=[False,False,False,False,False,False,False,False,False],fontsize=10):
+    #plotting model results simultaneously, object_files=[file1,file2,file3] file is the path of a dumped data/model file
+    fig=pyplot.figure(figsize=fig_size)
+    object_sets=[pickle.load(open(os.path.join(head,file))) for file in object_files]#each_item=[00L,02L,10L,11L,20L,22L,30L,2-1L,21L]
+    object=[]
+    for i in range(len(object_sets[0])):
+        object.append([])
+        for j in range(len(object_sets)):
+            if j==0:
+                object[-1].append(object_sets[j][i][0])
+            object[-1].append(object_sets[j][i][1])
+    if len(object_sets[0])==1:#case for plotting muscovite (assuming there is one specular rod)
+        index=[2,1]
+    else:#case for plotting hematite (9 rods in total including one specular rod)
+        pass
+
+    for i in range(len(object)):
+        if i<index[0]*index[1]:
+            order=i
+            ob=object[i]
+            plotting_modelB(object=ob,fig=fig,index=[index[0],index[1],i+1],color=color,l_dashes=l_dashes,lw=lw,label=label,title=[title[order]],marker=marker,legend=legend[order],fontsize=fontsize)
+        else:
+            pass
     fig.tight_layout()
     fig.savefig(save_file,dpi=300)
     return fig
@@ -939,6 +982,29 @@ def plot_many_experiment_data(data_files=['D:\\Google Drive\\data\\400uM_Sb_hema
             pyplot.ylabel('|F|',axes=ax,fontsize=fontsize)
     return True
 
+lateral_size=[5.4,5.1,7.3,8.6]
+lateral_size_errors=[0.5,0.1,0.6,0.5]
+vertical_size=[0.974,1.61,1.6,2.48]
+vertical_size_error=[0.01,0.01,0.01,0.04]
+labels=['IS=1.8 mM','IS=2.9 mM','IS=12 mM', 'IS=102 mM']
+def plot_NP_size_evolution(file_head=module_path_locator(),lateral=lateral_size,lateral_error=lateral_size_errors,vertical=vertical_size,vertical_error=vertical_size_error,label=labels,color_type=1):
+    colors=set_color(len(lateral),color_type)
+    hfont = {'fontname':['times new roman','Helvetica'][0]}
+    fig=pyplot.figure(figsize=(8,5))
+    ax=fig.add_subplot(1,1,1)
+    pyplot.ylabel("Vertical size (nm)",fontsize=12)
+    pyplot.xlabel("Lateral size (nm)",fontsize=12)
+    for i in range(len(lateral)):
+        x,y,x_er,y_er,label,color=lateral[i],vertical[i],lateral_error[i],vertical_error[i],labels[i],colors[i]
+        ax.errorbar(x,y,xerr=x_er,yerr=y_er,fmt='o',label=label,color=color)
+    #for i in range(len(lateral)-1):
+    #    ax.arrow(lateral[i],vertical[i],lateral[i+1]-lateral[i],vertical[i+1]-vertical[i],head_width=0.05, head_length=0.2, fc='k', ec='k',ls=':',color=colors[i])
+        ax.annotate(label,xy=(x-0.4,y+0.05),xytext=(x-0.4,y+0.05),fontsize=12)
+    #ax.legend(fontsize=12,loc=2)
+    ax.set_ylim(0.8,2.8)
+    fig.savefig(os.path.join(file_head,'NP_size_evolution.png'),dpi=300)
+    return fig
+
 def plot_multiple_e_profiles(file_head=module_path_locator(),dump_files=['temp_plot_eden_0NaCl','temp_plot_eden_1NaCl','temp_plot_eden_10NaCl','temp_plot_eden_100NaCl'],label_marks=['0mM NaCl','1mM NaCl','10mM NaCl','100mM NaCl'],color_type=5):
     colors=set_color(len(dump_files),color_type)
     fig=pyplot.figure(figsize=(6,8))
@@ -962,13 +1028,37 @@ def plot_multiple_e_profiles(file_head=module_path_locator(),dump_files=['temp_p
     fig.savefig(os.path.join(file_head,'multiple_eprofiles.png'),dpi=300)
     return fig
 
-
-def plot_multiple_e_profiles_2(file_head=module_path_locator(),dump_files=['temp_plot_eden_0NaCl_0502','temp_plot_eden_1NaCl_0502','temp_plot_eden_10NaCl_0502','temp_plot_eden_100NaCl_0502'],label_marks=['0mM NaCl','1mM NaCl','10mM NaCl','100mM NaCl'],color_type=1):
+dump_files_genx_0=['temp_plot_eden_0NaCl_0502','temp_plot_eden_1NaCl_0502','temp_plot_eden_10NaCl_0502','temp_plot_eden_100NaCl_0502']
+labels_genx_0=['0mM NaCl','1mM NaCl','10mM NaCl','100mM NaCl']
+dump_files_genx_1=['temp_plot_eden_100mM_NH4Cl_Jul10_2017','temp_plot_eden_100mM_CH5NCl_Jul23_2017','temp_plot_eden_100mM_LiCl_Jul10_2017','temp_plot_eden_100mM_NaCl_Jul10_2017','temp_plot_eden_100mM_KCl_Jul23_2017','temp_plot_eden_100mM_RbCl_Jul10_2017','temp_plot_eden_32mM_MgCl2_Jul10_2017','temp_plot_eden_32mM_CaCl2_Jul10_2017']
+labels_genx_1=['100 mM NH4Cl (2.4 Zr/AUC)','100 mM CH5NCl (4.4 Zr/AUC)','100 mM LiCl (2.1 Zr/AUC)','100 mM NaCl (3.7 Zr/AUC)','100 mM KCl (3.9 Zr/AUC)','100 mM RbCl (3.9 Zr/AUC)','32 mM MgCl2 (2.4 Zr/AUC)','32 mM CaCl2 (3.9 Zr/AUC)']
+dump_files_genx_2=['temp_plot_eden_100LiCl_Oct4_2017','temp_plot_eden_100NaCl_Oct4_2017','temp_plot_eden_100KCl_Oct4_2017','temp_plot_eden_100RbCl_Oct4_2017','temp_plot_eden_100CsCl_Oct4_2017']
+labels_genx_2=[r'100 mM LiCl [5.04(0.01) Zr/AUC]',r'100 mM NaCl [4.57(0.6) Zr/AUC]',r'100 mM KCl [3.92(1) Zr/AUC]',r'100 mM RbCl [2.26(0.15) Zr/AUC]',r'100 mM CsCl [1.58(0.8) Zr/AUC]']
+dump_files_genx_3=['temp_plot_eden_100LiCl_Oct5_2017','temp_plot_eden_100NaCl_Oct5_2017','temp_plot_eden_100RbCl_Zr_Oct5_2017','temp_plot_eden_100RbCl_Rb_Oct5_2017','temp_plot_eden_100CsCl_Oct5_2017']
+labels_genx_3=[r'100 mM LiCl [4.40(1) Zr/AUC]',r'100 mM NaCl [3.98(0.68) Zr/AUC]',r'100 mM RbCl [2.23(0.04) Zr/AUC]',r'100 mM RbCl [~1.0(0.1) Rb/AUC]',r'100 mM CsCl [1.56(0.04) Zr/AUC]']
+dump_files_genx_4=['temp_plot_eden_100LiCl_Oct5_2017','temp_plot_eden_100NaCl_Oct5_2017','temp_plot_eden_100NH4Cl_Zr_Oct10_2017','temp_plot_eden_100KCl_Zr_Oct10_2017','temp_plot_eden_100RbCl_Zr_Oct5_2017','temp_plot_eden_100RbCl_Rb_Oct10_2017','temp_plot_eden_100CsCl_Oct5_2017']
+labels_genx_4=[r'100 mM LiCl [4.40(1) Zr/AUC]',r'100 mM NaCl [3.98(0.68) Zr/AUC]',r'100 mM NH4Cl [3.0(0.8) Zr/AUC]',r'100 mM KCl [3.6(0.1) Zr/AUC]',r'100 mM RbCl [2.23(0.04) Zr/AUC]',r'100 mM RbCl [0.66(0.01) Rb/AUC]',r'100 mM CsCl [1.56(0.04) Zr/AUC]']
+def plot_multiple_e_profiles_2(file_head=module_path_locator(),dump_files=dump_files_genx_4,label_marks=labels_genx_4,color_type=1):
+    def _cal_percentage_(data,cutoff=5,label=''):#use to calculate the percentage of resonant element area within the cutoff distance from mineral surface
+        z,e=data[0],data[1]
+        total_area=0
+        target_area=0
+        for i in range(len(z))[1:]:
+            x1,y1=z[i],e[i]
+            x0,y0=z[i-1],e[i-1]
+            area=abs(x1-x0)*min([y0,y1])+abs(x1-x0)*abs(y1-y0)/2
+            total_area+=area
+            if x1<=cutoff:
+                target_area+=area
+        print '<<Case of '+label+'>>'
+        print 'The percentage of area plot within '+str(cutoff)+' A is:'+str(target_area/total_area*100)+'%'
+        return None
     colors=set_color(len(dump_files),color_type)
-    fig=pyplot.figure(figsize=(6,6))
+    fig=pyplot.figure(figsize=(5,9))
     ax1=fig.add_subplot(1,1,1)
-    pyplot.ylabel("e density",fontsize=12)
-    pyplot.xlabel(r"$\rm{Z(\AA)}$",fontsize=12)
+    hfont = {'fontname':['times new roman','Helvetica'][0]}
+    pyplot.ylabel(r"$\rm{Normalized\ Electron\ Density}$",fontsize=12,**hfont)
+    pyplot.xlabel(r"$\rm{Height\ from\ the\ Surface(\AA)}$",fontsize=12,**hfont)
     #pyplot.title('Total e profile',fontsize=12)
 
     #ax2=fig.add_subplot(2,1,2)
@@ -978,21 +1068,34 @@ def plot_multiple_e_profiles_2(file_head=module_path_locator(),dump_files=['temp
     for i in range(len(dump_files)):
         data_eden=pickle.load(open(os.path.join(file_head,dump_files[i]),"rb"))
         edata,labels=data_eden[0],data_eden[1]
-        ax1.plot(np.array(edata[-1][0,:]),edata[-1][1,:]+i*3,color=colors[i],label=label_marks[i],lw=2)
-        ax1.fill_between(np.array(edata[-1][0,:]),edata[-1][2,:]*0+i*3,edata[-1][2,:]+i*3,where=edata[-1][2,:]>(edata[-1][2,:]*0+0.00000001),color=colors[i],alpha=0.6)
-    ax1.legend(fontsize=12)
+        ax1.plot(np.array(edata[-1][0,:]),edata[-1][1,:]+i*5,color=colors[i],label=label_marks[i],lw=2)
+        ax1.fill_between(np.array(edata[-1][0,:]),edata[-1][2,:]*0+i*5,edata[-1][2,:]+i*5,color=colors[i],alpha=0.6)
+        ax1.annotate(label_marks[i],xy=(18,edata[-1][1,:][-1]+i*5-0.5),xytext=(18,edata[-1][1,:][-1]+i*5-0.5),fontsize=10,**hfont)
+        _cal_percentage_([edata[-1][0,:],edata[-1][2,:]],label=label_marks[i])
+    #ax1.legend(fontsize=12)
     #ax2.legend(fontsize=12)
-    ax1.set_ylim(0,18)
-    ax1.plot([2.5,2.5],[0,12],':',color='black')
-    ax1.plot([4.3,4.3],[0,12],':',color='black')
+    ax1.set_ylim(0,38)
+    ax1.set_xlim(-5,50)
+    ax1.plot([2.5,2.5],[0,40],':',color='black')
+    ax1.plot([5,5],[0,40],':',color='black')
+    #ax1.plot([4.3,4.3],[0,12],':',color='black')
+    for label in ax1.get_xticklabels() :
+        label.set_fontproperties(hfont['fontname'])
+        label.set_fontsize(12)
+    for label in ax1.get_yticklabels() :
+        label.set_fontproperties(hfont['fontname'])
+        label.set_fontsize(12)
     fig.tight_layout()
-    fig.savefig(os.path.join(file_head,'multiple_eprofiles2.png'),dpi=300)
+    fig.savefig(os.path.join(file_head,'multiple_eprofiles_genx_results.png'),dpi=300)
     return fig
+
 dump_file_1=[['total_e_profile_0mM_NaCl','mica_zr_0mM_NaCl_MD_May04_rho'],['total_e_profile_1mM_NaCl','mica_zr_1mM_NaCl_MD_May04_rho'],['total_e_profile_10mM_NaCl','mica_zr_10mM_NaCl_MD_May04_rho'],['total_e_profile_100mM_NaCl','mica_zr_100mM_NaCl_MD_May04_rho']]
 label_1=['0 mM NaCl','1 mM NaCl','10 mM NaCl','100 mM NaCl']
 dump_file_2=[['total_e_profile_100mM_LiCl','mica_zr_100mM_LiCl_MD_Jun12_rho'],['total_e_profile_100mM_NaCl','mica_zr_100mM_NaCl_MD_May04_rho'],['total_e_profile_100mM_RbCl_Jun29','Zr_mica_zr_100mM_RbCl_MD_Jun29_rho'],['total_e_profile_100mM_RbCl_Jun29','mica_Rb_100mM_RbCl_MD_Jun29_rho'],['total_e_profile_32mM_CaCl2_APS_Jun29','mica_zr_32mM_CaCl2_MD_Jun29_rho_APS'],['total_e_profile_32mM_MgCl2_ESRF','mica_zr_32mM_MgCl2_MD_Jun29_rho_ESRF'],['total_e_profile_100mM_NH4Cl','mica_zr_100mM_NH4Cl_MD_Jun27_rho']]
 label_2=['100 mM LiCl (3.4 Zr/AUC)','100 mM NaCl (3.4 Zr/AUC)','100 mM RbCl(3.2 Zr/AUC)','100 mM RbCl(2.4 Rb/AUC)','32 mM CaCl2 (5.1 Zr/AUC)','32 mM MgCl2 (3.7 Zr/AUC)','100 mM NH4Cl (2.4 Zr/AUC)']
-def plot_multiple_e_profiles_matlab_output(file_head=module_path_locator(),dump_files=dump_file_2,label_marks=label_2,color_type=1):
+dump_file_Jul11=[['total_e_profile_100mM_NH4Cl_Jul11','mica_zr_100mM_NH4Cl_MD_Jul11_rho'],['total_e_profile_100mM_LiCl_Jul11','mica_zr_100mM_LiCl_MD_Jul11_rho'],['total_e_profile_100mM_NaCl_Jul11','mica_zr_100mM_NaCl_MD_Jul11_rho'],['total_e_profile_100mM_KCl_Aug10','mica_zr_100mM_KCl_MD_Aug10_rho'],['total_e_profile_100mM_RbCl_Jun29','Zr_mica_zr_100mM_RbCl_MD_Jun29_rho'],['total_e_profile_100mM_CsCl_Aug10','mica_zr_100mM_CsCl_MD_Aug10_rho'],['total_e_profile_32mM_MgCl2_ESRF_Jul11','mica_zr_32mM_MgCl2_MD_Jul11_rho_ESRF'],['total_e_profile_32mM_CaCl2_APS_Jul11','mica_zr_32mM_CaCl2_MD_Jul11_rho_APS']]
+label_Jul11=['100 mM NH4Cl (1.6 Zr/AUC)','100 mM LiCl (2.3 Zr/AUC)','100 mM NaCl (3.4 Zr/AUC)','100 mM KCl (3.3 Zr/AUC)','100 mM RbCl(3.2 Zr/AUC)','100 mM CsCl(3.4 Zr/AUC)','32 mM MgCl2 (3.6 Zr/AUC)','32 mM CaCl2 (5.4 Zr/AUC)',]
+def plot_multiple_e_profiles_matlab_output(file_head=module_path_locator(),dump_files=dump_file_Jul11,label_marks=label_Jul11,color_type=1):
 
     colors=set_color(len(dump_files),color_type)
     fig=pyplot.figure(figsize=(4,8))
@@ -1015,9 +1118,9 @@ def plot_multiple_e_profiles_matlab_output(file_head=module_path_locator(),dump_
         ax1.annotate(label_marks[i],xy=(17,edata[:,1][-1]+i*5+1.5),xytext=(16,edata[:,1][-1]+i*5+1.5),fontsize=10,**hfont)
     #ax1.legend(fontsize=10)
     #ax2.legend(fontsize=12)
-    ax1.set_ylim(0,37)
+    ax1.set_ylim(0,47)
     ax1.set_xlim(-5,50)
-    ax1.plot([2.5,2.5],[0,32],':',color='black')
+    ax1.plot([2.5,2.5],[0,42],':',color='black')
     for label in ax1.get_xticklabels() :
         label.set_fontproperties(hfont['fontname'])
         label.set_fontsize(12)
@@ -1189,7 +1292,7 @@ def plot_all(path=module_path_locator(),make_offset_of_total_e=False,fit_e_profi
     #At the same time, the total_e - raxs_e - water is actually total_e - 2*raxs_e -water
     PATH=path
     #which plots do you want to create
-    plot_e_model,plot_e_FS,plot_ctr,plot_raxr,plot_AP_Q=1,1,1,1,0
+    plot_e_model,plot_e_FS,plot_ctr,plot_raxr,plot_AP_Q=1,1,0,0,0
 
     #specify file paths (files are dumped files when setting running_mode=False in GenX script)
     e_file=os.path.join(PATH,"temp_plot_eden")#e density from model
@@ -1225,28 +1328,30 @@ def plot_all(path=module_path_locator(),make_offset_of_total_e=False,fit_e_profi
                     pass
             else:
                 pass
-            ax.plot(np.array(edata[i][0,:]),edata[i][1,:],color='black',label="Total e density")
-            ax.plot(np.array(edata[i][0,:]),edata[i][2,:],color='blue')
-            ax.fill_between(np.array(edata[i][0,:]),edata[i][2,:],alpha=0.6,color='m',label="RAXS element e profile (MD)")
+            ax.plot(np.array(edata[i][0,:]),edata[i][1,:],color='black',lw=2.5,linestyle='-',label="Total e density")
+            ax.plot([0,0],[0,max(edata[i][1,:])+2],linestyle=':',color='m',lw=3,label='Mineral surface')
+            #ax.plot(np.array(edata[i][0,:]),edata[i][2,:],color='blue')
+            ax.fill_between(np.array(edata[i][0,:]),edata[i][2,:],alpha=0.2,color='m',label="RAXS element e profile (MD)")
             #try:#some domain may have no raxr element
             #    ax.plot(np.array(edata[i][0,:]),edata[i][2,:],color='g',label="RAXS element e profile (MD)")
             #except:
             #    pass
             pyplot.title(labels[i],fontsize=11)
             if plot_e_FS:
-                if i==0:
+                #if i==0:
+                if i!=N-1:
                     ax.plot(data_eden_FS[0],list(np.array(data_eden_FS[2])[:,i]),color='r',label="RAXR imaging (MI)")
                     #ax.fill_between(data_eden_FS[0],list(np.array(data_eden_FS[2])[:,i]),color='m',alpha=0.6)
                     #clip off negative part of the e density through Fourier thynthesis
                     #ax.fill_between(data_eden_FS[0],list(edata[i][1,:]-edata[i][3,:]-np.array(data_eden_FS[2])[:,i]*(np.array(data_eden_FS[2])[:,i]>0.01)),color='black',alpha=0.6,label="Total e - LayerWater - RAXR")
                     ax.fill_between(data_eden_FS[0],edata[i][3,:],color='green',alpha=0.4,label="LayerWater")
-                    ax.plot(data_eden_FS_sub[0],list(np.array(data_eden_FS_sub[2])[:,i]),color='black',label="RAXR imaging (MD)")
+                    ax.plot(data_eden_FS_sub[0],list(np.array(data_eden_FS_sub[2])[:,i]),color='blue',label="RAXR imaging (MD)")
                     #ax.fill_between(data_eden_FS_sub[0],list(np.array(data_eden_FS_sub[2])[:,i]),color='c',alpha=0.6)
                 elif i==N-1:
                     ax.plot(data_eden_FS[0],data_eden_FS[1],color='r',label="RAXR imaging (MI)")
                     #ax.fill_between(data_eden_FS[0],data_eden_FS[1],color='m',alpha=0.6)
                     #ax.fill_between(data_eden_FS[0],edata[i][1,:]-data_eden_FS[1],color='black',alpha=0.6,label="Total e - RAXR(MI)")
-                    ax.plot(data_eden_FS[0],edata[i][3,:],color='green',alpha=1,ls='-',lw=1.5,label="LayerWater")
+                    ax.fill_between(data_eden_FS[0],edata[i][3,:],color='green',alpha=0.4,label="LayerWater")
                     '''
                     if make_offset_of_total_e:
                         ax.fill_between(data_eden_FS[0],list(edata[i][1,:]-edata[i][3,:]-2*edata[i][2,:]),color='black',alpha=0.6,label="Total e - raxr (MD) - LayerWater")
@@ -1264,13 +1369,14 @@ def plot_all(path=module_path_locator(),make_offset_of_total_e=False,fit_e_profi
                     z_temp=np.array(data_eden_FS[0])[:,np.newaxis]
                     e_den_subtracted=np.append(z_temp,eden_temp,axis=1)
                     e_den_raxr_MI=np.append(np.array(data_eden_FS[0])[:,np.newaxis],(np.array(data_eden_FS[1])*(np.array(data_eden_FS[1])>0.01))[:,np.newaxis],axis=1)
-                    ax.plot(data_eden_FS_sub[0],data_eden_FS_sub[1],color='black',label="RAXR imaging (MD)")
+                    ax.plot(data_eden_FS_sub[0],data_eden_FS_sub[1],color='blue',label="RAXR imaging (MD)")
                     #ax.fill_between(data_eden_FS_sub[0],data_eden_FS_sub[1],color='m',alpha=0.6)
             if i==N-1:pyplot.xlabel('Z(Angstrom)',axes=ax,fontsize=12)
             pyplot.ylabel('E_density',axes=ax,fontsize=12)
             pyplot.ylim(ymin=0)
-            pyplot.xlim(xmin=-7.4)
-            pyplot.legend(fontsize=11,ncol=1)
+            pyplot.xlim(xmin=-15)
+            pyplot.xlim(xmax=15)
+            if i==N-1:pyplot.legend(fontsize=11,ncol=1)
         fig.tight_layout()
         fig.savefig(e_file+".png",dpi=300)
     if plot_ctr:
@@ -1308,7 +1414,8 @@ def plot_all(path=module_path_locator(),make_offset_of_total_e=False,fit_e_profi
     if fit_e_profile:
         pyplot.figure()
         print '##############Total e -layer water#################'
-        gaussian_fit(e_den_subtracted,zs=None,water_scaling=water_scaling)
+        #gaussian_fit(e_den_subtracted,zs=None,water_scaling=water_scaling)
+        gaussian_fit_DE(e_den_subtracted,zs=3,water_scaling=water_scaling)
         pyplot.title('Total e - layer water')
 
         pyplot.figure()
@@ -1324,6 +1431,77 @@ def plot_all(path=module_path_locator(),make_offset_of_total_e=False,fit_e_profi
         #return e_den_subtracted,data_eden_FS
         '''
     return water_scaling
+
+def gaussian_fit_DE(data,fit_range=[1,40],zs=None,N=8,water_scaling=1):
+    x,y=[],[]
+    for i in range(len(data)):
+        if data[i,0]>fit_range[0] and data[i,0]<fit_range[1]:
+            x.append(data[i,0]),y.append(data[i,1])
+    x,y=np.array(x),np.array(y)*water_scaling
+    plt.plot(x,y)
+    plt.show()
+
+    def func_DE(params,*args):
+        x=np.array(list(args))
+        y_fit = np.zeros_like(x)
+        for i in range(0, len(params), 3):
+            amp = abs(params[i])
+            wid = abs(params[i+1])
+            ctr= abs(params[i+2])
+            y_fit = y_fit + amp * np.exp( -((x - ctr)/wid)**2/2)
+        return sum(abs(y_fit-y))
+
+    def func(params,*args):
+        x=np.array(list(args))
+        y_fit = np.zeros_like(x)
+        for i in range(0, len(params), 3):
+            amp = abs(params[i])
+            wid = abs(params[i+1])
+            ctr= abs(params[i+2])
+            y_fit = y_fit + amp * np.exp( -((x - ctr)/wid)**2/2)
+        return y_fit
+
+    ctrs=[]
+    bounds=[]
+    if zs==None:
+        for i in range(1,len(x)-1):
+            if y[i-1]<y[i] and y[i+1]<y[i]:
+                ctrs.append(x[i])
+    elif type(zs)==int:
+        ctrs=[fit_range[0]+(fit_range[1]-fit_range[0])/zs*i for i in range(zs)]+[fit_range[1]]
+    else:
+        ctrs=np.array(zs)
+    for i in range(len(ctrs)):
+        #bounds+=[(0,30),(0.2,10),(np.max([ctrs[i]-5,fit_range[0]]),np.min([ctrs[i]+5,fit_range[1]]))]
+        bounds+=[(0,30),(0.2,10),(fit_range[0],fit_range[1])]
+
+    result=differential_evolution(func_DE, bounds,args=tuple(x))
+    popt=result.x
+    print popt
+    combinded_set=[]
+    #print 'z occupancy*4 U(sigma**2)'
+    for i in range(0,len(popt),3):
+        combinded_set=combinded_set+[abs(popt[i])/N*(abs(popt[i])*np.sqrt(np.pi*2)*5.199*9.027)*4,abs(popt[i+1])**2,popt[i+2]]
+        #print '%3.3f\t%3.3f\t%3.3f'%(ctrs[i/2],abs(popt[i])/N*(abs(popt[i+1])*np.sqrt(np.pi*2)*5.199*9.027)*4,abs(popt[i+1])**2)
+    combinded_set=np.reshape(np.array(combinded_set),(len(combinded_set)/3,3)).transpose()
+    print combinded_set
+    #combinded_set=combinded_set.transpose()
+    #normalized to full surface unit cell
+    print 'total_occupancy=',np.sum(combinded_set[0,:]/4)
+    #normalized to half unit cell (oc and u have been added to 1 to be used in Matlab input par file)
+    print 'OC_RAXS_LIST=np.array([',','.join([str(each) for each in combinded_set[0,:]]),'])'
+    #the u not U(u**2)
+    print 'U_RAXS_LIST=np.array([',','.join([str(each) for each in combinded_set[1,:]]),'])'
+    print 'X_RAXS_LIST=[0.5]*',len(combinded_set[1,:])
+    print 'Y_RAXS_LIST=[0.5]*',len(combinded_set[1,:])
+    print 'Z_RAXS_LIST=np.array([',','.join([str(each) for each in combinded_set[2,:]]),'])'
+
+
+    fit = func(popt,*x)
+
+    plt.plot(x, y)
+    plt.plot(x, fit , 'r-')
+    plt.show()
 
 def gaussian_fit(data,fit_range=[1,40],zs=None,N=8,water_scaling=1):
     x,y=[],[]
@@ -1367,14 +1545,13 @@ def gaussian_fit(data,fit_range=[1,40],zs=None,N=8,water_scaling=1):
     combinded_set=np.reshape(np.array(combinded_set),(len(combinded_set)/3,3)).transpose()
     #combinded_set=combinded_set.transpose()
     #normalized to full surface unit cell
+    #inputs for GenX refinement
     print 'total_occupancy=',np.sum(combinded_set[1,:]/4)
-    #normalized to half unit cell (oc and u have been added to 1 to be used in Matlab input par file)
-    print 'OC_RAXS_LIST=np.array([',','.join([str(each/8.+1.) for each in combinded_set[1,:]]),'])'
-    #the u not U(u**2)
-    print 'U_RAXS_LIST=np.array([',','.join([str(each**0.5+1) for each in combinded_set[2,:]]),'])'
-    print 'X_RAXS_LIST=[0.5]*',len(combinded_set[1,:])
-    print 'Y_RAXS_LIST=[0.5]*',len(combinded_set[1,:])
-    print 'Z_RAXS_LIST=np.array([',','.join([str(each+1) for each in combinded_set[0,:]]),'])'
+    print 'OC_LIST=np.array([',','.join([str(each) for each in combinded_set[1,:]]),'])'
+    print 'U_LIST=np.array([',','.join([str(each) for each in combinded_set[2,:]]),'])'
+    print 'X_LIST=[0.5]*',len(combinded_set[1,:])
+    print 'Y_LIST=[0.5]*',len(combinded_set[1,:])
+    print 'Z_LIST=np.array([',','.join([str(each) for each in combinded_set[0,:]]),'])'
 
 
     fit = func([x,ctrs], *popt)
