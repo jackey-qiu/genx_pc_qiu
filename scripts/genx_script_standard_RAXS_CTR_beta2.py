@@ -52,7 +52,7 @@ O_NUMBER_FL_EXTRA=[[0,0],[0,0],[0,0],[2,2],[0,0],[0,0],[4,4]]
 
 #water layer and layer sorbate setup here#
 water_pars={'use_default':True,'number':[0,2,0],'ref_point':[[[]],[['O1_3_0','O1_4_0']],[[]]]}
-layered_water_pars={'yes_OR_no':[0]*len(pickup_index),'ref_layer_height':['O1_1_0']*len(pickup_index)}
+layered_water_pars={'yes_OR_no':[0]*len(pickup_index),'ref_layer_height':['O1_1_0']*len(pickup_index)}#For physical reason, there should be layer water for each domain
 WATER_PAIR=True#add water pair each time if True, otherwise only add single water each time (only needed par is V_SHIFT)
 layered_sorbate_pars={'yes_OR_no':[0]*len(pickup_index),'ref_layer_height':['O1_1_0']*len(pickup_index),'el':'Pb'}
 
@@ -80,8 +80,8 @@ ref_L_domain1 =  model.Slab(c = 1.0,T_factor='B')
 ref_S_domain2 =  model.Slab(c = 1.0,T_factor='B')
 ref_L_domain2 =  model.Slab(c = 1.0,T_factor='B')
 rgh=UserVars()
-rgh.new_var('beta', 0.0)
-rgh.new_var('mu',1)
+rgh.new_var('beta', 0.0)#roughness factor
+rgh.new_var('mu',1)#liquid film thickness
 scales=['scale_CTR']
 for scale in scales:
     rgh.new_var(scale,1.)
